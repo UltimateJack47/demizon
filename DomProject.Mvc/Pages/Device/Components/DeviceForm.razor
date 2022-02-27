@@ -7,8 +7,8 @@
 
 <MudForm Model="Device" Class="Class">
     <MudTextField @bind-Value="Device.Name" T="string" Label="Name" Required="true" RequiredError="Name is required!"/>
-    <MudTextField @bind-Value="Device.Description" T="string" Label="Description" Required="true" RequiredError="Description is required!"/>
-    <MudTextField @bind-Value="Device.Price" T="decimal" Label="Price" Required="true" RequiredError="Price is required!"/>
+    <MudTextField @bind-Value="Device.Description" T="string" Label="Description"/>
+    <MudTextField @bind-Value="Device.Price" T="decimal" Label="Price"/>
     <MudTextField @bind-Value="Device.Year" T="int" Label="Year" Required="true" RequiredError="Year is required!"/>
 </MudForm>
 <MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">

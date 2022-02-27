@@ -30,11 +30,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Components" />
+      <AdditionalFiles Include="Pages\Device\Components\DeviceForm.razor" />
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Pages\Device\Components\DeviceForm.razor" />
+      <Folder Include="Components" />
     </ItemGroup>
 
 </Project>

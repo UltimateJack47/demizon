@@ -1,3 +1,7 @@
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using DomProject.Common.Configuration;
 using DomProject.Core.Extensions;
 using MudBlazor.Services;
@@ -7,15 +11,31 @@ using DomProject.Mvc.Services.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Connect with mobile on local network setting:
-builder.WebHost.ConfigureKestrel(options => options.Listen(System.Net.IPAddress.Parse("192.168.0.3"), 7272));
-builder.WebHost.UseKestrel();
-
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.Local.json", true, true);
 DefaultConnectionString.DbConnectionString = builder.Configuration.GetConnectionString("Default");
-    
+
+// Connect with mobile on local network setting:
+var ipAddress = NetworkInterface
+                    .GetAllNetworkInterfaces()
+                    .FirstOrDefault(ni =>
+                        ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet
+                        && ni.OperationalStatus == OperationalStatus.Up
+                        && ni.GetIPProperties().GatewayAddresses.FirstOrDefault() != null
+                        && ni.GetIPProperties().UnicastAddresses.FirstOrDefault(ip => ip.Address.AddressFamily == AddressFamily.InterNetwork) != null
+                    )
+                    ?.GetIPProperties()
+                    .UnicastAddresses
+                    .FirstOrDefault(ip => ip.Address.AddressFamily == AddressFamily.InterNetwork)
+                    ?.Address.ToString()
+                ?? string.Empty;
+
+builder.WebHost.UseKestrel(options => { 
+    options.Listen(IPAddress.Parse(ipAddress), 7272, listenOptions => { listenOptions.UseHttps(); });
+    options.Listen(IPAddress.Loopback, 7272, listenOptions => { listenOptions.UseHttps(); });
+});
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddDatabase(DefaultConnectionString.DbConnectionString);

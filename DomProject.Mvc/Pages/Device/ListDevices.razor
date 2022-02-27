@@ -1,9 +1,10 @@
-﻿@page "/devices"
+﻿@page "/Devices"
 @using Microsoft.EntityFrameworkCore
 @using AutoMapper
 @using DomProject.Core.Services
 @using DomProject.Dal.Entities
 @using DomProject.Mvc.DTO
+@using DomProject.Mvc.Pages.Device.Components
 
 <PageTitle>Devices</PageTitle>
 @inject IDeviceService DeviceService
@@ -35,7 +36,7 @@
 
 @if (ShowCreateDevice)
 {
-    <ProductForm PassDevice="NewProduct" Class="mt-2"></ProductForm>
+    <DeviceForm PassDevice="NewDevice" Class="mt-2"></DeviceForm>
 }
 
 
@@ -51,10 +52,10 @@
         Devices = Mapper.Map<List<DeviceDto.Read>>(await DeviceService.GetAll().ToListAsync());
     }
 
-    private async Task NewProduct(DeviceDto.Create productDto)
+    private async Task NewDevice(DeviceDto.Create deviceDto)
     {
-        var product = Mapper.Map<Device>(productDto);
-        await DeviceService.CreateAsync(product);
+        var device = Mapper.Map<Device>(deviceDto);
+        await DeviceService.CreateAsync(device);
         ShowCreateDevice = !ShowCreateDevice;
         await RefreshTable();
     }
