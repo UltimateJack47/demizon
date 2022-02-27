@@ -1,0 +1,88 @@
+﻿@page "/devices"
+@using Microsoft.EntityFrameworkCore
+@using AutoMapper
+@using DomProject.Core.Services
+@using DomProject.Dal.Entities
+@using DomProject.Mvc.DTO
+
+<PageTitle>Devices</PageTitle>
+@inject IDeviceService DeviceService
+@inject IMapper Mapper
+@inject IDialogService DialogService
+
+<MudTable @ref="DevicesGrid" T="DeviceDto.Read" Items="Devices">
+    <ToolBarContent>
+        <MudText Typo="Typo.h3">Devices page</MudText>
+        <MudSpacer />
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
+        <MudButton Size="Size.Medium" Class="mt-0" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateDevice = !ShowCreateDevice">Create new</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Year</MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Price</MudTh>
+        <MudTh Style="width: 20px"></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Name</MudTd>
+        <MudTd>@context.Year</MudTd>
+        <MudTd>@context.Description</MudTd>
+        <MudTd>@context.Price</MudTd>
+        <MudTd><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveDevice(context.Id)"></MudIconButton></MudTd>
+    </RowTemplate>
+</MudTable>
+
+@if (ShowCreateDevice)
+{
+    <ProductForm PassDevice="NewProduct" Class="mt-2"></ProductForm>
+}
+
+
+@code {
+    private List<DeviceDto.Read> Devices { get; set; } = new ();
+
+    private bool ShowCreateDevice = false;
+    
+    private MudTable<DeviceDto.Read> DevicesGrid { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Devices = Mapper.Map<List<DeviceDto.Read>>(await DeviceService.GetAll().ToListAsync());
+    }
+
+    private async Task NewProduct(DeviceDto.Create productDto)
+    {
+        var product = Mapper.Map<Device>(productDto);
+        await DeviceService.CreateAsync(product);
+        ShowCreateDevice = !ShowCreateDevice;
+        await RefreshTable();
+    }
+
+    private async Task RemoveDevice(int id)
+    {
+        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        if (resultMessage.HasValue && resultMessage.Value)
+        {
+            await DeviceService.DeleteAsync(id);
+            await RefreshTable();
+        }
+    }
+
+    private async Task RefreshTable()
+    {
+        Devices = Mapper.Map<List<DeviceDto.Read>>(await DeviceService.GetAll().ToListAsync());
+        StateHasChanged();
+    }
+    
+    /*private async Task OpenCreateDialog()
+    {
+        var dialog = DialogService.Show<ProductForm>("Create new Product");
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            var newProduct = result.Data as ProductDto.Create;
+            await ProductService.CreateAsync(Mapper.Map<Product>(newProduct));    
+        }
+    }*/
+}

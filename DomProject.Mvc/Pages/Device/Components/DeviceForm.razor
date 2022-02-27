@@ -1,0 +1,28 @@
+﻿@using AutoMapper
+@using DomProject.Core.Services
+@using DomProject.Mvc.DTO
+
+@inject IDeviceService DeviceService;
+@inject IMapper Mapper;
+
+<MudForm Model="Device" Class="Class">
+    <MudTextField @bind-Value="Device.Name" T="string" Label="Name" Required="true" RequiredError="Name is required!"/>
+    <MudTextField @bind-Value="Device.Description" T="string" Label="Description" Required="true" RequiredError="Description is required!"/>
+    <MudTextField @bind-Value="Device.Price" T="decimal" Label="Price" Required="true" RequiredError="Price is required!"/>
+    <MudTextField @bind-Value="Device.Year" T="int" Label="Year" Required="true" RequiredError="Year is required!"/>
+</MudForm>
+<MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => PassDevice.InvokeAsync(Device))">Submit</MudButton>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public DeviceDto.Create Device { get; set; } = new ();
+    
+    [Parameter]
+    public EventCallback<DeviceDto.Create> PassDevice { get; set; }
+
+    [Parameter]
+    public string Class { get; set; } = "";
+
+}
