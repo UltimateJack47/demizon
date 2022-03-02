@@ -16,7 +16,7 @@
         <MudText Typo="Typo.h3">Devices page</MudText>
         <MudSpacer />
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
-        <MudButton Size="Size.Medium" Class="mt-0" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateDevice = !ShowCreateDevice">Create new</MudButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateDevice = !ShowCreateDevice">Create new</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Name</MudTh>
@@ -61,6 +61,11 @@
         await DeviceService.CreateAsync(device);
         ShowCreateDevice = !ShowCreateDevice;
         await RefreshTable();
+    }
+
+    private string GetCreateButtonClass()
+    {
+        return ShowCreateDevice ? "active mt-0" : "mt-0";
     }
 
     private async Task RemoveDevice(int id)
