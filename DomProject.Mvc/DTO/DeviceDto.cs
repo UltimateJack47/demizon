@@ -13,6 +13,8 @@ public class DeviceDto
 
     public string Description { get; set; } = null!;
 
+    public List<BorrowingDto> Borrowings { get; set; } = new();
+
     public class Read : DeviceDto
     {
         public int Id { get; set; }
@@ -32,5 +34,4 @@ public class DeviceDto
             CreateMap<Read, Create>();
         }
     }
-
 }

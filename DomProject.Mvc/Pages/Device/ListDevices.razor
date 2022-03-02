@@ -1,7 +1,7 @@
 ﻿@page "/Devices"
 @using Microsoft.EntityFrameworkCore
 @using AutoMapper
-@using DomProject.Core.Services
+@using DomProject.Core.Services.Device
 @using DomProject.Dal.Entities
 @using DomProject.Mvc.DTO
 @using DomProject.Mvc.Pages.Device.Components
@@ -23,14 +23,17 @@
         <MudTh>Year</MudTh>
         <MudTh>Description</MudTh>
         <MudTh>Price</MudTh>
-        <MudTh Style="width: 20px"></MudTh>
+        <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
-    <RowTemplate>
-        <MudTd>@context.Name</MudTd>
-        <MudTd>@context.Year</MudTd>
-        <MudTd>@context.Description</MudTd>
-        <MudTd>@context.Price</MudTd>
-        <MudTd><MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveDevice(context.Id)"></MudIconButton></MudTd>
+    <RowTemplate Context="device">
+        <MudTd>@device.Name</MudTd>
+        <MudTd>@device.Year</MudTd>
+        <MudTd>@device.Description</MudTd>
+        <MudTd>@device.Price</MudTd>
+        <MudTd>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(device.Id)"></MudIconButton>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveDevice(device.Id)"></MudIconButton>
+        </MudTd>
     </RowTemplate>
 </MudTable>
 
@@ -86,4 +89,10 @@
             await ProductService.CreateAsync(Mapper.Map<Product>(newProduct));    
         }
     }*/
+
+    private void NavigateToDetail(int id)
+    {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"Device/Detail/{id}");
+    }
+
 }

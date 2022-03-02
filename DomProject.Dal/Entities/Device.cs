@@ -11,4 +11,6 @@ public class Device
     public decimal Price { get; set; }
 
     public string Description { get; set; } = null!;
+
+    public virtual IList<Borrowing> Borrowings { get; set; } = new List<Borrowing>();
 }

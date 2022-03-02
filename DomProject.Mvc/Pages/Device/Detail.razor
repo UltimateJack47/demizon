@@ -1,0 +1,22 @@
+﻿@page "/Device/Detail/{Id:int}"
+
+@using DomProject.Core.Services.Device
+@using AutoMapper
+@using DomProject.Mvc.DTO
+
+@inject IDeviceService DeviceService;
+@inject IMapper Mapper;
+
+<MudText>Device detail page of model with name: @Model.Name</MudText>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private DeviceDto.Read Model { get; set; } = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Model = Mapper.Map<DeviceDto.Read>(await DeviceService.GetOneAsync(Id));
+    }
+}

@@ -1,46 +1,45 @@
 ﻿using DomProject.Common.Exceptions;
 using DomProject.Dal;
-using DomProject.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace DomProject.Core.Services;
+namespace DomProject.Core.Services.User;
 
-public class DeviceService : IDeviceService
+public class UserService : IUserService
 {
     private DomProjectContext DomProjectContext { get; set; }
 
-    public DeviceService(DomProjectContext domProjectContext)
+    public UserService(DomProjectContext domProjectContext)
     {
         DomProjectContext = domProjectContext;
     }
 
-    public async Task<Device> GetOneAsync(int id)
+    public async Task<Dal.Entities.User> GetOneAsync(int id)
     {
-        return await DomProjectContext.Devices.FindAsync(id) ?? throw new EntityNotFoundException($"Product with id: {id} not found.");
+        return await DomProjectContext.Users.FindAsync(id) ?? throw new EntityNotFoundException($"User with id: {id} not found.");
     }
     
-    public IQueryable<Device> GetAll()
+    public IQueryable<Dal.Entities.User> GetAll()
     {
-        return DomProjectContext.Devices.AsQueryable();
+        return DomProjectContext.Users.AsQueryable();
     }
 
-    public async Task UpdateAsync(int id, Device updatedDevice)
+    public async Task UpdateAsync(int id, Dal.Entities.User updatedUser)
     {
-        var entity = await DomProjectContext.Devices.FindAsync(id);
+        var entity = await DomProjectContext.Users.FindAsync(id);
         if (entity is null)
         {
-            throw new EntityNotFoundException($"Product with id: {id} not found.");
+            throw new EntityNotFoundException($"User with id: {id} not found.");
         }
-        DomProjectContext.Entry(entity).CurrentValues.SetValues(updatedDevice);
+        DomProjectContext.Entry(entity).CurrentValues.SetValues(updatedUser);
         DomProjectContext.Entry(entity).State = EntityState.Modified;
         await DomProjectContext.SaveChangesAsync();
     }
 
-    public async Task<bool> CreateAsync(Device device)
+    public async Task<bool> CreateAsync(Dal.Entities.User user)
     {
         try
         {
-            await DomProjectContext.AddAsync(device);
+            await DomProjectContext.AddAsync(user);
             await DomProjectContext.SaveChangesAsync();
             return true;
         }
@@ -54,13 +53,13 @@ public class DeviceService : IDeviceService
     {
         try
         {
-            var entity = await DomProjectContext.Devices.FindAsync(id);
+            var entity = await DomProjectContext.Users.FindAsync(id);
             if (entity is null)
             {
                 throw new EntityNotFoundException();
             }
             
-            DomProjectContext.Devices.Remove(entity);
+            DomProjectContext.Users.Remove(entity);
             await DomProjectContext.SaveChangesAsync();
             return true;
         }
