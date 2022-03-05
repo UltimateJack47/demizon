@@ -1,0 +1,50 @@
+@using AutoMapper
+@using DomProject.Core.Services.Borrowing
+@using DomProject.Core.Services.Device
+@using DomProject.Core.Services.User
+@using DomProject.Dal.Entities
+@using DomProject.Mvc.DTOs
+
+@inject IBorrowingService BorrowingService;
+@inject IMapper Mapper;
+@inject IDeviceService DeviceService;
+@inject IUserService UserService;
+
+<MudForm Model="Borrowing" Class="Class">
+    <MudSelect Label="Device" @bind-Value="Borrowing.DeviceId" Placeholder="Pick Device" Required="true" RequiredError="Device is required!">
+        @foreach (var device in AllDevices)
+        {
+            <MudSelectItem Value="device.Id">@device.Name</MudSelectItem>
+        }
+    </MudSelect>
+    <MudSelect Label="User" @bind-Value="Borrowing.UserId" Placeholder="Pick User" Required="true" RequiredError="User is required!">
+            @foreach (var user in AllUsers)
+            {
+                <MudSelectItem Value="user.Id">@user.Login</MudSelectItem>
+            }
+        </MudSelect>
+</MudForm>
+<MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => PassBorrowing.InvokeAsync(Borrowing))">Submit</MudButton>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public BorrowingDto.Create Borrowing { get; set; } = new ();
+    
+    [Parameter]
+    public EventCallback<BorrowingDto.Create> PassBorrowing { get; set; }
+
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    private List<DeviceDto.Read> AllDevices { get; set; } = new();
+    
+    private List<UserDto.Read> AllUsers { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        AllDevices = Mapper.Map<List<DeviceDto.Read>>(DeviceService.GetAll().ToList());
+        AllUsers = Mapper.Map<List<UserDto.Read>>(UserService.GetAll().ToList());
+    }
+}

@@ -14,13 +14,14 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="AutoMapper" Version="10.1.1" />
-      <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
+      <PackageReference Include="AutoMapper" Version="11.0.1" />
+      <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+      <PackageReference Include="CryptoHelper" Version="3.0.2" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.2">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.0.2" />
+      <PackageReference Include="MudBlazor" Version="6.0.7" />
     </ItemGroup>
 
     <ItemGroup>
@@ -30,11 +31,19 @@
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Pages\Device\Components\DeviceForm.razor" />
+      <Compile Remove="Pages\Borrowing\**" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Components" />
+      <EmbeddedResource Remove="Pages\Borrowing\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Pages\Borrowing\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Pages\Borrowing\ListBorrowings.razor" />
     </ItemGroup>
 
 </Project>

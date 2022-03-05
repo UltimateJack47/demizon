@@ -1,0 +1,106 @@
+@page "/Borrowings"
+
+@using Microsoft.EntityFrameworkCore
+@using AutoMapper
+@using DomProject.Core.Services.Borrowing
+@using DomProject.Core.Services.User
+@using DomProject.Dal.Entities
+@using DomProject.Mvc.DTOs
+@using DomProject.Mvc.Pages.Borrowing.Components
+
+<PageTitle>Borrowings</PageTitle>
+
+@inject IBorrowingService BorrowingService
+@inject IMapper Mapper
+@inject IDialogService DialogService
+
+<MudTable @ref="BorrowingsGrid" T="BorrowingDto.Read" Items="Borrowings">
+    <ToolBarContent>
+        <MudText Typo="Typo.h3">Borrowings page</MudText>
+        <MudSpacer />
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateBorrowing = !ShowCreateBorrowing">Create new</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Device</MudTh>
+        <MudTh>User</MudTh>
+        <MudTh>From</MudTh>
+        <MudTh>To</MudTh>
+        <MudTh Style="width: 40px"></MudTh>
+    </HeaderContent>
+    <RowTemplate Context="borrowing">
+        <MudTd>@borrowing.Device.Name</MudTd>
+        <MudTd>@borrowing.User.Name @borrowing.User.Surname</MudTd>
+        <MudTd>@borrowing.Start.ToLocalTime().ToString("HH:mm:ss - dd. MM. yyyy")</MudTd>
+        <MudTd>@borrowing.End?.ToLocalTime().ToString("HH:mm:ss - dd. MM. yyyy")</MudTd>
+        <MudTd>
+            @*<MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(borrowing.Id)"></MudIconButton>*@
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RotateLeft" OnClick="() => ReturnDevice(borrowing.Id)"></MudIconButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+<MudSpacer></MudSpacer>
+@if (ShowCreateBorrowing)
+{
+    <BorrowingForm PassBorrowing="NewBorrowing" Class="mt-2"></BorrowingForm>
+}
+
+
+@code {
+    private List<BorrowingDto.Read> Borrowings { get; set; } = new ();
+    
+    private bool ShowCreateBorrowing = false;
+    
+    private MudTable<BorrowingDto.Read> BorrowingsGrid { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Borrowings = Mapper.Map<List<BorrowingDto.Read>>(await BorrowingService.GetAll().ToListAsync());
+    }
+
+    private async Task NewBorrowing(BorrowingDto.Create borrowingDto)
+    {
+        var borrowing = Mapper.Map<Borrowing>(borrowingDto);
+        await BorrowingService.CreateAsync(borrowing);
+        ShowCreateBorrowing = !ShowCreateBorrowing;
+        await RefreshTable();
+    }
+
+    private string GetCreateButtonClass()
+    {
+        return ShowCreateBorrowing ? "active mt-0" : "mt-0";
+    }
+
+    private async Task ReturnDevice(int id)
+    {
+        var resultMessage = await DialogService.ShowMessageBox("Return device?", null, "Yes", "No", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        if (resultMessage.HasValue && resultMessage.Value)
+        {
+            await BorrowingService.SetReturned(id);
+            await RefreshTable();
+        }
+    }
+
+    private async Task RefreshTable()
+    {
+        Borrowings = Mapper.Map<List<BorrowingDto.Read>>(await BorrowingService.GetAll().ToListAsync());
+        StateHasChanged();
+    }
+    
+    /*private async Task OpenCreateDialog()
+    {
+        var dialog = DialogService.Show<ProductForm>("Create new Product");
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            var newProduct = result.Data as ProductDto.Create;
+            await ProductService.CreateAsync(Mapper.Map<Product>(newProduct));    
+        }
+    }*/
+
+    /*private void NavigateToDetail(int id)
+    {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"Borrowing/Detail/{id}");
+    }*/
+
+}

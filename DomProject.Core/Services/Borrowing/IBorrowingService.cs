@@ -7,4 +7,5 @@ public interface IBorrowingService
     Task UpdateAsync(int id, Dal.Entities.Borrowing updatedBorrowing);
     Task<bool> CreateAsync(Dal.Entities.Borrowing borrowing);
     Task<bool> DeleteAsync(int id);
+    Task<bool> SetReturned(int id);
 }

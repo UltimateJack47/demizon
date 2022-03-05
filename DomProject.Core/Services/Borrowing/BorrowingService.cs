@@ -68,4 +68,25 @@ public class BorrowingService : IBorrowingService
             return false;
         }
     }
+
+    public async Task<bool> SetReturned(int id)
+    {
+        try
+        {
+            var entity = await DomProjectContext.Borrowings.FindAsync(id);
+            if (entity is null)
+            {
+                throw new EntityNotFoundException();
+            }
+
+            entity.End = DateTime.UtcNow;
+            DomProjectContext.Borrowings.Update(entity);
+            await DomProjectContext.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
 }

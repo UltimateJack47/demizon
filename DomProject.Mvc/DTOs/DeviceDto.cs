@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using DomProject.Dal.Entities;
 
-namespace DomProject.Mvc.DTO;
+namespace DomProject.Mvc.DTOs;
 
 public class DeviceDto
 {
@@ -13,7 +13,7 @@ public class DeviceDto
 
     public string Description { get; set; } = null!;
 
-    public List<BorrowingDto> Borrowings { get; set; } = new();
+    public List<BorrowingDto.Read> Borrowings { get; set; } = new();
 
     public class Read : DeviceDto
     {

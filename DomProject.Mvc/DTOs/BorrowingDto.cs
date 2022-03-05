@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using DomProject.Dal.Entities;
 
-namespace DomProject.Mvc.DTO;
+namespace DomProject.Mvc.DTOs;
 
 public class BorrowingDto
 {
@@ -13,7 +13,7 @@ public class BorrowingDto
 
     public UserDto.Read User { get; set; } = null!;
 
-    public DateTime Start { get; set; }
+    public DateTime Start { get; set; } = DateTime.UtcNow;
 
     public DateTime? End { get; set; }
     
@@ -34,7 +34,7 @@ public class BorrowingDto
             CreateMap<Borrowing, Read>()
                 .ReverseMap();
             CreateMap<Create, Borrowing>();
-            CreateMap<Read, Create>();
+            CreateMap<Borrowing, BorrowingDto>();
         }
     }
 }

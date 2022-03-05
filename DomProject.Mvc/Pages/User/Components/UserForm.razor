@@ -1,6 +1,6 @@
 ﻿@using AutoMapper
 @using DomProject.Core.Services.User
-@using DomProject.Mvc.DTO
+@using DomProject.Mvc.DTOs
 
 @inject IUserService UserService;
 @inject IMapper Mapper;
@@ -9,20 +9,41 @@
     <MudTextField @bind-Value="User.Name" T="string" Label="Name" Required="true" RequiredError="Name is required!"/>
     <MudTextField @bind-Value="User.Surname" T="string" Label="Surname"/>
     <MudTextField @bind-Value="User.Login" T="string" Label="Login" Required="true" RequiredError="Login is required!"/>
-    <MudTextField @bind-Value="User.Email" T="string" Label="Year" Required="true" RequiredError="Email is required!"/>
+    <MudTextField @bind-Value="User.Email" T="string" Label="Email" Required="true" RequiredError="Email is required!"/>
+    <MudTextField @bind-Value="User.Password" T="string" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ChangeIsShow" Required="true" RequiredError="Password is required!"/>
 </MudForm>
+
 <MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">
     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => PassUser.InvokeAsync(User))">Submit</MudButton>
 </MudPaper>
 
 @code {
     [Parameter]
-    public UserDto.Create User { get; set; } = new ();
-    
+    public UserDto.Create User { get; set; } = new();
+
     [Parameter]
     public EventCallback<UserDto.Create> PassUser { get; set; }
 
     [Parameter]
     public string Class { get; set; } = "";
 
+    bool IsShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void ChangeIsShow()
+    {
+    @if (IsShow)
+    {
+        IsShow = false;
+        PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+        PasswordInput = InputType.Password;
+    }
+    else
+    {
+        IsShow = true;
+        PasswordInputIcon = Icons.Material.Filled.Visibility;
+        PasswordInput = InputType.Text;
+    }
+    }
 }
