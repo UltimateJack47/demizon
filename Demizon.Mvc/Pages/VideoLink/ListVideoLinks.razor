@@ -1,35 +1,34 @@
-﻿@page "/Devices"
+﻿@page "/Videos"
 @using Microsoft.EntityFrameworkCore
 @using AutoMapper
-@using DomProject.Core.Services.Device
+@using DomProject.Core.Services.VideoLink
 @using DomProject.Dal.Entities
-@using DomProject.Mvc.DTOs
-@using DomProject.Mvc.Pages.Device.Components
+@using DomProject.Mvc.ViewModels
 
-<PageTitle>Devices</PageTitle>
-@inject IDeviceService DeviceService
+<PageTitle>Video Links</PageTitle>
+@inject IVideoLinkService VideoLinkService
 @inject IMapper Mapper
 @inject IDialogService DialogService
 
-<MudTable @ref="DevicesGrid" T="DeviceDto.Read" Items="Devices">
+<MudTable @ref="VideoLinksGrid" T="VideoLinkViewModel.Read" Items="VideoLinks">
     <ToolBarContent>
         <MudText Typo="Typo.h3">Devices page</MudText>
         <MudSpacer />
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateDevice = !ShowCreateDevice">Create new</MudButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateVideoLink = !ShowCreateVideoLink">Create new</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Name</MudTh>
         <MudTh>Year</MudTh>
-        <MudTh>Description</MudTh>
-        <MudTh>Price</MudTh>
+        @*<MudTh>Description</MudTh>
+        <MudTh>Price</MudTh>*@
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="device">
         <MudTd>@device.Name</MudTd>
         <MudTd>@device.Year</MudTd>
-        <MudTd>@device.Description</MudTd>
-        <MudTd>@device.Price</MudTd>
+        @*<MudTd>@device.Description</MudTd>
+        <MudTd>@device.Price</MudTd>*@
         <MudTd>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(device.Id)"></MudIconButton>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveDevice(device.Id)"></MudIconButton>
@@ -37,35 +36,35 @@
     </RowTemplate>
 </MudTable>
 
-@if (ShowCreateDevice)
+@if (ShowCreateVideoLink)
 {
     <DeviceForm PassDevice="NewDevice" Class="mt-2"></DeviceForm>
 }
 
 
 @code {
-    private List<DeviceDto.Read> Devices { get; set; } = new ();
+    private List<VideoLinkViewModel.Read> VideoLinks { get; set; } = new ();
 
-    private bool ShowCreateDevice = false;
+    private bool ShowCreateVideoLink = false;
     
-    private MudTable<DeviceDto.Read> DevicesGrid { get; set; } = null!;
+    private MudTable<VideoLinkViewModel.Read> VideoLinksGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        Devices = Mapper.Map<List<DeviceDto.Read>>(await DeviceService.GetAll().ToListAsync());
+        VideoLinks = Mapper.Map<List<VideoLinkViewModel.Read>>(await VideoLinkService.GetAll().ToListAsync());
     }
 
-    private async Task NewDevice(DeviceDto.Create deviceDto)
+    private async Task NewDevice(VideoLinkViewModel.Create videoLinkViewModel)
     {
-        var device = Mapper.Map<Device>(deviceDto);
-        await DeviceService.CreateAsync(device);
-        ShowCreateDevice = !ShowCreateDevice;
+        var videoLink = Mapper.Map<VideoLink>(videoLinkViewModel);
+        await VideoLinkService.CreateAsync(videoLink);
+        ShowCreateVideoLink = !ShowCreateVideoLink;
         await RefreshTable();
     }
 
     private string GetCreateButtonClass()
     {
-        return ShowCreateDevice ? "active mt-0" : "mt-0";
+        return ShowCreateVideoLink ? "active mt-0" : "mt-0";
     }
 
     private async Task RemoveDevice(int id)
@@ -73,14 +72,14 @@
         var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
-            await DeviceService.DeleteAsync(id);
+            await VideoLinkService.DeleteAsync(id);
             await RefreshTable();
         }
     }
 
     private async Task RefreshTable()
     {
-        Devices = Mapper.Map<List<DeviceDto.Read>>(await DeviceService.GetAll().ToListAsync());
+        VideoLinks = Mapper.Map<List<VideoLinkViewModel.Read>>(await VideoLinkService.GetAll().ToListAsync());
         StateHasChanged();
     }
     

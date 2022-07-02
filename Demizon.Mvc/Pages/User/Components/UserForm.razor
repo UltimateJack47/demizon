@@ -1,6 +1,6 @@
 ﻿@using AutoMapper
 @using DomProject.Core.Services.User
-@using DomProject.Mvc.DTOs
+@using DomProject.Mvc.ViewModels
 
 @inject IUserService UserService;
 @inject IMapper Mapper;
@@ -19,10 +19,10 @@
 
 @code {
     [Parameter]
-    public UserDto.Create User { get; set; } = new();
+    public UserViewModel.Create User { get; set; } = new();
 
     [Parameter]
-    public EventCallback<UserDto.Create> PassUser { get; set; }
+    public EventCallback<UserViewModel.Create> PassUser { get; set; }
 
     [Parameter]
     public string Class { get; set; } = "";

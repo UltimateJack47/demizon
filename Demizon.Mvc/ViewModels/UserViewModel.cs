@@ -2,9 +2,9 @@
 using CryptoHelper;
 using DomProject.Dal.Entities;
 
-namespace DomProject.Mvc.DTOs;
+namespace DomProject.Mvc.ViewModels;
 
-public class UserDto
+public class UserViewModel
 {
     public string Name { get; set; } = null!;
 
@@ -14,16 +14,14 @@ public class UserDto
 
     public string Email { get; set; } = null!;
 
-    public List<BorrowingDto.Read> Borrowings { get; set; } = new();
-
-    public class Read : UserDto
+    public class Read : UserViewModel
     {
         public int Id { get; set; }
 
         public string PasswordHash { get; set; } = null!;
     }
 
-    public class Create : UserDto
+    public class Create : UserViewModel
     {
         public string Password { get; set; } = null!;
     }

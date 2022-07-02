@@ -3,14 +3,14 @@
 @using AutoMapper
 @using DomProject.Core.Services.User
 @using DomProject.Dal.Entities
-@using DomProject.Mvc.DTOs
 @using DomProject.Mvc.Pages.User.Components
+@using DomProject.Mvc.ViewModels
 @inject IUserService UserService
 @inject IMapper Mapper
 @inject IDialogService DialogService
 <PageTitle>Users</PageTitle>
 
-<MudTable @ref="UsersGrid" T="UserDto.Read" Items="Users">
+<MudTable @ref="UsersGrid" T="UserViewModel.Read" Items="Users">
     <ToolBarContent>
         <MudText Typo="Typo.h3">Users page</MudText>
         <MudSpacer />
@@ -43,18 +43,18 @@
 
 
 @code {
-    private List<UserDto.Read> Users { get; set; } = new ();
+    private List<UserViewModel.Read> Users { get; set; } = new ();
 
     private bool ShowCreateUser = false;
     
-    private MudTable<UserDto.Read> UsersGrid { get; set; } = null!;
+    private MudTable<UserViewModel.Read> UsersGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        Users = Mapper.Map<List<UserDto.Read>>(await UserService.GetAll().ToListAsync());
+        Users = Mapper.Map<List<UserViewModel.Read>>(await UserService.GetAll().ToListAsync());
     }
 
-    private async Task NewUser(UserDto.Create userDto)
+    private async Task NewUser(UserViewModel.Create userDto)
     {
         await UserService.CreateAsync(Mapper.Map<User>(userDto));
         ShowCreateUser = !ShowCreateUser;
@@ -78,7 +78,7 @@
 
     private async Task RefreshTable()
     {
-        Users = Mapper.Map<List<UserDto.Read>>(await UserService.GetAll().ToListAsync());
+        Users = Mapper.Map<List<UserViewModel.Read>>(await UserService.GetAll().ToListAsync());
         StateHasChanged();
     }
     

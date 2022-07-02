@@ -1,10 +1,9 @@
 ﻿@page "/Device/Detail/{Id:int}"
-
-@using DomProject.Core.Services.Device
 @using AutoMapper
-@using DomProject.Mvc.DTOs
+@using DomProject.Core.Services.Event
+@using DomProject.Mvc.ViewModels
 
-@inject IDeviceService DeviceService;
+@inject IEventService EventService;
 @inject IMapper Mapper;
 
 <MudText>Device detail page of model with name: @Model.Name</MudText>
@@ -13,10 +12,10 @@
     [Parameter]
     public int Id { get; set; }
 
-    private DeviceDto.Read Model { get; set; } = new();
+    private VideoLinkViewModel.Read Model { get; set; } = new();
     
     protected override async Task OnInitializedAsync()
     {
-        Model = Mapper.Map<DeviceDto.Read>(await DeviceService.GetOneAsync(Id));
+        Model = Mapper.Map<VideoLinkViewModel.Read>(await EventService.GetOneAsync(Id));
     }
 }

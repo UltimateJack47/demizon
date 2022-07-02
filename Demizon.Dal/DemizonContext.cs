@@ -1,5 +1,6 @@
 ﻿using DomProject.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
+using File = DomProject.Dal.Entities.File;
 
 namespace DomProject.Dal;
 
@@ -10,9 +11,11 @@ public class DemizonContext : DbContext
     }
     
     public DbSet<Setting> Settings { get; set; } = null!;
-    public DbSet<Device> Devices { get; set; } = null!;
+    public DbSet<Event> Events { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
-    public DbSet<Borrowing> Borrowings { get; set; } = null!;
+    public DbSet<File> Files { get; set; } = null!;
+    public DbSet<Member> Members { get; set; } = null!;
+    public DbSet<VideoLink> VideoLinks { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,15 +30,6 @@ public class DemizonContext : DbContext
             b.Property(s => s.Key).HasConversion<string>();
             b.HasData(new Setting { Id = 1, Key = SettingKey.DevelopedBy, Value = "Jack", IsPublic = false });
         });
-        
-        modelBuilder.Entity<Device>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.Property(s => s.Name).IsRequired();
-            b.Property(s => s.Description).HasMaxLength(255);
-            b.Property(s => s.Price).HasColumnType("decimal(7,2)");
-            b.Property(s => s.Year).IsRequired();
-        });
 
         modelBuilder.Entity<User>(b =>
         {
@@ -43,17 +37,40 @@ public class DemizonContext : DbContext
             b.Property(s => s.Name).IsRequired();
             b.Property(s => s.Login).IsRequired();
         });
-
-        modelBuilder.Entity<Borrowing>(b =>
+        
+        modelBuilder.Entity<Event>(b =>
         {
             b.HasKey(x => x.Id);
-            b.HasOne(x => x.Device)
-                .WithMany(y => y.Borrowings)
-                .HasForeignKey(x => x.DeviceId);
-            b.HasOne(x => x.User)
-                .WithMany(y => y.Borrowings)
-                .HasForeignKey(x => x.UserId);
-            b.Property(s => s.Start).IsRequired();
+            b.Property(s => s.Name).IsRequired();
+            b.Property(s => s.Date).IsRequired();
+        });
+
+        modelBuilder.Entity<File>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(s => s.Path).IsRequired();
+        });
+
+        modelBuilder.Entity<Member>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(m => m.Gender).IsRequired();
+            b.Property(m => m.FirstName).IsRequired();
+            b.Property(m => m.LastName).IsRequired();
+            b.Property(m => m.IsVisible).IsRequired();
+            b.Property(m => m.Gender).HasConversion<string>();
+            b.HasMany(m => m.Photos)
+                .WithOne(f => f.Member)
+                .HasForeignKey(f => f.MemberId);
+        });
+
+        modelBuilder.Entity<VideoLink>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(s => s.Name).IsRequired();
+            b.Property(s => s.Url).IsRequired();
+            b.Property(s => s.Year).IsRequired();
+            b.Property(s => s.IsVisible).IsRequired();
         });
     }
 }

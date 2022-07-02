@@ -2,44 +2,44 @@
 using DomProject.Dal;
 using Microsoft.EntityFrameworkCore;
 
-namespace DomProject.Core.Services.Device;
+namespace DomProject.Core.Services.Event;
 
-public class DeviceService : IDeviceService
+public class EventService : IEventService
 {
     private DemizonContext DemizonContext { get; set; }
 
-    public DeviceService(DemizonContext demizonContext)
+    public EventService(DemizonContext demizonContext)
     {
         DemizonContext = demizonContext;
     }
 
-    public async Task<Dal.Entities.Device> GetOneAsync(int id)
+    public async Task<Dal.Entities.Event> GetOneAsync(int id)
     {
-        return await DemizonContext.Devices.FindAsync(id) ?? throw new EntityNotFoundException($"Device with id: {id} not found.");
+        return await DemizonContext.Events.FindAsync(id) ?? throw new EntityNotFoundException($"Event with id: {id} not found.");
     }
     
-    public IQueryable<Dal.Entities.Device> GetAll()
+    public IQueryable<Dal.Entities.Event> GetAll()
     {
-        return DemizonContext.Devices.AsQueryable();
+        return DemizonContext.Events.AsQueryable();
     }
 
-    public async Task UpdateAsync(int id, Dal.Entities.Device updatedDevice)
+    public async Task UpdateAsync(int id, Dal.Entities.Event updatedEvent)
     {
-        var entity = await DemizonContext.Devices.FindAsync(id);
+        var entity = await DemizonContext.Events.FindAsync(id);
         if (entity is null)
         {
-            throw new EntityNotFoundException($"Device with id: {id} not found.");
+            throw new EntityNotFoundException($"Event with id: {id} not found.");
         }
-        DemizonContext.Entry(entity).CurrentValues.SetValues(updatedDevice);
+        DemizonContext.Entry(entity).CurrentValues.SetValues(updatedEvent);
         DemizonContext.Entry(entity).State = EntityState.Modified;
         await DemizonContext.SaveChangesAsync();
     }
 
-    public async Task<bool> CreateAsync(Dal.Entities.Device device)
+    public async Task<bool> CreateAsync(Dal.Entities.Event newEvent)
     {
         try
         {
-            await DemizonContext.AddAsync(device);
+            await DemizonContext.AddAsync(newEvent);
             await DemizonContext.SaveChangesAsync();
             return true;
         }
@@ -53,13 +53,13 @@ public class DeviceService : IDeviceService
     {
         try
         {
-            var entity = await DemizonContext.Devices.FindAsync(id);
+            var entity = await DemizonContext.Events.FindAsync(id);
             if (entity is null)
             {
                 throw new EntityNotFoundException();
             }
             
-            DemizonContext.Devices.Remove(entity);
+            DemizonContext.Events.Remove(entity);
             await DemizonContext.SaveChangesAsync();
             return true;
         }

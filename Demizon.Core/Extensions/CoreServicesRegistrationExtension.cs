@@ -1,6 +1,8 @@
-﻿using DomProject.Core.Services.Borrowing;
-using DomProject.Core.Services.Device;
+﻿using DomProject.Core.Services.Event;
+using DomProject.Core.Services.File;
+using DomProject.Core.Services.Member;
 using DomProject.Core.Services.User;
+using DomProject.Core.Services.VideoLink;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DomProject.Core.Extensions;
@@ -9,9 +11,11 @@ public static class CoreServicesRegistrationExtension
 {
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
-        services.AddTransient<IDeviceService, DeviceService>();
+        services.AddTransient<IEventService, EventService>();
         services.AddTransient<IUserService, UserService>();
-        services.AddTransient<IBorrowingService, BorrowingService>();
+        services.AddTransient<IFileService, FileService>();
+        services.AddTransient<IMemberService, MemberService>();
+        services.AddTransient<IVideoLinkService, VideoLinkService>();
         return services;
     }
 }
