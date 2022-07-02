@@ -1,0 +1,101 @@
+﻿@page "/Users"
+@using Microsoft.EntityFrameworkCore
+@using AutoMapper
+@using DomProject.Core.Services.User
+@using DomProject.Dal.Entities
+@using DomProject.Mvc.DTOs
+@using DomProject.Mvc.Pages.User.Components
+@inject IUserService UserService
+@inject IMapper Mapper
+@inject IDialogService DialogService
+<PageTitle>Users</PageTitle>
+
+<MudTable @ref="UsersGrid" T="UserDto.Read" Items="Users">
+    <ToolBarContent>
+        <MudText Typo="Typo.h3">Users page</MudText>
+        <MudSpacer />
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateUser = !ShowCreateUser">Create new</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Surname</MudTh>
+        <MudTh>Login</MudTh>
+        <MudTh>Email</MudTh>
+        <MudTh Style="width: 40px"></MudTh>
+    </HeaderContent>
+    <RowTemplate Context="user">
+        <MudTd>@user.Name</MudTd>
+        <MudTd>@user.Surname</MudTd>
+        <MudTd>@user.Login</MudTd>
+        <MudTd>@user.Email</MudTd>
+        <MudTd>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(user.Id)"></MudIconButton>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveUser(user.Id)"></MudIconButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@if (ShowCreateUser)
+{
+    <UserForm PassUser="NewUser" Class="mt-2"></UserForm>
+}
+
+
+@code {
+    private List<UserDto.Read> Users { get; set; } = new ();
+
+    private bool ShowCreateUser = false;
+    
+    private MudTable<UserDto.Read> UsersGrid { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Users = Mapper.Map<List<UserDto.Read>>(await UserService.GetAll().ToListAsync());
+    }
+
+    private async Task NewUser(UserDto.Create userDto)
+    {
+        await UserService.CreateAsync(Mapper.Map<User>(userDto));
+        ShowCreateUser = !ShowCreateUser;
+        await RefreshTable();
+    }
+
+    private string GetCreateButtonClass()
+    {
+        return ShowCreateUser ? "active mt-0" : "mt-0";
+    }
+
+    private async Task RemoveUser(int id)
+    {
+        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        if (resultMessage.HasValue && resultMessage.Value)
+        {
+            await UserService.DeleteAsync(id);
+            await RefreshTable();
+        }
+    }
+
+    private async Task RefreshTable()
+    {
+        Users = Mapper.Map<List<UserDto.Read>>(await UserService.GetAll().ToListAsync());
+        StateHasChanged();
+    }
+    
+    /*private async Task OpenCreateDialog()
+    {
+        var dialog = DialogService.Show<ProductForm>("Create new Product");
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            var newProduct = result.Data as ProductDto.Create;
+            await ProductService.CreateAsync(Mapper.Map<Product>(newProduct));    
+        }
+    }*/
+
+    private void NavigateToDetail(int id)
+    {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"User/Detail/{id}");
+    }
+
+}

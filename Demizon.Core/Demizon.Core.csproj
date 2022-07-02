@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>DomProject.Core</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Demizon.Dal\Demizon.Dal.csproj" />
+        <ProjectReference Include="..\Demizon.Common\Demizon.Common.csproj" />
+    </ItemGroup>
+    
+</Project>

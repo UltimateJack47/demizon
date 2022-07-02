@@ -4,4 +4,5 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 /.idea
-/DomProject.Mvc/appsettings.Local.json
+/Demizon.Mvc/appsettings.Local.json
+/Demizon.sln.DotSettings.user
