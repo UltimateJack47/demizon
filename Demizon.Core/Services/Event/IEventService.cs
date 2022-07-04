@@ -1,4 +1,4 @@
-﻿namespace DomProject.Core.Services.Event;
+﻿namespace Demizon.Core.Services.Event;
 
 public interface IEventService
 {

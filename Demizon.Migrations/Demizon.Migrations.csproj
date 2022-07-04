@@ -8,7 +8,7 @@
         <Platforms>x64</Platforms>
         <OutputType>Exe</OutputType>
         <LangVersion>10</LangVersion>
-        <RootNamespace>DomProject.Migrations</RootNamespace>
+        <RootNamespace>Demizon.Migrations</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

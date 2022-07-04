@@ -1,4 +1,4 @@
-﻿namespace DomProject.Core.Services.VideoLink;
+﻿namespace Demizon.Core.Services.VideoLink;
 
 public interface IVideoLinkService
 {

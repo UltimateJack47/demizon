@@ -1,4 +1,4 @@
-﻿namespace DomProject.Core.Services.File;
+﻿namespace Demizon.Core.Services.File;
 
 public interface IFileService
 {

@@ -1,4 +1,4 @@
-﻿namespace DomProject.Common.Configuration;
+﻿namespace Demizon.Common.Configuration;
 
 public static class DefaultConnectionString
 {

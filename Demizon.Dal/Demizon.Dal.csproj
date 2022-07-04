@@ -4,7 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>DomProject.Dal</RootNamespace>
+        <RootNamespace>Demizon.Dal</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

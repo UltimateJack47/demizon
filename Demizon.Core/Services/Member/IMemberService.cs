@@ -1,4 +1,4 @@
-﻿namespace DomProject.Core.Services.Member;
+﻿namespace Demizon.Core.Services.Member;
 
 public interface IMemberService
 {

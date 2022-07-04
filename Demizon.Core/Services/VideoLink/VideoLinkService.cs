@@ -1,9 +1,8 @@
-﻿using DomProject.Common.Exceptions;
-using DomProject.Core.Services.File;
-using DomProject.Dal;
+﻿using Demizon.Common.Exceptions;
+using Demizon.Dal;
 using Microsoft.EntityFrameworkCore;
 
-namespace DomProject.Core.Services.VideoLink;
+namespace Demizon.Core.Services.VideoLink;
 
 public class VideoLinkService : IVideoLinkService
 {

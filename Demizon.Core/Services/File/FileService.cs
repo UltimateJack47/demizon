@@ -1,8 +1,8 @@
-﻿using DomProject.Common.Exceptions;
-using DomProject.Dal;
+﻿using Demizon.Common.Exceptions;
+using Demizon.Dal;
 using Microsoft.EntityFrameworkCore;
 
-namespace DomProject.Core.Services.File;
+namespace Demizon.Core.Services.File;
 
 public class FileService : IFileService
 {

@@ -1,11 +1,11 @@
-﻿using DomProject.Core.Services.Event;
-using DomProject.Core.Services.File;
-using DomProject.Core.Services.Member;
-using DomProject.Core.Services.User;
-using DomProject.Core.Services.VideoLink;
+﻿using Demizon.Core.Services.Event;
+using Demizon.Core.Services.File;
+using Demizon.Core.Services.Member;
+using Demizon.Core.Services.User;
+using Demizon.Core.Services.VideoLink;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DomProject.Core.Extensions;
+namespace Demizon.Core.Extensions;
 
 public static class CoreServicesRegistrationExtension
 {

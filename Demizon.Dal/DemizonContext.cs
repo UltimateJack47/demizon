@@ -1,8 +1,8 @@
-﻿using DomProject.Dal.Entities;
+﻿using Demizon.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
-using File = DomProject.Dal.Entities.File;
+using File = Demizon.Dal.Entities.File;
 
-namespace DomProject.Dal;
+namespace Demizon.Dal;
 
 public class DemizonContext : DbContext
 {
@@ -42,7 +42,8 @@ public class DemizonContext : DbContext
         {
             b.HasKey(x => x.Id);
             b.Property(s => s.Name).IsRequired();
-            b.Property(s => s.Date).IsRequired();
+            b.Property(s => s.DateFrom).IsRequired();
+            b.Property(s => s.DateTo).IsRequired();
         });
 
         modelBuilder.Entity<File>(b =>

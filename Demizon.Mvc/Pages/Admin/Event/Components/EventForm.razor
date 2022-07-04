@@ -1,0 +1,22 @@
+@using Demizon.Mvc.ViewModels
+
+<MudForm Model="EventModel" Class="Class">
+    <MudTextField @bind-Value="EventModel.Name" Label="Name"></MudTextField>
+    <MudDateRangePicker @bind-DateRange="EventModel.Date"></MudDateRangePicker>
+    <MudTextField @bind-Value="EventModel.Place" Label="Place"></MudTextField>
+</MudForm>
+<MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => PassEvent.InvokeAsync(EventModel))">Submit</MudButton>
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    public EventViewModel.Create EventModel { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<EventViewModel.Create> PassEvent { get; set; }
+
+    [Parameter]
+    public string Class { get; set; } = "";
+}

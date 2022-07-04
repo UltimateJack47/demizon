@@ -1,8 +1,8 @@
-﻿using DomProject.Common.Configuration;
+﻿using Demizon.Common.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace DomProject.Dal;
+namespace Demizon.Dal;
 
 public class DbContextFactory : IDesignTimeDbContextFactory<DemizonContext>
 {

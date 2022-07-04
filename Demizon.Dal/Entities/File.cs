@@ -1,4 +1,4 @@
-﻿namespace DomProject.Dal.Entities;
+﻿namespace Demizon.Dal.Entities;
 
 public class File
 {
@@ -6,7 +6,7 @@ public class File
     
     public string Path { get; set; } = null!;
 
-    public Member? Member { get; set; }
+    public virtual Member? Member { get; set; }
 
     public int? MemberId { get; set; }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace DomProject.Dal.Entities;
+namespace Demizon.Dal.Entities;
 
 public class Setting
 {

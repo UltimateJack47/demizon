@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using File = DomProject.Dal.Entities.File;
+using File = Demizon.Dal.Entities.File;
 
-namespace DomProject.Mvc.ViewModels;
+namespace Demizon.Mvc.ViewModels;
 
 public class FileViewModel
 {

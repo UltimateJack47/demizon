@@ -4,7 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <RootNamespace>DomProject.Mvc</RootNamespace>
+        <RootNamespace>Demizon.Mvc</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -31,19 +31,20 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Pages\Borrowing\**" />
+      <AdditionalFiles Include="Pages\Admin\Event\ListEvents.razor" />
+      <AdditionalFiles Include="Pages\Admin\User\Components\UserForm.razor" />
+      <AdditionalFiles Include="Pages\Admin\User\ListUsers.razor" />
+      <AdditionalFiles Include="Pages\Admin\VideoLink\Components\DeviceForm.razor" />
+      <AdditionalFiles Include="Pages\Admin\VideoLink\Detail.razor" />
+      <AdditionalFiles Include="Pages\Admin\VideoLink\ListVideoLinks.razor" />
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Remove="Pages\Borrowing\**" />
+      <Folder Include="Pages\Public\Member\Components" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Remove="Pages\Borrowing\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <_ContentIncludedByDefault Remove="Pages\Borrowing\ListBorrowings.razor" />
-    </ItemGroup>
+    <PropertyGroup>
+        <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
+    </PropertyGroup>
 
 </Project>

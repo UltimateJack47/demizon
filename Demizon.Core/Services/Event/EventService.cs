@@ -1,8 +1,8 @@
-﻿using DomProject.Common.Exceptions;
-using DomProject.Dal;
+﻿using Demizon.Common.Exceptions;
+using Demizon.Dal;
 using Microsoft.EntityFrameworkCore;
 
-namespace DomProject.Core.Services.Event;
+namespace Demizon.Core.Services.Event;
 
 public class EventService : IEventService
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DomProject.Dal.Extensions;
+namespace Demizon.Dal.Extensions;
 
 public static class DatabaseServiceConfigurationExtension
 {

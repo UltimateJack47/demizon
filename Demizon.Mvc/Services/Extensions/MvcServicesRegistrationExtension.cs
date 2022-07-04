@@ -1,4 +1,4 @@
-﻿namespace DomProject.Mvc.Services.Extensions;
+﻿namespace Demizon.Mvc.Services.Extensions;
 
 public static class ApiServicesRegistrationExtension
 {

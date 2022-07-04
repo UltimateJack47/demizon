@@ -1,4 +1,4 @@
-﻿namespace DomProject.Dal.Entities;
+﻿namespace Demizon.Dal.Entities;
 
 public class Member
 {
@@ -16,7 +16,7 @@ public class Member
     
     public DateTime? MemberSince { get; set; }
 
-    public List<File> Photos { get; set; } = new List<File>();
+    public virtual List<File> Photos { get; set; } = new List<File>();
 }
 
 public enum Gender

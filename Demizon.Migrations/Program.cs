@@ -1,9 +1,9 @@
-﻿using DomProject.Common.Configuration;
-using DomProject.Dal;
-using DomProject.Dal.Extensions;
+﻿using Demizon.Common.Configuration;
+using Demizon.Dal;
+using Demizon.Dal.Extensions;
 using Microsoft.EntityFrameworkCore;
 
-namespace DomProject.Migrations;
+namespace Demizon.Migrations;
 
 internal static class Program
 {

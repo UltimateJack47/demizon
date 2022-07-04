@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using CryptoHelper;
-using DomProject.Dal.Entities;
+using Demizon.Dal.Entities;
 
-namespace DomProject.Mvc.ViewModels;
+namespace Demizon.Mvc.ViewModels;
 
 public class UserViewModel
 {

@@ -1,4 +1,4 @@
-namespace DomProject.Dal.Entities;
+namespace Demizon.Dal.Entities;
 
 public class Event
 {
@@ -6,7 +6,9 @@ public class Event
     
     public string Name { get; set; } = null!;
 
-    public DateTime Date { get; set; }
+    public DateTime DateFrom { get; set; }
+    
+    public DateTime DateTo { get; set; }
 
     public string? Place { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿namespace DomProject.Core.Services.User;
+﻿namespace Demizon.Core.Services.User;
 
 public interface IUserService
 {

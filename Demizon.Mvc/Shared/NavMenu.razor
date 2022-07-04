@@ -1,7 +1,7 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <MudLink Href="/">
-            <MudText Typo="Typo.h5" Class="mud-text-align-center">Dom - Project</MudText>
+            <MudText Typo="Typo.h5" Class="mud-text-align-center">Demizon</MudText>
         </MudLink>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
@@ -17,11 +17,11 @@
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="@(NavigationManager.BaseUri + "Devices")" >
-                <span class="oi oi-calculator" aria-hidden="true"></span> Devices
+            <NavLink class="nav-link" href="@(NavigationManager.BaseUri + "Admin/Events")" >
+                <span class="oi oi-calendar" aria-hidden="true"></span> Events
             </NavLink>
         </div>
-        <div class="nav-item px-3">
+        @*<div class="nav-item px-3">
             <NavLink class="nav-link" href="@(NavigationManager.BaseUri + "Users")">
                 <span class="oi oi-person" aria-hidden="true"></span> Users
             </NavLink>
@@ -30,7 +30,7 @@
             <NavLink class="nav-link" href="@(NavigationManager.BaseUri + "Borrowings")">
                 <span class="oi oi-transfer" aria-hidden="true"></span> Borrowings
             </NavLink>
-        </div>
+        </div>*@
     </nav>
 </div>
 

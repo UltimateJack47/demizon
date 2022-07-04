@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using DomProject.Dal.Entities;
+using Demizon.Dal.Entities;
 
-namespace DomProject.Mvc.ViewModels;
+namespace Demizon.Mvc.ViewModels;
 
 public class VideoLinkViewModel
 {

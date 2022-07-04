@@ -1,4 +1,4 @@
-﻿namespace DomProject.Common.Exceptions;
+﻿namespace Demizon.Common.Exceptions;
 
 public class EntityNotFoundException : Exception
 {

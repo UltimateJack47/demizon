@@ -1,11 +1,11 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using DomProject.Common.Configuration;
-using DomProject.Core.Extensions;
+using Demizon.Common.Configuration;
+using Demizon.Core.Extensions;
+using Demizon.Dal.Extensions;
+using Demizon.Mvc.Services.Extensions;
 using MudBlazor.Services;
-using DomProject.Dal.Extensions;
-using DomProject.Mvc.Services.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

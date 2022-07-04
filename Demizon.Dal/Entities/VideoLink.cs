@@ -1,4 +1,4 @@
-﻿namespace DomProject.Dal.Entities;
+﻿namespace Demizon.Dal.Entities;
 
 public class VideoLink
 {
