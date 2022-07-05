@@ -1,0 +1,24 @@
+﻿@using Demizon.Mvc.ViewModels
+
+<MudForm Model="Model" Class="Class">
+    <MudTextField @bind-Value="Model.Name" Label="Name" Required="true" RequiredError="Name is required!"/>
+    <MudTextField @bind-Value="Model.Url" Label="Url" Required="true" RequiredError="URL is required!"/>
+    <MudTextField @bind-Value="Model.Year" Label="Year" Required="true" RequiredError="Year is required!"/>
+    <MudCheckBox @bind-Checked="Model.IsVisible" Label="IsVisible" />
+</MudForm>
+
+<MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => PassVideoLink.InvokeAsync(Model))">Submit</MudButton>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public VideoLinkViewModel.Create Model { get; set; } = new ();
+    
+    [Parameter]
+    public EventCallback<VideoLinkViewModel.Create> PassVideoLink { get; set; }
+
+    [Parameter]
+    public string Class { get; set; } = "";
+
+}

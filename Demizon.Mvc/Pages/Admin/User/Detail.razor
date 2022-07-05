@@ -1,0 +1,26 @@
+﻿@page "/Users/Detail/{Id:int}"
+@using AutoMapper
+@using Demizon.Core.Services.Event
+@using Demizon.Core.Services.User
+@using Demizon.Core.Services.VideoLink
+@using Demizon.Mvc.ViewModels
+
+@inject IUserService UserService;
+@inject IMapper Mapper;
+
+<MudText>User detail page of model with login: @Model.Login</MudText>
+<MudText>Name: @Model.Name</MudText>
+<MudText>Surname: @Model.Surname</MudText>
+<MudText>Email: @Model.Email</MudText>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private UserViewModel.Read Model { get; set; } = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Model = Mapper.Map<UserViewModel.Read>(await UserService.GetOneAsync(Id));
+    }
+}

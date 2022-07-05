@@ -1,0 +1,26 @@
+﻿@page "/Members/Detail/{Id:int}"
+@using AutoMapper
+@using Demizon.Core.Services.Event
+@using Demizon.Core.Services.Member
+@using Demizon.Core.Services.VideoLink
+@using Demizon.Mvc.ViewModels
+
+@inject IMemberService MemberService;
+@inject IMapper Mapper;
+
+<MudText>Member detail page of model with name: @Model.FirstName @Model.LastName</MudText>
+<MudText>Birthday: @Model.BirthDate</MudText>
+<MudText>Member since: @Model.MemberSince</MudText>
+<MudText>Is visible: @Model.IsVisible</MudText>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private MemberViewModel.Read Model { get; set; } = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Model = Mapper.Map<MemberViewModel.Read>(await MemberService.GetOneAsync(Id));
+    }
+}

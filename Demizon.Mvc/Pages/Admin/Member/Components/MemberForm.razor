@@ -1,0 +1,30 @@
+﻿@using Demizon.Mvc.ViewModels
+@using Demizon.Dal.Entities
+
+<MudForm Model="Model" Class="Class">
+    <MudTextField @bind-Value="Model.FirstName" Label="FirstName" Required="true" RequiredError="First Name is required!"/>
+    <MudTextField @bind-Value="Model.LastName" Label="LastName" Required="true" RequiredError="Last Name is required!"/>
+    <MudDatePicker @bind-Date="Model.MemberSince" Label="Member Since" />
+    <MudSelect @bind-Value="Model.Gender" Label="Gender" T="Gender">
+        @foreach (Gender item in Enum.GetValues(typeof(Gender)))
+        {
+            <MudSelectItem Value="@item">@item</MudSelectItem>
+        }
+    </MudSelect>
+</MudForm>
+
+<MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => PassMember.InvokeAsync(Model))">Submit</MudButton>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public MemberViewModel.Create Model { get; set; } = new ();
+    
+    [Parameter]
+    public EventCallback<MemberViewModel.Create> PassMember { get; set; }
+
+    [Parameter]
+    public string Class { get; set; } = "";
+
+}

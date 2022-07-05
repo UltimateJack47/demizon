@@ -4,6 +4,7 @@
 @using Demizon.Core.Services.VideoLink
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.ViewModels
+@using Demizon.Mvc.Pages.Admin.VideoLink.Components
 
 <PageTitle>Video Links</PageTitle>
 @inject IVideoLinkService VideoLinkService
@@ -12,7 +13,7 @@
 
 <MudTable @ref="VideoLinksGrid" T="VideoLinkViewModel.Read" Items="VideoLinks">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Devices page</MudText>
+        <MudText Typo="Typo.h3">Video Link page</MudText>
         <MudSpacer />
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
         <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateVideoLink = !ShowCreateVideoLink">Create new</MudButton>
@@ -20,25 +21,30 @@
     <HeaderContent>
         <MudTh>Name</MudTh>
         <MudTh>Year</MudTh>
-        @*<MudTh>Description</MudTh>
-        <MudTh>Price</MudTh>*@
+        <MudTh>URL</MudTh>
+        <MudTh>Is Visible</MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
-    <RowTemplate Context="device">
-        <MudTd>@device.Name</MudTd>
-        <MudTd>@device.Year</MudTd>
-        @*<MudTd>@device.Description</MudTd>
-        <MudTd>@device.Price</MudTd>*@
+    <RowTemplate Context="videoLink">
+        <MudTd>@videoLink.Name</MudTd>
+        <MudTd>@videoLink.Year</MudTd>
+        <MudTd>@videoLink.Url</MudTd>
         <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(device.Id)"></MudIconButton>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveDevice(device.Id)"></MudIconButton>
+            @if (videoLink.IsVisible)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Check"></MudIcon>
+            }
+        </MudTd>
+        <MudTd>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(videoLink.Id)"></MudIconButton>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveVideoLink(videoLink.Id)"></MudIconButton>
         </MudTd>
     </RowTemplate>
 </MudTable>
 
 @if (ShowCreateVideoLink)
 {
-    <DeviceForm PassDevice="NewDevice" Class="mt-2"></DeviceForm>
+    <VideoLinkForm PassVideoLink="NewVideoLink" Class="mt-2"></VideoLinkForm>
 }
 
 
@@ -54,7 +60,7 @@
         VideoLinks = Mapper.Map<List<VideoLinkViewModel.Read>>(await VideoLinkService.GetAll().ToListAsync());
     }
 
-    private async Task NewDevice(VideoLinkViewModel.Create videoLinkViewModel)
+    private async Task NewVideoLink(VideoLinkViewModel.Create videoLinkViewModel)
     {
         var videoLink = Mapper.Map<VideoLink>(videoLinkViewModel);
         await VideoLinkService.CreateAsync(videoLink);
@@ -67,7 +73,7 @@
         return ShowCreateVideoLink ? "active mt-0" : "mt-0";
     }
 
-    private async Task RemoveDevice(int id)
+    private async Task RemoveVideoLink(int id)
     {
         var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
@@ -83,20 +89,20 @@
         StateHasChanged();
     }
     
-    /*private async Task OpenCreateDialog()
+    private async Task OpenCreateDialog()
     {
-        var dialog = DialogService.Show<ProductForm>("Create new Product");
+        var dialog = DialogService.Show<VideoLinkForm>("Create new Video Link");
         var result = await dialog.Result;
         if (!result.Cancelled)
         {
-            var newProduct = result.Data as ProductDto.Create;
-            await ProductService.CreateAsync(Mapper.Map<Product>(newProduct));    
+            var newProduct = result.Data as VideoLinkViewModel.Create;
+            await VideoLinkService.CreateAsync(Mapper.Map<VideoLink>(newProduct));    
         }
-    }*/
+    }
 
     private void NavigateToDetail(int id)
     {
-        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"Device/Detail/{id}");
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"Videos/Detail/{id}");
     }
 
 }

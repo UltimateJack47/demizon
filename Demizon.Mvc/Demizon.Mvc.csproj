@@ -32,9 +32,13 @@
 
     <ItemGroup>
       <AdditionalFiles Include="Pages\Admin\Event\ListEvents.razor" />
+      <AdditionalFiles Include="Pages\Admin\Member\Components\MemberForm.razor" />
+      <AdditionalFiles Include="Pages\Admin\Member\Detail.razor" />
+      <AdditionalFiles Include="Pages\Admin\Member\ListVideoLinks.razor" />
       <AdditionalFiles Include="Pages\Admin\User\Components\UserForm.razor" />
+      <AdditionalFiles Include="Pages\Admin\User\Detail.razor" />
       <AdditionalFiles Include="Pages\Admin\User\ListUsers.razor" />
-      <AdditionalFiles Include="Pages\Admin\VideoLink\Components\DeviceForm.razor" />
+      <AdditionalFiles Include="Pages\Admin\VideoLink\Components\VideoLinkForm.razor" />
       <AdditionalFiles Include="Pages\Admin\VideoLink\Detail.razor" />
       <AdditionalFiles Include="Pages\Admin\VideoLink\ListVideoLinks.razor" />
     </ItemGroup>
