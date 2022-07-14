@@ -8,7 +8,7 @@
     }
   },
   "profiles": {
-    "DomProject.Mvc": {
+    "Demizon.Mvc": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
