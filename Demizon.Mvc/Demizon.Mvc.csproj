@@ -43,10 +43,6 @@
       <AdditionalFiles Include="Pages\Admin\VideoLink\ListVideoLinks.razor" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Pages\Public\Member\Components" />
-    </ItemGroup>
-
     <PropertyGroup>
         <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
     </PropertyGroup>
