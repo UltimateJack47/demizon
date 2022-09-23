@@ -1,11 +1,10 @@
 @page "/Admin/Events"
-
 @using Microsoft.EntityFrameworkCore
-@using AutoMapper
 @using Demizon.Core.Services.Event
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.Event.Components
 @using Demizon.Mvc.ViewModels
+@using AutoMapper
 
 <PageTitle>Events</PageTitle>
 
@@ -57,6 +56,14 @@
 {
     <EventForm PassEvent="NewEvent" Class="mt-2"></EventForm>
 }
+
+<BlazoredVideo 
+        class="w-100"
+        style="max-width:800px;"
+        controls="controls"
+        >
+    <source src="api/Blob/PlayVideo" type="video/mp4" />
+</BlazoredVideo>
 
 
 @code {

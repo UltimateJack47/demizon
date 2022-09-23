@@ -62,7 +62,19 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.MapGet("api/Blob/PlayVideo", GetStreamedVideoAsync);
+
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
+
+async Task<IResult> GetStreamedVideoAsync()
+{
+    var cloudBlob = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+
+    var client = new HttpClient();
+    var stream = await client.GetStreamAsync(cloudBlob);
+    
+    return Results.Stream(stream, "video/mp4", enableRangeProcessing: true);
+}
