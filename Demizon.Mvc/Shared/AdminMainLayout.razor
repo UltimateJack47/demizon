@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<PageTitle>FS Demižón - Strážnice</PageTitle>
+<PageTitle>FS Demižón - Administration</PageTitle>
 
 <MudLayout>
     <MudAppBar Elevation="1" Dense="true" Color="Color.Transparent">
@@ -9,9 +9,9 @@
     </MudAppBar>
     <MudDrawer @bind-Open="DrawerOpen" Elevation="2" Variant="DrawerVariant.Responsive">
         <MudDrawerHeader>
-            <MudText Typo="Typo.h5" Class="mt-1">FS Demižón</MudText>
+            <MudText Typo="Typo.h5" Class="mt-1">FS Demižón - Administration</MudText>
         </MudDrawerHeader>
-        <NavMenu></NavMenu>
+        <AdminNavMenu></AdminNavMenu>
     </MudDrawer>
     <MudMainContent>
         @Body
@@ -25,4 +25,5 @@
     {
         DrawerOpen = !DrawerOpen;
     }
+
 }

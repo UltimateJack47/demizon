@@ -1,13 +1,13 @@
 ﻿@page "/Admin/Users"
 @using Microsoft.EntityFrameworkCore
-@using AutoMapper
+@using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.User
 @using Demizon.Dal.Entities
-@using Demizon.Mvc.ViewModels
 @using Demizon.Mvc.Pages.Admin.User.Components
 @inject IUserService UserService
 @inject IMapper Mapper
 @inject IDialogService DialogService
+@layout AdminMainLayout
 <PageTitle>Users</PageTitle>
 
 <MudTable @ref="UsersGrid" T="UserViewModel.Read" Items="Users">

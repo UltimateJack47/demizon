@@ -1,15 +1,16 @@
 ﻿@page "/Admin/Members"
 @using Microsoft.EntityFrameworkCore
-@using AutoMapper
+@using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.Member
 @using Demizon.Dal.Entities
-@using Demizon.Mvc.ViewModels
 @using Demizon.Mvc.Pages.Admin.Member.Components
 
 <PageTitle>Members</PageTitle>
 @inject IMemberService MemberService
 @inject IMapper Mapper
 @inject IDialogService DialogService
+
+@layout AdminMainLayout
 
 <MudTable @ref="MembersGrid" T="MemberViewModel.Read" Items="Members">
     <ToolBarContent>
@@ -93,9 +94,9 @@
     
     private async Task OpenCreateDialog()
     {
-        var dialog = DialogService.Show<MemberForm>("Create new Member");
+        var dialog = await DialogService.ShowAsync<MemberForm>("Create new Member");
         var result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             var newMember = result.Data as MemberViewModel.Create;
             await MemberService.CreateAsync(Mapper.Map<Member>(newMember));    

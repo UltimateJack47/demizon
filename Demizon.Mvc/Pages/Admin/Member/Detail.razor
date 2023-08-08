@@ -1,12 +1,11 @@
 ﻿@page "/Members/Detail/{Id:int}"
-@using AutoMapper
-@using Demizon.Core.Services.Event
-@using Demizon.Core.Services.Member
-@using Demizon.Core.Services.VideoLink
 @using Demizon.Mvc.ViewModels
+@using Demizon.Core.Services.Member
 
 @inject IMemberService MemberService;
 @inject IMapper Mapper;
+
+@layout AdminMainLayout
 
 <MudText>Member detail page of model with name: @Model.FirstName @Model.LastName</MudText>
 <MudText>Birthday: @Model.BirthDate</MudText>

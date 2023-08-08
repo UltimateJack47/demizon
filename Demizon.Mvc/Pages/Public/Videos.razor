@@ -1,0 +1,30 @@
+﻿@page "/Videos"
+@using Microsoft.EntityFrameworkCore
+@using Demizon.Mvc.ViewModels
+@using Demizon.Core.Services.VideoLink
+
+<MudText Typo="Typo.h3">Videa</MudText>
+
+<MudGrid Spacing="3" Justify="Justify.FlexEnd">
+    @foreach (var video in VideoLinks)
+    {
+        <MudItem xs="6" Class="py-2">
+            <MudText Typo="Typo.h5">@video.Year - @video.Name</MudText>
+            <iframe width="560" height="315" src="@video.Url" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+    private List<VideoLinkViewModel.Read> VideoLinks { get; set; } = new();
+
+    [Inject]
+    private IVideoLinkService VideoLinkService { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var videos = await VideoLinkService.GetAll().Where(x => x.IsVisible).OrderByDescending(x => x.Year).Take(5).ToListAsync();
+        VideoLinks = Mapper.Map<List<VideoLinkViewModel.Read>>(videos);
+    }
+
+}

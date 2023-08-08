@@ -1,11 +1,12 @@
+@page "/Admin"
 @page "/Admin/Events"
-
 @using Microsoft.EntityFrameworkCore
+@using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.Event
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.Event.Components
-@using Demizon.Mvc.ViewModels
-@using AutoMapper
+
+@layout AdminMainLayout
 
 <PageTitle>Events</PageTitle>
 
@@ -91,9 +92,9 @@
 
     private async Task OpenCreateDialog()
     {
-        var dialog = DialogService.Show<EventForm>("Create new Event");
+        var dialog = await DialogService.ShowAsync<EventForm>("Create new Event");
         var result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             var newProduct = result.Data as EventViewModel.Create;
             await EventService.CreateAsync(Mapper.Map<Event>(newProduct));

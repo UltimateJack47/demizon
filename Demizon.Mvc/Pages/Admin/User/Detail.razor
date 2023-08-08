@@ -1,12 +1,10 @@
 ﻿@page "/Users/Detail/{Id:int}"
-@using AutoMapper
-@using Demizon.Core.Services.Event
-@using Demizon.Core.Services.User
-@using Demizon.Core.Services.VideoLink
 @using Demizon.Mvc.ViewModels
+@using Demizon.Core.Services.User
 
 @inject IUserService UserService;
 @inject IMapper Mapper;
+@layout AdminMainLayout
 
 <MudText>User detail page of model with login: @Model.Login</MudText>
 <MudText>Name: @Model.Name</MudText>

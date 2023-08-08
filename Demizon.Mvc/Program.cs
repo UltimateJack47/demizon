@@ -14,7 +14,9 @@ builder.Configuration
     .AddJsonFile("appsettings.Local.json", true, true)
     .AddJsonFile("appsettings.json", true, true)
     .AddJsonFile("appsettings.Development.json", true, true);
-DefaultConnectionString.DbConnectionString = builder.Configuration.GetConnectionString("Default");
+var defaultConnectionString = builder.Configuration.GetConnectionString("Default");
+
+if (defaultConnectionString != null) DefaultConnectionString.DbConnectionString = defaultConnectionString;
 
 // Connect with mobile on local network setting:
 var ipAddress = NetworkInterface

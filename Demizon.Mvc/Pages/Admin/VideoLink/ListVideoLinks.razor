@@ -1,15 +1,15 @@
 ﻿@page "/Admin/Videos"
 @using Microsoft.EntityFrameworkCore
-@using AutoMapper
+@using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.VideoLink
 @using Demizon.Dal.Entities
-@using Demizon.Mvc.ViewModels
 @using Demizon.Mvc.Pages.Admin.VideoLink.Components
 
 <PageTitle>Video Links</PageTitle>
 @inject IVideoLinkService VideoLinkService
 @inject IMapper Mapper
 @inject IDialogService DialogService
+@layout AdminMainLayout
 
 <MudTable @ref="VideoLinksGrid" T="VideoLinkViewModel.Read" Items="VideoLinks">
     <ToolBarContent>
@@ -32,7 +32,11 @@
         <MudTd>
             @if (videoLink.IsVisible)
             {
-                <MudIcon Icon="@Icons.Material.Filled.Check"></MudIcon>
+                <MudIcon Icon="@Icons.Material.Filled.Visibility"></MudIcon>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff"></MudIcon>
             }
         </MudTd>
         <MudTd>
@@ -57,7 +61,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        VideoLinks = Mapper.Map<List<VideoLinkViewModel.Read>>(await VideoLinkService.GetAll().ToListAsync());
+        VideoLinks = Mapper.Map<List<VideoLinkViewModel.Read>>(await VideoLinkService.GetAll().OrderByDescending(x=>x.Year).ToListAsync());
     }
 
     private async Task NewVideoLink(VideoLinkViewModel.Create videoLinkViewModel)
@@ -91,9 +95,9 @@
     
     private async Task OpenCreateDialog()
     {
-        var dialog = DialogService.Show<VideoLinkForm>("Create new Video Link");
+        var dialog = await DialogService.ShowAsync<VideoLinkForm>("Create new Video Link");
         var result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             var newProduct = result.Data as VideoLinkViewModel.Create;
             await VideoLinkService.CreateAsync(Mapper.Map<VideoLink>(newProduct));    

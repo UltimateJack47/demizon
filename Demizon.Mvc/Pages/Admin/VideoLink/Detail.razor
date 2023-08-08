@@ -1,11 +1,10 @@
 ﻿@page "/Videos/Detail/{Id:int}"
-@using AutoMapper
-@using Demizon.Core.Services.Event
-@using Demizon.Core.Services.VideoLink
 @using Demizon.Mvc.ViewModels
+@using Demizon.Core.Services.VideoLink
 
 @inject IVideoLinkService VideoLinkService;
 @inject IMapper Mapper;
+@layout AdminMainLayout
 
 <MudText>VideoLink detail page of model with name: @Model.Name</MudText>
 <MudText>URL: @Model.Url</MudText>

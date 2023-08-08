@@ -1,51 +1,13 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <MudLink Href="/">
-            <MudText Typo="Typo.h5" Class="mud-text-align-center">Demizon</MudText>
-        </MudLink>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
-
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="@(NavigationManager.BaseUri + "Admin/Events")" >
-                <span class="oi oi-calendar" aria-hidden="true"></span> Events
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="@(NavigationManager.BaseUri + "Admin/Videos")">
-                <span class="oi oi-video" aria-hidden="true"></span> Videos
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="@(NavigationManager.BaseUri + "Admin/Users")">
-                <span class="oi oi-person" aria-hidden="true"></span> Users
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="@(NavigationManager.BaseUri + "Admin/Members")">
-                <span class="oi oi-people" aria-hidden="true"></span> Members
-            </NavLink>
-        </div>
-    </nav>
-</div>
-
-@code {
-    private bool CollapseNavMenu = true;
-
-    private string? NavMenuCssClass => CollapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        CollapseNavMenu = !CollapseNavMenu;
-    }
-}
+﻿<MudPaper Elevation="0">
+    <MudNavMenu>
+        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">O nás</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Join-Us")" Icon="@Icons.Material.Filled.PlusOne">Přidej se k nám</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Events")" Icon="@Icons.Material.Filled.CalendarMonth">Plán akcí</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Dances")" Icon="@Icons.Material.Filled.Celebration">Taneční repertoár</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Members")" Icon="@Icons.Material.Filled.People">Členové</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Photos")" Icon="@Icons.Material.Filled.PhotoAlbum">Fotogalerie</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Videos")" Icon="@Icons.Material.Filled.VideoLibrary">Videa</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Contact")" Icon="@Icons.Material.Filled.ContactPhone">Kontakt</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin")" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin</MudNavLink>
+    </MudNavMenu>
+</MudPaper>
