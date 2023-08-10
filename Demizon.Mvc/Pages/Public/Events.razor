@@ -1,7 +1,27 @@
 ﻿@page "/Events"
+@using Microsoft.EntityFrameworkCore
+@using Demizon.Core.Services.Event
+@using Demizon.Mvc.ViewModels
 
 <MudText Typo="Typo.h3">Plán akcí</MudText>
 
+@foreach (var upcomingEvent in UpcomingEvents)
+{
+    <MudItem>
+        <MudText>@upcomingEvent.Place - @upcomingEvent.Name - @upcomingEvent.DateFrom.ToString("d. MMMM yyyy") - @upcomingEvent.DateTo.ToString("d. MMMM yyyy")</MudText>
+    </MudItem>
+}
+
 @code {
-    
+    [Inject]
+    private IEventService EventService { get; set; } = null!;
+
+    private List<EventViewModel.Read> UpcomingEvents { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var events = await EventService.GetAll().Where(x => x.DateTo <= DateTime.Today).OrderBy(x=>x.DateTo).ToListAsync();
+        UpcomingEvents = Mapper.Map<List<EventViewModel.Read>>(events);
+    }
+
 }

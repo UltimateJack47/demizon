@@ -10,6 +10,29 @@
         </LayoutView>
     </NotFound>
 </Router>
-<MudThemeProvider/>
+
+<MudThemeProvider Theme="MyCustomTheme"/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
+
+@code{
+
+    MudTheme MyCustomTheme = new MudTheme
+    {
+        Palette = new PaletteLight
+        {
+            Primary = Colors.Green.Default,
+            Secondary = Colors.LightGreen.Default,
+            AppbarBackground = Colors.LightGreen.Default,
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = Colors.Blue.Lighten1
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DrawerWidthLeft = "260px",
+            DrawerWidthRight = "300px"
+        }
+    };
+}

@@ -1,0 +1,103 @@
+﻿@page "/Admin/Dances"
+@using Microsoft.EntityFrameworkCore
+@using Demizon.Mvc.ViewModels
+@using Demizon.Core.Services.Dance
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.Pages.Admin.Dance.Components
+
+<PageTitle>Dances</PageTitle>
+@inject IDanceService DanceService
+@inject IDialogService DialogService
+
+@layout AdminMainLayout
+
+<MudText Typo="Typo.h3">Dances page</MudText>
+<MudTable @ref="DancesGrid" T="DanceViewModel.Read" Items="Dances">
+    <ToolBarContent>
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateDance = !ShowCreateDance">Create new</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Is Visible</MudTh>
+        <MudTh Style="width: 40px"></MudTh>
+    </HeaderContent>
+    <RowTemplate Context="dance">
+        <MudTd>@dance.Name</MudTd>
+        <MudTd>
+            @if (dance.IsVisible)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Check"></MudIcon>
+            }
+        </MudTd>
+        <MudTd>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(dance.Id)"></MudIconButton>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveDance(dance.Id)"></MudIconButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@if (ShowCreateDance)
+{
+    <DanceForm PassDance="NewDance" Class="mt-2"></DanceForm>
+}
+
+
+@code {
+    private List<DanceViewModel.Read> Dances { get; set; } = new ();
+
+    private bool ShowCreateDance = false;
+    
+    private MudTable<DanceViewModel.Read> DancesGrid { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Dances = Mapper.Map<List<DanceViewModel.Read>>(await DanceService.GetAll().ToListAsync());
+    }
+
+    private async Task NewDance(DanceViewModel.Create danceViewModel)
+    {
+        var dance = Mapper.Map<Dance>(danceViewModel);
+        await DanceService.CreateAsync(dance);
+        ShowCreateDance = !ShowCreateDance;
+        await RefreshTable();
+    }
+
+    private string GetCreateButtonClass()
+    {
+        return ShowCreateDance ? "active mt-0" : "mt-0";
+    }
+
+    private async Task RemoveDance(int id)
+    {
+        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        if (resultMessage.HasValue && resultMessage.Value)
+        {
+            await DanceService.DeleteAsync(id);
+            await RefreshTable();
+        }
+    }
+
+    private async Task RefreshTable()
+    {
+        Dances = Mapper.Map<List<DanceViewModel.Read>>(await DanceService.GetAll().ToListAsync());
+        StateHasChanged();
+    }
+    
+    private async Task OpenCreateDialog()
+    {
+        var dialog = await DialogService.ShowAsync<DanceForm>("Create new Dance");
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            var newMember = result.Data as DanceViewModel.Create;
+            await DanceService.CreateAsync(Mapper.Map<Dance>(newMember));    
+        }
+    }
+
+    private void NavigateToDetail(int id)
+    {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"Dances/Detail/{id}");
+    }
+
+}

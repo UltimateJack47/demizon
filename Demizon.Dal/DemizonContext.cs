@@ -16,6 +16,7 @@ public class DemizonContext : DbContext
     public DbSet<File> Files { get; set; } = null!;
     public DbSet<Member> Members { get; set; } = null!;
     public DbSet<VideoLink> VideoLinks { get; set; } = null!;
+    public DbSet<Dance> Dances { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -71,6 +72,13 @@ public class DemizonContext : DbContext
             b.Property(s => s.Name).IsRequired();
             b.Property(s => s.Url).IsRequired();
             b.Property(s => s.Year).IsRequired();
+            b.Property(s => s.IsVisible).IsRequired();
+        });
+
+        modelBuilder.Entity<Dance>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(s => s.Name).IsRequired();
             b.Property(s => s.IsVisible).IsRequired();
         });
     }

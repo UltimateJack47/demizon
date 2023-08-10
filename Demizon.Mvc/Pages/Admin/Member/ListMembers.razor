@@ -12,10 +12,9 @@
 
 @layout AdminMainLayout
 
+<MudText Typo="Typo.h3">Member page</MudText>
 <MudTable @ref="MembersGrid" T="MemberViewModel.Read" Items="Members">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Member page</MudText>
-        <MudSpacer />
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
         <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateMember = !ShowCreateMember">Create new</MudButton>
     </ToolBarContent>

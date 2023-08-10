@@ -31,6 +31,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <AdditionalFiles Include="Pages\Admin\Dance\Components\DanceForm.razor" />
+      <AdditionalFiles Include="Pages\Admin\Dance\Detail.razor" />
       <AdditionalFiles Include="Pages\Admin\Event\ListEvents.razor" />
       <AdditionalFiles Include="Pages\Admin\Member\Components\MemberForm.razor" />
       <AdditionalFiles Include="Pages\Admin\Member\Detail.razor" />

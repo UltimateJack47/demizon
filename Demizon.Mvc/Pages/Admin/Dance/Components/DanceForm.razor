@@ -1,0 +1,21 @@
+﻿@using Demizon.Mvc.ViewModels
+<MudForm Model="Model" Class="Class">
+    <MudTextField @bind-Value="Model.Name" Label="Name" Required="true" RequiredError="Name is required!"/>
+    <MudCheckBox @bind-Checked="Model.IsVisible" Label="Is visible" Required="true" RequiredError="Visibility is required!"/>
+</MudForm>
+
+<MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => PassDance.InvokeAsync(Model))">Submit</MudButton>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public DanceViewModel.Create Model { get; set; } = new ();
+    
+    [Parameter]
+    public EventCallback<DanceViewModel.Create> PassDance { get; set; }
+
+    [Parameter]
+    public string Class { get; set; } = "";
+
+}

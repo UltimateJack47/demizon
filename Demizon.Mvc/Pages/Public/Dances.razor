@@ -1,7 +1,26 @@
 ﻿@page "/Dances"
+@using Microsoft.EntityFrameworkCore
+@using Demizon.Core.Services.Dance
+@using Demizon.Mvc.ViewModels
 
 <MudText Typo="Typo.h3">Taneční repertoár</MudText>
+<MudItem>
+    @foreach (var dance in VisibleDances)
+    {
+        <MudText>@dance.Name</MudText>
+    }
+</MudItem>
 
 @code {
-    
+    [Inject]
+    private IDanceService DanceService { get; set; } = null!;
+
+    private List<DanceViewModel.Read> VisibleDances { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var dances = await DanceService.GetAll().Where(x => x.IsVisible).ToListAsync();
+        VisibleDances = Mapper.Map<List<DanceViewModel.Read>>(dances);
+    }
+
 }

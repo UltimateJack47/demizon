@@ -1,0 +1,23 @@
+﻿@page "/Dances/Detail/{Id:int}"
+@using Demizon.Mvc.ViewModels
+@using Demizon.Core.Services.Dance
+
+@inject IDanceService DanceService;
+@inject IMapper Mapper;
+
+@layout AdminMainLayout
+
+<MudText>Dance name: @Model.Name</MudText>
+<MudText>Is visible: @Model.IsVisible</MudText>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private DanceViewModel.Read Model { get; set; } = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Model = Mapper.Map<DanceViewModel.Read>(await DanceService.GetOneAsync(Id));
+    }
+}

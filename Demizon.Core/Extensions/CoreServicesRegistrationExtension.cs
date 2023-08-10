@@ -1,4 +1,5 @@
-﻿using Demizon.Core.Services.Event;
+﻿using Demizon.Core.Services.Dance;
+using Demizon.Core.Services.Event;
 using Demizon.Core.Services.File;
 using Demizon.Core.Services.Member;
 using Demizon.Core.Services.User;
@@ -16,6 +17,7 @@ public static class CoreServicesRegistrationExtension
         services.AddTransient<IFileService, FileService>();
         services.AddTransient<IMemberService, MemberService>();
         services.AddTransient<IVideoLinkService, VideoLinkService>();
+        services.AddTransient<IDanceService, DanceService>();
         return services;
     }
 }
