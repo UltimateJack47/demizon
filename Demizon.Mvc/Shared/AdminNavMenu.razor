@@ -1,10 +1,10 @@
 ﻿<MudPaper Elevation="0">
     <MudNavMenu>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Event">Events</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")" Icon="@Icons.Material.Filled.Event">Events</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Videos")" Icon="@Icons.Material.Filled.VideoLibrary">Videos</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Users")" Icon="@Icons.Material.Filled.Man">Users</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Members")" Icon="@Icons.Material.Filled.People">Members</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Dances")" Icon="@Icons.Material.Filled.Celebration">Dances</MudNavLink>
-        <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri)" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
     </MudNavMenu>
 </MudPaper>
