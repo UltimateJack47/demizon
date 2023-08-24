@@ -12,11 +12,13 @@
 
 @layout AdminMainLayout
 
-<MudText Typo="Typo.h3">Member page</MudText>
 <MudTable @ref="MembersGrid" T="MemberViewModel.Read" Items="Members">
     <ToolBarContent>
-        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateMember = !ShowCreateMember">Create new</MudButton>
+        <MudText Typo="Typo.h3">Members page</MudText>
+        <MudSpacer/>
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
+        @*<MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateMember = !ShowCreateMember">Create new</MudButton>*@
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="OpenFormDialog">Create new</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>First Name</MudTh>
@@ -44,10 +46,10 @@
     </RowTemplate>
 </MudTable>
 
-@if (ShowCreateMember)
+@*@if (ShowCreateMember)
 {
     <MemberForm PassMember="NewMember" Class="mt-2"></MemberForm>
-}
+}*@
 
 
 @code {
@@ -91,15 +93,25 @@
         StateHasChanged();
     }
     
-    private async Task OpenCreateDialog()
+    private async Task OpenFormDialog()
     {
-        var dialog = await DialogService.ShowAsync<MemberForm>("Create new Member");
+        var options = new DialogOptions() { CloseOnEscapeKey = true };
+        //var parameters = new DialogParameters() { { "PassMember", NewMember }  };
+        var dialog = await DialogService.ShowAsync<MemberForm>("Member form", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Console.WriteLine(result.Data);
+        }
+        
+        /*var dialog = await DialogService.ShowAsync<MemberForm>("Member Form");
         var result = await dialog.Result;
         if (!result.Canceled)
         {
             var newMember = result.Data as MemberViewModel.Create;
             await MemberService.CreateAsync(Mapper.Map<Member>(newMember));    
-        }
+        }*/
     }
 
     private void NavigateToDetail(int id)

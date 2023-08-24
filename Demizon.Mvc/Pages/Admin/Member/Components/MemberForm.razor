@@ -1,30 +1,57 @@
 ﻿@using Demizon.Mvc.ViewModels
 @using Demizon.Dal.Entities
 
-<MudForm Model="Model" Class="Class">
-    <MudTextField @bind-Value="Model.FirstName" Label="FirstName" Required="true" RequiredError="First Name is required!"/>
-    <MudTextField @bind-Value="Model.LastName" Label="LastName" Required="true" RequiredError="Last Name is required!"/>
-    <MudDatePicker @bind-Date="Model.MemberSince" Label="Member Since" />
-    <MudSelect @bind-Value="Model.Gender" Label="Gender" T="Gender">
-        @foreach (Gender item in Enum.GetValues(typeof(Gender)))
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Member form</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="Model.FirstName" Label="First Name" Required="true" RequiredError="First Name is required!"/>
+        <MudTextField @bind-Value="Model.LastName" Label="Last Name" Required="true" RequiredError="Last Name is required!"/>
+        <MudDatePicker @bind-Date="Model.MemberSince" Label="Member Since" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"  />
+        <MudDatePicker @bind-Date="Model.BirthDate" Label="Birthdate" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today" />
+        <MudSelect @bind-Value="Model.Gender" Label="Gender" T="Gender">
+            @foreach (Gender item in Enum.GetValues(typeof(Gender)))
+            {
+                <MudSelectItem Value="@item">@item</MudSelectItem>
+            }
+        </MudSelect>
+        <MudCheckBox @bind-Checked="Model.IsVisible" Label="Is visible?"></MudCheckBox>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        @if (IsUpdate)
         {
-            <MudSelectItem Value="@item">@item</MudSelectItem>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => UpdateMember.InvokeAsync(Model))">Update</MudButton>    
         }
-    </MudSelect>
-</MudForm>
-
-<MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => PassMember.InvokeAsync(Model))">Submit</MudButton>
-</MudPaper>
+        else
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => CreateMember.InvokeAsync(Model))">Create</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
 
 @code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = null!;
+
     [Parameter]
     public MemberViewModel.Create Model { get; set; } = new ();
     
     [Parameter]
-    public EventCallback<MemberViewModel.Create> PassMember { get; set; }
+    public bool IsUpdate { get; set; }
+    
+    [Parameter]
+    public EventCallback<MemberViewModel.Create> CreateMember { get; set; }
+    
+    [Parameter]
+    public EventCallback<MemberViewModel> UpdateMember { get; set; }
 
     [Parameter]
     public string Class { get; set; } = "";
 
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
 }
