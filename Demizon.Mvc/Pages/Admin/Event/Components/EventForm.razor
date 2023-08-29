@@ -12,10 +12,10 @@
 @code {
 
     [Parameter]
-    public EventViewModel.Create EventModel { get; set; } = new();
+    public EventViewModel EventModel { get; set; } = new();
 
     [Parameter]
-    public EventCallback<EventViewModel.Create> PassEvent { get; set; }
+    public EventCallback<EventViewModel> PassEvent { get; set; }
 
     [Parameter]
     public string Class { get; set; } = "";

@@ -11,7 +11,7 @@
 @inject IDialogService DialogService
 @layout AdminMainLayout
 
-<MudTable @ref="VideoLinksGrid" T="VideoLinkViewModel.Read" Items="VideoLinks">
+<MudTable @ref="VideoLinksGrid" T="VideoLinkViewModel" Items="VideoLinks">
     <ToolBarContent>
         <MudText Typo="Typo.h3">Video Link page</MudText>
         <MudSpacer />
@@ -53,18 +53,18 @@
 
 
 @code {
-    private List<VideoLinkViewModel.Read> VideoLinks { get; set; } = new ();
+    private List<VideoLinkViewModel> VideoLinks { get; set; } = new ();
 
     private bool ShowCreateVideoLink = false;
     
-    private MudTable<VideoLinkViewModel.Read> VideoLinksGrid { get; set; } = null!;
+    private MudTable<VideoLinkViewModel> VideoLinksGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        VideoLinks = Mapper.Map<List<VideoLinkViewModel.Read>>(await VideoLinkService.GetAll().OrderByDescending(x=>x.Year).ToListAsync());
+        VideoLinks = Mapper.Map<List<VideoLinkViewModel>>(await VideoLinkService.GetAll().OrderByDescending(x=>x.Year).ToListAsync());
     }
 
-    private async Task NewVideoLink(VideoLinkViewModel.Create videoLinkViewModel)
+    private async Task NewVideoLink(VideoLinkViewModel videoLinkViewModel)
     {
         var videoLink = Mapper.Map<VideoLink>(videoLinkViewModel);
         await VideoLinkService.CreateAsync(videoLink);
@@ -89,7 +89,7 @@
 
     private async Task RefreshTable()
     {
-        VideoLinks = Mapper.Map<List<VideoLinkViewModel.Read>>(await VideoLinkService.GetAll().ToListAsync());
+        VideoLinks = Mapper.Map<List<VideoLinkViewModel>>(await VideoLinkService.GetAll().ToListAsync());
         StateHasChanged();
     }
     
@@ -99,7 +99,7 @@
         var result = await dialog.Result;
         if (!result.Canceled)
         {
-            var newProduct = result.Data as VideoLinkViewModel.Create;
+            var newProduct = result.Data as VideoLinkViewModel;
             await VideoLinkService.CreateAsync(Mapper.Map<VideoLink>(newProduct));    
         }
     }

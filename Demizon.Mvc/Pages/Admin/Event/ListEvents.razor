@@ -14,7 +14,7 @@
 @inject IMapper Mapper
 @inject IDialogService DialogService
 
-<MudTable @ref="EventsGrid" T="EventViewModel.Read" Items="Events">
+<MudTable @ref="EventsGrid" T="EventViewModel" Items="Events">
     <ToolBarContent>
         <MudText Typo="Typo.h3">Upcoming events page</MudText>
         <MudSpacer/>
@@ -60,18 +60,18 @@
 }
 
 @code {
-    private List<EventViewModel.Read> Events { get; set; } = new();
+    private List<EventViewModel> Events { get; set; } = new();
 
     private bool ShowCreateEvent = false;
 
-    private MudTable<EventViewModel.Read> EventsGrid { get; set; } = null!;
+    private MudTable<EventViewModel> EventsGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        Events = Mapper.Map<List<EventViewModel.Read>>(await EventService.GetAll().ToListAsync());
+        Events = Mapper.Map<List<EventViewModel>>(await EventService.GetAll().ToListAsync());
     }
 
-    private async Task NewEvent(EventViewModel.Create create)
+    private async Task NewEvent(EventViewModel create)
     {
         var newEvent = Mapper.Map<Event>(create);
         await EventService.CreateAsync(newEvent);
@@ -86,7 +86,7 @@
 
     private async Task RefreshTable()
     {
-        Events = Mapper.Map<List<EventViewModel.Read>>(await EventService.GetAll().Where(x=> DateTime.Today <= x.DateFrom).ToListAsync());
+        Events = Mapper.Map<List<EventViewModel>>(await EventService.GetAll().Where(x=> DateTime.Today <= x.DateFrom).ToListAsync());
         StateHasChanged();
     }
 
@@ -96,7 +96,7 @@
         var result = await dialog.Result;
         if (!result.Canceled)
         {
-            var newProduct = result.Data as EventViewModel.Create;
+            var newProduct = result.Data as EventViewModel;
             await EventService.CreateAsync(Mapper.Map<Event>(newProduct));
         }
     }

@@ -5,6 +5,8 @@ namespace Demizon.Mvc.ViewModels;
 
 public class MemberViewModel
 {
+    public int Id { get; set; }
+    
     public string FirstName { get; set; } = null!;
 
     public string LastName { get; set; } = null!;
@@ -17,25 +19,14 @@ public class MemberViewModel
 
     public DateTime? MemberSince { get; set; }
 
-    public List<FileViewModel> Photos { get; set; } = new List<FileViewModel>();
+    public IEnumerable<FileViewModel> Photos { get; set; } = new List<FileViewModel>();
     
-    public class Read : MemberViewModel
-    {
-        public int Id { get; set; }
-    }
-
-    public class Create : MemberViewModel
-    {
-    }
-
     public class DtoProfile : Profile
     {
         public DtoProfile()
         {
-            CreateMap<Member, Read>()
+            CreateMap<Member, MemberViewModel>()
                 .ReverseMap();
-            CreateMap<Create, Member>();
-            CreateMap<Member, MemberViewModel>();
         }
     }
 }

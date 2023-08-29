@@ -10,10 +10,10 @@
 
 @code {
     [Parameter]
-    public DanceViewModel.Create Model { get; set; } = new ();
+    public DanceViewModel Model { get; set; } = new ();
     
     [Parameter]
-    public EventCallback<DanceViewModel.Create> PassDance { get; set; }
+    public EventCallback<DanceViewModel> PassDance { get; set; }
 
     [Parameter]
     public string Class { get; set; } = "";

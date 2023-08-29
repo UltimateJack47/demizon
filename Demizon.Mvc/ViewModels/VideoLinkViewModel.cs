@@ -5,6 +5,8 @@ namespace Demizon.Mvc.ViewModels;
 
 public class VideoLinkViewModel
 {
+    public int Id { get; set; }
+    
     public string Name { get; set; } = null!;
 
     public bool IsVisible { get; set; } = false;
@@ -13,23 +15,12 @@ public class VideoLinkViewModel
 
     public int Year { get; set; }
 
-    public class Read : VideoLinkViewModel
-    {
-        public int Id { get; set; }
-    }
-    
-    public class Create : VideoLinkViewModel
-    {
-    }
-    
     public class DtoProfile : Profile
     {
         public DtoProfile()
         {
-            CreateMap<VideoLink, Read>()
+            CreateMap<VideoLink, VideoLinkViewModel>()
                 .ReverseMap();
-            CreateMap<Create, VideoLink>();
-            CreateMap<Read, Create>();
         }
     }
 }

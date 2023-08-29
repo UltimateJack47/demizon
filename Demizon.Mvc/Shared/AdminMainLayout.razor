@@ -9,7 +9,7 @@
     </MudAppBar>
     <MudDrawer @bind-Open="DrawerOpen" Elevation="2" Variant="DrawerVariant.Responsive">
         <MudDrawerHeader>
-            <MudText Typo="Typo.h5" Class="mt-1">FS Demižón - Administration</MudText>
+            <MudText Typo="Typo.h5" Class="mt-1"><MudImage Src="@(NavigationManager.BaseUri + "favicon.gif")" Width="30" Height="30" ObjectFit="ObjectFit.Contain"></MudImage> Administration</MudText>
         </MudDrawerHeader>
         <AdminNavMenu></AdminNavMenu>
     </MudDrawer>

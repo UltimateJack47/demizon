@@ -9,14 +9,16 @@
 @inject IMemberService MemberService
 @inject IMapper Mapper
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 @layout AdminMainLayout
 
-<MudText Typo="Typo.h3">Member page</MudText>
-<MudTable @ref="MembersGrid" T="MemberViewModel.Read" Items="Members">
+<MudTable @ref="MembersGrid" T="MemberViewModel" Items="Members">
     <ToolBarContent>
-        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateMember = !ShowCreateMember">Create new</MudButton>
+        <MudText Typo="Typo.h3">Members page</MudText>
+        <MudSpacer/>
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>First Name</MudTh>
@@ -38,46 +40,27 @@
             }
         </MudTd>
         <MudTd>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(member)">Update</MudIconButton>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(member.Id)"></MudIconButton>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveMember(member.Id)"></MudIconButton>
         </MudTd>
     </RowTemplate>
 </MudTable>
 
-@if (ShowCreateMember)
-{
-    <MemberForm PassMember="NewMember" Class="mt-2"></MemberForm>
-}
-
 
 @code {
-    private List<MemberViewModel.Read> Members { get; set; } = new ();
+    private List<MemberViewModel> Members { get; set; } = new();
 
-    private bool ShowCreateMember = false;
-    
-    private MudTable<MemberViewModel.Read> MembersGrid { get; set; } = null!;
+    private MudTable<MemberViewModel> MembersGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        Members = Mapper.Map<List<MemberViewModel.Read>>(await MemberService.GetAll().ToListAsync());
-    }
-
-    private async Task NewMember(MemberViewModel.Create memberViewModel)
-    {
-        var member = Mapper.Map<Member>(memberViewModel);
-        await MemberService.CreateAsync(member);
-        ShowCreateMember = !ShowCreateMember;
-        await RefreshTable();
-    }
-
-    private string GetCreateButtonClass()
-    {
-        return ShowCreateMember ? "active mt-0" : "mt-0";
+        Members = Mapper.Map<List<MemberViewModel>>(await MemberService.GetAll().ToListAsync());
     }
 
     private async Task RemoveMember(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() { Position = DialogPosition.Center, CloseButton = false });
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await MemberService.DeleteAsync(id);
@@ -87,18 +70,43 @@
 
     private async Task RefreshTable()
     {
-        Members = Mapper.Map<List<MemberViewModel.Read>>(await MemberService.GetAll().ToListAsync());
+        Members = Mapper.Map<List<MemberViewModel>>(await MemberService.GetAll().OrderBy(x => x.Id).ToListAsync());
         StateHasChanged();
     }
-    
-    private async Task OpenCreateDialog()
+
+    private async Task OpenFormDialog(MemberViewModel? viewModel = null)
     {
-        var dialog = await DialogService.ShowAsync<MemberForm>("Create new Member");
+        var isUpdate = viewModel is not null;
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters
+        {
+            { "IsUpdate", isUpdate },
+            { "Model", viewModel ?? new MemberViewModel() }
+        };
+        var dialog = await DialogService.ShowAsync<MemberForm>("Member form", parameters, options);
         var result = await dialog.Result;
+
         if (!result.Canceled)
         {
-            var newMember = result.Data as MemberViewModel.Create;
-            await MemberService.CreateAsync(Mapper.Map<Member>(newMember));    
+            var memberResult = result.Data as MemberViewModel;
+            try
+            {
+                if (isUpdate)
+                {
+                    await MemberService.UpdateAsync(viewModel!.Id, Mapper.Map<Member>(memberResult));
+                    Snackbar.Add("The member has been updated.", Severity.Success);
+                }
+                else
+                {
+                    await MemberService.CreateAsync(Mapper.Map<Member>(memberResult));
+                    Snackbar.Add("The member has been created.", Severity.Success);
+                }
+                await RefreshTable();
+            }
+            catch (Exception e)
+            {
+                Snackbar.Add("Something went wrong.", Severity.Error);
+            }
         }
     }
 

@@ -14,10 +14,10 @@
     [Parameter]
     public int Id { get; set; }
 
-    private DanceViewModel.Read Model { get; set; } = new();
+    private DanceViewModel Model { get; set; } = new();
     
     protected override async Task OnInitializedAsync()
     {
-        Model = Mapper.Map<DanceViewModel.Read>(await DanceService.GetOneAsync(Id));
+        Model = Mapper.Map<DanceViewModel>(await DanceService.GetOneAsync(Id));
     }
 }

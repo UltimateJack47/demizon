@@ -16,7 +16,7 @@
 </MudGrid>
 
 @code {
-    private List<VideoLinkViewModel.Read> VideoLinks { get; set; } = new();
+    private List<VideoLinkViewModel> VideoLinks { get; set; } = new();
 
     [Inject]
     private IVideoLinkService VideoLinkService { get; set; } = null!;
@@ -24,7 +24,7 @@
     protected override async Task OnInitializedAsync()
     {
         var videos = await VideoLinkService.GetAll().Where(x => x.IsVisible).OrderByDescending(x => x.Year).Take(5).ToListAsync();
-        VideoLinks = Mapper.Map<List<VideoLinkViewModel.Read>>(videos);
+        VideoLinks = Mapper.Map<List<VideoLinkViewModel>>(videos);
     }
 
 }
