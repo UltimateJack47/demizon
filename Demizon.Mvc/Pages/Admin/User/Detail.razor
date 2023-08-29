@@ -15,10 +15,10 @@
     [Parameter]
     public int Id { get; set; }
 
-    private UserViewModel.Read Model { get; set; } = new();
+    private UserViewModel Model { get; set; } = new();
     
     protected override async Task OnInitializedAsync()
     {
-        Model = Mapper.Map<UserViewModel.Read>(await UserService.GetOneAsync(Id));
+        Model = Mapper.Map<UserViewModel>(await UserService.GetOneAsync(Id));
     }
 }

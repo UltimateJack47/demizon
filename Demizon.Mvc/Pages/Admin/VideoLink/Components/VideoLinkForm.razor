@@ -13,10 +13,10 @@
 
 @code {
     [Parameter]
-    public VideoLinkViewModel.Create Model { get; set; } = new ();
+    public VideoLinkViewModel Model { get; set; } = new ();
     
     [Parameter]
-    public EventCallback<VideoLinkViewModel.Create> PassVideoLink { get; set; }
+    public EventCallback<VideoLinkViewModel> PassVideoLink { get; set; }
 
     [Parameter]
     public string Class { get; set; } = "";

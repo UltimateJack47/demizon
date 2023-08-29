@@ -12,7 +12,7 @@
 @layout AdminMainLayout
 
 <MudText Typo="Typo.h3">Dances page</MudText>
-<MudTable @ref="DancesGrid" T="DanceViewModel.Read" Items="Dances">
+<MudTable @ref="DancesGrid" T="DanceViewModel" Items="Dances">
     <ToolBarContent>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
         <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateDance = !ShowCreateDance">Create new</MudButton>
@@ -44,18 +44,18 @@
 
 
 @code {
-    private List<DanceViewModel.Read> Dances { get; set; } = new ();
+    private List<DanceViewModel> Dances { get; set; } = new ();
 
     private bool ShowCreateDance = false;
     
-    private MudTable<DanceViewModel.Read> DancesGrid { get; set; } = null!;
+    private MudTable<DanceViewModel> DancesGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        Dances = Mapper.Map<List<DanceViewModel.Read>>(await DanceService.GetAll().ToListAsync());
+        Dances = Mapper.Map<List<DanceViewModel>>(await DanceService.GetAll().ToListAsync());
     }
 
-    private async Task NewDance(DanceViewModel.Create danceViewModel)
+    private async Task NewDance(DanceViewModel danceViewModel)
     {
         var dance = Mapper.Map<Dance>(danceViewModel);
         await DanceService.CreateAsync(dance);
@@ -80,7 +80,7 @@
 
     private async Task RefreshTable()
     {
-        Dances = Mapper.Map<List<DanceViewModel.Read>>(await DanceService.GetAll().ToListAsync());
+        Dances = Mapper.Map<List<DanceViewModel>>(await DanceService.GetAll().ToListAsync());
         StateHasChanged();
     }
     
@@ -90,7 +90,7 @@
         var result = await dialog.Result;
         if (!result.Canceled)
         {
-            var newMember = result.Data as DanceViewModel.Create;
+            var newMember = result.Data as DanceViewModel;
             await DanceService.CreateAsync(Mapper.Map<Dance>(newMember));    
         }
     }

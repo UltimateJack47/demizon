@@ -6,6 +6,10 @@ namespace Demizon.Mvc.ViewModels;
 
 public class UserViewModel
 {
+    public int Id { get; set; }
+
+    public string PasswordHash { get; set; } = null!;
+    
     public string Name { get; set; } = null!;
 
     public string? Surname { get; set; }
@@ -14,28 +18,16 @@ public class UserViewModel
 
     public string Email { get; set; } = null!;
 
-    public class Read : UserViewModel
-    {
-        public int Id { get; set; }
-
-        public string PasswordHash { get; set; } = null!;
-    }
-
-    public class Create : UserViewModel
-    {
-        public string Password { get; set; } = null!;
-    }
+    public string Password { get; set; } = null!;
 
     public class DtoProfile : Profile
     {
         public DtoProfile()
         {
-            CreateMap<User, Read>()
-                .ReverseMap();
-            CreateMap<Create, User>()
+            CreateMap<User, UserViewModel>()
+                .ReverseMap()
                 .ForMember(x => x.PasswordHash,
                     opt => opt.MapFrom(y => Crypto.HashPassword(y.Password)));
-            CreateMap<Read, Create>();
         }
     }
 }

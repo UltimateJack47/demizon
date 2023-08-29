@@ -7,19 +7,31 @@
 
 @layout AdminMainLayout
 
-<MudText>Member detail page of model with name: @Model.FirstName @Model.LastName</MudText>
-<MudText>Birthday: @Model.BirthDate</MudText>
-<MudText>Member since: @Model.MemberSince</MudText>
-<MudText>Is visible: @Model.IsVisible</MudText>
+<MudText Typo="Typo.h3">Member detail page:</MudText>
+<MudDivider Class="mb-2 mt-1"></MudDivider>
+<MudText>Name: @Model.FirstName @Model.LastName</MudText>
+<MudText>Birthday: @Model.BirthDate.GetValueOrDefault().ToString("dd. MM. yyyy")</MudText>
+<MudText>Member since: @Model.MemberSince.GetValueOrDefault().ToString("dd. MM. yyyy")</MudText>
+<MudText>
+    Is visible:
+    @if (Model.IsVisible)
+    {
+        <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
+    }
+    else
+    {
+        <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
+    }
+</MudText>
 
 @code {
     [Parameter]
     public int Id { get; set; }
 
-    private MemberViewModel.Read Model { get; set; } = new();
+    private MemberViewModel Model { get; set; } = new();
     
     protected override async Task OnInitializedAsync()
     {
-        Model = Mapper.Map<MemberViewModel.Read>(await MemberService.GetOneAsync(Id));
+        Model = Mapper.Map<MemberViewModel>(await MemberService.GetOneAsync(Id));
     }
 }

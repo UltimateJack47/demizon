@@ -10,7 +10,7 @@
 @layout AdminMainLayout
 <PageTitle>Users</PageTitle>
 
-<MudTable @ref="UsersGrid" T="UserViewModel.Read" Items="Users">
+<MudTable @ref="UsersGrid" T="UserViewModel" Items="Users">
     <ToolBarContent>
         <MudText Typo="Typo.h3">Users page</MudText>
         <MudSpacer />
@@ -43,18 +43,18 @@
 
 
 @code {
-    private List<UserViewModel.Read> Users { get; set; } = new ();
+    private List<UserViewModel> Users { get; set; } = new ();
 
     private bool ShowCreateUser = false;
     
-    private MudTable<UserViewModel.Read> UsersGrid { get; set; } = null!;
+    private MudTable<UserViewModel> UsersGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        Users = Mapper.Map<List<UserViewModel.Read>>(await UserService.GetAll().ToListAsync());
+        Users = Mapper.Map<List<UserViewModel>>(await UserService.GetAll().ToListAsync());
     }
 
-    private async Task NewUser(UserViewModel.Create userDto)
+    private async Task NewUser(UserViewModel userDto)
     {
         await UserService.CreateAsync(Mapper.Map<User>(userDto));
         ShowCreateUser = !ShowCreateUser;
@@ -78,7 +78,7 @@
 
     private async Task RefreshTable()
     {
-        Users = Mapper.Map<List<UserViewModel.Read>>(await UserService.GetAll().ToListAsync());
+        Users = Mapper.Map<List<UserViewModel>>(await UserService.GetAll().ToListAsync());
         StateHasChanged();
     }
     

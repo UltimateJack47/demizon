@@ -15,10 +15,10 @@
     [Parameter]
     public int Id { get; set; }
 
-    private VideoLinkViewModel.Read Model { get; set; } = new();
+    private VideoLinkViewModel Model { get; set; } = new();
     
     protected override async Task OnInitializedAsync()
     {
-        Model = Mapper.Map<VideoLinkViewModel.Read>(await VideoLinkService.GetOneAsync(Id));
+        Model = Mapper.Map<VideoLinkViewModel>(await VideoLinkService.GetOneAsync(Id));
     }
 }

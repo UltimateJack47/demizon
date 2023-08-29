@@ -5,29 +5,20 @@ namespace Demizon.Mvc.ViewModels;
 
 public class FileViewModel
 {
+    public int Id { get; set; }
+    
     public string Path { get; set; } = null!;
 
     public MemberViewModel? Member { get; set; }
 
     public int? MemberId { get; set; }
 
-    public class Read : MemberViewModel
-    {
-        public int Id { get; set; }
-    }
-
-    public class Create : MemberViewModel
-    {
-    }
-
     public class DtoProfile : Profile
     {
         public DtoProfile()
         {
-            CreateMap<File, Read>()
+            CreateMap<File, FileViewModel>()
                 .ReverseMap();
-            CreateMap<Create, File>();
-            CreateMap<File, MemberViewModel>();
         }
     }
 }

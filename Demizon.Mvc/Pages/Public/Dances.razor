@@ -15,12 +15,12 @@
     [Inject]
     private IDanceService DanceService { get; set; } = null!;
 
-    private List<DanceViewModel.Read> VisibleDances { get; set; } = new();
+    private List<DanceViewModel> VisibleDances { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
         var dances = await DanceService.GetAll().Where(x => x.IsVisible).ToListAsync();
-        VisibleDances = Mapper.Map<List<DanceViewModel.Read>>(dances);
+        VisibleDances = Mapper.Map<List<DanceViewModel>>(dances);
     }
 
 }
