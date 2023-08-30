@@ -13,19 +13,19 @@
 
 @layout AdminMainLayout
 
-<MudTable @ref="MembersGrid" T="MemberViewModel" Items="Members">
+<MudTable @ref="MembersGrid" T="MemberViewModel" Items="Members" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Members page</MudText>
+        <MudText Typo="Typo.h3">Members</MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
         <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh>First Name</MudTh>
-        <MudTh>Last Name</MudTh>
-        <MudTh>Member since</MudTh>
-        <MudTh>Birthdate</MudTh>
-        <MudTh>Is Visible</MudTh>
+        <MudTh><b>First Name</b></MudTh>
+        <MudTh><b>Last Name</b></MudTh>
+        <MudTh><b>Member since</b></MudTh>
+        <MudTh><b>Birthdate</b></MudTh>
+        <MudTh><b>Is Visible</b></MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="member">
@@ -36,7 +36,11 @@
         <MudTd>
             @if (member.IsVisible)
             {
-                <MudIcon Icon="@Icons.Material.Filled.Check"></MudIcon>
+                <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
             }
         </MudTd>
         <MudTd>

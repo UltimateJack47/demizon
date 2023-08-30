@@ -4,24 +4,27 @@
 @using Demizon.Core.Services.User
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.User.Components
+
 @inject IUserService UserService
 @inject IMapper Mapper
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
 @layout AdminMainLayout
 <PageTitle>Users</PageTitle>
 
-<MudTable @ref="UsersGrid" T="UserViewModel" Items="Users">
+<MudTable @ref="UsersGrid" T="UserViewModel" Items="Users" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Users page</MudText>
+        <MudText Typo="Typo.h3">Users</MudText>
         <MudSpacer />
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateUser = !ShowCreateUser">Create new</MudButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh>Name</MudTh>
-        <MudTh>Surname</MudTh>
-        <MudTh>Login</MudTh>
-        <MudTh>Email</MudTh>
+        <MudTh><b>Name</b></MudTh>
+        <MudTh><b>Surname</b></MudTh>
+        <MudTh><b>Login</b></MudTh>
+        <MudTh><b>Email</b></MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="user">
@@ -30,40 +33,23 @@
         <MudTd>@user.Login</MudTd>
         <MudTd>@user.Email</MudTd>
         <MudTd>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(user)">Update</MudIconButton>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(user.Id)"></MudIconButton>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveUser(user.Id)"></MudIconButton>
         </MudTd>
     </RowTemplate>
 </MudTable>
 
-@if (ShowCreateUser)
-{
-    <UserForm PassUser="NewUser" Class="mt-2"></UserForm>
-}
 
 
 @code {
     private List<UserViewModel> Users { get; set; } = new ();
 
-    private bool ShowCreateUser = false;
-    
     private MudTable<UserViewModel> UsersGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
         Users = Mapper.Map<List<UserViewModel>>(await UserService.GetAll().ToListAsync());
-    }
-
-    private async Task NewUser(UserViewModel userDto)
-    {
-        await UserService.CreateAsync(Mapper.Map<User>(userDto));
-        ShowCreateUser = !ShowCreateUser;
-        await RefreshTable();
-    }
-
-    private string GetCreateButtonClass()
-    {
-        return ShowCreateUser ? "active mt-0" : "mt-0";
     }
 
     private async Task RemoveUser(int id)
@@ -81,18 +67,43 @@
         Users = Mapper.Map<List<UserViewModel>>(await UserService.GetAll().ToListAsync());
         StateHasChanged();
     }
-    
-    /*private async Task OpenCreateDialog()
-    {
-        var dialog = DialogService.Show<ProductForm>("Create new Product");
-        var result = await dialog.Result;
-        if (!result.Cancelled)
-        {
-            var newProduct = result.Data as ProductDto.Create;
-            await ProductService.CreateAsync(Mapper.Map<Product>(newProduct));    
-        }
-    }*/
 
+    private async Task OpenFormDialog(UserViewModel? viewModel = null)
+    {
+        var isUpdate = viewModel is not null;
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters
+        {
+            { "IsUpdate", isUpdate },
+            { "Model", viewModel ?? new UserViewModel() }
+        };
+        var dialog = await DialogService.ShowAsync<UserForm>("User form", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var memberResult = result.Data as UserViewModel;
+            try
+            {
+                if (isUpdate)
+                {
+                    await UserService.UpdateAsync(viewModel!.Id, Mapper.Map<User>(memberResult));
+                    Snackbar.Add("The user has been updated.", Severity.Success);
+                }
+                else
+                {
+                    await UserService.CreateAsync(Mapper.Map<User>(memberResult));
+                    Snackbar.Add("The user has been created.", Severity.Success);
+                }
+                await RefreshTable();
+            }
+            catch (Exception e)
+            {
+                Snackbar.Add("Something went wrong.", Severity.Error);
+            }
+        }
+    }
+    
     private void NavigateToDetail(int id)
     {
         NavigationManager.NavigateTo(NavigationManager.BaseUri + $"Users/Detail/{id}");

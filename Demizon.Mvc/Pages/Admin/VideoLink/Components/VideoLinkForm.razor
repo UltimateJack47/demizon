@@ -1,24 +1,51 @@
 ﻿@using Demizon.Mvc.ViewModels
 
-<MudForm Model="Model" Class="Class">
-    <MudTextField @bind-Value="Model.Name" Label="Name" Required="true" RequiredError="Name is required!"/>
-    <MudTextField @bind-Value="Model.Url" Label="Url" Required="true" RequiredError="URL is required!"/>
-    <MudTextField @bind-Value="Model.Year" Label="Year" Required="true" RequiredError="Year is required!"/>
-    <MudCheckBox @bind-Checked="Model.IsVisible" Label="IsVisible" />
-</MudForm>
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Video link form</MudText>
+    </TitleContent>
 
-<MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => PassVideoLink.InvokeAsync(Model))">Submit</MudButton>
-</MudPaper>
+    <DialogContent>
+        <MudTextField @bind-Value="Model.Name" Label="Name" Required="true" RequiredError="Name is required!"/>
+        <MudTextField @bind-Value="Model.Url" Label="Url" Required="true" RequiredError="URL is required!"/>
+        <MudTextField @bind-Value="Model.Year" Label="Year" Required="true" RequiredError="Year is required!"/>
+        <MudCheckBox @bind-Checked="Model.IsVisible" Label="IsVisible"/>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
+            @if (IsUpdate)
+            {
+                <span>Update</span>
+            }
+            else
+            {
+                <span>Create</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
-    [Parameter]
-    public VideoLinkViewModel Model { get; set; } = new ();
-    
-    [Parameter]
-    public EventCallback<VideoLinkViewModel> PassVideoLink { get; set; }
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
-    public string Class { get; set; } = "";
+    public bool IsUpdate { get; set; }
+
+    [Parameter]
+    public VideoLinkViewModel Model { get; set; } = new();
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void ClickedOk()
+    {
+        MudDialog.Close(DialogResult.Ok(Model));
+    }
 
 }

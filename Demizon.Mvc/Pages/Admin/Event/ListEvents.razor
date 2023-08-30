@@ -13,18 +13,25 @@
 @inject IEventService EventService
 @inject IMapper Mapper
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
-<MudTable @ref="EventsGrid" T="EventViewModel" Items="Events">
+<MudTable @ref="EventsGrid" T="EventViewModel" Items="Events" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Upcoming events page</MudText>
+        <MudText Typo="Typo.h3">Upcoming events</MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateEvent = !ShowCreateEvent">Create new</MudButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh>Name</MudTh>
-        <MudTh>Date</MudTh>
-        <MudTh>Place</MudTh>
+        <MudTh>
+            <b>Name</b>
+        </MudTh>
+        <MudTh>
+            <b>Date</b>
+        </MudTh>
+        <MudTh>
+            <b>Place</b>
+        </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="upcomingEvent">
@@ -48,21 +55,15 @@
             <MudTd></MudTd>
         }
         <MudTd>
-            @*<MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(borrowing.Id)"></MudIconButton>*@
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Remove" OnClick="() => RemoveEvent(upcomingEvent.Id)"></MudIconButton>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(upcomingEvent)">Update</MudIconButton>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(upcomingEvent.Id)"></MudIconButton>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveEvent(upcomingEvent.Id)"></MudIconButton>
         </MudTd>
     </RowTemplate>
 </MudTable>
-<MudSpacer></MudSpacer>
-@if (ShowCreateEvent)
-{
-    <EventForm PassEvent="NewEvent" Class="mt-2"></EventForm>
-}
 
 @code {
     private List<EventViewModel> Events { get; set; } = new();
-
-    private bool ShowCreateEvent = false;
 
     private MudTable<EventViewModel> EventsGrid { get; set; } = null!;
 
@@ -71,34 +72,51 @@
         Events = Mapper.Map<List<EventViewModel>>(await EventService.GetAll().ToListAsync());
     }
 
-    private async Task NewEvent(EventViewModel create)
-    {
-        var newEvent = Mapper.Map<Event>(create);
-        await EventService.CreateAsync(newEvent);
-        ShowCreateEvent = !ShowCreateEvent;
-        await RefreshTable();
-    }
-
-    private string GetCreateButtonClass()
-    {
-        return ShowCreateEvent ? "active mt-0" : "mt-0";
-    }
-
     private async Task RefreshTable()
     {
-        Events = Mapper.Map<List<EventViewModel>>(await EventService.GetAll().Where(x=> DateTime.Today <= x.DateFrom).ToListAsync());
+        Events = Mapper.Map<List<EventViewModel>>(await EventService.GetAll().OrderByDescending(x => x.DateFrom).ToListAsync());
         StateHasChanged();
     }
 
-    private async Task OpenCreateDialog()
+    private async Task OpenFormDialog(EventViewModel? viewModel = null)
     {
-        var dialog = await DialogService.ShowAsync<EventForm>("Create new Event");
+        var isUpdate = viewModel is not null;
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters
+        {
+            { "IsUpdate", isUpdate },
+            { "EventModel", viewModel ?? new EventViewModel() }
+        };
+        var dialog = await DialogService.ShowAsync<EventForm>("Event form", parameters, options);
         var result = await dialog.Result;
+
         if (!result.Canceled)
         {
-            var newProduct = result.Data as EventViewModel;
-            await EventService.CreateAsync(Mapper.Map<Event>(newProduct));
+            var memberResult = result.Data as EventViewModel;
+            try
+            {
+                if (isUpdate)
+                {
+                    await EventService.UpdateAsync(viewModel!.Id, Mapper.Map<Event>(memberResult));
+                    Snackbar.Add("The event has been updated.", Severity.Success);
+                }
+                else
+                {
+                    await EventService.CreateAsync(Mapper.Map<Event>(memberResult));
+                    Snackbar.Add("The event has been created.", Severity.Success);
+                }
+                await RefreshTable();
+            }
+            catch (Exception e)
+            {
+                Snackbar.Add("Something went wrong.", Severity.Error);
+            }
         }
+    }
+
+    private void NavigateToDetail(int id)
+    {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"Events/Detail/{id}");
     }
 
     private async Task RemoveEvent(int id)

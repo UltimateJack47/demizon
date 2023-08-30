@@ -8,18 +8,20 @@
 <PageTitle>Dances</PageTitle>
 @inject IDanceService DanceService
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 @layout AdminMainLayout
 
-<MudText Typo="Typo.h3">Dances page</MudText>
-<MudTable @ref="DancesGrid" T="DanceViewModel" Items="Dances">
+<MudTable @ref="DancesGrid" T="DanceViewModel" Items="Dances" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" Class="@GetCreateButtonClass()" ButtonType="ButtonType.Button" Color="Color.Primary" OnClick="() => ShowCreateDance = !ShowCreateDance">Create new</MudButton>
-    </ToolBarContent>
+            <MudText Typo="Typo.h3">Dances</MudText>
+            <MudSpacer/>
+            <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
+            <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
+        </ToolBarContent>
     <HeaderContent>
-        <MudTh>Name</MudTh>
-        <MudTh>Is Visible</MudTh>
+        <MudTh><b>Name</b></MudTh>
+        <MudTh><b>Is Visible</b></MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="dance">
@@ -27,45 +29,31 @@
         <MudTd>
             @if (dance.IsVisible)
             {
-                <MudIcon Icon="@Icons.Material.Filled.Check"></MudIcon>
+                <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
             }
         </MudTd>
         <MudTd>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(dance)">Update</MudIconButton>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(dance.Id)"></MudIconButton>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveDance(dance.Id)"></MudIconButton>
         </MudTd>
     </RowTemplate>
 </MudTable>
 
-@if (ShowCreateDance)
-{
-    <DanceForm PassDance="NewDance" Class="mt-2"></DanceForm>
-}
 
 
 @code {
     private List<DanceViewModel> Dances { get; set; } = new ();
 
-    private bool ShowCreateDance = false;
-    
     private MudTable<DanceViewModel> DancesGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        Dances = Mapper.Map<List<DanceViewModel>>(await DanceService.GetAll().ToListAsync());
-    }
-
-    private async Task NewDance(DanceViewModel danceViewModel)
-    {
-        var dance = Mapper.Map<Dance>(danceViewModel);
-        await DanceService.CreateAsync(dance);
-        ShowCreateDance = !ShowCreateDance;
-        await RefreshTable();
-    }
-
-    private string GetCreateButtonClass()
-    {
-        return ShowCreateDance ? "active mt-0" : "mt-0";
+        Dances = Mapper.Map<List<DanceViewModel>>(await DanceService.GetAll().OrderBy(x=>x.Id).ToListAsync());
     }
 
     private async Task RemoveDance(int id)
@@ -83,15 +71,40 @@
         Dances = Mapper.Map<List<DanceViewModel>>(await DanceService.GetAll().ToListAsync());
         StateHasChanged();
     }
-    
-    private async Task OpenCreateDialog()
+
+    private async Task OpenFormDialog(DanceViewModel? viewModel = null)
     {
-        var dialog = await DialogService.ShowAsync<DanceForm>("Create new Dance");
+        var isUpdate = viewModel is not null;
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters
+        {
+            { "IsUpdate", isUpdate },
+            { "Model", viewModel ?? new DanceViewModel() }
+        };
+        var dialog = await DialogService.ShowAsync<DanceForm>("Dance form", parameters, options);
         var result = await dialog.Result;
+
         if (!result.Canceled)
         {
-            var newMember = result.Data as DanceViewModel;
-            await DanceService.CreateAsync(Mapper.Map<Dance>(newMember));    
+            var danceResult = result.Data as DanceViewModel;
+            try
+            {
+                if (isUpdate)
+                {
+                    await DanceService.UpdateAsync(viewModel!.Id, Mapper.Map<Dance>(danceResult));
+                    Snackbar.Add("The dance has been updated.", Severity.Success);
+                }
+                else
+                {
+                    await DanceService.CreateAsync(Mapper.Map<Dance>(danceResult));
+                    Snackbar.Add("The dance has been created.", Severity.Success);
+                }
+                await RefreshTable();
+            }
+            catch (Exception)
+            {
+                Snackbar.Add("Something went wrong.", Severity.Error);
+            }
         }
     }
 

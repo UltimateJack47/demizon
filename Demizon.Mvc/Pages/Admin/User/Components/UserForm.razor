@@ -1,31 +1,43 @@
-﻿@using AutoMapper
-@using Demizon.Core.Services.User
-@using Demizon.Mvc.ViewModels
+﻿@using Demizon.Mvc.ViewModels
 
-@inject IUserService UserService;
-@inject IMapper Mapper;
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">User form</MudText>
+    </TitleContent>
 
-<MudForm Model="User" Class="Class">
-    <MudTextField @bind-Value="User.Name" T="string" Label="Name" Required="true" RequiredError="Name is required!"/>
-    <MudTextField @bind-Value="User.Surname" T="string" Label="Surname"/>
-    <MudTextField @bind-Value="User.Login" T="string" Label="Login" Required="true" RequiredError="Login is required!"/>
-    <MudTextField @bind-Value="User.Email" T="string" Label="Email" Required="true" RequiredError="Email is required!"/>
-    <MudTextField @bind-Value="User.Password" T="string" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ChangeIsShow" Required="true" RequiredError="Password is required!"/>
-</MudForm>
+    <DialogContent>
+        <MudTextField @bind-Value="Model.Name" T="string" Label="Name" Required="true" RequiredError="Name is required!"/>
+        <MudTextField @bind-Value="Model.Surname" T="string" Label="Surname"/>
+        <MudTextField @bind-Value="Model.Login" T="string" Label="Login" Required="true" RequiredError="Login is required!"/>
+        <MudTextField @bind-Value="Model.Email" T="string" Label="Email" Required="true" RequiredError="Email is required!"/>
+        <MudTextField @bind-Value="Model.Password" T="string" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ChangeIsShow" Required="true" RequiredError="Password is required!"/>
+    </DialogContent>
 
-<MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => PassUser.InvokeAsync(User))">Submit</MudButton>
-</MudPaper>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
+            @if (IsUpdate)
+            {
+                <span>Update</span>
+            }
+            else
+            {
+                <span>Create</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
-    [Parameter]
-    public UserViewModel User { get; set; } = new();
 
     [Parameter]
-    public EventCallback<UserViewModel> PassUser { get; set; }
+    public UserViewModel Model { get; set; } = new();
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
-    public string Class { get; set; } = "";
+    public bool IsUpdate { get; set; }
 
     bool IsShow;
     InputType PasswordInput = InputType.Password;
@@ -33,17 +45,28 @@
 
     void ChangeIsShow()
     {
-    @if (IsShow)
+        @if (IsShow)
+        {
+            IsShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            IsShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    private void Cancel()
     {
-        IsShow = false;
-        PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-        PasswordInput = InputType.Password;
+        MudDialog.Cancel();
     }
-    else
+
+    private void ClickedOk()
     {
-        IsShow = true;
-        PasswordInputIcon = Icons.Material.Filled.Visibility;
-        PasswordInput = InputType.Text;
+        MudDialog.Close(DialogResult.Ok(Model));
     }
-    }
+
 }

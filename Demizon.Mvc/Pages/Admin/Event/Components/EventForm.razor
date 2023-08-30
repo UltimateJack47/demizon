@@ -1,22 +1,50 @@
 @using Demizon.Mvc.ViewModels
 
-<MudForm Model="EventModel" Class="Class">
-    <MudTextField @bind-Value="EventModel.Name" Label="Name"></MudTextField>
-    <MudDateRangePicker @bind-DateRange="EventModel.Date"></MudDateRangePicker>
-    <MudTextField @bind-Value="EventModel.Place" Label="Place"></MudTextField>
-</MudForm>
-<MudPaper Class="pa-4 justify-center my-4 mud-text-align-center">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => PassEvent.InvokeAsync(EventModel))">Submit</MudButton>
-</MudPaper>
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Event form</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudTextField @bind-Value="EventModel.Name" Label="Name"></MudTextField>
+        <MudDateRangePicker @bind-DateRange="EventModel.Date"></MudDateRangePicker>
+        <MudTextField @bind-Value="EventModel.Place" Label="Place"></MudTextField>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
+            @if (IsUpdate)
+            {
+                <span>Update</span>
+            }
+            else
+            {
+                <span>Create</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
     public EventViewModel EventModel { get; set; } = new();
 
     [Parameter]
-    public EventCallback<EventViewModel> PassEvent { get; set; }
+    public bool IsUpdate { get; set; }
 
-    [Parameter]
-    public string Class { get; set; } = "";
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void ClickedOk()
+    {
+        MudDialog.Close(DialogResult.Ok(EventModel));
+    }
+
 }
