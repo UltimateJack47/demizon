@@ -1,7 +1,37 @@
 ﻿@page "/Members"
+@using Demizon.Core.Services.Member
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 <MudText Typo="Typo.h3">Členové</MudText>
+<MudText Typo="Typo.h4">Muži</MudText>
+<MudItem >
+    @foreach (var dance in VisibleMembers.Where(x=>x.Gender == Gender.Male))
+    {
+        <MudText>@dance.FirstName @dance.LastName</MudText>
+    }
+</MudItem>
+
+<MudDivider Class="mt-1"></MudDivider>
+<MudText Typo="Typo.h4" Class="mt-1">Ženy</MudText>
+<MudItem>
+    @foreach (var dance in VisibleMembers.Where(x=>x.Gender == Gender.Female))
+    {
+        <MudText>@dance.FirstName @dance.LastName</MudText>
+    }
+</MudItem>
 
 @code {
-    
+
+    [Inject]
+    private IMemberService MemberService { get; set; } = null!;
+
+    private List<MemberViewModel> VisibleMembers { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var members = await MemberService.GetAll().Where(x => x.IsVisible).ToListAsync();
+        VisibleMembers = Mapper.Map<List<MemberViewModel>>(members);
+    }
 }
