@@ -1,0 +1,20 @@
+﻿@page "/Login"
+@using Demizon.Mvc.ViewModels
+
+<MudText Typo="Typo.h3">Login</MudText>
+
+<MudForm Model="@Model">
+    <MudTextField bind-Value="Model.Login" Label="Login"></MudTextField>
+    <MudTextField bind-Value="Model.Password" Label="Password" InputType="InputType.Password"></MudTextField>
+    <MudButton OnClick="HandleSubmit"></MudButton>
+</MudForm>
+
+@code {
+    private UserViewModel Model { get; set; } = new();
+
+    private async Task HandleSubmit()
+    {
+        //TODO: finish this
+    }
+
+}

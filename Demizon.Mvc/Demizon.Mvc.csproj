@@ -17,11 +17,11 @@
       <PackageReference Include="AutoMapper" Version="12.0.1" />
       <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
       <PackageReference Include="CryptoHelper" Version="3.0.2" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.10">
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.11">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.8.0" />
+      <PackageReference Include="MudBlazor" Version="6.10.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -43,6 +43,8 @@
       <AdditionalFiles Include="Pages\Admin\VideoLink\Detail.razor" />
       <AdditionalFiles Include="Pages\Admin\VideoLink\ListVideoLinks.razor" />
     </ItemGroup>
+
+
 
     <PropertyGroup>
         <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
