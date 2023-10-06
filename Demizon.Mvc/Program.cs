@@ -16,6 +16,10 @@ builder.Configuration
     .AddJsonFile("appsettings.Development.json", true, true);
 var defaultConnectionString = builder.Configuration.GetConnectionString("Default");
 
+//builder.Services.Configure<UploadSettings>(builder.Configuration.GetSection("Upload"));
+builder.Services.AddOptions<UploadSettings>()
+    .BindConfiguration("Upload");
+
 if (defaultConnectionString != null) DefaultConnectionString.DbConnectionString = defaultConnectionString;
 
 // Connect with mobile on local network setting:

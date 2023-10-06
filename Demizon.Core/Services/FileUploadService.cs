@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using Demizon.Common.Configuration;
+﻿using Demizon.Common.Configuration;
 using ImageMagick;
 using Microsoft.Extensions.Options;
 
@@ -9,47 +8,43 @@ public class FileUploadService : IFileUploadService
 {
     private UploadSettings UploadSettings { get; }
 
-    private FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings)
+    public FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings)
     {
         UploadSettings = uploadSettings.Value;
     }
 
-    public async Task<Collection<FileUploadResult>> UploadImageAsync(FileUploadRequest fileRequest,
-        bool createResizedImages = true, string? uploadSessionIdentifier = null)
+    public async Task<FileUploadResult> UploadImageAsync(FileUploadRequest fileRequest,
+        bool createResizedImages = false, string? uploadSessionIdentifier = null)
     {
         string documentRoot = Environment.CurrentDirectory;
-        Collection<FileUploadResult> imgUpResults = new Collection<FileUploadResult>();
 
         // Create directory
-        uploadSessionIdentifier ??= new Guid().ToString();
+        uploadSessionIdentifier ??= Guid.NewGuid().ToString();
         string fileRelPathDir = $"{UploadSettings.ImagesDirectory}/{uploadSessionIdentifier}/";
         Directory.CreateDirectory(documentRoot + "/" + fileRelPathDir);
 
         // Set paths
-        string fileExtension = Path.GetExtension(fileRequest.FileName).ToLower()!;
-        string fileName = Guid.NewGuid() + fileExtension;
+        string fileName = Guid.NewGuid() + fileRequest.FileExtension;
         Uri fileUri = new Uri(documentRoot + "/" + fileRelPathDir + fileName);
 
         await using (var stream = new FileStream(fileUri.AbsolutePath, FileMode.Create))
         {
-            //fileRequest.Stream.CopyTo(stream);
+            await fileRequest.Stream.CopyToAsync(stream);
         }
 
 
-        if (createResizedImages)
+        /*if (createResizedImages)
         {
             ResizeAndCreate(fileUri, fileName);
-        }
+        }*/
 
-
-        imgUpResults.Add(new FileUploadResult
+        return new FileUploadResult
         {
-            FileExtension = fileExtension,
+            FileExtension = fileRequest.FileExtension,
             FileName = Path.GetFileNameWithoutExtension(fileName),
-            RelativePath = fileRelPathDir + fileName
-        });
-
-        return imgUpResults;
+            RelativePath = fileRelPathDir + fileName,
+            IsSuccessful = true
+        };
     }
 
 
