@@ -43,6 +43,8 @@ public class FileUploadService : IFileUploadService
             FileExtension = fileRequest.FileExtension,
             FileName = Path.GetFileNameWithoutExtension(fileName),
             RelativePath = fileRelPathDir + fileName,
+            ContentType = fileRequest.ContentType,
+            FileSize = fileRequest.FileSize,
             IsSuccessful = true
         };
     }

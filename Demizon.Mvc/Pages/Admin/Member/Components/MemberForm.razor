@@ -82,7 +82,7 @@
         if (File is not null)
         {
             //TODO upload the files to the server
-            var stream = File.OpenReadStream();
+            var stream = File.OpenReadStream(25*1024*1024);
             var result = await FileUploadService.UploadImageAsync(new FileUploadRequest
             {
                 Stream = stream,
@@ -91,13 +91,10 @@
                 FileSize = File.Size,
                 ContentType = File.ContentType
             } );
+            
             if (result.IsSuccessful)
             {
-                Snackbar.Add("The Member image has been uploaded.", Severity.Success);
-            }
-            else
-            {
-                Snackbar.Add("The Member image hasn't been uploaded.", Severity.Error);
+                Model.Photos.Add(new FileViewModel {Path = result.RelativePath, FileExtension = result.FileExtension, FileSize = result.FileSize, ContentType = result.ContentType});
             }
         }
         

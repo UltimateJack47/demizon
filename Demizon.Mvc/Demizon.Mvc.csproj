@@ -44,6 +44,11 @@
       <AdditionalFiles Include="Pages\Admin\VideoLink\ListVideoLinks.razor" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="wwwroot\files\images\5c1a78a0-cc3c-4083-9789-0e7d25726cc6\5c22343b-7a54-4036-abfc-15a5b848790c.jpg" />
+      <None Include="wwwroot\files\images\74289e4c-3fbb-4efb-bcd6-0feeee7a71e8\f66d5c09-bf54-4215-ba73-cefc5318b70c.jpg" />
+    </ItemGroup>
+
 
 
     <PropertyGroup>
