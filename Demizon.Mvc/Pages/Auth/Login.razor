@@ -1,20 +1,48 @@
 ﻿@page "/Login"
 @using Demizon.Mvc.ViewModels
+@using Demizon.Core.Services.User
+@using CryptoHelper
+@using Demizon.Mvc.Services.Authentication
+
+@inject IUserService UserService;
+@inject AuthenticationStateProvider AuthStateProvider;
+
 
 <MudText Typo="Typo.h3">Login</MudText>
 
-<MudForm Model="@Model">
-    <MudTextField bind-Value="Model.Login" Label="Login"></MudTextField>
-    <MudTextField bind-Value="Model.Password" Label="Password" InputType="InputType.Password"></MudTextField>
-    <MudButton OnClick="HandleSubmit"></MudButton>
+<MudForm Model="Model">
+
+
+    <MudTextField @bind-Value="Model.Login" Required="true" Label="Login"></MudTextField>
+    <MudTextField @bind-Value="Model.Password" Required="true" Label="Password" InputType="InputType.Password"></MudTextField>
+    @if (ErrorMessage is not null)
+    {
+        <MudText Typo="Typo.body1">@ErrorMessage</MudText>
+    }
+    <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined" OnClick="HandleSubmit">Submit</MudButton>
 </MudForm>
 
 @code {
     private UserViewModel Model { get; set; } = new();
+    private string? ErrorMessage { get; set; }
 
     private async Task HandleSubmit()
     {
-        //TODO: finish this
+        var userAccount = UserService.GetOneByLogin(Model.Login);
+        if (userAccount is null || !Crypto.VerifyHashedPassword(userAccount.PasswordHash, Model.Password))
+        {
+            ErrorMessage = "Invalid Login or Password";
+            StateHasChanged();
+            return;
+        }
+
+        var appAuthStateProvider = (AppAuthenticationStateProvider)AuthStateProvider;
+        await appAuthStateProvider.UpdateAuthenticationState(new UserSession
+        {
+            UserName = userAccount.Login,
+            Role = "admin" //TODO: add roles to user entity
+        });
+    //NavigationManager.NavigateTo(NavigationManager.BaseUri + "Admin", true);
     }
 
 }
