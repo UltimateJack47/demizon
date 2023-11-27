@@ -8,6 +8,8 @@ public class AppAuthenticationStateProvider : AuthenticationStateProvider
 {
     private readonly ProtectedSessionStorage SessionStorage;
 
+    private const string SessionKey = "UserSession";
+
     private readonly ClaimsPrincipal Anonymous = new(new ClaimsIdentity());
 
     public AppAuthenticationStateProvider(ProtectedSessionStorage sessionStorage)
@@ -19,10 +21,10 @@ public class AppAuthenticationStateProvider : AuthenticationStateProvider
     {
         try
         {
-            var userSessionStorageResult = await SessionStorage.GetAsync<UserSession>("UserSession");
+            var userSessionStorageResult = await SessionStorage.GetAsync<UserSession>(SessionKey);
             var userSession = userSessionStorageResult.Success ? userSessionStorageResult.Value : null;
 
-            if (userSession == null)
+            if (userSession is null)
             {
                 return await Task.FromResult(new AuthenticationState(Anonymous));
             }
@@ -31,7 +33,7 @@ public class AppAuthenticationStateProvider : AuthenticationStateProvider
             {
                 new(ClaimTypes.Name, userSession.UserName),
                 new(ClaimTypes.Role, userSession.Role)
-            }, "CustomAuth"));
+            }, "Basic"));
             return await Task.FromResult(new AuthenticationState(claimsPrincipal));
         }
         catch
@@ -45,16 +47,17 @@ public class AppAuthenticationStateProvider : AuthenticationStateProvider
         ClaimsPrincipal claimsPrincipal;
         if (userSession is not null)
         {
-            await SessionStorage.SetAsync("UserSession", userSession);
+            await SessionStorage.SetAsync(SessionKey, userSession);
             claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>
             {
                 new(ClaimTypes.Name, userSession.UserName),
-                new(ClaimTypes.Role, userSession.Role)
-            }));
+                new(ClaimTypes.Role, userSession.Role),
+                new(ClaimTypes.Authentication, "Basic")                
+            }, "Basic"));
         }
         else
         {
-            await SessionStorage.DeleteAsync("UserSession");
+            await SessionStorage.DeleteAsync(SessionKey);
             claimsPrincipal = Anonymous;
         }
 

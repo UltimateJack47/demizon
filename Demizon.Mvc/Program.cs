@@ -71,6 +71,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseAuthentication();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
