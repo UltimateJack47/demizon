@@ -7,20 +7,26 @@
 @inject IUserService UserService;
 @inject AuthenticationStateProvider AuthStateProvider;
 
+<AuthorizeView Roles="admin">
+    <Authorized>
+        Hello, @context.User.Identity.Name
+        <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined" OnClick="Logout">Logout</MudButton> 
+    </Authorized>
+    <NotAuthorized>
+        <MudText Typo="Typo.h3">Login</MudText>
+        
+        <MudForm Model="Model">
+            <MudTextField @bind-Value="Model.Login" Required="true" Label="Login"></MudTextField>
+            <MudTextField @bind-Value="Model.Password" Required="true" Label="Password" InputType="InputType.Password"></MudTextField>
+            @if (ErrorMessage is not null)
+            {
+                <MudText Typo="Typo.body1">@ErrorMessage</MudText>
+            }
+            <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined" OnClick="HandleSubmit">Submit</MudButton>
+        </MudForm>
+    </NotAuthorized>
+</AuthorizeView>
 
-<MudText Typo="Typo.h3">Login</MudText>
-
-<MudForm Model="Model">
-
-
-    <MudTextField @bind-Value="Model.Login" Required="true" Label="Login"></MudTextField>
-    <MudTextField @bind-Value="Model.Password" Required="true" Label="Password" InputType="InputType.Password"></MudTextField>
-    @if (ErrorMessage is not null)
-    {
-        <MudText Typo="Typo.body1">@ErrorMessage</MudText>
-    }
-    <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined" OnClick="HandleSubmit">Submit</MudButton>
-</MudForm>
 
 @code {
     private UserViewModel Model { get; set; } = new();
@@ -29,7 +35,8 @@
     private async Task HandleSubmit()
     {
         var userAccount = UserService.GetOneByLogin(Model.Login);
-        if (userAccount is null || !Crypto.VerifyHashedPassword(userAccount.PasswordHash, Model.Password))
+        var isPasswordCorrect = Crypto.VerifyHashedPassword(userAccount?.PasswordHash, Model.Password);
+        if (userAccount is null || !isPasswordCorrect)
         {
             ErrorMessage = "Invalid Login or Password";
             StateHasChanged();
@@ -42,7 +49,20 @@
             UserName = userAccount.Login,
             Role = "admin" //TODO: add roles to user entity
         });
-    //NavigationManager.NavigateTo(NavigationManager.BaseUri + "Admin", true);
+
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + "Admin", true);
+    }
+
+    private async Task Logout()
+    {
+        var appAuthStateProvider = (AppAuthenticationStateProvider)AuthStateProvider;
+        var state = await appAuthStateProvider.GetAuthenticationStateAsync();
+        if (!string.IsNullOrWhiteSpace(state.User.Identity?.Name))
+        {
+            await appAuthStateProvider.UpdateAuthenticationState(null);
+            NavigationManager.NavigateTo("/", true);
+        }
+        
     }
 
 }
