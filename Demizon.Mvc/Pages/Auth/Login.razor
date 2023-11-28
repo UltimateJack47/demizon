@@ -1,68 +1,33 @@
 ﻿@page "/Login"
-@using Demizon.Mvc.ViewModels
-@using Demizon.Core.Services.User
-@using CryptoHelper
-@using Demizon.Mvc.Services.Authentication
+@page "/Login/{E:bool}"
 
-@inject IUserService UserService;
-@inject AuthenticationStateProvider AuthStateProvider;
+@using Demizon.Mvc.ViewModels
 
 <AuthorizeView Roles="admin">
     <Authorized>
         Hello, @context.User.Identity.Name
-        <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined" OnClick="Logout">Logout</MudButton> 
+        <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined" Href="/Logout">Logout</MudButton>
     </Authorized>
     <NotAuthorized>
         <MudText Typo="Typo.h3">Login</MudText>
-        
-        <MudForm Model="Model">
-            <MudTextField @bind-Value="Model.Login" Required="true" Label="Login"></MudTextField>
-            <MudTextField @bind-Value="Model.Password" Required="true" Label="Password" InputType="InputType.Password"></MudTextField>
-            @if (ErrorMessage is not null)
+
+        <form action="/ProcessLogin" method="post">
+            <MudTextField @bind-Value="Model.Login" Name="Login" Required="true" Label="Login"></MudTextField>
+            <MudTextField @bind-Value="Model.Password" Name="Password" Required="true" Label="Password" InputType="InputType.Password"></MudTextField>
+            @if (E)
             {
-                <MudText Typo="Typo.body1">@ErrorMessage</MudText>
+                <MudText Typo="Typo.body1">Invalid Login or Password</MudText>
             }
-            <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined" OnClick="HandleSubmit">Submit</MudButton>
-        </MudForm>
+            <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined">Submit</MudButton>
+        </form>
     </NotAuthorized>
 </AuthorizeView>
 
 
 @code {
     private UserViewModel Model { get; set; } = new();
-    private string? ErrorMessage { get; set; }
 
-    private async Task HandleSubmit()
-    {
-        var userAccount = UserService.GetOneByLogin(Model.Login);
-        var isPasswordCorrect = Crypto.VerifyHashedPassword(userAccount?.PasswordHash, Model.Password);
-        if (userAccount is null || !isPasswordCorrect)
-        {
-            ErrorMessage = "Invalid Login or Password";
-            StateHasChanged();
-            return;
-        }
-
-        var appAuthStateProvider = (AppAuthenticationStateProvider)AuthStateProvider;
-        await appAuthStateProvider.UpdateAuthenticationState(new UserSession
-        {
-            UserName = userAccount.Login,
-            Role = "admin" //TODO: add roles to user entity
-        });
-
-        NavigationManager.NavigateTo(NavigationManager.BaseUri + "Admin", true);
-    }
-
-    private async Task Logout()
-    {
-        var appAuthStateProvider = (AppAuthenticationStateProvider)AuthStateProvider;
-        var state = await appAuthStateProvider.GetAuthenticationStateAsync();
-        if (!string.IsNullOrWhiteSpace(state.User.Identity?.Name))
-        {
-            await appAuthStateProvider.UpdateAuthenticationState(null);
-            NavigationManager.NavigateTo("/", true);
-        }
-        
-    }
+    [Parameter]
+    public bool E { get; set; } = false;
 
 }
