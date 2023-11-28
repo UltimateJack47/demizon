@@ -6,7 +6,6 @@ using Demizon.Core.Extensions;
 using Demizon.Dal.Extensions;
 using Demizon.Mvc.Services.Authentication;
 using Demizon.Mvc.Services.Extensions;
-using Microsoft.AspNetCore.Authentication;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,7 +37,10 @@ var ipAddress = NetworkInterface
 
 builder.WebHost.UseKestrel(options =>
 {
-    options.Listen(IPAddress.Parse(ipAddress), 7272, listenOptions => { listenOptions.UseHttps(); });
+    if (!string.IsNullOrWhiteSpace(ipAddress))
+    {
+        options.Listen(IPAddress.Parse(ipAddress), 7272, listenOptions => { listenOptions.UseHttps(); });
+    }
     options.Listen(IPAddress.Loopback, 7272, listenOptions => { listenOptions.UseHttps(); });
 });
 
@@ -77,5 +79,7 @@ app.MapGet("/Logout", async (HttpContext context, IMyAuthenticationService servi
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
+app.ApplyDbMigrations();
 
 app.Run();
