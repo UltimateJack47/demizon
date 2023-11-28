@@ -1,20 +1,33 @@
 ﻿@page "/Login"
+@page "/Login/{E:bool}"
+
 @using Demizon.Mvc.ViewModels
 
-<MudText Typo="Typo.h3">Login</MudText>
+<AuthorizeView Roles="admin">
+    <Authorized>
+        Hello, @context.User.Identity.Name
+        <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined" Href="/Logout">Logout</MudButton>
+    </Authorized>
+    <NotAuthorized>
+        <MudText Typo="Typo.h3">Login</MudText>
 
-<MudForm Model="@Model">
-    <MudTextField bind-Value="Model.Login" Label="Login"></MudTextField>
-    <MudTextField bind-Value="Model.Password" Label="Password" InputType="InputType.Password"></MudTextField>
-    <MudButton OnClick="HandleSubmit"></MudButton>
-</MudForm>
+        <form action="/ProcessLogin" method="post">
+            <MudTextField @bind-Value="Model.Login" Name="Login" Required="true" Label="Login"></MudTextField>
+            <MudTextField @bind-Value="Model.Password" Name="Password" Required="true" Label="Password" InputType="InputType.Password"></MudTextField>
+            @if (E)
+            {
+                <MudText Typo="Typo.body1">Invalid Login or Password</MudText>
+            }
+            <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined">Submit</MudButton>
+        </form>
+    </NotAuthorized>
+</AuthorizeView>
+
 
 @code {
     private UserViewModel Model { get; set; } = new();
 
-    private async Task HandleSubmit()
-    {
-        //TODO: finish this
-    }
+    [Parameter]
+    public bool E { get; set; } = false;
 
 }

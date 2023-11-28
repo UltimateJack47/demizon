@@ -15,9 +15,15 @@ public class UserService : IUserService
 
     public async Task<Dal.Entities.User> GetOneAsync(int id)
     {
-        return await DemizonContext.Users.FindAsync(id) ?? throw new EntityNotFoundException($"User with id: {id} not found.");
+        return await DemizonContext.Users.FindAsync(id) ??
+               throw new EntityNotFoundException($"User with id: {id} not found.");
     }
-    
+
+    public Dal.Entities.User? GetOneByLogin(string login)
+    {
+        return DemizonContext.Users.FirstOrDefault(x => x.Login == login);
+    }
+
     public IQueryable<Dal.Entities.User> GetAll()
     {
         return DemizonContext.Users.AsQueryable();
@@ -30,6 +36,7 @@ public class UserService : IUserService
         {
             throw new EntityNotFoundException($"User with id: {id} not found.");
         }
+
         DemizonContext.Entry(entity).CurrentValues.SetValues(updatedUser);
         DemizonContext.Entry(entity).State = EntityState.Modified;
         await DemizonContext.SaveChangesAsync();
@@ -48,7 +55,7 @@ public class UserService : IUserService
             return false;
         }
     }
-    
+
     public async Task<bool> DeleteAsync(int id)
     {
         try
@@ -58,7 +65,7 @@ public class UserService : IUserService
             {
                 throw new EntityNotFoundException();
             }
-            
+
             DemizonContext.Users.Remove(entity);
             await DemizonContext.SaveChangesAsync();
             return true;

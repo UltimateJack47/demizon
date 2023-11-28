@@ -1,6 +1,6 @@
 ﻿namespace Demizon.Mvc.Services.Extensions;
 
-public static class ApiServicesRegistrationExtension
+public static class MvcServicesRegistrationExtension
 {
     /// <summary>
     /// Collection of used services in the Api
@@ -14,4 +14,3 @@ public static class ApiServicesRegistrationExtension
         return services;
     }
 }
-

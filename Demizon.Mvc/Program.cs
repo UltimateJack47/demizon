@@ -4,7 +4,9 @@ using System.Net.Sockets;
 using Demizon.Common.Configuration;
 using Demizon.Core.Extensions;
 using Demizon.Dal.Extensions;
+using Demizon.Mvc.Services.Authentication;
 using Demizon.Mvc.Services.Extensions;
+using Microsoft.AspNetCore.Authentication;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +27,8 @@ var ipAddress = NetworkInterface
                         ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet
                         && ni.OperationalStatus == OperationalStatus.Up
                         && ni.GetIPProperties().GatewayAddresses.FirstOrDefault() != null
-                        && ni.GetIPProperties().UnicastAddresses.FirstOrDefault(ip => ip.Address.AddressFamily == AddressFamily.InterNetwork) != null
+                        && ni.GetIPProperties().UnicastAddresses
+                            .FirstOrDefault(ip => ip.Address.AddressFamily == AddressFamily.InterNetwork) != null
                     )
                     ?.GetIPProperties()
                     .UnicastAddresses
@@ -33,7 +36,8 @@ var ipAddress = NetworkInterface
                     ?.Address.ToString()
                 ?? string.Empty;
 
-builder.WebHost.UseKestrel(options => { 
+builder.WebHost.UseKestrel(options =>
+{
     options.Listen(IPAddress.Parse(ipAddress), 7272, listenOptions => { listenOptions.UseHttps(); });
     options.Listen(IPAddress.Loopback, 7272, listenOptions => { listenOptions.UseHttps(); });
 });
@@ -45,6 +49,7 @@ builder.Services.AddMudServices();
 
 builder.Services.AddCoreServices();
 builder.Services.AddMvcServices();
+builder.Services.AddAuthenticationServices();
 
 builder.Services.AddDatabase(DefaultConnectionString.DbConnectionString);
 
@@ -63,6 +68,12 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseCookiePolicy();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapPost("/ProcessLogin", async(HttpContext context, IMyAuthenticationService service) => await service.Login(context));
+app.MapGet("/Logout", async (HttpContext context, IMyAuthenticationService service) => await service.Logout(context));
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

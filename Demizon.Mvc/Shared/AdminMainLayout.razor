@@ -1,26 +1,37 @@
 ﻿@inherits LayoutComponentBase
 
 <PageTitle>FS Demižón - Administration</PageTitle>
+<AuthorizeView>
+    <Authorized>
+        <MudLayout>
+            <MudAppBar Elevation="1" Dense="true">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="d-flex d-md-none" Color="Color.Primary" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())"/>
+                <MudSpacer/>
+            </MudAppBar>
+            <MudDrawer @bind-Open="DrawerOpen" Elevation="2" Variant="DrawerVariant.Responsive">
+                <MudDrawerHeader>
+                    <MudText Typo="Typo.h5" Class="mt-1"><MudImage Src="@(NavigationManager.BaseUri + "favicon.gif")" Width="30" Height="30" ObjectFit="ObjectFit.Contain"></MudImage> Administration</MudText>
+                </MudDrawerHeader>
+                <AdminNavMenu></AdminNavMenu>
+            </MudDrawer>
+            <MudMainContent Class="mt-2">
+                <MudItem Class="ml-2">
+                    @Body
+                </MudItem>
+            </MudMainContent>
+        </MudLayout>
+    </Authorized>
+    <NotAuthorized>
+        You are not allowed to see this page.
+    </NotAuthorized>
+</AuthorizeView>
 
-<MudLayout>
-    <MudAppBar Elevation="1" Dense="true">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="d-flex d-md-none" Color="Color.Primary" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())"/>
-        <MudSpacer/>
-    </MudAppBar>
-    <MudDrawer @bind-Open="DrawerOpen" Elevation="2" Variant="DrawerVariant.Responsive">
-        <MudDrawerHeader>
-            <MudText Typo="Typo.h5" Class="mt-1"><MudImage Src="@(NavigationManager.BaseUri + "favicon.gif")" Width="30" Height="30" ObjectFit="ObjectFit.Contain"></MudImage> Administration</MudText>
-        </MudDrawerHeader>
-        <AdminNavMenu></AdminNavMenu>
-    </MudDrawer>
-    <MudMainContent Class="mt-2">
-        <MudItem Class="ml-2">
-            @Body
-        </MudItem>
-    </MudMainContent>
-</MudLayout>
 
 @code {
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
     bool DrawerOpen = true;
 
     void DrawerToggle()
