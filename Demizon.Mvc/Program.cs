@@ -6,6 +6,7 @@ using Demizon.Core.Extensions;
 using Demizon.Dal.Extensions;
 using Demizon.Mvc.Services.Authentication;
 using Demizon.Mvc.Services.Extensions;
+using Microsoft.AspNetCore.Authentication;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -67,7 +68,12 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseCookiePolicy();
 app.UseAuthentication();
+app.UseAuthorization();
+app.MapPost("/ProcessLogin", async(HttpContext context, IMyAuthenticationService service) => await service.Login(context));
+app.MapGet("/Logout", async (HttpContext context, IMyAuthenticationService service) => await service.Logout(context));
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
