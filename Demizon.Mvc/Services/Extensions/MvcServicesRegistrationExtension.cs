@@ -1,4 +1,7 @@
-﻿namespace Demizon.Mvc.Services.Extensions;
+﻿using Demizon.Dal;
+using Microsoft.EntityFrameworkCore;
+
+namespace Demizon.Mvc.Services.Extensions;
 
 public static class MvcServicesRegistrationExtension
 {
@@ -12,5 +15,12 @@ public static class MvcServicesRegistrationExtension
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
         return services;
+    }
+
+    public static void ApplyDbMigrations(this IApplicationBuilder app)
+    {
+        using var services = app.ApplicationServices.CreateScope();
+        var dbContext = services.ServiceProvider.GetRequiredService<DemizonContext>();
+        dbContext.Database.Migrate();
     }
 }

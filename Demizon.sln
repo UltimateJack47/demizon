@@ -6,8 +6,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demizon.Dal", "Demizon.Dal\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demizon.Common", "Demizon.Common\Demizon.Common.csproj", "{5E036541-5173-4CDF-A007-C00769FDA470}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demizon.Migrations", "Demizon.Migrations\Demizon.Migrations.csproj", "{FF6B87EB-B02C-437D-BBA1-60661AE9A272}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demizon.Core", "Demizon.Core\Demizon.Core.csproj", "{18BCA53B-9E99-4A0C-8666-3D656F63D7F8}"
 EndProject
 Global
@@ -28,10 +26,6 @@ Global
 		{5E036541-5173-4CDF-A007-C00769FDA470}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E036541-5173-4CDF-A007-C00769FDA470}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E036541-5173-4CDF-A007-C00769FDA470}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FF6B87EB-B02C-437D-BBA1-60661AE9A272}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{FF6B87EB-B02C-437D-BBA1-60661AE9A272}.Debug|Any CPU.Build.0 = Debug|x64
-		{FF6B87EB-B02C-437D-BBA1-60661AE9A272}.Release|Any CPU.ActiveCfg = Release|x64
-		{FF6B87EB-B02C-437D-BBA1-60661AE9A272}.Release|Any CPU.Build.0 = Release|x64
 		{18BCA53B-9E99-4A0C-8666-3D656F63D7F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{18BCA53B-9E99-4A0C-8666-3D656F63D7F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18BCA53B-9E99-4A0C-8666-3D656F63D7F8}.Release|Any CPU.ActiveCfg = Release|Any CPU

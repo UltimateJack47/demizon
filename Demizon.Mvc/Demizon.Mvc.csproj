@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>Demizon.Mvc</RootNamespace>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,11 +18,11 @@
       <PackageReference Include="AutoMapper" Version="12.0.1" />
       <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
       <PackageReference Include="CryptoHelper" Version="3.0.2" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.11">
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.10.0" />
+      <PackageReference Include="MudBlazor" Version="6.11.1" />
     </ItemGroup>
 
     <ItemGroup>
@@ -29,27 +30,6 @@
         <ProjectReference Include="..\Demizon.Dal\Demizon.Dal.csproj" />
         <ProjectReference Include="..\Demizon.Common\Demizon.Common.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <AdditionalFiles Include="Pages\Admin\Dance\Components\DanceForm.razor" />
-      <AdditionalFiles Include="Pages\Admin\Dance\Detail.razor" />
-      <AdditionalFiles Include="Pages\Admin\Event\ListEvents.razor" />
-      <AdditionalFiles Include="Pages\Admin\Member\Components\MemberForm.razor" />
-      <AdditionalFiles Include="Pages\Admin\Member\Detail.razor" />
-      <AdditionalFiles Include="Pages\Admin\User\Components\UserForm.razor" />
-      <AdditionalFiles Include="Pages\Admin\User\Detail.razor" />
-      <AdditionalFiles Include="Pages\Admin\User\ListUsers.razor" />
-      <AdditionalFiles Include="Pages\Admin\VideoLink\Components\VideoLinkForm.razor" />
-      <AdditionalFiles Include="Pages\Admin\VideoLink\Detail.razor" />
-      <AdditionalFiles Include="Pages\Admin\VideoLink\ListVideoLinks.razor" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Include="wwwroot\files\images\5c1a78a0-cc3c-4083-9789-0e7d25726cc6\5c22343b-7a54-4036-abfc-15a5b848790c.jpg" />
-      <None Include="wwwroot\files\images\74289e4c-3fbb-4efb-bcd6-0feeee7a71e8\f66d5c09-bf54-4215-ba73-cefc5318b70c.jpg" />
-    </ItemGroup>
-
-
 
     <PropertyGroup>
         <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
