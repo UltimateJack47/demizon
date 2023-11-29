@@ -1,11 +1,10 @@
 ﻿@page "/Login"
 @page "/Login/{E:bool}"
-
 @using Demizon.Mvc.ViewModels
 
 <AuthorizeView Roles="admin">
     <Authorized>
-        Hello, @context.User.Identity.Name
+        <MudText Typo="Typo.body1">Hello, @context.User.Identity.Name!</MudText>
         <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined" Href="/Logout">Logout</MudButton>
     </Authorized>
     <NotAuthorized>

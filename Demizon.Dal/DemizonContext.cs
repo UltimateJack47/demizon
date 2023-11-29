@@ -38,6 +38,7 @@ public class DemizonContext : DbContext
             b.HasKey(x => x.Id);
             b.Property(s => s.Name).IsRequired();
             b.Property(s => s.Login).IsRequired();
+            b.Property(s => s.Role).HasConversion<string>().IsRequired();
         });
         
         modelBuilder.Entity<Event>(b =>
