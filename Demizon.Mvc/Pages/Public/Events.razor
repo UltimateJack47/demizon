@@ -20,7 +20,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var events = await EventService.GetAll().Where(x => x.DateTo >= DateTime.Today).OrderBy(x=>x.DateTo).ToListAsync();
+        var events = await EventService.GetAll().Where(x => x.DateTo >= DateTime.Today.ToUniversalTime()).OrderBy(x=>x.DateTo).ToListAsync();
         UpcomingEvents = Mapper.Map<List<EventViewModel>>(events);
     }
 

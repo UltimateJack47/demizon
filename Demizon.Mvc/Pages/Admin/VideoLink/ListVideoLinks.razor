@@ -90,22 +90,22 @@
 
         if (!result.Canceled)
         {
-            var memberResult = result.Data as MemberViewModel;
+            var linkResult = result.Data as VideoLinkViewModel;
             try
             {
                 if (isUpdate)
                 {
-                    await VideoLinkService.UpdateAsync(viewModel!.Id, Mapper.Map<VideoLink>(memberResult));
+                    await VideoLinkService.UpdateAsync(viewModel!.Id, Mapper.Map<VideoLink>(linkResult));
                     Snackbar.Add("The video link has been updated.", Severity.Success);
                 }
                 else
                 {
-                    await VideoLinkService.CreateAsync(Mapper.Map<VideoLink>(memberResult));
+                    await VideoLinkService.CreateAsync(Mapper.Map<VideoLink>(linkResult));
                     Snackbar.Add("The video link has been created.", Severity.Success);
                 }
                 await RefreshTable();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Snackbar.Add("Something went wrong.", Severity.Error);
             }
