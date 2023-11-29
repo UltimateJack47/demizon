@@ -14,11 +14,11 @@
 
 <MudTable @ref="DancesGrid" T="DanceViewModel" Items="Dances" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Dances</MudText>
-        <MudSpacer/>
-        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
-    </ToolBarContent>
+            <MudText Typo="Typo.h3">@StringLocalizer[nameof(DemizonResource.Dance)]</MudText>
+            <MudSpacer/>
+            <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
+            <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
+        </ToolBarContent>
     <HeaderContent>
         <MudTh>
             <b>Name</b>
