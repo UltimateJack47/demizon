@@ -6,6 +6,7 @@ using Demizon.Core.Extensions;
 using Demizon.Dal.Extensions;
 using Demizon.Mvc.Services.Authentication;
 using Demizon.Mvc.Services.Extensions;
+using Microsoft.AspNetCore.Localization;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +54,8 @@ builder.Services.AddCoreServices();
 builder.Services.AddMvcServices();
 builder.Services.AddAuthenticationServices();
 
+builder.Services.AddAppLocalizationServices();
+
 builder.Services.AddDatabase(DefaultConnectionString.DbConnectionString);
 
 var app = builder.Build();
@@ -76,6 +79,17 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapPost("/ProcessLogin", async(HttpContext context, IMyAuthenticationService service) => await service.Login(context));
 app.MapGet("/Logout", async (HttpContext context, IMyAuthenticationService service) => await service.Logout(context));
+app.MapGet("/SetLanguage/{culture}", Task (context) =>
+{
+    var culture = context.Request.RouteValues["culture"];
+    context.Response.Cookies
+        .Append(
+            CookieRequestCultureProvider.DefaultCookieName,
+            CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture?.ToString() ?? string.Empty)),
+            new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) }
+        );
+    return Task.CompletedTask;
+});
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
