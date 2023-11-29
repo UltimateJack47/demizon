@@ -29,7 +29,8 @@ public sealed class MyAuthenticationService : IMyAuthenticationService
             new List<Claim>
             {
                 new (ClaimTypes.Name, userAccount.Name),
-                new (ClaimTypes.Role, "admin")
+                new (ClaimTypes.Role, userAccount.Role.ToString()),
+                new (ClaimTypes.PrimarySid, userAccount.Id.ToString())
             }, CookieAuthenticationDefaults.AuthenticationScheme)));
 
         context.Response.Redirect("/Admin");

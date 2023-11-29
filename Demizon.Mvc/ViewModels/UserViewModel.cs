@@ -20,6 +20,8 @@ public class UserViewModel
 
     public string? Password { get; set; }
 
+    public UserRole Role { get; set; }
+
     public class DtoProfile : Profile
     {
         public DtoProfile()
