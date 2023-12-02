@@ -21,11 +21,21 @@
         <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh><b>First Name</b></MudTh>
-        <MudTh><b>Last Name</b></MudTh>
-        <MudTh><b>Member since</b></MudTh>
-        <MudTh><b>Birthdate</b></MudTh>
-        <MudTh><b>Is Visible</b></MudTh>
+        <MudTh>
+            <b>First Name</b>
+        </MudTh>
+        <MudTh>
+            <b>Last Name</b>
+        </MudTh>
+        <MudTh>
+            <b>Member since</b>
+        </MudTh>
+        <MudTh>
+            <b>Birthdate</b>
+        </MudTh>
+        <MudTh>
+            <b>Is Visible</b>
+        </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="member">
@@ -43,10 +53,10 @@
                 <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
             }
         </MudTd>
-        <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(member)">Update</MudIconButton>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(member.Id)"></MudIconButton>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveMember(member.Id)"></MudIconButton>
+        <MudTd Class="d-flex d-sm-inline-flex">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(member)"/>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(member.Id)"/>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveMember(member.Id)"/>
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -107,7 +117,7 @@
                 }
                 await RefreshTable();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Snackbar.Add("Something went wrong.", Severity.Error);
             }

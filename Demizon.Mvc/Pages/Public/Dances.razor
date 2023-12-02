@@ -3,7 +3,8 @@
 @using Demizon.Core.Services.Dance
 @using Demizon.Mvc.ViewModels
 
-<MudText Typo="Typo.h3">Taneční repertoár</MudText>
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
 <MudItem>
     @foreach (var dance in VisibleDances)
     {
@@ -12,6 +13,7 @@
 </MudItem>
 
 @code {
+
     [Inject]
     private IDanceService DanceService { get; set; } = null!;
 
@@ -19,6 +21,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        PageService.SetTitle("Taneční repertoár");
         var dances = await DanceService.GetAll().Where(x => x.IsVisible).ToListAsync();
         VisibleDances = Mapper.Map<List<DanceViewModel>>(dances);
     }

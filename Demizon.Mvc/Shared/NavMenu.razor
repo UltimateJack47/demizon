@@ -2,13 +2,20 @@
     <MudNavMenu>
         <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">O nás</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Join-Us")" Icon="@Icons.Material.Filled.PlusOne">Přidej se k nám</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Events")" Icon="@Icons.Material.Filled.CalendarMonth">Plán akcí</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Events")" Icon="@Icons.Material.Filled.CalendarMonth">Plán vystoupení</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Dances")" Icon="@Icons.Material.Filled.Celebration">Taneční repertoár</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Members")" Icon="@Icons.Material.Filled.People">Členové</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Photos")" Icon="@Icons.Material.Filled.PhotoAlbum">Fotogalerie</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Videos")" Icon="@Icons.Material.Filled.VideoLibrary">Videa</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Contact")" Icon="@Icons.Material.Filled.ContactPhone">Kontakt</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Login")" Icon="@Icons.Material.Filled.Login">Login</MudNavLink>
+        <AuthorizeView>
+            <Authorized>
+                <MudNavLink Href="@(NavigationManager.BaseUri + "Logout")" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
+            </Authorized>
+            <NotAuthorized>
+                <MudNavLink Href="@(NavigationManager.BaseUri + "Login")" Icon="@Icons.Material.Filled.Login">Login</MudNavLink>        
+            </NotAuthorized>
+        </AuthorizeView>
     </MudNavMenu>
 </MudPaper>

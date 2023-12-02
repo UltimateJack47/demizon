@@ -1,13 +1,14 @@
 ﻿@page "/Members"
+@using Microsoft.EntityFrameworkCore
 @using Demizon.Core.Services.Member
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.ViewModels
-@using Microsoft.EntityFrameworkCore
 
-<MudText Typo="Typo.h3">Členové</MudText>
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
 <MudText Typo="Typo.h4">Muži</MudText>
 <MudItem >
-    @foreach (var member in VisibleMembers.Where(x=>x.Gender == Gender.Male))
+    @foreach (var member in VisibleMembers.Where(x => x.Gender == Gender.Male))
     {
         <MudCard>
             <MudCardMedia Image="@member.Photos.FirstOrDefault()?.Path" Height="200"/>
@@ -21,7 +22,7 @@
 <MudDivider Class="mt-1"></MudDivider>
 <MudText Typo="Typo.h4" Class="mt-1">Ženy</MudText>
 <MudItem>
-    @foreach (var member in VisibleMembers.Where(x=>x.Gender == Gender.Female))
+    @foreach (var member in VisibleMembers.Where(x => x.Gender == Gender.Female))
     {
         <MudCard>
             <MudCardMedia Image="@member.Photos.FirstOrDefault()?.Path" Height="200"/>
@@ -41,7 +42,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        PageService.SetTitle("Členové");
         var members = await MemberService.GetAll().Where(x => x.IsVisible).ToListAsync();
         VisibleMembers = Mapper.Map<List<MemberViewModel>>(members);
     }
+
 }

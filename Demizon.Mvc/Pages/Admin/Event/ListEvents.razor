@@ -17,7 +17,7 @@
 
 <MudTable @ref="EventsGrid" T="EventViewModel" Items="Events" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Upcoming events</MudText>
+        <MudText Typo="Typo.h3">Events</MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
         <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
@@ -54,10 +54,10 @@
         {
             <MudTd></MudTd>
         }
-        <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(upcomingEvent)">Update</MudIconButton>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(upcomingEvent.Id)"></MudIconButton>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveEvent(upcomingEvent.Id)"></MudIconButton>
+        <MudTd Class="d-flex d-sm-inline-flex">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(upcomingEvent)"/>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(upcomingEvent.Id)"/>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveEvent(upcomingEvent.Id)"/>
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -107,7 +107,7 @@
                 }
                 await RefreshTable();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Snackbar.Add("Something went wrong.", Severity.Error);
             }
