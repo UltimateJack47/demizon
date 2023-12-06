@@ -8,5 +8,8 @@
   "AllowedHosts": "*",
   "ConnectionStrings": {
     "Default": "Host=localhost;Database=demizon;Username=postgres;Password=postgres;Include Error Detail=true;"
-  }
+  },
+     "ImageKit" : {
+       "PrivateKey": "privateKey"
+     }
 }

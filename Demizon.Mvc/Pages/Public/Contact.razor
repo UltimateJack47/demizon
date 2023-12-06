@@ -1,4 +1,5 @@
 ﻿@page "/Contact"
+@using Demizon.Core.Services.S3
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
@@ -21,9 +22,13 @@
 
 @code {
 
+    [Inject]
+    private IS3Service S3Service { get; set; } = null!;
+
     protected override void OnInitialized()
     {
         PageService.SetTitle("Kontakt");
+        var test = S3Service.GetTestImage();
     }
 
 }
