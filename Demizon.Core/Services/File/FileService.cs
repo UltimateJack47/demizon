@@ -4,14 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Core.Services.File;
 
-public class FileService : IFileService
+public class FileService(DemizonContext demizonContext) : IFileService
 {
-    private DemizonContext DemizonContext { get; set; }
-
-    public FileService(DemizonContext demizonContext)
-    {
-        DemizonContext = demizonContext;
-    }
+    private DemizonContext DemizonContext { get; set; } = demizonContext;
 
     public async Task<Dal.Entities.File> GetOneAsync(int id)
     {

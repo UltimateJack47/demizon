@@ -3,14 +3,9 @@ using Imagekit.Sdk;
 
 namespace Demizon.Core.Services.S3;
 
-public class S3Service : IS3Service
+public class S3Service(ImagekitClient imagekit) : IS3Service
 {
-    public S3Service(ImagekitClient imagekit)
-    {
-        Imagekit = imagekit;
-    }
-
-    private ImagekitClient Imagekit { get; set; }
+    private ImagekitClient Imagekit { get; set; } = imagekit;
 
     public string GetTestImage()
     {
@@ -22,5 +17,15 @@ public class S3Service : IS3Service
         
         ResultList res = Imagekit.GetFileListRequest(model);
         return res.FileList.First().url;
+    }
+
+    public string GetImage(string id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string UploadImage(FileUploadRequest file)
+    {
+        throw new NotImplementedException();
     }
 }

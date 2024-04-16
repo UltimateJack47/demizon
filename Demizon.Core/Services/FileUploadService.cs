@@ -4,14 +4,9 @@ using Microsoft.Extensions.Options;
 
 namespace Demizon.Core.Services;
 
-public class FileUploadService : IFileUploadService
+public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) : IFileUploadService
 {
-    private UploadSettings UploadSettings { get; }
-
-    public FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings)
-    {
-        UploadSettings = uploadSettings.Value;
-    }
+    private UploadSettings UploadSettings { get; } = uploadSettings.Value;
 
     public async Task<FileUploadResult> UploadImageAsync(FileUploadRequest fileRequest,
         bool createResizedImages = false, string? uploadSessionIdentifier = null)

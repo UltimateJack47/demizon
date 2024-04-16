@@ -5,12 +5,8 @@ using File = Demizon.Dal.Entities.File;
 
 namespace Demizon.Dal;
 
-public class DemizonContext : DbContext
+public class DemizonContext(DbContextOptions options) : DbContext(options)
 {
-    public DemizonContext(DbContextOptions options) : base(options)
-    {
-    }
-    
     public DbSet<Setting> Settings { get; set; } = null!;
     public DbSet<Event> Events { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;

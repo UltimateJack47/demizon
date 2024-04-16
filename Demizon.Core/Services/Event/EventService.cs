@@ -4,14 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Core.Services.Event;
 
-public class EventService : IEventService
+public class EventService(DemizonContext demizonContext) : IEventService
 {
-    private DemizonContext DemizonContext { get; set; }
-
-    public EventService(DemizonContext demizonContext)
-    {
-        DemizonContext = demizonContext;
-    }
+    private DemizonContext DemizonContext { get; } = demizonContext;
 
     public async Task<Dal.Entities.Event> GetOneAsync(int id)
     {
