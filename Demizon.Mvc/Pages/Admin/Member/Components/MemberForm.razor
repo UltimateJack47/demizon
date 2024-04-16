@@ -1,7 +1,7 @@
-﻿@using Demizon.Mvc.ViewModels
+﻿@using Demizon.Core.Services
+@using Demizon.Core.Services.S3
 @using Demizon.Dal.Entities
-@using Demizon.Core.Services
-
+@using Demizon.Mvc.ViewModels
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">Member form</MudText>
@@ -62,6 +62,9 @@
     
     [Inject]
     private ISnackbar Snackbar { get; set; } = null!;
+    
+    [Inject]
+    private IS3Service S3Service { get; set; } = null!;
 
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; } = null!;
@@ -83,18 +86,26 @@
         {
             //TODO upload the files to the server
             var stream = File.OpenReadStream(25*1024*1024);
-            var result = await FileUploadService.UploadImageAsync(new FileUploadRequest
+            /*var result = await FileUploadService.UploadImageAsync(new FileUploadRequest
             {
                 Stream = stream,
                 FileExtension = Path.GetExtension(File.Name),
                 FileName = Path.GetFileNameWithoutExtension(File.Name),
                 FileSize = File.Size,
                 ContentType = File.ContentType
-            } );
-            
-            if (result.IsSuccessful)
+            } );*/
+            var result = await S3Service.UploadImage(new FileUploadRequest
             {
-                Model.Photos.Add(new FileViewModel {Path = result.RelativePath, FileExtension = result.FileExtension, FileSize = result.FileSize, ContentType = result.ContentType});
+                Stream = stream,
+                FileExtension = Path.GetExtension(File.Name),
+                FileName = Path.GetFileNameWithoutExtension(File.Name),
+                FileSize = File.Size,
+                ContentType = File.ContentType
+            });
+            
+            if (result is not null)
+            {
+                Model.Photos.Add(new FileViewModel {Path = result, FileExtension = Path.GetExtension(File.Name), FileSize = File.Size, ContentType = File.ContentType});
             }
         }
         

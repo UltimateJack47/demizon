@@ -1,4 +1,5 @@
-﻿using Imagekit.Models;
+﻿using System.Text.Json;
+using Imagekit.Models;
 using Imagekit.Sdk;
 
 namespace Demizon.Core.Services.S3;
@@ -7,7 +8,7 @@ public class S3Service(ImagekitClient imagekit) : IS3Service
 {
     private ImagekitClient Imagekit { get; set; } = imagekit;
 
-    public string GetTestImage()
+    public string? GetTestImage()
     {
         GetFileListRequest model = new GetFileListRequest
         {
@@ -16,7 +17,11 @@ public class S3Service(ImagekitClient imagekit) : IS3Service
         };        
         
         ResultList res = Imagekit.GetFileListRequest(model);
-        return res.FileList.First().url;
+        var neco = JsonSerializer.Deserialize<List<ResultListRaw>>(res.Raw, options: new JsonSerializerOptions()
+        {
+            PropertyNameCaseInsensitive = true
+        });
+        return neco?.FirstOrDefault()?.Url;
     }
 
     public string GetImage(string id)
@@ -24,8 +29,18 @@ public class S3Service(ImagekitClient imagekit) : IS3Service
         throw new NotImplementedException();
     }
 
-    public string UploadImage(FileUploadRequest file)
+    public async Task<string?> UploadImage(FileUploadRequest file)
     {
-        throw new NotImplementedException();
+        var result = await Imagekit.UploadAsync(new FileCreateRequest()
+        {
+            file = file.Stream,
+            fileName = file.FileName,
+            useUniqueFileName = true
+        });
+        if (result.HttpStatusCode != 200)
+        {
+            return null;
+        }
+        return result.url;
     }
 }
