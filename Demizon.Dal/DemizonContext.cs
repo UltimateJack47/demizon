@@ -19,8 +19,6 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.HasPostgresExtension("uuid-ossp");
-
         modelBuilder.Entity<Setting>(b =>
         {
             b.HasIndex(s => s.Key)

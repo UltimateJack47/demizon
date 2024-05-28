@@ -12,7 +12,7 @@ public class DbContextFactory : IDesignTimeDbContextFactory<DemizonContext>
         var optionsBuilder = new DbContextOptionsBuilder<DemizonContext>();
         optionsBuilder
             .UseLazyLoadingProxies()
-            .UseNpgsql(DefaultConnectionString.DbConnectionString);
+            .UseSqlite(DefaultConnectionString.DbConnectionString);
 
         return new DemizonContext(optionsBuilder.Options);
     }

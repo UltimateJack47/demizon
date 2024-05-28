@@ -11,4 +11,6 @@ public class Event
     public DateTime DateTo { get; set; }
 
     public string? Place { get; set; }
+
+    public bool IsPublic { get; set; } = false;
 }

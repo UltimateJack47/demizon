@@ -18,6 +18,8 @@ public class EventViewModel
 
     public DateRange Date { get; set; } = null!;
 
+    public bool IsPublic { get; set; }
+
     public class DtoProfile : Profile
     {
         public DtoProfile()

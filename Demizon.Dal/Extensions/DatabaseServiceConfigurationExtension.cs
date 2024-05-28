@@ -15,14 +15,14 @@ public static class DatabaseServiceConfigurationExtension
 #if DEBUG
             .EnableSensitiveDataLogging()
 #endif
-            .UseNpgsql(connectionString);
+            .UseSqlite(connectionString ?? throw new ArgumentNullException(nameof(connectionString)));
 
         return builder;
     }
 
     public static IServiceCollection AddDatabase(this IServiceCollection services, string connectionString)
     {
-        services.AddDbContext<DemizonContext>(options => BuildOptions(connectionString, options));
+        services.AddDbContextPool<DemizonContext>(options => BuildOptions(connectionString, options));
         return services;
     }
 }
