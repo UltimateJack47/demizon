@@ -1,18 +1,18 @@
 ﻿using System.Security.Claims;
 using CryptoHelper;
-using Demizon.Core.Services.User;
+using Demizon.Core.Services.Member;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace Demizon.Mvc.Services.Authentication;
 
-public sealed class MyAuthenticationService(IUserService userService) : IMyAuthenticationService
+public sealed class MyAuthenticationService(IMemberService memberService) : IMyAuthenticationService
 {
-    private IUserService UserService { get; set; } = userService;
+    private IMemberService MemberService { get; set; } = memberService;
 
     public async Task Login(HttpContext context)
     {
-        var userAccount = UserService.GetOneByLogin(context.Request.Form["Login"].ToString());
+        var userAccount = MemberService.GetOneByLogin(context.Request.Form["Login"].ToString());
         var isPasswordCorrect = Crypto.VerifyHashedPassword(userAccount?.PasswordHash, context.Request.Form["Password"]);
         if (userAccount is null || !isPasswordCorrect)
         {

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CryptoHelper;
 using Demizon.Dal.Entities;
 
 namespace Demizon.Mvc.ViewModels;
@@ -6,27 +7,39 @@ namespace Demizon.Mvc.ViewModels;
 public class MemberViewModel
 {
     public int Id { get; set; }
+
+    public string PasswordHash { get; set; } = null!;
+
+    public string Name { get; set; } = null!;
+
+    public string Surname { get; set; } = null!;
+
+    public string Login { get; set; } = null!;
+
+    public string? Email { get; set; }
+
+    public string? Password { get; set; }
+
+    public UserRole Role { get; set; }
     
-    public string FirstName { get; set; } = null!;
-
-    public string LastName { get; set; } = null!;
-
     public Gender Gender { get; set; }
 
-    public bool IsVisible { get; set; }
+    public bool IsVisible { get; set; } = false;
 
-    public DateTime? BirthDate { get; set; }
-
+    public DateTime? Birthdate { get; set; }
+    
     public DateTime? MemberSince { get; set; }
 
-    public IList<FileViewModel> Photos { get; set; } = new List<FileViewModel>();
-    
+    public virtual List<FileViewModel> Photos { get; set; } = [];
+
     public class DtoProfile : Profile
     {
         public DtoProfile()
         {
             CreateMap<Member, MemberViewModel>()
-                .ReverseMap();
+                .ReverseMap()
+                .ForMember(x => x.PasswordHash,
+                    opt => opt.MapFrom(y => Crypto.HashPassword(y.Password)));
         }
     }
 }

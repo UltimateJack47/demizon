@@ -11,7 +11,12 @@ public class MemberService(DemizonContext demizonContext) : IMemberService
     public async Task<Dal.Entities.Member> GetOneAsync(int id)
     {
         return await DemizonContext.Members.FindAsync(id) ??
-               throw new EntityNotFoundException($"VideoLink with id: {id} not found.");
+               throw new EntityNotFoundException($"Member with id: {id} not found.");
+    }
+
+    public Dal.Entities.Member? GetOneByLogin(string login)
+    {
+        return DemizonContext.Members.FirstOrDefault(x => x.Login == login);
     }
 
     public IQueryable<Dal.Entities.Member> GetAll()
@@ -28,7 +33,6 @@ public class MemberService(DemizonContext demizonContext) : IMemberService
         }
 
         DemizonContext.Entry(entity).CurrentValues.SetValues(updatedMember);
-        entity.Photos = updatedMember.Photos;
         DemizonContext.Entry(entity).State = EntityState.Modified;
         await DemizonContext.SaveChangesAsync();
     }

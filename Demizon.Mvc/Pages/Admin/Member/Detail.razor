@@ -1,33 +1,15 @@
 ﻿@page "/Members/Detail/{Id:int}"
-@using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.Member
+@using Demizon.Mvc.ViewModels
 
 @inject IMemberService MemberService;
 @inject IMapper Mapper;
-
 @layout AdminMainLayout
 
-<MudText Typo="Typo.h3">Member detail page:</MudText>
-<MudDivider Class="mb-2 mt-1"></MudDivider>
-<MudText>Name: @Model.FirstName @Model.LastName</MudText>
-<MudText>Birthday: @Model.BirthDate.GetValueOrDefault().ToString("dd. MM. yyyy")</MudText>
-<MudText>Member since: @Model.MemberSince.GetValueOrDefault().ToString("dd. MM. yyyy")</MudText>
-<MudText>
-    Is visible:
-    @if (Model.IsVisible)
-    {
-        <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
-    }
-    else
-    {
-        <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
-    }
-</MudText>
-@if (Model.Photos.Any())
-{
-    <MudImage Src="@(NavigationManager.BaseUri + Model.Photos.First().Path)" Width="200" ObjectFit="ObjectFit.ScaleDown" Fluid="true" ></MudImage>    
-}
-
+<MudText>Member detail page of model with login: @Model.Login</MudText>
+<MudText>Name: @Model.Name</MudText>
+<MudText>Surname: @Model.Surname</MudText>
+<MudText>Email: @Model.Email</MudText>
 
 @code {
     [Parameter]

@@ -1,8 +1,8 @@
 ﻿@page "/Members"
-@using Microsoft.EntityFrameworkCore
 @using Demizon.Core.Services.Member
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
@@ -13,7 +13,7 @@
         <MudCard>
             <MudCardMedia Image="@member.Photos.FirstOrDefault()?.Path" Height="200"/>
             <MudCardContent>
-                <MudText Typo="Typo.h5">@member.FirstName @member.LastName</MudText>
+                <MudText Typo="Typo.h5">@member.Name @member.Surname</MudText>
             </MudCardContent>
         </MudCard>
     }
@@ -27,7 +27,7 @@
         <MudCard>
             <MudCardMedia Image="@member.Photos.FirstOrDefault()?.Path" Height="200"/>
             <MudCardContent>
-                <MudText Typo="Typo.h5">@member.FirstName @member.LastName</MudText>
+                <MudText Typo="Typo.h5">@member.Name @member.Surname</MudText>
             </MudCardContent>
         </MudCard>
     }

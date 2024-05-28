@@ -5,13 +5,13 @@
 @using Demizon.Mvc.ViewModels
 @using Microsoft.EntityFrameworkCore
 
-<PageTitle>Members</PageTitle>
 @inject IMemberService MemberService
 @inject IMapper Mapper
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
 @layout AdminMainLayout
+<PageTitle>Members</PageTitle>
 
 <MudTable @ref="MembersGrid" T="MemberViewModel" Items="Members" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
@@ -20,12 +20,19 @@
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
         <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
     </ToolBarContent>
+    
     <HeaderContent>
         <MudTh>
-            <b>First Name</b>
+            <b>Name</b>
         </MudTh>
         <MudTh>
-            <b>Last Name</b>
+            <b>Surname</b>
+        </MudTh>
+        <MudTh>
+            <b>Login</b>
+        </MudTh>
+        <MudTh>
+            <b>Email</b>
         </MudTh>
         <MudTh>
             <b>Member since</b>
@@ -34,23 +41,26 @@
             <b>Birthdate</b>
         </MudTh>
         <MudTh>
-            <b>Is Visible</b>
+            <b>Is Visible?</b>
         </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
+    
     <RowTemplate Context="member">
-        <MudTd>@member.FirstName</MudTd>
-        <MudTd>@member.LastName</MudTd>
+        <MudTd>@member.Name</MudTd>
+        <MudTd>@member.Surname</MudTd>
+        <MudTd>@member.Login</MudTd>
+        <MudTd>@member.Email</MudTd>
         <MudTd>@member.MemberSince?.ToShortDateString()</MudTd>
-        <MudTd>@member.BirthDate?.ToShortDateString()</MudTd>
+        <MudTd>@member.Birthdate?.ToShortDateString()</MudTd>
         <MudTd>
             @if (member.IsVisible)
             {
-                <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
+            <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
             }
             else
             {
-                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
+            <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
             }
         </MudTd>
         <MudTd Class="d-flex d-sm-inline-flex">
@@ -84,7 +94,7 @@
 
     private async Task RefreshTable()
     {
-        Members = Mapper.Map<List<MemberViewModel>>(await MemberService.GetAll().OrderBy(x => x.Id).ToListAsync());
+        Members = Mapper.Map<List<MemberViewModel>>(await MemberService.GetAll().ToListAsync());
         StateHasChanged();
     }
 

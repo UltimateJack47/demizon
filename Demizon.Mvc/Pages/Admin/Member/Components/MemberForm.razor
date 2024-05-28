@@ -8,14 +8,17 @@
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="Model.FirstName" Label="First Name" Required="true" RequiredError="First Name is required!"/>
-        <MudTextField @bind-Value="Model.LastName" Label="Last Name" Required="true" RequiredError="Last Name is required!"/>
+        <MudTextField @bind-Value="Model.Name" T="string" Label="Name" Required="true" RequiredError="Name is required!"/>
+        <MudTextField @bind-Value="Model.Surname" T="string" Label="Surname"/>
+        <MudTextField @bind-Value="Model.Login" T="string" Label="Login" Required="true" RequiredError="Login is required!"/>
+        <MudTextField @bind-Value="Model.Email" T="string" Label="Email" Required="true" RequiredError="Email is required!"/>
+        <MudTextField @bind-Value="Model.Password" T="string" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ChangeIsShow" Required="true" RequiredError="Password is required!"/>
         <MudDatePicker @bind-Date="Model.MemberSince" Label="Member Since" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"/>
-        <MudDatePicker @bind-Date="Model.BirthDate" Label="Birthdate" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"/>
+        <MudDatePicker @bind-Date="Model.Birthdate" Label="Birthdate" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"/>
         <MudSelect @bind-Value="Model.Gender" Label="Gender" T="Gender">
             @foreach (Gender item in Enum.GetValues(typeof(Gender)))
             {
-                <MudSelectItem Value="@item">@item</MudSelectItem>
+            <MudSelectItem Value="@item">@item</MudSelectItem>
             }
         </MudSelect>
         <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile" >
@@ -31,12 +34,12 @@
         </MudFileUpload>
         @if (File is not null)
         {
-            <MudList>
-                <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@File">
-                    @File.Name <code>@File.Size bytes</code>
-                    <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" OnClick="RemoveFile"></MudIconButton>
-                </MudListItem>
-            </MudList>
+        <MudList>
+            <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@File">
+                @File.Name <code>@File.Size bytes</code>
+                <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" OnClick="RemoveFile"></MudIconButton>
+            </MudListItem>
+        </MudList>
         }
         <MudCheckBox @bind-Checked="Model.IsVisible" Label="Is visible?"></MudCheckBox>
     </DialogContent>
@@ -57,6 +60,20 @@
 </MudDialog>
 
 @code {
+
+    [Parameter]
+    public MemberViewModel Model { get; set; } = new();
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public bool IsUpdate { get; set; }
+
+    bool IsShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    
     [Inject]
     private IFileUploadService FileUploadService { get; set; } = null!;
     
@@ -65,20 +82,6 @@
     
     [Inject]
     private IS3Service S3Service { get; set; } = null!;
-
-    [CascadingParameter]
-    MudDialogInstance MudDialog { get; set; } = null!;
-
-    [Parameter]
-    public MemberViewModel Model { get; set; } = new();
-
-    [Parameter]
-    public bool IsUpdate { get; set; }
-
-    private void Cancel()
-    {
-        MudDialog.Cancel();
-    }
 
     private async Task ClickedOk()
     {
@@ -102,10 +105,16 @@
                 FileSize = File.Size,
                 ContentType = File.ContentType
             });
-            
+
             if (result is not null)
             {
-                Model.Photos.Add(new FileViewModel {Path = result, FileExtension = Path.GetExtension(File.Name), FileSize = File.Size, ContentType = File.ContentType});
+                Model.Photos.Add(new FileViewModel
+                {
+                    Path = result,
+                    FileExtension = Path.GetExtension(File.Name),
+                    FileSize = File.Size,
+                    ContentType = File.ContentType
+                });
             }
         }
         
@@ -124,4 +133,24 @@
         File = null;
     }
 
+    void ChangeIsShow()
+    {
+        @if (IsShow)
+        {
+            IsShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            IsShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
 }

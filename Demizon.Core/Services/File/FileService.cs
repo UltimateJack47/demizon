@@ -18,14 +18,14 @@ public class FileService(DemizonContext demizonContext) : IFileService
         return DemizonContext.Files.AsQueryable();
     }
 
-    public async Task UpdateAsync(int id, Dal.Entities.File updatedUser)
+    public async Task UpdateAsync(int id, Dal.Entities.File updatedMember)
     {
         var entity = await DemizonContext.Files.FindAsync(id);
         if (entity is null)
         {
             throw new EntityNotFoundException($"File with id: {id} not found.");
         }
-        DemizonContext.Entry(entity).CurrentValues.SetValues(updatedUser);
+        DemizonContext.Entry(entity).CurrentValues.SetValues(updatedMember);
         DemizonContext.Entry(entity).State = EntityState.Modified;
         await DemizonContext.SaveChangesAsync();
     }
