@@ -1,10 +1,10 @@
 @page "/Admin"
 @page "/Admin/Events"
-@using Microsoft.EntityFrameworkCore
-@using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.Event
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.Event.Components
+@using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 @layout AdminMainLayout
 
@@ -38,11 +38,11 @@
         <MudTd>@upcomingEvent.Name</MudTd>
         @if (upcomingEvent.DateFrom != upcomingEvent.DateTo)
         {
-            <MudTd>@upcomingEvent.DateFrom.ToLocalTime().ToString("d. MMMM yyyy") - @upcomingEvent.DateTo.ToLocalTime().ToString("dd. MMMM yyyy")</MudTd>
+            <MudTd>@upcomingEvent.DateFrom.ToString("d. MMMM yyyy") - @upcomingEvent.DateTo.ToLocalTime().ToString("dd. MMMM yyyy")</MudTd>
         }
         else
         {
-            <MudTd>@upcomingEvent.DateFrom.ToLocalTime().ToString("dd. MMMM yyyy")</MudTd>
+            <MudTd>@upcomingEvent.DateFrom.ToString("dd. MMMM yyyy")</MudTd>
         }
 
 

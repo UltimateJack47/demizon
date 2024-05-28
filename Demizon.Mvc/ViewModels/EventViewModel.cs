@@ -27,10 +27,10 @@ public class EventViewModel
             CreateMap<Event, EventViewModel>()
                 .ForMember(x => x.Date,
                     opt => opt.MapFrom(y => new DateRange
-                        { Start = y.DateFrom.ToLocalTime(), End = y.DateTo.ToLocalTime() }))
+                        { Start = y.DateFrom, End = y.DateTo }))
                 .ReverseMap()
-                .ForMember(x => x.DateFrom, opt => opt.MapFrom(y => y.Date.Start!.Value.ToUniversalTime()))
-                .ForMember(x => x.DateTo, opt => opt.MapFrom(y => y.Date.End!.Value.ToUniversalTime()));
+                .ForMember(x => x.DateFrom, opt => opt.MapFrom(y => y.Date.Start!.Value))
+                .ForMember(x => x.DateTo, opt => opt.MapFrom(y => y.Date.End!.Value));
         }
     }
 }

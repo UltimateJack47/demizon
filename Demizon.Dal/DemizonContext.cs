@@ -1,5 +1,4 @@
 ﻿using Demizon.Dal.Entities;
-using Demizon.Dal.Extensions;
 using Microsoft.EntityFrameworkCore;
 using File = Demizon.Dal.Entities.File;
 
@@ -78,6 +77,6 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(s => s.IsVisible).IsRequired();
         });
 
-        modelBuilder.ApplyUtcDateTimeConverter();
+        //modelBuilder.ApplyUtcDateTimeConverter();
     }
 }

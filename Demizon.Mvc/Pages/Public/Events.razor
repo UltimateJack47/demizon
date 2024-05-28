@@ -1,7 +1,7 @@
 ﻿@page "/Events"
-@using Microsoft.EntityFrameworkCore
 @using Demizon.Core.Services.Event
 @using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
@@ -37,7 +37,10 @@
     protected override async Task OnInitializedAsync()
     {
         PageService.SetTitle("Plán vystoupení");
-        var events = await EventService.GetAll().Where(x => x.DateTo >= DateTime.Today.ToUniversalTime()).OrderBy(x => x.DateTo).ToListAsync();
+        var events = await EventService.GetAll()
+            .Where(x => x.DateTo >= DateTime.Today && x.IsPublic)
+            .OrderBy(x => x.DateTo)
+            .ToListAsync();
         UpcomingEvents = Mapper.Map<List<EventViewModel>>(events);
     }
 

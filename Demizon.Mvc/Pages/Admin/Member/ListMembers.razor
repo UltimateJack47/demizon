@@ -1,9 +1,9 @@
 ﻿@page "/Admin/Members"
-@using Microsoft.EntityFrameworkCore
-@using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.Member
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.Member.Components
+@using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>Members</PageTitle>
 @inject IMemberService MemberService
@@ -41,8 +41,8 @@
     <RowTemplate Context="member">
         <MudTd>@member.FirstName</MudTd>
         <MudTd>@member.LastName</MudTd>
-        <MudTd>@member.MemberSince?.ToLocalTime().ToShortDateString()</MudTd>
-        <MudTd>@member.BirthDate?.ToLocalTime().ToShortDateString()</MudTd>
+        <MudTd>@member.MemberSince?.ToShortDateString()</MudTd>
+        <MudTd>@member.BirthDate?.ToShortDateString()</MudTd>
         <MudTd>
             @if (member.IsVisible)
             {
