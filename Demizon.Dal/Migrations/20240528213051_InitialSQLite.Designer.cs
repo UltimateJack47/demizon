@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Demizon.Dal.Migrations
 {
     [DbContext(typeof(DemizonContext))]
-    [Migration("20240528210933_MergeMembersAndUsers")]
-    partial class MergeMembersAndUsers
+    [Migration("20240528213051_InitialSQLite")]
+    partial class InitialSQLite
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -86,55 +86,21 @@ namespace Demizon.Dal.Migrations
                     b.Property<long>("FileSize")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("MemberId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Path")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("MemberId");
 
                     b.ToTable("Files");
                 });
 
-            modelBuilder.Entity("Demizon.Dal.Entities.Setting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsPublic")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Key")
-                        .IsUnique();
-
-                    b.ToTable("Settings");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            IsPublic = false,
-                            Key = "DevelopedBy",
-                            Value = "Jack"
-                        });
-                });
-
-            modelBuilder.Entity("Demizon.Dal.Entities.User", b =>
+            modelBuilder.Entity("Demizon.Dal.Entities.Member", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -178,7 +144,41 @@ namespace Demizon.Dal.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Members");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.Setting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("Settings");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            IsPublic = false,
+                            Key = "DevelopedBy",
+                            Value = "Jack"
+                        });
                 });
 
             modelBuilder.Entity("Demizon.Dal.Entities.VideoLink", b =>
@@ -208,14 +208,14 @@ namespace Demizon.Dal.Migrations
 
             modelBuilder.Entity("Demizon.Dal.Entities.File", b =>
                 {
-                    b.HasOne("Demizon.Dal.Entities.User", "User")
+                    b.HasOne("Demizon.Dal.Entities.Member", "Member")
                         .WithMany("Photos")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("MemberId");
 
-                    b.Navigation("User");
+                    b.Navigation("Member");
                 });
 
-            modelBuilder.Entity("Demizon.Dal.Entities.User", b =>
+            modelBuilder.Entity("Demizon.Dal.Entities.Member", b =>
                 {
                     b.Navigation("Photos");
                 });
