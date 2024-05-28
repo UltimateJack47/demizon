@@ -8,9 +8,9 @@ public class FileViewModel
     public int Id { get; set; }
 
 
-    public MemberViewModel? Member { get; set; }
+    public UserViewModel? User { get; set; }
 
-    public int? MemberId { get; set; }
+    public int? UserId { get; set; }
     
     public string Path { get; set; } = null!;
 

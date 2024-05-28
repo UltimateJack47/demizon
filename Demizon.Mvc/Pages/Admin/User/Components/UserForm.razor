@@ -1,5 +1,7 @@
-﻿@using Demizon.Mvc.ViewModels
-
+﻿@using Demizon.Core.Services
+@using Demizon.Core.Services.S3
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.ViewModels
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">User form</MudText>
@@ -11,6 +13,35 @@
         <MudTextField @bind-Value="Model.Login" T="string" Label="Login" Required="true" RequiredError="Login is required!"/>
         <MudTextField @bind-Value="Model.Email" T="string" Label="Email" Required="true" RequiredError="Email is required!"/>
         <MudTextField @bind-Value="Model.Password" T="string" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ChangeIsShow" Required="true" RequiredError="Password is required!"/>
+        <MudDatePicker @bind-Date="Model.MemberSince" Label="Member Since" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"/>
+        <MudDatePicker @bind-Date="Model.Birthdate" Label="Birthdate" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"/>
+        <MudSelect @bind-Value="Model.Gender" Label="Gender" T="Gender">
+            @foreach (Gender item in Enum.GetValues(typeof(Gender)))
+            {
+            <MudSelectItem Value="@item">@item</MudSelectItem>
+            }
+        </MudSelect>
+        <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile" >
+            <ButtonTemplate>
+                <MudButton HtmlTag="label"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.CloudUpload"
+                           for="@context">
+                    Upload File
+                </MudButton>
+            </ButtonTemplate>
+        </MudFileUpload>
+        @if (File is not null)
+        {
+        <MudList>
+            <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@File">
+                @File.Name <code>@File.Size bytes</code>
+                <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" OnClick="RemoveFile"></MudIconButton>
+            </MudListItem>
+        </MudList>
+        }
+        <MudCheckBox @bind-Checked="Model.IsVisible" Label="Is visible?"></MudCheckBox>
     </DialogContent>
 
     <DialogActions>
@@ -42,6 +73,65 @@
     bool IsShow;
     InputType PasswordInput = InputType.Password;
     string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    
+    [Inject]
+    private IFileUploadService FileUploadService { get; set; } = null!;
+    
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    
+    [Inject]
+    private IS3Service S3Service { get; set; } = null!;
+
+    private async Task ClickedOk()
+    {
+        if (File is not null)
+        {
+            //TODO upload the files to the server
+            var stream = File.OpenReadStream(25*1024*1024);
+            /*var result = await FileUploadService.UploadImageAsync(new FileUploadRequest
+            {
+                Stream = stream,
+                FileExtension = Path.GetExtension(File.Name),
+                FileName = Path.GetFileNameWithoutExtension(File.Name),
+                FileSize = File.Size,
+                ContentType = File.ContentType
+            } );*/
+            var result = await S3Service.UploadImage(new FileUploadRequest
+            {
+                Stream = stream,
+                FileExtension = Path.GetExtension(File.Name),
+                FileName = Path.GetFileNameWithoutExtension(File.Name),
+                FileSize = File.Size,
+                ContentType = File.ContentType
+            });
+
+            if (result is not null)
+            {
+                Model.Photos.Add(new FileViewModel
+                {
+                    Path = result,
+                    FileExtension = Path.GetExtension(File.Name),
+                    FileSize = File.Size,
+                    ContentType = File.ContentType
+                });
+            }
+        }
+        
+        MudDialog.Close(DialogResult.Ok(Model));
+    }
+
+    private IBrowserFile? File { get; set; }
+
+    private void UploadFile(IBrowserFile file)
+    {
+        File = file;
+    }
+
+    private void RemoveFile()
+    {
+        File = null;
+    }
 
     void ChangeIsShow()
     {
@@ -63,10 +153,4 @@
     {
         MudDialog.Cancel();
     }
-
-    private void ClickedOk()
-    {
-        MudDialog.Close(DialogResult.Ok(Model));
-    }
-
 }

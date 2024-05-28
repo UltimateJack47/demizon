@@ -31,6 +31,12 @@
         <ProjectReference Include="..\Demizon.Common\Demizon.Common.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Pages\Admin\Member\Components\MemberForm.razor" />
+      <_ContentIncludedByDefault Remove="Pages\Admin\Member\Detail.razor" />
+      <_ContentIncludedByDefault Remove="Pages\Admin\Member\ListMembers.razor" />
+    </ItemGroup>
+
     <PropertyGroup>
         <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
     </PropertyGroup>

@@ -1,9 +1,9 @@
 ﻿@page "/Admin/Users"
-@using Microsoft.EntityFrameworkCore
-@using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.User
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.User.Components
+@using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 @inject IUserService UserService
 @inject IMapper Mapper
@@ -20,6 +20,7 @@
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
         <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
     </ToolBarContent>
+    
     <HeaderContent>
         <MudTh>
             <b>Name</b>
@@ -33,13 +34,35 @@
         <MudTh>
             <b>Email</b>
         </MudTh>
+        <MudTh>
+            <b>Member since</b>
+        </MudTh>
+        <MudTh>
+            <b>Birthdate</b>
+        </MudTh>
+        <MudTh>
+            <b>Is Visible?</b>
+        </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
+    
     <RowTemplate Context="user">
         <MudTd>@user.Name</MudTd>
         <MudTd>@user.Surname</MudTd>
         <MudTd>@user.Login</MudTd>
         <MudTd>@user.Email</MudTd>
+        <MudTd>@user.MemberSince?.ToShortDateString()</MudTd>
+        <MudTd>@user.Birthdate?.ToShortDateString()</MudTd>
+        <MudTd>
+            @if (user.IsVisible)
+            {
+            <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
+            }
+            else
+            {
+            <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
+            }
+        </MudTd>
         <MudTd Class="d-flex d-sm-inline-flex">
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(user)"/>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(user.Id)"/>
