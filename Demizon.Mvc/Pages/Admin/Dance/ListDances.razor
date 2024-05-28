@@ -14,14 +14,18 @@
 
 <MudTable @ref="DancesGrid" T="DanceViewModel" Items="Dances" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-            <MudText Typo="Typo.h3">Dances</MudText>
-            <MudSpacer/>
-            <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-            <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
-        </ToolBarContent>
+        <MudText Typo="Typo.h3">Dances</MudText>
+        <MudSpacer/>
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
+    </ToolBarContent>
     <HeaderContent>
-        <MudTh><b>Name</b></MudTh>
-        <MudTh><b>Is Visible</b></MudTh>
+        <MudTh>
+            <b>Name</b>
+        </MudTh>
+        <MudTh>
+            <b>Is Visible</b>
+        </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="dance">
@@ -36,29 +40,28 @@
                 <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
             }
         </MudTd>
-        <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(dance)">Update</MudIconButton>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(dance.Id)"></MudIconButton>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveDance(dance.Id)"></MudIconButton>
+        <MudTd Class="d-flex d-sm-inline-flex">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(dance)"/>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(dance.Id)"/>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveDance(dance.Id)"/>
         </MudTd>
     </RowTemplate>
 </MudTable>
 
 
-
 @code {
-    private List<DanceViewModel> Dances { get; set; } = new ();
+    private List<DanceViewModel> Dances { get; set; } = new();
 
     private MudTable<DanceViewModel> DancesGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        Dances = Mapper.Map<List<DanceViewModel>>(await DanceService.GetAll().OrderBy(x=>x.Id).ToListAsync());
+        Dances = Mapper.Map<List<DanceViewModel>>(await DanceService.GetAll().OrderBy(x => x.Id).ToListAsync());
     }
 
     private async Task RemoveDance(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() { Position = DialogPosition.Center, CloseButton = false });
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await DanceService.DeleteAsync(id);

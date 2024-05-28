@@ -4,14 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Core.Services.VideoLink;
 
-public class VideoLinkService : IVideoLinkService
+public class VideoLinkService(DemizonContext demizonContext) : IVideoLinkService
 {
-    private DemizonContext DemizonContext { get; set; }
-
-    public VideoLinkService(DemizonContext demizonContext)
-    {
-        DemizonContext = demizonContext;
-    }
+    private DemizonContext DemizonContext { get; } = demizonContext;
 
     public async Task<Dal.Entities.VideoLink> GetOneAsync(int id)
     {

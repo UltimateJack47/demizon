@@ -12,5 +12,10 @@
         <ProjectReference Include="..\Demizon.Dal\Demizon.Dal.csproj" />
         <ProjectReference Include="..\Demizon.Common\Demizon.Common.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Imagekit" Version="4.0.1" />
+        <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="13.3.0"/>
+    </ItemGroup>
     
 </Project>

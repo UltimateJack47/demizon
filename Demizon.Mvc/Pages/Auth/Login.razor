@@ -4,12 +4,12 @@
 
 <AuthorizeView Roles="admin">
     <Authorized>
-        <MudText Typo="Typo.body1">Hello, @context.User.Identity.Name!</MudText>
+        <MudText Typo="Typo.body1">Hello, @context.User.Identity?.Name!</MudText>
         <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined" Href="/Logout">Logout</MudButton>
     </Authorized>
+
     <NotAuthorized>
         <MudText Typo="Typo.h3">Login</MudText>
-
         <form action="/ProcessLogin" method="post">
             <MudTextField @bind-Value="Model.Login" Name="Login" Required="true" Label="Login"></MudTextField>
             <MudTextField @bind-Value="Model.Password" Name="Password" Required="true" Label="Password" InputType="InputType.Password"></MudTextField>

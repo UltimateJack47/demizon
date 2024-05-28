@@ -3,16 +3,32 @@
 @using Demizon.Core.Services.Event
 @using Demizon.Mvc.ViewModels
 
-<MudText Typo="Typo.h3">Plán akcí</MudText>
+<PageTitle>@PageService.GetTitle()</PageTitle>
 
-@foreach (var upcomingEvent in UpcomingEvents)
-{
-    <MudItem>
-        <MudText>@upcomingEvent.Place - @upcomingEvent.Name - @upcomingEvent.DateFrom.ToString("d. MMMM yyyy") - @upcomingEvent.DateTo.ToString("d. MMMM yyyy")</MudText>
-    </MudItem>
-}
+<MudTimeline>
+    @foreach (var upcomingEvent in UpcomingEvents)
+    {
+        <MudTimelineItem Color="Color.Info" TimelineAlign="TimelineAlign.End">
+            <ItemOpposite>
+                @if (upcomingEvent.Date.Start == upcomingEvent.Date.End)
+                {
+                    <MudText Color="Color.Info" Typo="Typo.body1">@upcomingEvent.Date.Start?.ToString("d. MMMM yyyy")</MudText>
+                }
+                else
+                {
+                    <MudText Color="Color.Info" Typo="Typo.body1">@upcomingEvent.Date.Start?.ToString("d. MMMM") - @upcomingEvent.Date.End?.ToString("d. MMMM yyyy")</MudText>
+                }
+            </ItemOpposite>
+            <ItemContent>
+                <MudText Typo="Typo.button">@upcomingEvent.Name</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@upcomingEvent.Place</MudText>
+            </ItemContent>
+        </MudTimelineItem>
+    }
+</MudTimeline>
 
 @code {
+
     [Inject]
     private IEventService EventService { get; set; } = null!;
 
@@ -20,7 +36,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var events = await EventService.GetAll().Where(x => x.DateTo >= DateTime.Today.ToUniversalTime()).OrderBy(x=>x.DateTo).ToListAsync();
+        PageService.SetTitle("Plán vystoupení");
+        var events = await EventService.GetAll().Where(x => x.DateTo >= DateTime.Today.ToUniversalTime()).OrderBy(x => x.DateTo).ToListAsync();
         UpcomingEvents = Mapper.Map<List<EventViewModel>>(events);
     }
 

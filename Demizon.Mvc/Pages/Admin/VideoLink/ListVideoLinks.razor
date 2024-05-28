@@ -16,15 +16,23 @@
 <MudTable @ref="VideoLinksGrid" T="VideoLinkViewModel" Items="VideoLinks" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
         <MudText Typo="Typo.h3">Video Links</MudText>
-        <MudSpacer />
-        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
+        <MudSpacer/>
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
         <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh><b>Name</b></MudTh>
-        <MudTh><b>Year</b></MudTh>
-        <MudTh><b>URL</b></MudTh>
-        <MudTh><b>Is Visible</b></MudTh>
+        <MudTh>
+            <b>Name</b>
+        </MudTh>
+        <MudTh>
+            <b>Year</b>
+        </MudTh>
+        <MudTh>
+            <b>URL</b>
+        </MudTh>
+        <MudTh>
+            <b>Is Visible</b>
+        </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="videoLink">
@@ -41,28 +49,28 @@
                 <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
             }
         </MudTd>
-        <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(videoLink)">Update</MudIconButton>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(videoLink.Id)"></MudIconButton>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveVideoLink(videoLink.Id)"></MudIconButton>
+        <MudTd Class="d-flex d-sm-inline-flex">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(videoLink)"/>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(videoLink.Id)"/>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveVideoLink(videoLink.Id)"/>
         </MudTd>
     </RowTemplate>
 </MudTable>
 
 
 @code {
-    private List<VideoLinkViewModel> VideoLinks { get; set; } = new ();
+    private List<VideoLinkViewModel> VideoLinks { get; set; } = new();
 
     private MudTable<VideoLinkViewModel> VideoLinksGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        VideoLinks = Mapper.Map<List<VideoLinkViewModel>>(await VideoLinkService.GetAll().OrderByDescending(x=>x.Year).ToListAsync());
+        VideoLinks = Mapper.Map<List<VideoLinkViewModel>>(await VideoLinkService.GetAll().OrderByDescending(x => x.Year).ToListAsync());
     }
 
     private async Task RemoveVideoLink(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() { Position = DialogPosition.Center, CloseButton = false });
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await VideoLinkService.DeleteAsync(id);

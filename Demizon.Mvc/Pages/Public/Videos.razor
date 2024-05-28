@@ -3,9 +3,9 @@
 @using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.VideoLink
 
-<MudText Typo="Typo.h3">Videa</MudText>
+<PageTitle>@PageService.GetTitle()</PageTitle>
 
-<MudGrid Spacing="3" Justify="Justify.FlexEnd">
+<MudGrid Spacing="3" Justify="Justify.FlexStart">
     @foreach (var video in VideoLinks)
     {
         <MudItem xs="6" Class="py-2">
@@ -23,6 +23,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        PageService.SetTitle("Videa");
         var videos = await VideoLinkService.GetAll().Where(x => x.IsVisible).OrderByDescending(x => x.Year).Take(5).ToListAsync();
         VideoLinks = Mapper.Map<List<VideoLinkViewModel>>(videos);
     }

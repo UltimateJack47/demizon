@@ -3,9 +3,11 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using Demizon.Common.Configuration;
 using Demizon.Core.Extensions;
+using Demizon.Core.Services.S3;
 using Demizon.Dal.Extensions;
 using Demizon.Mvc.Services.Authentication;
 using Demizon.Mvc.Services.Extensions;
+using Imagekit.Sdk;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +18,16 @@ builder.Configuration
     .AddJsonFile("appsettings.json", true, true)
     .AddJsonFile("appsettings.Development.json", true, true);
 var defaultConnectionString = builder.Configuration.GetConnectionString("Default");
+
+//builder.Services.Configure<UploadSettings>(builder.Configuration.GetSection("Upload"));
+builder.Services.AddOptions<UploadSettings>()
+    .BindConfiguration("Upload");
+
+builder.Services.AddOptions<ImagekitSettings>()
+    .BindConfiguration("ImageKit")
+    .Validate(x=> !string.IsNullOrWhiteSpace(x.PrivateKey))
+    .Validate(x=> !string.IsNullOrWhiteSpace(x.PublicKey))
+    .Validate(x=> !string.IsNullOrWhiteSpace(x.UrlEndpoint));
 
 if (defaultConnectionString != null) DefaultConnectionString.DbConnectionString = defaultConnectionString;
 
@@ -54,6 +66,12 @@ builder.Services.AddMvcServices();
 builder.Services.AddAuthenticationServices();
 
 builder.Services.AddDatabase(DefaultConnectionString.DbConnectionString);
+
+var imagekitSettings = builder.Configuration.GetSection("ImageKit").Get<ImagekitSettings>();
+var imageKit = new ImagekitClient(imagekitSettings!.PublicKey, imagekitSettings.PrivateKey, imagekitSettings.UrlEndpoint);
+
+builder.Services.AddSingleton(imageKit);
+builder.Services.AddTransient<IS3Service, S3Service>();
 
 var app = builder.Build();
 

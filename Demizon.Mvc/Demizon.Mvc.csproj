@@ -9,26 +9,26 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Include="..\.gitignore">
-        <Link>.gitignore</Link>
-      </Content>
+        <Content Include="..\.gitignore">
+            <Link>.gitignore</Link>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="AutoMapper" Version="12.0.1" />
-      <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
-      <PackageReference Include="CryptoHelper" Version="3.0.2" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.11.1" />
+        <PackageReference Include="AutoMapper" Version="12.0.1"/>
+        <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1"/>
+        <PackageReference Include="CryptoHelper" Version="3.0.2"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="MudBlazor" Version="6.11.1"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Demizon.Core\Demizon.Core.csproj" />
-        <ProjectReference Include="..\Demizon.Dal\Demizon.Dal.csproj" />
-        <ProjectReference Include="..\Demizon.Common\Demizon.Common.csproj" />
+        <ProjectReference Include="..\Demizon.Core\Demizon.Core.csproj"/>
+        <ProjectReference Include="..\Demizon.Dal\Demizon.Dal.csproj"/>
+        <ProjectReference Include="..\Demizon.Common\Demizon.Common.csproj"/>
     </ItemGroup>
 
     <PropertyGroup>

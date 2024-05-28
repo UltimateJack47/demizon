@@ -1,21 +1,21 @@
 ﻿@inherits LayoutComponentBase
 
-<PageTitle>FS Demižón - Strážnice</PageTitle>
+<PageTitle>@PageService.GetTitle()</PageTitle>
 
 <MudLayout>
     <MudAppBar Elevation="1" Dense="true">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="d-flex d-md-none" Color="Color.Primary" Edge="Edge.Start" OnClick="@(_ => DrawerToggle())"/>
         <MudSpacer/>
     </MudAppBar>
-    <MudDrawer @bind-Open="DrawerOpen"  Elevation="2" Variant="DrawerVariant.Responsive">
+    <MudDrawer @bind-Open="DrawerOpen" Elevation="2" Variant="DrawerVariant.Responsive">
         <MudDrawerHeader>
-            <MudText Typo="Typo.h5" Class="mt-1" >FS Demižón</MudText>
+            <MudText Typo="Typo.h5" Class="mt-1">FS Demižón</MudText>
         </MudDrawerHeader>
         <NavMenu></NavMenu>
     </MudDrawer>
     <MudMainContent Class="mt-2">
         <MudItem Class="ml-2">
-            @Body    
+            @Body
         </MudItem>
     </MudMainContent>
 </MudLayout>
@@ -27,4 +27,5 @@
     {
         DrawerOpen = !DrawerOpen;
     }
+
 }

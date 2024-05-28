@@ -19,7 +19,7 @@ public class MemberViewModel
 
     public DateTime? MemberSince { get; set; }
 
-    public IEnumerable<FileViewModel> Photos { get; set; } = new List<FileViewModel>();
+    public IList<FileViewModel> Photos { get; set; } = new List<FileViewModel>();
     
     public class DtoProfile : Profile
     {

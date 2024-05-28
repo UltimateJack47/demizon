@@ -1,6 +1,7 @@
-﻿@using Demizon.Mvc.ViewModels
+﻿@using Demizon.Core.Services
+@using Demizon.Core.Services.S3
 @using Demizon.Dal.Entities
-
+@using Demizon.Mvc.ViewModels
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">Member form</MudText>
@@ -17,6 +18,26 @@
                 <MudSelectItem Value="@item">@item</MudSelectItem>
             }
         </MudSelect>
+        <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile" >
+            <ButtonTemplate>
+                <MudButton HtmlTag="label"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.CloudUpload"
+                           for="@context">
+                    Upload File
+                </MudButton>
+            </ButtonTemplate>
+        </MudFileUpload>
+        @if (File is not null)
+        {
+            <MudList>
+                <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@File">
+                    @File.Name <code>@File.Size bytes</code>
+                    <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" OnClick="RemoveFile"></MudIconButton>
+                </MudListItem>
+            </MudList>
+        }
         <MudCheckBox @bind-Checked="Model.IsVisible" Label="Is visible?"></MudCheckBox>
     </DialogContent>
 
@@ -36,6 +57,14 @@
 </MudDialog>
 
 @code {
+    [Inject]
+    private IFileUploadService FileUploadService { get; set; } = null!;
+    
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    
+    [Inject]
+    private IS3Service S3Service { get; set; } = null!;
 
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; } = null!;
@@ -51,9 +80,48 @@
         MudDialog.Cancel();
     }
 
-    private void ClickedOk()
+    private async Task ClickedOk()
     {
+        if (File is not null)
+        {
+            //TODO upload the files to the server
+            var stream = File.OpenReadStream(25*1024*1024);
+            /*var result = await FileUploadService.UploadImageAsync(new FileUploadRequest
+            {
+                Stream = stream,
+                FileExtension = Path.GetExtension(File.Name),
+                FileName = Path.GetFileNameWithoutExtension(File.Name),
+                FileSize = File.Size,
+                ContentType = File.ContentType
+            } );*/
+            var result = await S3Service.UploadImage(new FileUploadRequest
+            {
+                Stream = stream,
+                FileExtension = Path.GetExtension(File.Name),
+                FileName = Path.GetFileNameWithoutExtension(File.Name),
+                FileSize = File.Size,
+                ContentType = File.ContentType
+            });
+            
+            if (result is not null)
+            {
+                Model.Photos.Add(new FileViewModel {Path = result, FileExtension = Path.GetExtension(File.Name), FileSize = File.Size, ContentType = File.ContentType});
+            }
+        }
+        
         MudDialog.Close(DialogResult.Ok(Model));
+    }
+
+    private IBrowserFile? File { get; set; }
+
+    private void UploadFile(IBrowserFile file)
+    {
+        File = file;
+    }
+
+    private void RemoveFile()
+    {
+        File = null;
     }
 
 }

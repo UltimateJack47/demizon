@@ -5,7 +5,7 @@ namespace Demizon.Dal.Extensions;
 
 public static class DatabaseServiceConfigurationExtension
 {
-    public static DbContextOptionsBuilder BuildOptions(string connectionString,
+    private static DbContextOptionsBuilder BuildOptions(string connectionString,
         DbContextOptionsBuilder? builder = null)
     {
         builder ??= new DbContextOptionsBuilder();

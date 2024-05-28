@@ -6,14 +6,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace Demizon.Mvc.Services.Authentication;
 
-public sealed class MyAuthenticationService : IMyAuthenticationService
+public sealed class MyAuthenticationService(IUserService userService) : IMyAuthenticationService
 {
-    private IUserService UserService { get; set; }
-
-    public MyAuthenticationService(IUserService userService)
-    {
-        UserService = userService;
-    }
+    private IUserService UserService { get; set; } = userService;
 
     public async Task Login(HttpContext context)
     {

@@ -4,14 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Core.Services.User;
 
-public class UserService : IUserService
+public class UserService(DemizonContext demizonContext) : IUserService
 {
-    private DemizonContext DemizonContext { get; set; }
-
-    public UserService(DemizonContext demizonContext)
-    {
-        DemizonContext = demizonContext;
-    }
+    private DemizonContext DemizonContext { get; set; } = demizonContext;
 
     public async Task<Dal.Entities.User> GetOneAsync(int id)
     {

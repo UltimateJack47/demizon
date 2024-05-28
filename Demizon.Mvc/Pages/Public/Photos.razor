@@ -1,7 +1,12 @@
 ﻿@page "/Photos"
 
-<MudText Typo="Typo.h3">Fotogalerie</MudText>
+<PageTitle>@PageService.GetTitle()</PageTitle>
 
 @code {
-    
+
+    protected override void OnInitialized()
+    {
+        PageService.SetTitle("Fotogalerie");
+    }
+
 }

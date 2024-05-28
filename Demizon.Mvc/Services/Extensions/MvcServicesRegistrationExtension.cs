@@ -13,6 +13,7 @@ public static class MvcServicesRegistrationExtension
     public static IServiceCollection AddMvcServices(this IServiceCollection services)
     {
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+        services.AddTransient<PageService>();
 
         return services;
     }

@@ -16,15 +16,23 @@
 <MudTable @ref="UsersGrid" T="UserViewModel" Items="Users" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
         <MudText Typo="Typo.h3">Users</MudText>
-        <MudSpacer />
-        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh" ></MudIconButton>
+        <MudSpacer/>
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
         <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh><b>Name</b></MudTh>
-        <MudTh><b>Surname</b></MudTh>
-        <MudTh><b>Login</b></MudTh>
-        <MudTh><b>Email</b></MudTh>
+        <MudTh>
+            <b>Name</b>
+        </MudTh>
+        <MudTh>
+            <b>Surname</b>
+        </MudTh>
+        <MudTh>
+            <b>Login</b>
+        </MudTh>
+        <MudTh>
+            <b>Email</b>
+        </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="user">
@@ -32,18 +40,17 @@
         <MudTd>@user.Surname</MudTd>
         <MudTd>@user.Login</MudTd>
         <MudTd>@user.Email</MudTd>
-        <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(user)">Update</MudIconButton>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(user.Id)"></MudIconButton>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveUser(user.Id)"></MudIconButton>
+        <MudTd Class="d-flex d-sm-inline-flex">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(user)"/>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(user.Id)"/>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveUser(user.Id)"/>
         </MudTd>
     </RowTemplate>
 </MudTable>
 
 
-
 @code {
-    private List<UserViewModel> Users { get; set; } = new ();
+    private List<UserViewModel> Users { get; set; } = new();
 
     private MudTable<UserViewModel> UsersGrid { get; set; } = null!;
 
@@ -54,7 +61,7 @@
 
     private async Task RemoveUser(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() { Position = DialogPosition.Center, CloseButton = false });
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await UserService.DeleteAsync(id);
@@ -97,13 +104,13 @@
                 }
                 await RefreshTable();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Snackbar.Add("Something went wrong.", Severity.Error);
             }
         }
     }
-    
+
     private void NavigateToDetail(int id)
     {
         NavigationManager.NavigateTo(NavigationManager.BaseUri + $"Users/Detail/{id}");

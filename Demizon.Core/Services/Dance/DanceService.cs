@@ -4,14 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Core.Services.Dance;
 
-public class DanceService : IDanceService
+public class DanceService(DemizonContext demizonContext) : IDanceService
 {
-    private DemizonContext DemizonContext { get; set; }
-
-    public DanceService(DemizonContext demizonContext)
-    {
-        DemizonContext = demizonContext;
-    }
+    private DemizonContext DemizonContext { get; } = demizonContext;
 
     public async Task<Dal.Entities.Dance> GetOneAsync(int id)
     {

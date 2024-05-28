@@ -1,6 +1,6 @@
 ﻿@page "/Contact"
 
-<MudText Typo="Typo.h3">Kontakt</MudText>
+<PageTitle>@PageService.GetTitle()</PageTitle>
 
 <MudList>
     <MudListItem Expanded="true" InitiallyExpanded="true" Text="Jiří Rybecký">
@@ -20,5 +20,8 @@
 </MudList>
 
 @code {
-    
+    protected override void OnInitialized()
+    {
+        PageService.SetTitle("Kontakt");
+    }
 }
