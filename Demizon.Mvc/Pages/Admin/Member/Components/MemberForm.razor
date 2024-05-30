@@ -18,10 +18,10 @@
         <MudSelect @bind-Value="Model.Gender" Label="Gender" T="Gender">
             @foreach (Gender item in Enum.GetValues(typeof(Gender)))
             {
-            <MudSelectItem Value="@item">@item</MudSelectItem>
+                <MudSelectItem Value="@item">@item</MudSelectItem>
             }
         </MudSelect>
-        <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile" >
+        <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile">
             <ButtonTemplate>
                 <MudButton HtmlTag="label"
                            Variant="Variant.Filled"
@@ -34,12 +34,12 @@
         </MudFileUpload>
         @if (File is not null)
         {
-        <MudList>
-            <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@File">
-                @File.Name <code>@File.Size bytes</code>
-                <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" OnClick="RemoveFile"></MudIconButton>
-            </MudListItem>
-        </MudList>
+            <MudList>
+                <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@File">
+                    @File.Name <code>@File.Size bytes</code>
+                    <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" OnClick="RemoveFile"></MudIconButton>
+                </MudListItem>
+            </MudList>
         }
         <MudCheckBox @bind-Checked="Model.IsVisible" Label="Is visible?"></MudCheckBox>
     </DialogContent>
@@ -61,34 +61,28 @@
 
 @code {
 
-    [Parameter]
-    public MemberViewModel Model { get; set; } = new();
+    [Parameter] public MemberViewModel Model { get; set; } = new();
 
-    [CascadingParameter]
-    MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter]
-    public bool IsUpdate { get; set; }
+    [Parameter] public bool IsUpdate { get; set; }
 
     bool IsShow;
     InputType PasswordInput = InputType.Password;
     string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-    
-    [Inject]
-    private IFileUploadService FileUploadService { get; set; } = null!;
-    
-    [Inject]
-    private ISnackbar Snackbar { get; set; } = null!;
-    
-    [Inject]
-    private IS3Service S3Service { get; set; } = null!;
+
+    [Inject] private IFileUploadService FileUploadService { get; set; } = null!;
+
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    [Inject] private IS3Service? S3Service { get; set; }
 
     private async Task ClickedOk()
     {
         if (File is not null)
         {
             //TODO upload the files to the server
-            var stream = File.OpenReadStream(25*1024*1024);
+            var stream = File.OpenReadStream(25 * 1024 * 1024);
             /*var result = await FileUploadService.UploadImageAsync(new FileUploadRequest
             {
                 Stream = stream,
@@ -97,27 +91,31 @@
                 FileSize = File.Size,
                 ContentType = File.ContentType
             } );*/
-            var result = await S3Service.UploadImage(new FileUploadRequest
-            {
-                Stream = stream,
-                FileExtension = Path.GetExtension(File.Name),
-                FileName = Path.GetFileNameWithoutExtension(File.Name),
-                FileSize = File.Size,
-                ContentType = File.ContentType
-            });
 
-            if (result is not null)
+            if (S3Service is not null)
             {
-                Model.Photos.Add(new FileViewModel
+                var result = await S3Service.UploadImage(new FileUploadRequest
                 {
-                    Path = result,
+                    Stream = stream,
                     FileExtension = Path.GetExtension(File.Name),
+                    FileName = Path.GetFileNameWithoutExtension(File.Name),
                     FileSize = File.Size,
                     ContentType = File.ContentType
                 });
+
+                if (result is not null)
+                {
+                    Model.Photos.Add(new FileViewModel
+                    {
+                        Path = result,
+                        FileExtension = Path.GetExtension(File.Name),
+                        FileSize = File.Size,
+                        ContentType = File.ContentType
+                    });
+                }
             }
         }
-        
+
         MudDialog.Close(DialogResult.Ok(Model));
     }
 
@@ -153,4 +151,5 @@
     {
         MudDialog.Cancel();
     }
+
 }

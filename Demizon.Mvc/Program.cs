@@ -26,9 +26,9 @@ builder.Services.AddOptions<UploadSettings>()
 
 builder.Services.AddOptions<ImagekitSettings>()
     .BindConfiguration("ImageKit")
-    .Validate(x=> !string.IsNullOrWhiteSpace(x.PrivateKey))
-    .Validate(x=> !string.IsNullOrWhiteSpace(x.PublicKey))
-    .Validate(x=> !string.IsNullOrWhiteSpace(x.UrlEndpoint));
+    .Validate(x => !string.IsNullOrWhiteSpace(x.PrivateKey))
+    .Validate(x => !string.IsNullOrWhiteSpace(x.PublicKey))
+    .Validate(x => !string.IsNullOrWhiteSpace(x.UrlEndpoint));
 
 if (defaultConnectionString != null) DefaultConnectionString.DbConnectionString = defaultConnectionString;
 
@@ -54,6 +54,7 @@ builder.WebHost.UseKestrel(options =>
     {
         options.Listen(IPAddress.Parse(ipAddress), 7272, listenOptions => { listenOptions.UseHttps(); });
     }
+
     options.Listen(IPAddress.Loopback, 7272, listenOptions => { listenOptions.UseHttps(); });
 });
 
@@ -71,10 +72,13 @@ builder.Services.AddAppLocalizationServices();
 builder.Services.AddDatabase(DefaultConnectionString.DbConnectionString);
 
 var imagekitSettings = builder.Configuration.GetSection("ImageKit").Get<ImagekitSettings>();
-var imageKit = new ImagekitClient(imagekitSettings!.PublicKey, imagekitSettings.PrivateKey, imagekitSettings.UrlEndpoint);
-
-builder.Services.AddSingleton(imageKit);
-builder.Services.AddTransient<IS3Service, S3Service>();
+if (!string.IsNullOrWhiteSpace(imagekitSettings?.PrivateKey))
+{
+    var imageKit = new ImagekitClient(imagekitSettings!.PublicKey, imagekitSettings.PrivateKey,
+        imagekitSettings.UrlEndpoint);
+    builder.Services.AddSingleton(imageKit);
+    builder.Services.AddTransient<IS3Service, S3Service>();
+}
 
 var app = builder.Build();
 
@@ -96,7 +100,8 @@ app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapPost("/ProcessLogin", async(HttpContext context, IMyAuthenticationService service) => await service.Login(context));
+app.MapPost("/ProcessLogin",
+    async (HttpContext context, IMyAuthenticationService service) => await service.Login(context));
 app.MapGet("/Logout", async (HttpContext context, IMyAuthenticationService service) => await service.Logout(context));
 app.MapGet("/SetLanguage/{culture}", (HttpContext context, string culture) =>
 {
@@ -104,7 +109,7 @@ app.MapGet("/SetLanguage/{culture}", (HttpContext context, string culture) =>
         .Append(
             CookieRequestCultureProvider.DefaultCookieName,
             CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
-            new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) }
+            new CookieOptions {Expires = DateTimeOffset.UtcNow.AddYears(1)}
         );
     return Task.FromResult(Results.Redirect(context.Request.Headers.Referer.ToString()));
 });

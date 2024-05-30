@@ -1,9 +1,11 @@
 ﻿@page "/Dances"
-@using Microsoft.EntityFrameworkCore
 @using Demizon.Core.Services.Dance
 @using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
+
+@StringLocalizer[nameof(DemizonResource.Dance)]
 
 <MudItem>
     @foreach (var dance in VisibleDances)
@@ -14,8 +16,7 @@
 
 @code {
 
-    [Inject]
-    private IDanceService DanceService { get; set; } = null!;
+    [Inject] private IDanceService DanceService { get; set; } = null!;
 
     private List<DanceViewModel> VisibleDances { get; set; } = new();
 
