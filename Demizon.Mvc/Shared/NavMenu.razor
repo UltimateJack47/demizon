@@ -9,13 +9,25 @@
         <MudNavLink Href="@(NavigationManager.BaseUri + "Videos")" Icon="@Icons.Material.Filled.VideoLibrary">Videa</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Contact")" Icon="@Icons.Material.Filled.ContactPhone">Kontakt</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin</MudNavLink>
+        <MudNavLink ActiveClass="nonono" Icon="@Icons.Material.Filled.Language">
+            <MudButton Size="Size.Small" Color="Color.Default" OnClick="@(() => SetCulture("cs-CZ"))">CS</MudButton> / <MudButton Size="Size.Small" Color="Color.Default" HtmlTag="span" OnClick="@(() => SetCulture("en-US"))">EN</MudButton>
+        </MudNavLink>
         <AuthorizeView>
             <Authorized>
                 <MudNavLink Href="@(NavigationManager.BaseUri + "Logout")" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
             </Authorized>
             <NotAuthorized>
-                <MudNavLink Href="@(NavigationManager.BaseUri + "Login")" Icon="@Icons.Material.Filled.Login">Login</MudNavLink>        
+                <MudNavLink Href="@(NavigationManager.BaseUri + "Login")" Icon="@Icons.Material.Filled.Login">Login</MudNavLink>
             </NotAuthorized>
         </AuthorizeView>
     </MudNavMenu>
 </MudPaper>
+
+@code {
+
+    private void SetCulture(string culture)
+    {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"SetLanguage/{culture}", true);
+    }
+
+}

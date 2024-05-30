@@ -95,18 +95,18 @@ app.UseRouting();
 app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapPost("/ProcessLogin", async(HttpContext context, IMyAuthenticationService service) => await service.Login(context));
 app.MapGet("/Logout", async (HttpContext context, IMyAuthenticationService service) => await service.Logout(context));
-app.MapGet("/SetLanguage/{culture}", Task (context) =>
+app.MapGet("/SetLanguage/{culture}", (HttpContext context, string culture) =>
 {
-    var culture = context.Request.RouteValues["culture"];
     context.Response.Cookies
         .Append(
             CookieRequestCultureProvider.DefaultCookieName,
-            CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture?.ToString() ?? string.Empty)),
+            CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
             new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) }
         );
-    return Task.CompletedTask;
+    return Task.FromResult(Results.Redirect(context.Request.Headers.Referer.ToString()));
 });
 
 app.MapBlazorHub();
