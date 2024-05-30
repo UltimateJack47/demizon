@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -13,6 +14,7 @@ using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddLocalization();
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.Local.json", true, true)
@@ -67,8 +69,6 @@ builder.Services.AddCoreServices();
 builder.Services.AddMvcServices();
 builder.Services.AddAuthenticationServices();
 
-builder.Services.AddAppLocalizationServices();
-
 builder.Services.AddDatabase(DefaultConnectionString.DbConnectionString);
 
 var imagekitSettings = builder.Configuration.GetSection("ImageKit").Get<ImagekitSettings>();
@@ -94,6 +94,14 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
+// Position of localization culture switching is crucial between UseStaticFiles and UseRouting 
+var supportedCultures = new[] {"en-US", "cs-CZ"};
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[0])
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+app.UseRequestLocalization(localizationOptions);
+
 app.UseRouting();
 
 app.UseCookiePolicy();
@@ -105,12 +113,13 @@ app.MapPost("/ProcessLogin",
 app.MapGet("/Logout", async (HttpContext context, IMyAuthenticationService service) => await service.Logout(context));
 app.MapGet("/SetLanguage/{culture}", (HttpContext context, string culture) =>
 {
-    context.Response.Cookies
-        .Append(
-            CookieRequestCultureProvider.DefaultCookieName,
-            CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
-            new CookieOptions {Expires = DateTimeOffset.UtcNow.AddYears(1)}
-        );
+    var cultureInfo = culture == "cs" ? new CultureInfo("cs-CZ") : new CultureInfo("en-US");
+
+    var requestCulture = new RequestCulture(cultureInfo, cultureInfo);
+    var cookieName = CookieRequestCultureProvider.DefaultCookieName;
+    var cookieValue = CookieRequestCultureProvider.MakeCookieValue(requestCulture);
+
+    context.Response.Cookies.Append(cookieName, cookieValue);
     return Task.FromResult(Results.Redirect(context.Request.Headers.Referer.ToString()));
 });
 

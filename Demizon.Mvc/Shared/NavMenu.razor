@@ -10,7 +10,11 @@
         <MudNavLink Href="@(NavigationManager.BaseUri + "Contact")" Icon="@Icons.Material.Filled.ContactPhone">Kontakt</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin</MudNavLink>
         <MudNavLink ActiveClass="nonono" Icon="@Icons.Material.Filled.Language">
-            <MudButton Size="Size.Small" Color="Color.Default" OnClick="@(() => SetCulture("cs-CZ"))">CS</MudButton> / <MudButton Size="Size.Small" Color="Color.Default" HtmlTag="span" OnClick="@(() => SetCulture("en-US"))">EN</MudButton>
+            <MudButton Size="Size.Small" Color="Color.Default" OnClick="@(() => SetCulture("cs"))">CS</MudButton>
+            /
+            <MudButton Size="Size.Small" Color="Color.Default" HtmlTag="span" OnClick="@(() => SetCulture("en"))">
+                EN
+            </MudButton>
         </MudNavLink>
         <AuthorizeView>
             <Authorized>

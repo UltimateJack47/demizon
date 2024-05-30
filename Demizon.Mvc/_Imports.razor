@@ -8,7 +8,7 @@
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @using Microsoft.JSInterop
 @using Demizon.Mvc
-@using Demizon.Mvc.Resources
+@using Demizon.Mvc.Locales
 @using Demizon.Mvc.Services
 @using Demizon.Mvc.Shared
 @using Microsoft.Extensions.Localization
@@ -16,5 +16,5 @@
 
 @inject NavigationManager NavigationManager
 @inject IMapper Mapper
-@inject IStringLocalizer<DemizonResource> StringLocalizer
+@inject IStringLocalizer<DemizonLocales> Localizer
 @inject PageService PageService

@@ -1,9 +1,9 @@
 ﻿@page "/Admin/Dances"
-@using Microsoft.EntityFrameworkCore
-@using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.Dance
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.Dance.Components
+@using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>Dances</PageTitle>
 @inject IDanceService DanceService
@@ -14,11 +14,11 @@
 
 <MudTable @ref="DancesGrid" T="DanceViewModel" Items="Dances" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-            <MudText Typo="Typo.h3">@StringLocalizer[nameof(DemizonResource.Dance)]</MudText>
-            <MudSpacer/>
-            <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-            <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
-        </ToolBarContent>
+        <MudText Typo="Typo.h3">Dances</MudText>
+        <MudSpacer/>
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
+    </ToolBarContent>
     <HeaderContent>
         <MudTh>
             <b>Name</b>
@@ -61,7 +61,7 @@
 
     private async Task RemoveDance(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() { Position = DialogPosition.Center, CloseButton = false });
+        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await DanceService.DeleteAsync(id);
@@ -78,11 +78,11 @@
     private async Task OpenFormDialog(DanceViewModel? viewModel = null)
     {
         var isUpdate = viewModel is not null;
-        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var options = new DialogOptions {CloseOnEscapeKey = true};
         var parameters = new DialogParameters
         {
-            { "IsUpdate", isUpdate },
-            { "Model", viewModel ?? new DanceViewModel() }
+            {"IsUpdate", isUpdate},
+            {"Model", viewModel ?? new DanceViewModel()}
         };
         var dialog = await DialogService.ShowAsync<DanceForm>("Dance form", parameters, options);
         var result = await dialog.Result;
@@ -102,6 +102,7 @@
                     await DanceService.CreateAsync(Mapper.Map<Dance>(danceResult));
                     Snackbar.Add("The dance has been created.", Severity.Success);
                 }
+
                 await RefreshTable();
             }
             catch (Exception)
