@@ -41,4 +41,19 @@
         <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
     </PropertyGroup>
 
+    <ItemGroup>
+        <Compile Update="Resources\DemizonResource.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>DemizonResource.resx</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Update="Resources\DemizonResource.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+            <LastGenOutput>DemizonResource.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+    </ItemGroup>
+
 </Project>
