@@ -7,7 +7,8 @@
   },
   "AllowedHosts": "*",
   "ConnectionStrings": {
-    "Default": "Host=localhost;Database=demizon;Username=postgres;Password=postgres;Include Error Detail=true;"
+    "DefaultPGSQL": "Host=localhost;Database=demizon;Username=postgres;Password=postgres;Include Error Detail=true;",
+    "Default": "Data Source=mru.sqlite"
   },
      "ImageKit" : {
        "PrivateKey": "privateKey"
