@@ -89,4 +89,10 @@
     <data name="Events" xml:space="preserve">
         <value>Události</value>
     </data>
+    <data name="Password" xml:space="preserve">
+        <value>Heslo</value>
+    </data>
+    <data name="InvalidSignIn" xml:space="preserve">
+        <value>Špatný login nebo heslo</value>
+    </data>
 </root>

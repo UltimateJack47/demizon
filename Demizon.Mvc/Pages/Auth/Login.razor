@@ -2,22 +2,33 @@
 @page "/Login/{E:bool}"
 @using Demizon.Mvc.ViewModels
 
-<AuthorizeView Roles="admin">
+<AuthorizeView Roles="Admin,Standard">
     <Authorized>
         <MudText Typo="Typo.body1">Hello, @context.User.Identity?.Name!</MudText>
-        <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined" Href="/Logout">Logout</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined"
+                   Href="/Logout">
+            @Localizer[nameof(DemizonLocales.Logout)]
+        </MudButton>
     </Authorized>
 
     <NotAuthorized>
-        <MudText Typo="Typo.h3">Login</MudText>
+        <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.SignIn)]</MudText>
         <form action="/ProcessLogin" method="post">
-            <MudTextField @bind-Value="Model.Login" Name="Login" Required="true" Label="Login"></MudTextField>
-            <MudTextField @bind-Value="Model.Password" Name="Password" Required="true" Label="Password" InputType="InputType.Password"></MudTextField>
+            <MudTextField @bind-Value="Model.Login" Name="Login" Required="true"
+                          Label="@Localizer[nameof(DemizonLocales.Login)]">
+            </MudTextField>
+            <MudTextField @bind-Value="Model.Password" Name="Password" Required="true"
+                          Label="@Localizer[nameof(DemizonLocales.Password)]"
+                          InputType="InputType.Password">
+            </MudTextField>
             @if (E)
             {
-                <MudText Typo="Typo.body1">Invalid Login or Password</MudText>
+                <MudText Typo="Typo.body1">@Localizer[nameof(DemizonLocales.InvalidSignIn)]</MudText>
             }
-            <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined">Submit</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium"
+                       Variant="Variant.Outlined">
+                @Localizer[nameof(DemizonLocales.SignIn)]
+            </MudButton>
         </form>
     </NotAuthorized>
 </AuthorizeView>
@@ -26,7 +37,6 @@
 @code {
     private MemberViewModel Model { get; set; } = new();
 
-    [Parameter]
-    public bool E { get; set; } = false;
+    [Parameter] public bool E { get; set; } = false;
 
 }

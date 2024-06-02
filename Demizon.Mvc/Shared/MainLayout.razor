@@ -6,6 +6,29 @@
     <MudAppBar Elevation="1" Dense="true">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="d-flex d-md-none" Color="Color.Primary" Edge="Edge.Start" OnClick="@(_ => DrawerToggle())"/>
         <MudSpacer/>
+        <MudIcon Icon="@Icons.Material.Filled.Language"></MudIcon>
+        <MudText>
+            <MudButton Size="Size.Small" Color="Color.Default" OnClick="@(() => SetCulture("cs"))">CS</MudButton>
+            /
+            <MudButton Size="Size.Small" Color="Color.Default" HtmlTag="span" OnClick="@(() => SetCulture("en"))">
+                EN
+            </MudButton>
+        </MudText>
+        <AuthorizeView>
+            <Authorized>
+                <MudIconButton Icon="@Icons.Material.Filled.AdminPanelSettings"
+                               Href="@(NavigationManager.BaseUri + "Admin/Events")">
+                </MudIconButton>
+                <MudIconButton Href="@(NavigationManager.BaseUri + "Logout")"
+                               Icon="@Icons.Material.Filled.Logout">
+                </MudIconButton>
+            </Authorized>
+            <NotAuthorized>
+                <MudIconButton Icon="@Icons.Material.Filled.AdminPanelSettings"
+                               Href="@(NavigationManager.BaseUri + "Login")">
+                </MudIconButton>
+            </NotAuthorized>
+        </AuthorizeView>
     </MudAppBar>
     <MudDrawer @bind-Open="DrawerOpen" Elevation="2" Variant="DrawerVariant.Responsive">
         <MudDrawerHeader>
@@ -26,6 +49,11 @@
     void DrawerToggle()
     {
         DrawerOpen = !DrawerOpen;
+    }
+
+    private void SetCulture(string culture)
+    {
+        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"SetLanguage/{culture}", true);
     }
 
 }

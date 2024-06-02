@@ -168,6 +168,15 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid Login or Password.
+        /// </summary>
+        internal static string InvalidSignIn {
+            get {
+                return ResourceManager.GetString("InvalidSignIn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Is visible?.
         /// </summary>
         internal static string IsVisible {
@@ -227,6 +236,15 @@ namespace Demizon.Mvc.Locales {
         internal static string Name {
             get {
                 return ResourceManager.GetString("Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Password.
+        /// </summary>
+        internal static string Password {
+            get {
+                return ResourceManager.GetString("Password", resourceCulture);
             }
         }
         

@@ -104,4 +104,10 @@
     <data name="Events" xml:space="preserve">
         <value>Events</value>
     </data>
+    <data name="Password" xml:space="preserve">
+        <value>Password</value>
+    </data>
+    <data name="InvalidSignIn" xml:space="preserve">
+        <value>Invalid Login or Password</value>
+    </data>
 </root>
