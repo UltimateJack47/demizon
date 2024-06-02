@@ -14,8 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Imagekit" Version="4.0.1" />
-        <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="13.3.0"/>
+        <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="13.9.0"/>
     </ItemGroup>
     
 </Project>

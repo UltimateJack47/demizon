@@ -1,5 +1,4 @@
 ﻿@using Demizon.Core.Services
-@using Demizon.Core.Services.S3
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.ViewModels
 <MudDialog>
@@ -75,8 +74,6 @@
 
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
-    [Inject] private IS3Service? S3Service { get; set; }
-
     private async Task ClickedOk()
     {
         if (File is not null)
@@ -91,29 +88,6 @@
                 FileSize = File.Size,
                 ContentType = File.ContentType
             } );*/
-
-            if (S3Service is not null)
-            {
-                var result = await S3Service.UploadImage(new FileUploadRequest
-                {
-                    Stream = stream,
-                    FileExtension = Path.GetExtension(File.Name),
-                    FileName = Path.GetFileNameWithoutExtension(File.Name),
-                    FileSize = File.Size,
-                    ContentType = File.ContentType
-                });
-
-                if (result is not null)
-                {
-                    Model.Photos.Add(new FileViewModel
-                    {
-                        Path = result,
-                        FileExtension = Path.GetExtension(File.Name),
-                        FileSize = File.Size,
-                        ContentType = File.ContentType
-                    });
-                }
-            }
         }
 
         MudDialog.Close(DialogResult.Ok(Model));

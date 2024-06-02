@@ -9,8 +9,5 @@
   "ConnectionStrings": {
     "DefaultPGSQL": "Host=localhost;Database=demizon;Username=postgres;Password=postgres;Include Error Detail=true;",
     "Default": "Data Source=demizon.sqlite"
-  },
-     "ImageKit" : {
-       "PrivateKey": "privateKey"
-     }
+  }
 }
