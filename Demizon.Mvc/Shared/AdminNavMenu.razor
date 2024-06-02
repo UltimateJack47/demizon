@@ -1,9 +1,9 @@
 ﻿<MudPaper Elevation="0">
     <MudNavMenu>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")" Icon="@Icons.Material.Filled.Event">Events</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Videos")" Icon="@Icons.Material.Filled.VideoLibrary">Videos</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Members")" Icon="@Icons.Material.Filled.People">Members</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Dances")" Icon="@Icons.Material.Filled.Celebration">Dances</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri)" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")" Icon="@Icons.Material.Filled.Event">@Localizer[nameof(DemizonLocales.Events)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Videos")" Icon="@Icons.Material.Filled.VideoLibrary">@Localizer[nameof(DemizonLocales.Videos)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Members")" Icon="@Icons.Material.Filled.People">@Localizer[nameof(DemizonLocales.Members)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Dances")" Icon="@Icons.Material.Filled.Celebration">@Localizer[nameof(DemizonLocales.Dances)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri)" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@Localizer[nameof(DemizonLocales.Home)]</MudNavLink>
     </MudNavMenu>
 </MudPaper>

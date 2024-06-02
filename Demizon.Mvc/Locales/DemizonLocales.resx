@@ -26,4 +26,82 @@
     <data name="Home" xml:space="preserve">
         <value>Home</value>
     </data>
+    <data name="Name" xml:space="preserve">
+        <value>Name</value>
+    </data>
+    <data name="Surname" xml:space="preserve">
+        <value>Surname</value>
+    </data>
+    <data name="Email" xml:space="preserve">
+        <value>Email</value>
+    </data>
+    <data name="Create" xml:space="preserve">
+        <value>Create</value>
+    </data>
+    <data name="Update" xml:space="preserve">
+        <value>Update</value>
+    </data>
+    <data name="Cancel" xml:space="preserve">
+        <value>Cancel</value>
+    </data>
+    <data name="UploadFile" xml:space="preserve">
+        <value>Upload file</value>>
+    </data>
+    <data name="SignIn" xml:space="preserve">
+        <value>Sign in</value>
+    </data>
+    <data name="Dances" xml:space="preserve">
+        <value>Dances</value>
+    </data>
+    <data name="PlannedEvents" xml:space="preserve">
+        <value>Planned events</value>
+    </data>
+    <data name="JoinUs" xml:space="preserve">
+        <value>Join Us</value>
+    </data>
+    <data name="Members" xml:space="preserve">
+        <value>Members</value>
+    </data>
+    <data name="Photos" xml:space="preserve">
+        <value>Photos</value>
+    </data>
+    <data name="Videos" xml:space="preserve">
+        <value>Videos</value>
+    </data>
+    <data name="Contact" xml:space="preserve">
+        <value>Contact</value>
+    </data>
+    <data name="Admin" xml:space="preserve">
+        <value>Admin</value>
+    </data>
+    <data name="AboutUs" xml:space="preserve">
+        <value>About us</value>
+    </data>
+    <data name="Logout" xml:space="preserve">
+        <value>Logout</value>
+    </data>
+    <data name="Login" xml:space="preserve">
+        <value>Login</value>
+    </data>
+    <data name="MemberSince" xml:space="preserve">
+        <value>Member since</value>
+    </data>
+    <data name="Birthdate" xml:space="preserve">
+        <value>Birthdate</value>
+    </data>
+    <data name="IsVisible" xml:space="preserve">
+        <value>Is visible?</value>
+    </data>
+    <data name="DeleteItem" xml:space="preserve">
+        <value>Delete item?</value>
+    </data>
+    <data name="Yes" xml:space="preserve">
+        <value>Yes</value>
+    </data>
+    <data name="Administration" xml:space="preserve">
+        <value>Administration</value>
+    </data>
+    <data name="Events" xml:space="preserve">
+        <value>Events</value>
+    </data>
 </root>

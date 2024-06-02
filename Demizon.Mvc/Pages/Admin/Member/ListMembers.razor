@@ -11,41 +11,44 @@
 @inject ISnackbar Snackbar
 
 @layout AdminMainLayout
-<PageTitle>Members</PageTitle>
+<PageTitle>@Localizer[nameof(DemizonLocales.Members)]</PageTitle>
 
 <MudTable @ref="MembersGrid" T="MemberViewModel" Items="Members" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Members</MudText>
+        <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.Members)]</MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary"
+                   @onclick="() => OpenFormDialog()">
+            @Localizer[nameof(DemizonLocales.Create)]
+        </MudButton>
     </ToolBarContent>
-    
+
     <HeaderContent>
         <MudTh>
-            <b>Name</b>
+            <b>@Localizer[nameof(DemizonLocales.Name)]</b>
         </MudTh>
         <MudTh>
-            <b>Surname</b>
+            <b>@Localizer[nameof(DemizonLocales.Surname)]</b>
         </MudTh>
         <MudTh>
-            <b>Login</b>
+            <b>@Localizer[nameof(DemizonLocales.Login)]</b>
         </MudTh>
         <MudTh>
-            <b>Email</b>
+            <b>@Localizer[nameof(DemizonLocales.Email)]</b>
         </MudTh>
         <MudTh>
-            <b>Member since</b>
+            <b>@Localizer[nameof(DemizonLocales.MemberSince)]</b>
         </MudTh>
         <MudTh>
-            <b>Birthdate</b>
+            <b>@Localizer[nameof(DemizonLocales.Birthdate)]</b>
         </MudTh>
         <MudTh>
-            <b>Is Visible?</b>
+            <b>@Localizer[nameof(DemizonLocales.IsVisible)]</b>
         </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
-    
+
     <RowTemplate Context="member">
         <MudTd>@member.Name</MudTd>
         <MudTd>@member.Surname</MudTd>
@@ -56,11 +59,11 @@
         <MudTd>
             @if (member.IsVisible)
             {
-            <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
+                <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
             }
             else
             {
-            <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
+                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
             }
         </MudTd>
         <MudTd Class="d-flex d-sm-inline-flex">
@@ -84,7 +87,7 @@
 
     private async Task RemoveMember(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() { Position = DialogPosition.Center, CloseButton = false });
+        var resultMessage = await DialogService.ShowMessageBox(Localizer[nameof(DemizonLocales.DeleteItem)], null, Localizer[nameof(DemizonLocales.Yes)], Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await MemberService.DeleteAsync(id);
@@ -101,11 +104,11 @@
     private async Task OpenFormDialog(MemberViewModel? viewModel = null)
     {
         var isUpdate = viewModel is not null;
-        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var options = new DialogOptions {CloseOnEscapeKey = true};
         var parameters = new DialogParameters
         {
-            { "IsUpdate", isUpdate },
-            { "Model", viewModel ?? new MemberViewModel() }
+            {"IsUpdate", isUpdate},
+            {"Model", viewModel ?? new MemberViewModel()}
         };
         var dialog = await DialogService.ShowAsync<MemberForm>("Member form", parameters, options);
         var result = await dialog.Result;
@@ -125,6 +128,7 @@
                     await MemberService.CreateAsync(Mapper.Map<Member>(memberResult));
                     Snackbar.Add("The member has been created.", Severity.Success);
                 }
+
                 await RefreshTable();
             }
             catch (Exception)

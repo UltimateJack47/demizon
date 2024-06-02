@@ -1,14 +1,14 @@
 ﻿<MudPaper Elevation="0">
     <MudNavMenu>
-        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">O nás</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Join-Us")" Icon="@Icons.Material.Filled.PlusOne">Přidej se k nám</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Events")" Icon="@Icons.Material.Filled.CalendarMonth">Plán vystoupení</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Dances")" Icon="@Icons.Material.Filled.Celebration">Taneční repertoár</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Members")" Icon="@Icons.Material.Filled.People">Členové</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Photos")" Icon="@Icons.Material.Filled.PhotoAlbum">Fotogalerie</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Videos")" Icon="@Icons.Material.Filled.VideoLibrary">Videa</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Contact")" Icon="@Icons.Material.Filled.ContactPhone">Kontakt</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin</MudNavLink>
+        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@Localizer[nameof(DemizonLocales.AboutUs)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Join-Us")" Icon="@Icons.Material.Filled.PlusOne">@Localizer[nameof(DemizonLocales.JoinUs)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Events")" Icon="@Icons.Material.Filled.CalendarMonth">@Localizer[nameof(DemizonLocales.PlannedEvents)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Dances")" Icon="@Icons.Material.Filled.Celebration">@Localizer[nameof(DemizonLocales.Dances)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Members")" Icon="@Icons.Material.Filled.People">@Localizer[nameof(DemizonLocales.Members)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Photos")" Icon="@Icons.Material.Filled.PhotoAlbum">@Localizer[nameof(DemizonLocales.Photos)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Videos")" Icon="@Icons.Material.Filled.VideoLibrary">@Localizer[nameof(DemizonLocales.Videos)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Contact")" Icon="@Icons.Material.Filled.ContactPhone">@Localizer[nameof(DemizonLocales.Contact)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")" Icon="@Icons.Material.Filled.AdminPanelSettings">@Localizer[nameof(DemizonLocales.Admin)]</MudNavLink>
         <MudNavLink ActiveClass="nonono" Icon="@Icons.Material.Filled.Language">
             <MudButton Size="Size.Small" Color="Color.Default" OnClick="@(() => SetCulture("cs"))">CS</MudButton>
             /
@@ -18,10 +18,10 @@
         </MudNavLink>
         <AuthorizeView>
             <Authorized>
-                <MudNavLink Href="@(NavigationManager.BaseUri + "Logout")" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
+                <MudNavLink Href="@(NavigationManager.BaseUri + "Logout")" Icon="@Icons.Material.Filled.Logout">@Localizer[nameof(DemizonLocales.Logout)]</MudNavLink>
             </Authorized>
             <NotAuthorized>
-                <MudNavLink Href="@(NavigationManager.BaseUri + "Login")" Icon="@Icons.Material.Filled.Login">Login</MudNavLink>
+                <MudNavLink Href="@(NavigationManager.BaseUri + "Login")" Icon="@Icons.Material.Filled.Login">@Localizer[nameof(DemizonLocales.SignIn)]</MudNavLink>
             </NotAuthorized>
         </AuthorizeView>
     </MudNavMenu>

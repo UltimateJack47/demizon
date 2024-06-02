@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<PageTitle>FS Demižón - Administration</PageTitle>
+<PageTitle>FS Demižón - @Localizer[nameof(DemizonLocales.Administration)]</PageTitle>
 <AuthorizeView>
     <Authorized>
         <MudLayout>
@@ -10,7 +10,9 @@
             </MudAppBar>
             <MudDrawer @bind-Open="DrawerOpen" Elevation="2" Variant="DrawerVariant.Responsive">
                 <MudDrawerHeader>
-                    <MudText Typo="Typo.h5" Class="mt-1"><MudImage Src="@(NavigationManager.BaseUri + "favicon.gif")" Width="30" Height="30" ObjectFit="ObjectFit.Contain"></MudImage> Administration</MudText>
+                    <MudText Typo="Typo.h5" Class="mt-1">
+                        <MudImage Src="@(NavigationManager.BaseUri + "favicon.gif")" Width="30" Height="30" ObjectFit="ObjectFit.Contain"></MudImage> @Localizer[nameof(DemizonLocales.Administration)]
+                    </MudText>
                 </MudDrawerHeader>
                 <AdminNavMenu></AdminNavMenu>
             </MudDrawer>
@@ -29,8 +31,7 @@
 
 @code {
 
-    [CascadingParameter]
-    private Task<AuthenticationState>? AuthenticationState { get; set; }
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
 
     bool DrawerOpen = true;
 

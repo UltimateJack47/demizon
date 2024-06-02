@@ -14,4 +14,79 @@
     <data name="Home" xml:space="preserve">
         <value>Domov</value>
     </data>
+    <data name="Email" xml:space="preserve">
+        <value>E-mail</value>
+    </data>
+    <data name="Name" xml:space="preserve">
+        <value>Jméno</value>
+    </data>
+    <data name="Surname" xml:space="preserve">
+        <value>Příjmení</value>
+    </data>
+    <data name="Update" xml:space="preserve">
+        <value>Upravit</value>
+    </data>
+    <data name="Create" xml:space="preserve">
+        <value>Vytvořit</value>
+    </data>
+    <data name="Cancel" xml:space="preserve">
+        <value>Zrušit</value>
+    </data>
+    <data name="UploadFile" xml:space="preserve">
+        <value>Nahrát soubor</value>
+    </data>
+    <data name="Dances" xml:space="preserve">
+        <value>Taneční repertoár</value>
+    </data>
+    <data name="SignIn" xml:space="preserve">
+        <value>Přihlásit</value>
+    </data>
+    <data name="PlannedEvents" xml:space="preserve">
+        <value>Plánovaná vystoupení</value>
+    </data>
+    <data name="JoinUs" xml:space="preserve">
+        <value>Přidej se k nám</value>
+    </data>
+    <data name="Members" xml:space="preserve">
+        <value>Členové</value>
+    </data>
+    <data name="Photos" xml:space="preserve">
+        <value>Fotogalerie</value>
+    </data>
+    <data name="Videos" xml:space="preserve">
+        <value>Videa</value>
+    </data>
+    <data name="Contact" xml:space="preserve">
+        <value>Kontakt</value>
+    </data>
+    <data name="Admin" xml:space="preserve">
+        <value>Uživatelská sekce</value>
+    </data>
+    <data name="AboutUs" xml:space="preserve">
+        <value>O nás</value>
+    </data>
+    <data name="Logout" xml:space="preserve">
+        <value>Odhlásit</value>
+    </data>
+    <data name="MemberSince" xml:space="preserve">
+        <value>Členem od</value>
+    </data>
+    <data name="Birthdate" xml:space="preserve">
+        <value>Narozeniny</value>
+    </data>
+    <data name="IsVisible" xml:space="preserve">
+        <value>Veřejné?</value>
+    </data>
+    <data name="DeleteItem" xml:space="preserve">
+        <value>Smazat položku?</value>
+    </data>
+    <data name="Yes" xml:space="preserve">
+        <value>Ano</value>
+    </data>
+    <data name="Administration" xml:space="preserve">
+        <value>Administrace</value>
+    </data>
+    <data name="Events" xml:space="preserve">
+        <value>Události</value>
+    </data>
 </root>

@@ -27,7 +27,7 @@
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.CloudUpload"
                            for="@context">
-                    Upload File
+                    @Localizer[nameof(DemizonLocales.UploadFile)]
                 </MudButton>
             </ButtonTemplate>
         </MudFileUpload>
@@ -44,15 +44,15 @@
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">@Localizer[nameof(DemizonLocales.Cancel)]</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
             @if (IsUpdate)
             {
-                <span>Update</span>
+                <span>@Localizer[nameof(DemizonLocales.Update)]</span>
             }
             else
             {
-                <span>Create</span>
+                <span>@Localizer[nameof(DemizonLocales.Create)]</span>
             }
         </MudButton>
     </DialogActions>
