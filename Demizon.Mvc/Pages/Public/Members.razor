@@ -6,7 +6,7 @@
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
-<MudText Typo="Typo.h4">Muži</MudText>
+<MudText Typo="Typo.h4">@Localizer[nameof(DemizonLocales.Men)]</MudText>
 <MudItem >
     @foreach (var member in VisibleMembers.Where(x => x.Gender == Gender.Male))
     {
@@ -20,7 +20,7 @@
 </MudItem>
 
 <MudDivider Class="mt-1"></MudDivider>
-<MudText Typo="Typo.h4" Class="mt-1">Ženy</MudText>
+<MudText Typo="Typo.h4" Class="mt-1">@Localizer[nameof(DemizonLocales.Women)]</MudText>
 <MudItem>
     @foreach (var member in VisibleMembers.Where(x => x.Gender == Gender.Female))
     {
@@ -42,7 +42,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        PageService.SetTitle("Členové");
+        PageService.SetTitle(@Localizer[nameof(DemizonLocales.Members)]);
         var members = await MemberService.GetAll().Where(x => x.IsVisible).ToListAsync();
         VisibleMembers = Mapper.Map<List<MemberViewModel>>(members);
     }

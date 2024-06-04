@@ -27,6 +27,12 @@
     }
 </MudTimeline>
 
+@if (UpcomingEvents.Count == 0)
+{
+    <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageHeader)]</MudText>
+    <MudText Typo="Typo.body1">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageText)]</MudText>
+}
+
 @code {
 
     [Inject]
@@ -36,7 +42,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        PageService.SetTitle("Plán vystoupení");
+        PageService.SetTitle(Localizer[nameof(DemizonLocales.UpcomingEvents)]);
         var events = await EventService.GetAll()
             .Where(x => x.DateTo >= DateTime.Today && x.IsPublic)
             .OrderBy(x => x.DateTo)

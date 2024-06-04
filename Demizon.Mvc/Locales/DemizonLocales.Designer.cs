@@ -150,6 +150,15 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use this contact information if you want to communicate in English or German:.
+        /// </summary>
+        internal static string EnglishAndGermanCommunicationText {
+            get {
+                return ResourceManager.GetString("EnglishAndGermanCommunicationText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Events.
         /// </summary>
         internal static string Events {
@@ -231,11 +240,38 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Men.
+        /// </summary>
+        internal static string Men {
+            get {
+                return ResourceManager.GetString("Men", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Name.
         /// </summary>
         internal static string Name {
             get {
                 return ResourceManager.GetString("Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Our calendar is free at the moment..
+        /// </summary>
+        internal static string NoUpcomingEventsPageHeader {
+            get {
+                return ResourceManager.GetString("NoUpcomingEventsPageHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If you want us at your event you can find ways to contact us on the Contact page..
+        /// </summary>
+        internal static string NoUpcomingEventsPageText {
+            get {
+                return ResourceManager.GetString("NoUpcomingEventsPageText", resourceCulture);
             }
         }
         
@@ -258,15 +294,6 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Planned events.
-        /// </summary>
-        internal static string PlannedEvents {
-            get {
-                return ResourceManager.GetString("PlannedEvents", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Sign in.
         /// </summary>
         internal static string SignIn {
@@ -281,6 +308,15 @@ namespace Demizon.Mvc.Locales {
         internal static string Surname {
             get {
                 return ResourceManager.GetString("Surname", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upcoming events.
+        /// </summary>
+        internal static string UpcomingEvents {
+            get {
+                return ResourceManager.GetString("UpcomingEvents", resourceCulture);
             }
         }
         
@@ -308,6 +344,15 @@ namespace Demizon.Mvc.Locales {
         internal static string Videos {
             get {
                 return ResourceManager.GetString("Videos", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Women.
+        /// </summary>
+        internal static string Women {
+            get {
+                return ResourceManager.GetString("Women", resourceCulture);
             }
         }
         

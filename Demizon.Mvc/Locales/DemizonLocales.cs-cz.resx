@@ -41,7 +41,7 @@
     <data name="SignIn" xml:space="preserve">
         <value>Přihlásit</value>
     </data>
-    <data name="PlannedEvents" xml:space="preserve">
+    <data name="UpcomingEvents" xml:space="preserve">
         <value>Plánovaná vystoupení</value>
     </data>
     <data name="JoinUs" xml:space="preserve">
@@ -94,5 +94,20 @@
     </data>
     <data name="InvalidSignIn" xml:space="preserve">
         <value>Špatný login nebo heslo</value>
+    </data>
+    <data name="NoUpcomingEventsPageHeader" xml:space="preserve">
+        <value>Aktuálně máme volný kalendář.</value>
+    </data>
+    <data name="NoUpcomingEventsPageText" xml:space="preserve">
+        <value>Chcete-li si nás objednat na vaši akci na stránce Kontakt zjistíte způsoby jak nás oslovit.</value>
+    </data>
+    <data name="EnglishAndGermanCommunicationText" xml:space="preserve">
+        <value>Pro komunikaci v anglickém nebo německém jazyce:</value>
+    </data>
+    <data name="Men" xml:space="preserve">
+        <value>Muži</value>
+    </data>
+    <data name="Women" xml:space="preserve">
+        <value>Ženy</value>
     </data>
 </root>

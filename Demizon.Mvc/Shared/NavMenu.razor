@@ -1,8 +1,11 @@
 ﻿<MudPaper Elevation="0">
     <MudNavMenu>
         <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@Localizer[nameof(DemizonLocales.AboutUs)]</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Join-Us")" Icon="@Icons.Material.Filled.PlusOne">@Localizer[nameof(DemizonLocales.JoinUs)]</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Events")" Icon="@Icons.Material.Filled.CalendarMonth">@Localizer[nameof(DemizonLocales.PlannedEvents)]</MudNavLink>
+        @if (Thread.CurrentThread.CurrentUICulture.Name == "cs-CZ")
+        {
+            <MudNavLink Href="@(NavigationManager.BaseUri + "Join-Us")" Icon="@Icons.Material.Filled.PlusOne">@Localizer[nameof(DemizonLocales.JoinUs)]</MudNavLink>    
+        }
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Events")" Icon="@Icons.Material.Filled.CalendarMonth">@Localizer[nameof(DemizonLocales.UpcomingEvents)]</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Dances")" Icon="@Icons.Material.Filled.Celebration">@Localizer[nameof(DemizonLocales.Dances)]</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Members")" Icon="@Icons.Material.Filled.People">@Localizer[nameof(DemizonLocales.Members)]</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Photos")" Icon="@Icons.Material.Filled.PhotoAlbum">@Localizer[nameof(DemizonLocales.Photos)]</MudNavLink>

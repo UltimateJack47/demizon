@@ -1,7 +1,7 @@
 ﻿@page "/Videos"
-@using Microsoft.EntityFrameworkCore
-@using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.VideoLink
+@using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
@@ -23,7 +23,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        PageService.SetTitle("Videa");
+        PageService.SetTitle(Localizer[nameof(DemizonLocales.Videos)]);
         var videos = await VideoLinkService.GetAll().Where(x => x.IsVisible).OrderByDescending(x => x.Year).Take(5).ToListAsync();
         VideoLinks = Mapper.Map<List<VideoLinkViewModel>>(videos);
     }

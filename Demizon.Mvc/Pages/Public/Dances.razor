@@ -20,7 +20,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        PageService.SetTitle("Taneční repertoár");
+        PageService.SetTitle(Localizer[nameof(DemizonLocales.Dances)]);
         var dances = await DanceService.GetAll().Where(x => x.IsVisible).ToListAsync();
         VisibleDances = Mapper.Map<List<DanceViewModel>>(dances);
     }

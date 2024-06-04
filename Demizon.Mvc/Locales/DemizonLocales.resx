@@ -53,8 +53,8 @@
     <data name="Dances" xml:space="preserve">
         <value>Dances</value>
     </data>
-    <data name="PlannedEvents" xml:space="preserve">
-        <value>Planned events</value>
+    <data name="UpcomingEvents" xml:space="preserve">
+        <value>Upcoming events</value>
     </data>
     <data name="JoinUs" xml:space="preserve">
         <value>Join Us</value>
@@ -109,5 +109,20 @@
     </data>
     <data name="InvalidSignIn" xml:space="preserve">
         <value>Invalid Login or Password</value>
+    </data>
+    <data name="NoUpcomingEventsPageHeader" xml:space="preserve">
+        <value>Our calendar is free at the moment.</value>
+    </data>
+    <data name="NoUpcomingEventsPageText" xml:space="preserve">
+        <value>If you want us at your event you can find ways to contact us on the Contact page.</value>
+    </data>
+    <data name="EnglishAndGermanCommunicationText" xml:space="preserve">
+        <value>Use this contact information if you want to communicate in English or German:</value>
+    </data>
+    <data name="Men" xml:space="preserve">
+        <value>Men</value>
+    </data>
+    <data name="Women" xml:space="preserve">
+        <value>Women</value>
     </data>
 </root>
