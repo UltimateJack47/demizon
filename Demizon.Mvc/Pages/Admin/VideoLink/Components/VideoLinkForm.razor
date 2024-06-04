@@ -1,27 +1,26 @@
 ﻿@using Demizon.Mvc.ViewModels
-
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6">Video link form</MudText>
+        <MudText Typo="Typo.h6">@Localizer[nameof(DemizonLocales.VideoLink)] - @Localizer[nameof(DemizonLocales.Form)]</MudText>
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="Model.Name" Label="Name" Required="true" RequiredError="Name is required!"/>
+        <MudTextField @bind-Value="Model.Name" Label="@Localizer[nameof(DemizonLocales.Name)]" Required="true" RequiredError="Name is required!"/>
         <MudTextField @bind-Value="Model.Url" Label="Url" Required="true" RequiredError="URL is required!"/>
-        <MudTextField @bind-Value="Model.Year" Label="Year" Required="true" RequiredError="Year is required!"/>
-        <MudCheckBox @bind-Checked="Model.IsVisible" Label="IsVisible"/>
+        <MudTextField @bind-Value="Model.Year" Label="@Localizer[nameof(DemizonLocales.Year)]" Required="true" RequiredError="Year is required!"/>
+        <MudCheckBox @bind-Value="Model.IsVisible" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"/>
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">@Localizer[nameof(DemizonLocales.Cancel)]</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
             @if (IsUpdate)
             {
-                <span>Update</span>
+                <span>@Localizer[nameof(DemizonLocales.Update)]</span>
             }
             else
             {
-                <span>Create</span>
+                <span>@Localizer[nameof(DemizonLocales.Create)]</span>
             }
         </MudButton>
     </DialogActions>

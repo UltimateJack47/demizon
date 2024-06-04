@@ -125,4 +125,43 @@
     <data name="Women" xml:space="preserve">
         <value>Women</value>
     </data>
+    <data name="PublicHome" xml:space="preserve">
+        <value>Home - public</value>
+    </data>
+    <data name="Dance" xml:space="preserve">
+        <value>Dance</value>
+    </data>
+    <data name="Form" xml:space="preserve">
+        <value>Form</value>
+    </data>
+    <data name="Event" xml:space="preserve">
+        <value>Event</value>
+    </data>
+    <data name="When" xml:space="preserve">
+        <value>When</value>
+    </data>
+    <data name="Place" xml:space="preserve">
+        <value>Place</value>
+    </data>
+    <data name="Date" xml:space="preserve">
+        <value>Date</value>
+    </data>
+    <data name="Member" xml:space="preserve">
+        <value>Member</value>
+    </data>
+    <data name="FirstName" xml:space="preserve">
+        <value>Firstname</value>
+    </data>
+    <data name="Gender" xml:space="preserve">
+        <value>Gender</value>
+    </data>
+    <data name="VideoLink" xml:space="preserve">
+        <value>Video Link</value>
+    </data>
+    <data name="Year" xml:space="preserve">
+        <value>Year</value>
+    </data>
+    <data name="VideoLinks" xml:space="preserve">
+        <value>Video Links</value>
+    </data>
 </root>

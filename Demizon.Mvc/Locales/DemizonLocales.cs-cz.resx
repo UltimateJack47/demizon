@@ -12,13 +12,13 @@
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
     <data name="Home" xml:space="preserve">
-        <value>Domov</value>
+        <value>Úvod</value>
     </data>
     <data name="Email" xml:space="preserve">
         <value>E-mail</value>
     </data>
     <data name="Name" xml:space="preserve">
-        <value>Jméno</value>
+        <value>Název</value>
     </data>
     <data name="Surname" xml:space="preserve">
         <value>Příjmení</value>
@@ -109,5 +109,44 @@
     </data>
     <data name="Women" xml:space="preserve">
         <value>Ženy</value>
+    </data>
+    <data name="PublicHome" xml:space="preserve">
+        <value>Úvod - veřejné</value>
+    </data>
+    <data name="VideoLink" xml:space="preserve">
+        <value>Video odkaz</value>
+    </data>
+    <data name="VideoLinks" xml:space="preserve">
+        <value>Video odkazy</value>
+    </data>
+    <data name="When" xml:space="preserve">
+        <value>Kdy</value>
+    </data>
+    <data name="Year" xml:space="preserve">
+        <value>Rok</value>
+    </data>
+    <data name="Place" xml:space="preserve">
+        <value>Místo</value>
+    </data>
+    <data name="Member" xml:space="preserve">
+        <value>Člen</value>
+    </data>
+    <data name="Dance" xml:space="preserve">
+        <value>Tanec</value>
+    </data>
+    <data name="Date" xml:space="preserve">
+        <value>Datum</value>
+    </data>
+    <data name="Event" xml:space="preserve">
+        <value>Událost</value>
+    </data>
+    <data name="FirstName" xml:space="preserve">
+        <value>Jméno</value>
+    </data>
+    <data name="Form" xml:space="preserve">
+        <value>Formulář</value>
+    </data>
+    <data name="Gender" xml:space="preserve">
+        <value>Pohlaví</value>
     </data>
 </root>

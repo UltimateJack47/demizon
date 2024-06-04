@@ -7,13 +7,13 @@
             <MudAppBar Elevation="1" Dense="true">
                 <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="d-flex d-md-none" Color="Color.Primary" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())"/>
                 <MudSpacer/>
-                <MudIcon Icon="@Icons.Material.Filled.Language"></MudIcon>
+                <MudIcon Icon="@Icons.Material.Filled.Language" Color="Color.Inherit"></MudIcon>
                 <MudText>
-                    <MudButton Size="Size.Small" Color="Color.Default" OnClick="@(() => SetCulture("cs"))">
+                    <MudButton Size="Size.Small" Color="Color.Inherit" OnClick="@(() => SetCulture("cs"))">
                         CS
                     </MudButton>
                     /
-                    <MudButton Size="Size.Small" Color="Color.Default" HtmlTag="span"
+                    <MudButton Size="Size.Small" Color="Color.Inherit" HtmlTag="span"
                                OnClick="@(() => SetCulture("en"))">
                         EN
                     </MudButton>

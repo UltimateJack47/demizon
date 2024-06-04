@@ -3,18 +3,18 @@
 @using Demizon.Mvc.ViewModels
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6">Member form</MudText>
+        <MudText Typo="Typo.h6">@Localizer[nameof(DemizonLocales.Member)] - @Localizer[nameof(DemizonLocales.Form)]</MudText>
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="Model.Name" T="string" Label="Name" Required="true" RequiredError="Name is required!"/>
-        <MudTextField @bind-Value="Model.Surname" T="string" Label="Surname"/>
-        <MudTextField @bind-Value="Model.Login" T="string" Label="Login" Required="true" RequiredError="Login is required!"/>
-        <MudTextField @bind-Value="Model.Email" T="string" Label="Email" Required="true" RequiredError="Email is required!"/>
-        <MudTextField @bind-Value="Model.Password" T="string" Label="Password" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ChangeIsShow" Required="true" RequiredError="Password is required!"/>
-        <MudDatePicker @bind-Date="Model.MemberSince" Label="Member Since" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"/>
-        <MudDatePicker @bind-Date="Model.Birthdate" Label="Birthdate" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"/>
-        <MudSelect @bind-Value="Model.Gender" Label="Gender" T="Gender">
+        <MudTextField @bind-Value="Model.Name" T="string" Label="@Localizer[nameof(DemizonLocales.FirstName)]" Required="true" RequiredError="Name is required!"/>
+        <MudTextField @bind-Value="Model.Surname" T="string" Label="@Localizer[nameof(DemizonLocales.Surname)]"/>
+        <MudTextField @bind-Value="Model.Login" T="string" Label="@Localizer[nameof(DemizonLocales.Login)]" Required="true" RequiredError="Login is required!"/>
+        <MudTextField @bind-Value="Model.Email" T="string" Label="@Localizer[nameof(DemizonLocales.Email)]" Required="true" RequiredError="Email is required!"/>
+        <MudTextField @bind-Value="Model.Password" T="string" Label="@Localizer[nameof(DemizonLocales.Password)]" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ChangeIsShow" Required="true" RequiredError="Password is required!"/>
+        <MudDatePicker @bind-Date="Model.MemberSince" Label="@Localizer[nameof(DemizonLocales.MemberSince)]" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"/>
+        <MudDatePicker @bind-Date="Model.Birthdate" Label="@Localizer[nameof(DemizonLocales.Birthdate)]" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"/>
+        <MudSelect @bind-Value="Model.Gender" Label="@Localizer[nameof(DemizonLocales.Gender)]" T="Gender">
             @foreach (Gender item in Enum.GetValues(typeof(Gender)))
             {
                 <MudSelectItem Value="@item">@item</MudSelectItem>
@@ -40,7 +40,7 @@
                 </MudListItem>
             </MudList>
         }
-        <MudCheckBox @bind-Checked="Model.IsVisible" Label="Is visible?"></MudCheckBox>
+        <MudCheckBox @bind-Value="Model.IsVisible" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"></MudCheckBox>
     </DialogContent>
 
     <DialogActions>

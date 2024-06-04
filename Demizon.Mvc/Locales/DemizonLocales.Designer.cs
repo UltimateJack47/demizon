@@ -123,11 +123,29 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dance.
+        /// </summary>
+        internal static string Dance {
+            get {
+                return ResourceManager.GetString("Dance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dances.
         /// </summary>
         internal static string Dances {
             get {
                 return ResourceManager.GetString("Dances", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Date.
+        /// </summary>
+        internal static string Date {
+            get {
+                return ResourceManager.GetString("Date", resourceCulture);
             }
         }
         
@@ -159,11 +177,47 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Event.
+        /// </summary>
+        internal static string Event {
+            get {
+                return ResourceManager.GetString("Event", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Events.
         /// </summary>
         internal static string Events {
             get {
                 return ResourceManager.GetString("Events", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Firstname.
+        /// </summary>
+        internal static string FirstName {
+            get {
+                return ResourceManager.GetString("FirstName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Form.
+        /// </summary>
+        internal static string Form {
+            get {
+                return ResourceManager.GetString("Form", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gender.
+        /// </summary>
+        internal static string Gender {
+            get {
+                return ResourceManager.GetString("Gender", resourceCulture);
             }
         }
         
@@ -218,6 +272,15 @@ namespace Demizon.Mvc.Locales {
         internal static string Logout {
             get {
                 return ResourceManager.GetString("Logout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Member.
+        /// </summary>
+        internal static string Member {
+            get {
+                return ResourceManager.GetString("Member", resourceCulture);
             }
         }
         
@@ -294,6 +357,24 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Place.
+        /// </summary>
+        internal static string Place {
+            get {
+                return ResourceManager.GetString("Place", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Home - public.
+        /// </summary>
+        internal static string PublicHome {
+            get {
+                return ResourceManager.GetString("PublicHome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sign in.
         /// </summary>
         internal static string SignIn {
@@ -339,6 +420,24 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Video Link.
+        /// </summary>
+        internal static string VideoLink {
+            get {
+                return ResourceManager.GetString("VideoLink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Video Links.
+        /// </summary>
+        internal static string VideoLinks {
+            get {
+                return ResourceManager.GetString("VideoLinks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Videos.
         /// </summary>
         internal static string Videos {
@@ -348,11 +447,29 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to When.
+        /// </summary>
+        internal static string When {
+            get {
+                return ResourceManager.GetString("When", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Women.
         /// </summary>
         internal static string Women {
             get {
                 return ResourceManager.GetString("Women", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Year.
+        /// </summary>
+        internal static string Year {
+            get {
+                return ResourceManager.GetString("Year", resourceCulture);
             }
         }
         

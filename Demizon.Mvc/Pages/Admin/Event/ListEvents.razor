@@ -17,20 +17,20 @@
 
 <MudTable @ref="EventsGrid" T="EventViewModel" Items="Events" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Events</MudText>
+        <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.Events)]</MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">@Localizer[nameof(DemizonLocales.Create)]</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>
-            <b>Name</b>
+            <b>@Localizer[nameof(DemizonLocales.Name)]</b>
         </MudTh>
         <MudTh>
-            <b>Date</b>
+            <b>@Localizer[nameof(DemizonLocales.Date)]</b>
         </MudTh>
         <MudTh>
-            <b>Place</b>
+            <b>@Localizer[nameof(DemizonLocales.Place)]</b>
         </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
@@ -121,7 +121,7 @@
 
     private async Task RemoveEvent(int id)
     {
-        var result = await DialogService.ShowMessageBox("Smazat?", "Opravdu si přejete smazat tuto položku?", "Ano", "Ne");
+        var result = await DialogService.ShowMessageBox(@Localizer[nameof(DemizonLocales.DeleteItem)], null, @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)]);
         if (result.HasValue && result.Value)
         {
             await EventService.DeleteAsync(id);

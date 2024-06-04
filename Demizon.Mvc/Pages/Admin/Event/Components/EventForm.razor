@@ -1,26 +1,26 @@
 @using Demizon.Mvc.ViewModels
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6">Event form</MudText>
+        <MudText Typo="Typo.h6">@Localizer[nameof(DemizonLocales.Event)] - @Localizer[nameof(DemizonLocales.Form)]</MudText>
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="EventModel.Name" Label="Name"></MudTextField>
-        <MudDateRangePicker @bind-DateRange="EventModel.Date" Label="When?"></MudDateRangePicker>
-        <MudTextField @bind-Value="EventModel.Place" Label="Place"></MudTextField>
-        <MudCheckBox @bind-Checked="EventModel.IsPublic" Label="Is Public?"></MudCheckBox>
+        <MudTextField @bind-Value="EventModel.Name" Label="@Localizer[nameof(DemizonLocales.Name)]"></MudTextField>
+        <MudDateRangePicker @bind-DateRange="EventModel.Date" Label="@Localizer[nameof(DemizonLocales.When)]"></MudDateRangePicker>
+        <MudTextField @bind-Value="EventModel.Place" Label="@Localizer[nameof(DemizonLocales.Place)]"></MudTextField>
+        <MudCheckBox @bind-Value="EventModel.IsPublic" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"></MudCheckBox>
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">@Localizer[nameof(DemizonLocales.Cancel)]</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
             @if (IsUpdate)
             {
-                <span>Update</span>
+                <span>@Localizer[nameof(DemizonLocales.Update)]</span>
             }
             else
             {
-                <span>Create</span>
+                <span>@Localizer[nameof(DemizonLocales.Create)]</span>
             }
         </MudButton>
     </DialogActions>

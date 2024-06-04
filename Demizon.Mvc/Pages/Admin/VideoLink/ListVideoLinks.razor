@@ -1,9 +1,9 @@
 ﻿@page "/Admin/Videos"
-@using Microsoft.EntityFrameworkCore
-@using Demizon.Mvc.ViewModels
 @using Demizon.Core.Services.VideoLink
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.VideoLink.Components
+@using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>Video Links</PageTitle>
 
@@ -15,23 +15,23 @@
 
 <MudTable @ref="VideoLinksGrid" T="VideoLinkViewModel" Items="VideoLinks" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Video Links</MudText>
+        <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.VideoLinks)]</MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Create one</MudButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">@Localizer[nameof(DemizonLocales.Create)]</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>
-            <b>Name</b>
+            <b>@Localizer[nameof(DemizonLocales.Name)]</b>
         </MudTh>
         <MudTh>
-            <b>Year</b>
+            <b>@Localizer[nameof(DemizonLocales.Year)]</b>
         </MudTh>
         <MudTh>
             <b>URL</b>
         </MudTh>
         <MudTh>
-            <b>Is Visible</b>
+            <b>@Localizer[nameof(DemizonLocales.IsVisible)]</b>
         </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
@@ -70,7 +70,7 @@
 
     private async Task RemoveVideoLink(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBox("Delete item?", null, "Yes", "Storno", null, new DialogOptions() { Position = DialogPosition.Center, CloseButton = false });
+        var resultMessage = await DialogService.ShowMessageBox(@Localizer[nameof(DemizonLocales.DeleteItem)], null, @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() { Position = DialogPosition.Center, CloseButton = false });
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await VideoLinkService.DeleteAsync(id);

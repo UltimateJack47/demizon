@@ -1,6 +1,6 @@
 ﻿<MudPaper Elevation="0">
     <MudNavMenu>
-        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@Localizer[nameof(DemizonLocales.AboutUs)]</MudNavLink>
+        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">@Localizer[nameof(DemizonLocales.Home)]</MudNavLink>
         @if (Thread.CurrentThread.CurrentUICulture.Name == "cs-CZ")
         {
             <MudNavLink Href="@(NavigationManager.BaseUri + "Join-Us")" Icon="@Icons.Material.Filled.PlusOne">@Localizer[nameof(DemizonLocales.JoinUs)]</MudNavLink>    
