@@ -5,38 +5,39 @@
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
-<MudTimeline>
-    @foreach (var upcomingEvent in UpcomingEvents)
-    {
-        <MudTimelineItem Color="Color.Info" TimelineAlign="TimelineAlign.End">
-            <ItemOpposite>
-                @if (upcomingEvent.Date.Start == upcomingEvent.Date.End)
-                {
-                    <MudText Color="Color.Info" Typo="Typo.body1">@upcomingEvent.Date.Start?.ToString("d. MMMM yyyy")</MudText>
-                }
-                else
-                {
-                    <MudText Color="Color.Info" Typo="Typo.body1">@upcomingEvent.Date.Start?.ToString("d. MMMM") - @upcomingEvent.Date.End?.ToString("d. MMMM yyyy")</MudText>
-                }
-            </ItemOpposite>
-            <ItemContent>
-                <MudText Typo="Typo.button">@upcomingEvent.Name</MudText>
-                <MudText Typo="Typo.body2" Class="mud-text-secondary">@upcomingEvent.Place</MudText>
-            </ItemContent>
-        </MudTimelineItem>
-    }
-</MudTimeline>
-
 @if (UpcomingEvents.Count == 0)
 {
     <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageHeader)]</MudText>
     <MudText Typo="Typo.body1">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageText)]</MudText>
 }
+else
+{
+    <MudTimeline>
+        @foreach (var upcomingEvent in UpcomingEvents)
+        {
+            <MudTimelineItem Color="Color.Info" TimelineAlign="TimelineAlign.End">
+                <ItemOpposite>
+                    @if (upcomingEvent.Date.Start == upcomingEvent.Date.End)
+                    {
+                        <MudText Color="Color.Info" Typo="Typo.body1">@upcomingEvent.Date.Start?.ToString("d. MMMM yyyy")</MudText>
+                    }
+                    else
+                    {
+                        <MudText Color="Color.Info" Typo="Typo.body1">@upcomingEvent.Date.Start?.ToString("d. MMMM") - @upcomingEvent.Date.End?.ToString("d. MMMM yyyy")</MudText>
+                    }
+                </ItemOpposite>
+                <ItemContent>
+                    <MudText Typo="Typo.button">@upcomingEvent.Name</MudText>
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@upcomingEvent.Place</MudText>
+                </ItemContent>
+            </MudTimelineItem>
+        }
+    </MudTimeline>
+}
 
 @code {
 
-    [Inject]
-    private IEventService EventService { get; set; } = null!;
+    [Inject] private IEventService EventService { get; set; } = null!;
 
     private List<EventViewModel> UpcomingEvents { get; set; } = new();
 

@@ -9,6 +9,7 @@
 @inject IDanceService DanceService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Admin, Standard")]
 
 @layout AdminMainLayout
 

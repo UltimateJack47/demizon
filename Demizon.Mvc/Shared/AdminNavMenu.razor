@@ -4,8 +4,18 @@
                     Icon="@Icons.Material.Filled.Home">
             @Localizer[nameof(DemizonLocales.PublicHome)]
         </MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")" Icon="@Icons.Material.Filled.Event">@Localizer[nameof(DemizonLocales.Events)]</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Videos")" Icon="@Icons.Material.Filled.VideoLibrary">@Localizer[nameof(DemizonLocales.Videos)]</MudNavLink>
+        <AuthorizeView Roles="Admin">
+            <Authorized>
+                <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")"
+                            Icon="@Icons.Material.Filled.Event">
+                    @Localizer[nameof(DemizonLocales.Events)]
+                </MudNavLink>
+                <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Videos")"
+                            Icon="@Icons.Material.Filled.VideoLibrary">
+                    @Localizer[nameof(DemizonLocales.Videos)]
+                </MudNavLink>
+            </Authorized>
+        </AuthorizeView>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Members")" Icon="@Icons.Material.Filled.People">@Localizer[nameof(DemizonLocales.Members)]</MudNavLink>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Dances")" Icon="@Icons.Material.Filled.Celebration">@Localizer[nameof(DemizonLocales.Dances)]</MudNavLink>
     </MudNavMenu>

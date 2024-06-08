@@ -11,6 +11,7 @@
 @inject IMapper Mapper
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Admin")]
 @layout AdminMainLayout
 
 <MudTable @ref="VideoLinksGrid" T="VideoLinkViewModel" Items="VideoLinks" Hover="true" Striped="true" FixedHeader="true" Height="900px">
@@ -70,7 +71,7 @@
 
     private async Task RemoveVideoLink(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBox(@Localizer[nameof(DemizonLocales.DeleteItem)], null, @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() { Position = DialogPosition.Center, CloseButton = false });
+        var resultMessage = await DialogService.ShowMessageBox(@Localizer[nameof(DemizonLocales.DeleteItem)], null, @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await VideoLinkService.DeleteAsync(id);
@@ -87,11 +88,11 @@
     private async Task OpenFormDialog(VideoLinkViewModel? viewModel = null)
     {
         var isUpdate = viewModel is not null;
-        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var options = new DialogOptions {CloseOnEscapeKey = true};
         var parameters = new DialogParameters
         {
-            { "IsUpdate", isUpdate },
-            { "Model", viewModel ?? new VideoLinkViewModel() }
+            {"IsUpdate", isUpdate},
+            {"Model", viewModel ?? new VideoLinkViewModel()}
         };
         var dialog = await DialogService.ShowAsync<VideoLinkForm>("Video Link form", parameters, options);
         var result = await dialog.Result;
@@ -111,6 +112,7 @@
                     await VideoLinkService.CreateAsync(Mapper.Map<VideoLink>(linkResult));
                     Snackbar.Add("The video link has been created.", Severity.Success);
                 }
+
                 await RefreshTable();
             }
             catch (Exception)

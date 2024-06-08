@@ -1,4 +1,5 @@
 ﻿@page "/Admin/Members"
+@using System.Security.Claims
 @using Demizon.Core.Services.Member
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.Member.Components
@@ -66,8 +67,11 @@
                 <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
             }
         </MudTd>
-        <MudTd Class="d-flex d-sm-inline-flex">
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(member)"/>
+        <MudTd>
+            @if (member.Id == LoggedUser.Id || LoggedUser.Role == UserRole.Admin)
+            {
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(member)"/>
+            }
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(member.Id)"/>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveMember(member.Id)"/>
         </MudTd>
@@ -76,6 +80,10 @@
 
 
 @code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private MemberViewModel LoggedUser { get; set; } = new();
+
     private List<MemberViewModel> Members { get; set; } = new();
 
     private MudTable<MemberViewModel> MembersGrid { get; set; } = null!;
@@ -83,6 +91,8 @@
     protected override async Task OnInitializedAsync()
     {
         Members = Mapper.Map<List<MemberViewModel>>(await MemberService.GetAll().ToListAsync());
+        var loggedUserLogin = AuthenticationState?.Result.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
+        LoggedUser = Mapper.Map<MemberViewModel>(MemberService.GetOneByLogin(loggedUserLogin));
     }
 
     private async Task RemoveMember(int id)

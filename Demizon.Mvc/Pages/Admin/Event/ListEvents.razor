@@ -14,6 +14,7 @@
 @inject IMapper Mapper
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Admin")]
 
 <MudTable @ref="EventsGrid" T="EventViewModel" Items="Events" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
@@ -32,6 +33,7 @@
         <MudTh>
             <b>@Localizer[nameof(DemizonLocales.Place)]</b>
         </MudTh>
+
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="upcomingEvent">
@@ -54,6 +56,16 @@
         {
             <MudTd></MudTd>
         }
+        <MudTd>
+            @if (upcomingEvent.IsPublic)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
+            }
+        </MudTd>
         <MudTd Class="d-flex d-sm-inline-flex">
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(upcomingEvent)"/>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(upcomingEvent.Id)"/>
@@ -81,11 +93,11 @@
     private async Task OpenFormDialog(EventViewModel? viewModel = null)
     {
         var isUpdate = viewModel is not null;
-        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var options = new DialogOptions {CloseOnEscapeKey = true};
         var parameters = new DialogParameters
         {
-            { "IsUpdate", isUpdate },
-            { "EventModel", viewModel ?? new EventViewModel() }
+            {"IsUpdate", isUpdate},
+            {"EventModel", viewModel ?? new EventViewModel()}
         };
         var dialog = await DialogService.ShowAsync<EventForm>("Event form", parameters, options);
         var result = await dialog.Result;
@@ -105,6 +117,7 @@
                     await EventService.CreateAsync(Mapper.Map<Event>(memberResult));
                     Snackbar.Add("The event has been created.", Severity.Success);
                 }
+
                 await RefreshTable();
             }
             catch (Exception)

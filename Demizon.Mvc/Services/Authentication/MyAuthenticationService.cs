@@ -13,7 +13,8 @@ public sealed class MyAuthenticationService(IMemberService memberService) : IMyA
     public async Task Login(HttpContext context)
     {
         var userAccount = MemberService.GetOneByLogin(context.Request.Form["Login"].ToString());
-        var isPasswordCorrect = Crypto.VerifyHashedPassword(userAccount?.PasswordHash, context.Request.Form["Password"]);
+        var isPasswordCorrect =
+            Crypto.VerifyHashedPassword(userAccount?.PasswordHash, context.Request.Form["Password"]);
         if (userAccount is null || !isPasswordCorrect)
         {
             context.Response.Redirect("/Login/true");
@@ -23,9 +24,9 @@ public sealed class MyAuthenticationService(IMemberService memberService) : IMyA
         await context.SignInAsync(new ClaimsPrincipal(new ClaimsIdentity(
             new List<Claim>
             {
-                new (ClaimTypes.Name, userAccount.Name),
-                new (ClaimTypes.Role, userAccount.Role.ToString()),
-                new (ClaimTypes.PrimarySid, userAccount.Id.ToString())
+                new(ClaimTypes.Name, userAccount.Login),
+                new(ClaimTypes.Role, userAccount.Role.ToString()),
+                new(ClaimTypes.PrimarySid, userAccount.Id.ToString())
             }, CookieAuthenticationDefaults.AuthenticationScheme)));
 
         context.Response.Redirect("/Admin");
@@ -33,7 +34,7 @@ public sealed class MyAuthenticationService(IMemberService memberService) : IMyA
 
     public async Task Logout(HttpContext context)
     {
-        await context.SignOutAsync();        
-        context.Response.Redirect("/");        
+        await context.SignOutAsync();
+        context.Response.Redirect("/");
     }
 }
