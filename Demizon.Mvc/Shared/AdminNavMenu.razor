@@ -4,6 +4,7 @@
                     Icon="@Icons.Material.Filled.Home">
             @Localizer[nameof(DemizonLocales.PublicHome)]
         </MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Dances")" Icon="@Icons.Material.Filled.Celebration">@Localizer[nameof(DemizonLocales.Dances)]</MudNavLink>
         <AuthorizeView Roles="Admin">
             <Authorized>
                 <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Events")"
@@ -17,6 +18,5 @@
             </Authorized>
         </AuthorizeView>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Members")" Icon="@Icons.Material.Filled.People">@Localizer[nameof(DemizonLocales.Members)]</MudNavLink>
-        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Dances")" Icon="@Icons.Material.Filled.Celebration">@Localizer[nameof(DemizonLocales.Dances)]</MudNavLink>
     </MudNavMenu>
 </MudPaper>

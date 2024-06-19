@@ -16,7 +16,7 @@
 
     [Inject] private IDanceService DanceService { get; set; } = null!;
 
-    private List<DanceViewModel> VisibleDances { get; set; } = new();
+    private List<DanceViewModel> VisibleDances { get; set; } = [new DanceViewModel(), new DanceViewModel()];
 
     protected override async Task OnInitializedAsync()
     {
