@@ -22,7 +22,7 @@
                                Icon="@Icons.Material.Filled.Logout">
                 </MudIconButton>
             </MudAppBar>
-            <MudDrawer @bind-Open="DrawerOpen" Elevation="2" Variant="DrawerVariant.Responsive">
+            <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="DrawerVariant.Responsive">
                 <MudDrawerHeader>
                     <MudText Typo="Typo.h5" Class="mt-1">
                         <MudImage Src="@(NavigationManager.BaseUri + "favicon.gif")" Width="30" Height="30" ObjectFit="ObjectFit.Contain"></MudImage> @Localizer[nameof(DemizonLocales.Administration)]
@@ -47,11 +47,11 @@
 
     [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
 
-    bool DrawerOpen = true;
+    bool _drawerOpen = true;
 
     void DrawerToggle()
     {
-        DrawerOpen = !DrawerOpen;
+        _drawerOpen = !_drawerOpen;
     }
 
     private void SetCulture(string culture)

@@ -1,7 +1,4 @@
 using System.Globalization;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using Demizon.Common.Configuration;
 using Demizon.Core.Extensions;
 using Demizon.Dal.Extensions;
@@ -25,32 +22,6 @@ builder.Services.AddOptions<UploadSettings>()
     .BindConfiguration("Upload");
 
 if (defaultConnectionString != null) DefaultConnectionString.DbConnectionString = defaultConnectionString;
-
-// Connect with mobile on local network setting:
-var ipAddress = NetworkInterface
-                    .GetAllNetworkInterfaces()
-                    .FirstOrDefault(ni =>
-                        ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet
-                        && ni.OperationalStatus == OperationalStatus.Up
-                        && ni.GetIPProperties().GatewayAddresses.FirstOrDefault() != null
-                        && ni.GetIPProperties().UnicastAddresses
-                            .FirstOrDefault(ip => ip.Address.AddressFamily == AddressFamily.InterNetwork) != null
-                    )
-                    ?.GetIPProperties()
-                    .UnicastAddresses
-                    .FirstOrDefault(ip => ip.Address.AddressFamily == AddressFamily.InterNetwork)
-                    ?.Address.ToString()
-                ?? string.Empty;
-
-builder.WebHost.UseKestrel(options =>
-{
-    if (!string.IsNullOrWhiteSpace(ipAddress))
-    {
-        options.Listen(IPAddress.Parse(ipAddress), 7272, listenOptions => { listenOptions.UseHttps(); });
-    }
-
-    options.Listen(IPAddress.Loopback, 7272, listenOptions => { listenOptions.UseHttps(); });
-});
 
 // Add services to the container.
 builder.Services.AddRazorPages();

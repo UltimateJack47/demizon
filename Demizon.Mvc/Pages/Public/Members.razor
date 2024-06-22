@@ -11,7 +11,14 @@
     @foreach (var member in VisibleMembers.Where(x => x.Gender == Gender.Male))
     {
         <MudCard>
-            <MudCardMedia Image="@member.Photos.FirstOrDefault()?.Path" Height="200"/>
+            @*<MudCardMedia Image="@member.Photos.FirstOrDefault()?.Path" Height="200"/>*@
+            @{
+                var photo = member.Photos.FirstOrDefault()?.Path;
+                if (photo is not null)
+                {
+                    <img src="@photo" alt="Profile photo"/>
+                }
+            }
             <MudCardContent>
                 <MudText Typo="Typo.h5">@member.Name @member.Surname</MudText>
             </MudCardContent>
@@ -35,8 +42,7 @@
 
 @code {
 
-    [Inject]
-    private IMemberService MemberService { get; set; } = null!;
+    [Inject] private IMemberService MemberService { get; set; } = null!;
 
     private List<MemberViewModel> VisibleMembers { get; set; } = new();
 

@@ -118,30 +118,21 @@
         var parameters = new DialogParameters
         {
             {"IsUpdate", isUpdate},
-            {"Model", viewModel ?? new MemberViewModel()}
+            {"Model", viewModel ?? new MemberViewModel()},
+            {"AuthenticationState", AuthenticationState}
         };
         var dialog = await DialogService.ShowAsync<MemberForm>("Member form", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
         {
-            var memberResult = result.Data as MemberViewModel;
-            try
+            var memberResult = result.Data is true;
+            if (memberResult)
             {
-                if (isUpdate)
-                {
-                    await MemberService.UpdateAsync(viewModel!.Id, Mapper.Map<Member>(memberResult));
-                    Snackbar.Add("The member has been updated.", Severity.Success);
-                }
-                else
-                {
-                    await MemberService.CreateAsync(Mapper.Map<Member>(memberResult));
-                    Snackbar.Add("The member has been created.", Severity.Success);
-                }
-
+                Snackbar.Add(isUpdate ? "The member has been updated." : "The member has been created.", Severity.Success);
                 await RefreshTable();
             }
-            catch (Exception)
+            else
             {
                 Snackbar.Add("Something went wrong.", Severity.Error);
             }

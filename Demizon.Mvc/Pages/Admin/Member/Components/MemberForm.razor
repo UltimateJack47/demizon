@@ -1,9 +1,23 @@
-﻿@using Demizon.Core.Services
+﻿@using System.Security.Claims
+@using Demizon.Core.Services
+@using Demizon.Core.Services.Member
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.ViewModels
+@using Color = MudBlazor.Color
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6">@Localizer[nameof(DemizonLocales.Member)] - @Localizer[nameof(DemizonLocales.Form)]</MudText>
+        <MudText
+            Typo="Typo.h6">
+            @if (IsUpdate)
+            {
+                @Localizer[nameof(DemizonLocales.Update)]
+            }
+            else
+            {
+                @Localizer[nameof(DemizonLocales.Create)]
+            }
+            - @Localizer[nameof(DemizonLocales.Member)]
+        </MudText>
     </TitleContent>
 
     <DialogContent>
@@ -11,9 +25,17 @@
         <MudTextField @bind-Value="Model.Surname" T="string" Label="@Localizer[nameof(DemizonLocales.Surname)]"/>
         <MudTextField @bind-Value="Model.Login" T="string" Label="@Localizer[nameof(DemizonLocales.Login)]" Required="true" RequiredError="Login is required!"/>
         <MudTextField @bind-Value="Model.Email" T="string" Label="@Localizer[nameof(DemizonLocales.Email)]" Required="true" RequiredError="Email is required!"/>
-        <MudTextField @bind-Value="Model.Password" T="string" Label="@Localizer[nameof(DemizonLocales.Password)]" Variant="Variant.Text" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ChangeIsShow" Required="true" RequiredError="Password is required!"/>
-        <MudDatePicker @bind-Date="Model.MemberSince" Label="@Localizer[nameof(DemizonLocales.MemberSince)]" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"/>
-        <MudDatePicker @bind-Date="Model.Birthdate" Label="@Localizer[nameof(DemizonLocales.Birthdate)]" Clearable="true" Editable="true" Required="true" MaxDate="DateTime.Today"/>
+        @if (IsUpdate && (Model.Id == LoggedUser.Id) || LoggedUser.Role == UserRole.Admin)
+        {
+            <MudTextField @bind-Value="Model.Password" T="string" Label="@Localizer[nameof(DemizonLocales.Password)]"
+                          Variant="Variant.Text" InputType="@_passwordInput" Adornment="Adornment.End"
+                          AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="ChangeIsShow" Required="true"
+                          RequiredError="Password is required!"/>
+        }
+        <MudDatePicker @bind-Date="Model.MemberSince" Label="@Localizer[nameof(DemizonLocales.MemberSince)]"
+                       Clearable="true" Editable="true" MaxDate="DateTime.Today"/>
+        <MudDatePicker @bind-Date="Model.Birthdate" Label="@Localizer[nameof(DemizonLocales.Birthdate)]"
+                       Clearable="true" Editable="true" MaxDate="DateTime.Today"/>
         <MudSelect @bind-Value="Model.Gender" Label="@Localizer[nameof(DemizonLocales.Gender)]" T="Gender">
             @foreach (Gender item in Enum.GetValues(typeof(Gender)))
             {
@@ -59,41 +81,80 @@
 </MudDialog>
 
 @code {
+    [Inject] IMemberService MemberService { get; set; } = null!;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 
     [Parameter] public MemberViewModel Model { get; set; } = new();
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter] public bool IsUpdate { get; set; }
 
-    bool IsShow;
-    InputType PasswordInput = InputType.Password;
-    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    bool _isShow;
+    InputType _passwordInput = InputType.Password;
+    string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
 
     [Inject] private IFileUploadService FileUploadService { get; set; } = null!;
 
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
-    private async Task ClickedOk()
-    {
-        if (File is not null)
-        {
-            //TODO upload the files to the server
-            var stream = File.OpenReadStream(25 * 1024 * 1024);
-            /*var result = await FileUploadService.UploadImageAsync(new FileUploadRequest
-            {
-                Stream = stream,
-                FileExtension = Path.GetExtension(File.Name),
-                FileName = Path.GetFileNameWithoutExtension(File.Name),
-                FileSize = File.Size,
-                ContentType = File.ContentType
-            } );*/
-        }
+    private IBrowserFile? File { get; set; }
+    public MemberViewModel LoggedUser { get; set; } = new();
 
-        MudDialog.Close(DialogResult.Ok(Model));
+    protected override void OnInitialized()
+    {
+        var loggedUserLogin = AuthenticationState?.Result.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
+        LoggedUser = Mapper.Map<MemberViewModel>(MemberService.GetOneByLogin(loggedUserLogin));
     }
 
-    private IBrowserFile? File { get; set; }
+    private async Task ClickedOk()
+    {
+        try
+        {
+            var dbModel = Mapper.Map<Member>(Model);
+            if (File is not null)
+            {
+                //TODO upload the files to the server
+                /*var stream = File.OpenReadStream(25 * 1024 * 1024);
+                var array = new byte[stream.Length];
+                await stream.ReadAsync(array, 0, (int)stream.Length);
+                var photoString = "data:image/jpg;base64,"+Convert.ToBase64String(array);
+                var file = new File
+                {
+                    MemberId = Model.Id,
+                    Path = photoString,
+                    ContentType = File.ContentType,
+                    FileSize = File.Size,
+                    FileExtension = File.Name
+                };
+                dbModel.Photos.Add(file);*/
+                /*var result = await FileUploadService.UploadImageAsync(new FileUploadRequest
+                {
+                    Stream = stream,
+                    FileExtension = Path.GetExtension(File.Name),
+                    FileName = Path.GetFileNameWithoutExtension(File.Name),
+                    FileSize = File.Size,
+                    ContentType = File.ContentType
+                } );*/
+            }
+
+            if (IsUpdate)
+            {
+                await MemberService.UpdateAsync(Model.Id, dbModel);
+            }
+            else
+            {
+                await MemberService.CreateAsync(dbModel);
+            }
+
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception)
+        {
+            MudDialog.Close(DialogResult.Ok(false));
+        }
+    }
 
     private void UploadFile(IBrowserFile file)
     {
@@ -107,17 +168,17 @@
 
     void ChangeIsShow()
     {
-        @if (IsShow)
+        @if (_isShow)
         {
-            IsShow = false;
-            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-            PasswordInput = InputType.Password;
+            _isShow = false;
+            _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            _passwordInput = InputType.Password;
         }
         else
         {
-            IsShow = true;
-            PasswordInputIcon = Icons.Material.Filled.Visibility;
-            PasswordInput = InputType.Text;
+            _isShow = true;
+            _passwordInputIcon = Icons.Material.Filled.Visibility;
+            _passwordInput = InputType.Text;
         }
     }
 

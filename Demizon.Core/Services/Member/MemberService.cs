@@ -33,6 +33,7 @@ public class MemberService(DemizonContext demizonContext) : IMemberService
         }
 
         DemizonContext.Entry(entity).CurrentValues.SetValues(updatedMember);
+        entity.Photos = updatedMember.Photos;
         DemizonContext.Entry(entity).State = EntityState.Modified;
         await DemizonContext.SaveChangesAsync();
     }
