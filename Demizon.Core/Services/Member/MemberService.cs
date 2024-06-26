@@ -14,7 +14,7 @@ public class MemberService(DemizonContext demizonContext) : IMemberService
                throw new EntityNotFoundException($"Member with id: {id} not found.");
     }
 
-    public Dal.Entities.Member? GetOneByLogin(string login)
+    public Dal.Entities.Member? GetOneByLogin(string? login)
     {
         return DemizonContext.Members.FirstOrDefault(x => x.Login == login);
     }

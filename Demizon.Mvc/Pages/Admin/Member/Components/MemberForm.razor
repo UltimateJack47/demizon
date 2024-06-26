@@ -25,7 +25,7 @@
         <MudTextField @bind-Value="Model.Surname" T="string" Label="@Localizer[nameof(DemizonLocales.Surname)]"/>
         <MudTextField @bind-Value="Model.Login" T="string" Label="@Localizer[nameof(DemizonLocales.Login)]" Required="true" RequiredError="Login is required!"/>
         <MudTextField @bind-Value="Model.Email" T="string" Label="@Localizer[nameof(DemizonLocales.Email)]" Required="true" RequiredError="Email is required!"/>
-        @if (IsUpdate && (Model.Id == LoggedUser.Id) || LoggedUser.Role == UserRole.Admin)
+        @if ((IsUpdate && (Model.Id == LoggedUser.Id)) || !IsUpdate)
         {
             <MudTextField @bind-Value="Model.Password" T="string" Label="@Localizer[nameof(DemizonLocales.Password)]"
                           Variant="Variant.Text" InputType="@_passwordInput" Adornment="Adornment.End"
@@ -42,14 +42,15 @@
                 <MudSelectItem Value="@item">@item</MudSelectItem>
             }
         </MudSelect>
-        <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile">
+
+        <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile" Accept="image/*" >
             <ButtonTemplate>
                 <MudButton HtmlTag="label"
                            Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.CloudUpload"
                            for="@context">
-                    @Localizer[nameof(DemizonLocales.UploadFile)]
+                    @Localizer[nameof(DemizonLocales.UploadProfilePhoto)]
                 </MudButton>
             </ButtonTemplate>
         </MudFileUpload>
@@ -62,7 +63,11 @@
                 </MudListItem>
             </MudList>
         }
-        <MudCheckBox @bind-Value="Model.IsVisible" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"></MudCheckBox>
+        @if (LoggedUser.Role == UserRole.Admin)
+        {
+            <MudCheckBox @bind-Value="Model.IsVisible" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"></MudCheckBox>
+        }
+
     </DialogContent>
 
     <DialogActions>
@@ -82,6 +87,9 @@
 
 @code {
     [Inject] IMemberService MemberService { get; set; } = null!;
+    [Inject] private IFileUploadService FileUploadService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -91,16 +99,11 @@
 
     [Parameter] public bool IsUpdate { get; set; }
 
+    private MemberViewModel LoggedUser { get; set; } = new();
     bool _isShow;
     InputType _passwordInput = InputType.Password;
     string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-
-    [Inject] private IFileUploadService FileUploadService { get; set; } = null!;
-
-    [Inject] private ISnackbar Snackbar { get; set; } = null!;
-
     private IBrowserFile? File { get; set; }
-    public MemberViewModel LoggedUser { get; set; } = new();
 
     protected override void OnInitialized()
     {
@@ -147,11 +150,12 @@
             {
                 await MemberService.CreateAsync(dbModel);
             }
-
+            Snackbar.Add(IsUpdate ? "The member has been updated." : "The member has been created.", Severity.Success);
             MudDialog.Close(DialogResult.Ok(true));
         }
         catch (Exception)
         {
+            Snackbar.Add("Something went wrong.", Severity.Error);
             MudDialog.Close(DialogResult.Ok(false));
         }
     }

@@ -164,4 +164,7 @@
     <data name="VideoLinks" xml:space="preserve">
         <value>Video Links</value>
     </data>
+    <data name="UploadProfilePhoto" xml:space="preserve">
+        <value>Upload profile photo</value>
+    </data>
 </root>

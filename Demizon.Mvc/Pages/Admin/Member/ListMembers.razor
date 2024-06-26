@@ -68,12 +68,12 @@
             }
         </MudTd>
         <MudTd>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(member.Id)"/>
             @if (member.Id == LoggedUser.Id || LoggedUser.Role == UserRole.Admin)
             {
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(member)"/>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveMember(member.Id)"/>
             }
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(member.Id)"/>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveMember(member.Id)"/>
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -124,18 +124,9 @@
         var dialog = await DialogService.ShowAsync<MemberForm>("Member form", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (!result.Canceled && result.Data is true)
         {
-            var memberResult = result.Data is true;
-            if (memberResult)
-            {
-                Snackbar.Add(isUpdate ? "The member has been updated." : "The member has been created.", Severity.Success);
-                await RefreshTable();
-            }
-            else
-            {
-                Snackbar.Add("Something went wrong.", Severity.Error);
-            }
+            await RefreshTable();
         }
     }
 

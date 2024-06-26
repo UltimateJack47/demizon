@@ -420,6 +420,15 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Upload profile photo.
+        /// </summary>
+        internal static string UploadProfilePhoto {
+            get {
+                return ResourceManager.GetString("UploadProfilePhoto", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Video Link.
         /// </summary>
         internal static string VideoLink {

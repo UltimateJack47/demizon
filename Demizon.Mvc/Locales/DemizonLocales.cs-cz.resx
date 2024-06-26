@@ -149,4 +149,7 @@
     <data name="Gender" xml:space="preserve">
         <value>Pohlaví</value>
     </data>
+    <data name="UploadProfilePhoto" xml:space="preserve">
+        <value>Nahrát profilovku</value>
+    </data>
 </root>
