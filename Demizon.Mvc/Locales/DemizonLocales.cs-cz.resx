@@ -102,7 +102,7 @@
         <value>Chcete-li si nás objednat na vaši akci na stránce Kontakt zjistíte způsoby jak nás oslovit.</value>
     </data>
     <data name="EnglishAndGermanCommunicationText" xml:space="preserve">
-        <value>Pro komunikaci v anglickém nebo německém jazyce:</value>
+        <value>English/Deutsch contact:</value>
     </data>
     <data name="Men" xml:space="preserve">
         <value>Muži</value>
@@ -151,5 +151,8 @@
     </data>
     <data name="UploadProfilePhoto" xml:space="preserve">
         <value>Nahrát profilovku</value>
+    </data>
+    <data name="Page" xml:space="preserve">
+        <value>Stránka</value>
     </data>
 </root>

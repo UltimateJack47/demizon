@@ -3,14 +3,17 @@
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
 <MudList>
-    <MudListItem Expanded="true" InitiallyExpanded="true" Text="Jana Belochova">
+    <MudListItem Expanded="true" InitiallyExpanded="true" Text="Jana Vadura">
         <NestedList>
             <MudListItem>@Localizer[nameof(DemizonLocales.EnglishAndGermanCommunicationText)]</MudListItem>
-            <MudListItem><MudIcon Icon="@Icons.Material.Outlined.Email" Size="Size.Small" Class="mr-2"></MudIcon> jana.belochova@gmail.com</MudListItem>
+            <MudListItem>
+                <MudIcon Icon="@Icons.Material.Outlined.Email" Size="Size.Small" Class="mr-2"></MudIcon>
+                janab.kolenc@gmail.com
+            </MudListItem>
             <MudListItem><MudIcon Icon="@Icons.Material.Outlined.Phone" Size="Size.Small" Class="mr-2"></MudIcon> +420 776 642 622</MudListItem>
         </NestedList>
     </MudListItem>
-    
+
     <MudListItem Expanded="true" InitiallyExpanded="true" Text="Jiří Rybecký">
         <NestedList>
             <MudListItem><MudIcon Icon="@Icons.Material.Outlined.Phone" Size="Size.Small" Class="mr-2"></MudIcon> 720 686 138</MudListItem>
@@ -20,8 +23,10 @@
 </MudList>
 
 @code {
+
     protected override void OnInitialized()
     {
         PageService.SetTitle(Localizer[nameof(DemizonLocales.Contact)]);
     }
+
 }

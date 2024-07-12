@@ -9,6 +9,10 @@
 {
     <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageHeader)]</MudText>
     <MudText Typo="Typo.body1">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageText)]</MudText>
+    <MudLink
+        Href="@(NavigationManager.BaseUri + "Contact")">
+        @Localizer[nameof(DemizonLocales.Contact)] @Localizer[nameof(DemizonLocales.Page)].ToString().ToLower()
+    </MudLink>
 }
 else
 {

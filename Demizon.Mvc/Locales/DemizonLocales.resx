@@ -167,4 +167,7 @@
     <data name="UploadProfilePhoto" xml:space="preserve">
         <value>Upload profile photo</value>
     </data>
+    <data name="Page" xml:space="preserve">
+        <value>Page</value>
+    </data>
 </root>
