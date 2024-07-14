@@ -8,6 +8,9 @@
         <MudTextField @bind-Value="EventModel.Name" Label="@Localizer[nameof(DemizonLocales.Name)]"></MudTextField>
         <MudDateRangePicker @bind-DateRange="EventModel.Date" Label="@Localizer[nameof(DemizonLocales.When)]"></MudDateRangePicker>
         <MudTextField @bind-Value="EventModel.Place" Label="@Localizer[nameof(DemizonLocales.Place)]"></MudTextField>
+        <MudTextField @bind-Value="EventModel.Information"
+                      Label="@Localizer[nameof(DemizonLocales.Information)]">
+        </MudTextField>
         <MudCheckBox @bind-Value="EventModel.IsPublic" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"></MudCheckBox>
     </DialogContent>
 
@@ -28,14 +31,11 @@
 
 @code {
 
-    [CascadingParameter]
-    MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter]
-    public EventViewModel EventModel { get; set; } = new();
+    [Parameter] public EventViewModel EventModel { get; set; } = new();
 
-    [Parameter]
-    public bool IsUpdate { get; set; }
+    [Parameter] public bool IsUpdate { get; set; }
 
     private void Cancel()
     {

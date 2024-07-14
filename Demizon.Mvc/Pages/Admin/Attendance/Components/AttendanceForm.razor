@@ -8,7 +8,17 @@
     </TitleContent>
 
     <DialogContent>
-        @Date
+        @if (Model.Event is not null)
+        {
+            <MudText Align="Align.Center" Typo="Typo.h4">
+                @Model.Event.Name<br/>
+                @(Model.Event.DateFrom.ToString("dd.MM.") + " - " + Model.Event.DateTo.ToString("dd.MM."))
+            </MudText>
+        }
+        else
+        {
+            @Model.Date.ToString("dd.MM.")
+        }
         <MudCheckBox @bind-Value="Model.Attends" Label="@Localizer[nameof(DemizonLocales.Attends)]"/>
         <MudTextField @bind-Value="Model.Comment" Label="@Localizer[nameof(DemizonLocales.Comment)]"/>
     </DialogContent>
@@ -16,14 +26,7 @@
     <DialogActions>
         <MudButton OnClick="Cancel">@Localizer[nameof(DemizonLocales.Cancel)]</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
-            @if (IsUpdate)
-            {
-                <span>@Localizer[nameof(DemizonLocales.Update)]</span>
-            }
-            else
-            {
-                <span>@Localizer[nameof(DemizonLocales.Create)]</span>
-            }
+            <span>@Localizer[nameof(DemizonLocales.Confirm)]</span>
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -33,10 +36,6 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter] public AttendanceViewModel Model { get; set; } = new();
-
-    [Parameter] public bool IsUpdate { get; set; }
-
-    [Parameter] public DateTime Date { get; set; }
 
     private void Cancel()
     {

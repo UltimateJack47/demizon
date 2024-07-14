@@ -19,24 +19,28 @@ public class AttendanceService(DemizonContext demizonContext) : IAttendanceServi
         return DemizonContext.Attendances.AsQueryable();
     }
 
-    public async Task UpdateAsync(int id, Dal.Entities.Attendance updatedAttendance)
-    {
-        var entity = await DemizonContext.Attendances.FindAsync(id);
-        if (entity is null)
-        {
-            throw new EntityNotFoundException($"Attendance with id: {id} not found.");
-        }
-
-        DemizonContext.Entry(entity).CurrentValues.SetValues(updatedAttendance);
-        DemizonContext.Entry(entity).State = EntityState.Modified;
-        await DemizonContext.SaveChangesAsync();
-    }
-
-    public async Task<bool> CreateAsync(Dal.Entities.Attendance attendance)
+    public async Task<bool> CreateOrUpdateAsync(Dal.Entities.Attendance attendance)
     {
         try
         {
-            await DemizonContext.AddAsync(attendance);
+            if (attendance.Id != 0)
+            {
+                var dbEntity = await DemizonContext.Attendances.FindAsync(attendance.Id);
+                if (dbEntity is not null)
+                {
+                    DemizonContext.Entry(dbEntity).CurrentValues.SetValues(attendance);
+                    DemizonContext.Entry(dbEntity).State = EntityState.Modified;
+                }
+                else
+                {
+                    await DemizonContext.AddAsync(attendance);
+                }
+            }
+            else
+            {
+                await DemizonContext.AddAsync(attendance);
+            }
+
             await DemizonContext.SaveChangesAsync();
             return true;
         }
@@ -68,7 +72,9 @@ public class AttendanceService(DemizonContext demizonContext) : IAttendanceServi
 
     public async Task<List<Dal.Entities.Attendance>> GetMemberAttendancesAsync(int memberId)
     {
-        return await DemizonContext.Attendances.Where(x => x.MemberId == memberId && x.Date >= DateTime.Today)
+        return await DemizonContext.Attendances
+            .Include(x => x.Event)
+            .Where(x => x.MemberId == memberId && x.Date >= DateTime.Today)
             .ToListAsync();
     }
 }

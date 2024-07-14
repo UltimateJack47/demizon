@@ -26,7 +26,9 @@ public class AttendanceViewModel
         public DtoProfile()
         {
             CreateMap<Attendance, AttendanceViewModel>()
-                .ReverseMap();
+                .ReverseMap()
+                .ForMember(dest => dest.Member, opt => opt.Ignore())
+                .ForMember(dest => dest.Event, opt => opt.Ignore());
         }
     }
 }

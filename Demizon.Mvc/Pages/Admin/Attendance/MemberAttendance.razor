@@ -1,4 +1,4 @@
-﻿@page "/Admin/MemberAttendance"
+﻿@page "/Admin/MemberAttendance/"
 
 @attribute [Authorize(Roles = "Admin, Standard")]
 
@@ -7,10 +7,32 @@
 @layout AdminMainLayout
 
 <MudStack Justify="Justify.Center" Row="true">
-    @foreach (var date in Dates)
-    {
-        <MudButton OnClick="() => SetAttendance(date)" Class="@GetThemeStyle(date)">
-            @date.ToString("dd.MM.")
-        </MudButton>
-    }
+    <MudButton StartIcon="@Icons.Material.Filled.ArrowLeft" OnClick="() => ChangeDate(false)"></MudButton>
+    <MudButton StartIcon="@Icons.Material.Filled.ArrowRight" OnClick="() => ChangeDate(true)"></MudButton>
 </MudStack>
+
+<MudContainer MaxWidth="MaxWidth.Large" Fixed="true">
+    <MudStack Justify="Justify.Center" Wrap="Wrap.Wrap" Row="true">
+        @foreach (var attendance in Attendances)
+        {
+            <MudButton OnClick="() => SetAttendance(attendance)" Class="@GetThemeStyle(attendance)">
+                @if (attendance.Event is not null)
+                {
+                    @attendance.Event.Name<br/>
+                    if (attendance.Event.DateFrom == attendance.Event.DateTo)
+                    {
+                        @attendance.Event.DateFrom.ToString("dd.MM.")
+                    }
+                    else
+                    {
+                        @(attendance.Event.DateFrom.ToString("dd.MM.") + " - " + attendance.Event.DateTo.ToString("dd.MM."))
+                    }
+                }
+                else
+                {
+                    @attendance.Date.ToString("dd.MM.")
+                }
+            </MudButton>
+        }
+    </MudStack>
+</MudContainer>

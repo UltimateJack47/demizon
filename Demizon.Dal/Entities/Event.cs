@@ -12,6 +12,8 @@ public class Event
 
     public string? Place { get; set; }
 
+    public string? Information { get; set; }
+
     public bool IsPublic { get; set; } = false;
 
     public virtual List<Attendance> Attendances { get; set; } = [];

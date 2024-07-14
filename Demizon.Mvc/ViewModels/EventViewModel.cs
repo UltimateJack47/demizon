@@ -16,6 +16,8 @@ public class EventViewModel
 
     public string? Place { get; set; }
 
+    public string? Information { get; set; }
+
     public DateRange Date { get; set; } = null!;
 
     public bool IsPublic { get; set; }

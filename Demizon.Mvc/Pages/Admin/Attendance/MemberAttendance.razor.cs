@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using Demizon.Core.Services.Attendance;
+using Demizon.Core.Services.Event;
 using Demizon.Core.Services.Member;
 using Demizon.Mvc.Locales;
 using Demizon.Mvc.Pages.Admin.Attendance.Components;
@@ -16,59 +17,104 @@ public partial class MemberAttendance : ComponentBase
 
     [Inject] private IMemberService MemberService { get; set; } = null!;
     [Inject] private IAttendanceService AttendanceService { get; set; } = null!;
+    [Inject] private IEventService EventService { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
+    private int Year { get; set; }
+    private int Month { get; set; }
+    private DateTime StartDate { get; set; }
+
     private MemberViewModel LoggedUser { get; set; } = new();
 
-    private List<DateTime> Dates { get; set; } = [];
+    private List<AttendanceViewModel> Attendances { get; set; } = [];
 
     protected override void OnInitialized()
     {
+        if (Year == 0)
+        {
+            Year = DateTime.Today.Year;
+        }
+
+        if (Month == 0)
+        {
+            Month = DateTime.Today.Month;
+        }
+
         var loggedUserLogin = AuthenticationState?.Result.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
         LoggedUser = Mapper.Map<MemberViewModel>(MemberService.GetOneByLogin(loggedUserLogin));
 
-        var startDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        var endDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month + 3, 1);
-        var allDates = Enumerable.Range(0, 1 + endDate.Subtract(startDate).Days)
-            .Select(offset => startDate.AddDays(offset))
+        PageService.SetTitle(Localizer[nameof(DemizonLocales.Attendance)]);
+    }
+
+    private async Task LoadData()
+    {
+        LoggedUser.Attendances =
+            Mapper.Map<List<AttendanceViewModel>>(await AttendanceService.GetMemberAttendancesAsync(LoggedUser.Id));
+        StartDate = new DateTime(Year, Month, 1);
+        var endDate = new DateTime(StartDate.AddMonths(3).Year, StartDate.AddMonths(3).Month, 1);
+        var allDates = Enumerable.Range(0, 1 + endDate.Subtract(StartDate).Days)
+            .Select(offset => StartDate.AddDays(offset))
             .ToList();
 
-        Dates = allDates.Where(date => date.DayOfWeek == DayOfWeek.Friday).ToList();
-        PageService.SetTitle(Localizer[nameof(DemizonLocales.Attendance)]);
+        var events = Mapper.Map<List<EventViewModel>>(EventService.GetAll()
+            .Where(x => x.DateFrom >= StartDate && x.DateFrom <= endDate).ToList());
+        Attendances = allDates.Where(date => date.DayOfWeek == DayOfWeek.Friday).Select(x => new AttendanceViewModel
+        {
+            Member = LoggedUser,
+            MemberId = LoggedUser.Id,
+            Date = x,
+        }).ToList();
+        Attendances.AddRange(events.Select(x => new AttendanceViewModel
+        {
+            Event = x,
+            EventId = x.Id,
+            MemberId = LoggedUser.Id,
+            Member = LoggedUser,
+            Date = x.DateFrom
+        }));
+        foreach (var attendance in Attendances)
+        {
+            var userAttendance =
+                LoggedUser.Attendances.FirstOrDefault(x =>
+                    x.Date == attendance.Date || x.EventId == attendance.EventId);
+            if (userAttendance is not null)
+            {
+                attendance.Id = userAttendance.Id;
+                attendance.Attends = userAttendance.Attends;
+                attendance.Comment = userAttendance.Comment;
+            }
+        }
+
+        Attendances = Attendances.OrderBy(x => x.Date).ToList();
     }
 
     protected override async Task OnInitializedAsync()
     {
-        LoggedUser.Attendances =
-            Mapper.Map<List<AttendanceViewModel>>(await AttendanceService.GetMemberAttendancesAsync(LoggedUser.Id));
+        await LoadData();
     }
 
-    private string GetThemeStyle(DateTime date)
+    private string GetThemeStyle(AttendanceViewModel date)
     {
-        var attendance = LoggedUser.Attendances.FirstOrDefault(x => x.Date == date);
-        if (attendance is null)
+        var userAttendance = LoggedUser.Attendances.FirstOrDefault(x => x.Date == date.Date);
+        if (userAttendance is null)
         {
-            return "pa-3 mud-theme-info";
+            return date.Event is not null ? "pa-3 mud-theme-warning" : "pa-3 mud-theme-info";
         }
 
-        return attendance.Attends switch
+        return userAttendance.Attends switch
         {
             true => "pa-3 mud-theme-success",
             false => "pa-3 mud-theme-error"
         };
     }
 
-    private async Task SetAttendance(DateTime date)
+    private async Task SetAttendance(AttendanceViewModel attendance)
     {
-        var viewModel = LoggedUser.Attendances.FirstOrDefault(x => x.Date == date);
-        var isUpdate = viewModel is not null;
         var options = new DialogOptions {CloseOnEscapeKey = true};
         var parameters = new DialogParameters
         {
-            {"IsUpdate", isUpdate},
-            {"Model", viewModel ?? new AttendanceViewModel()},
-            {"Date", date}
+            {"Model", attendance}
         };
         var dialog = await DialogService.ShowAsync<AttendanceForm>("Attendance form", parameters, options);
 
@@ -79,26 +125,22 @@ public partial class MemberAttendance : ComponentBase
             var attendanceResult = result.Data as AttendanceViewModel;
             try
             {
-                attendanceResult!.Date = date;
-                attendanceResult.MemberId = LoggedUser.Id;
-                if (isUpdate)
-                {
-                    await AttendanceService.UpdateAsync(viewModel!.Id,
-                        Mapper.Map<Dal.Entities.Attendance>(attendanceResult));
-                    Snackbar.Add("The attendance has been updated.", Severity.Success);
-                }
-                else
-                {
-                    await AttendanceService.CreateAsync(Mapper.Map<Dal.Entities.Attendance>(attendanceResult));
-                    Snackbar.Add("The attendance has been created.", Severity.Success);
-                }
-
-                StateHasChanged();
+                await AttendanceService.CreateOrUpdateAsync(Mapper.Map<Dal.Entities.Attendance>(attendanceResult));
+                await LoadData();
+                Snackbar.Add("The attendance has been updated.", Severity.Success);
             }
             catch (Exception)
             {
                 Snackbar.Add("Something went wrong.", Severity.Error);
             }
         }
+    }
+
+    private async Task ChangeDate(bool isNext)
+    {
+        StartDate = isNext ? StartDate.AddMonths(3) : StartDate.AddMonths(-3);
+        Year = StartDate.Year;
+        Month = StartDate.Month;
+        await LoadData();
     }
 }

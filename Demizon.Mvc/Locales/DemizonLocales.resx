@@ -110,6 +110,9 @@
     <data name="Comment" xml:space="preserve">
         <value>Comment</value>
     </data>
+    <data name="Confirm" xml:space="preserve">
+        <value>Confirm</value>
+    </data>
     <data name="Events" xml:space="preserve">
         <value>Events</value>
     </data>
@@ -118,6 +121,9 @@
     </data>
     <data name="InvalidSignIn" xml:space="preserve">
         <value>Invalid Login or Password</value>
+    </data>
+    <data name="Information" xml:space="preserve">
+        <value>Information</value>
     </data>
     <data name="NoUpcomingEventsPageHeader" xml:space="preserve">
         <value>Our calendar is free at the moment.</value>
