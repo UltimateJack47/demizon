@@ -1,5 +1,5 @@
 ﻿@using System.Security.Claims
-@using Demizon.Core.Services
+@using Demizon.Core.Services.FileUpload
 @using Demizon.Core.Services.Member
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.ViewModels
@@ -43,7 +43,7 @@
             }
         </MudSelect>
 
-        <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile" Accept="image/*" >
+        <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile" Accept="image/*">
             <ButtonTemplate>
                 <MudButton HtmlTag="label"
                            Variant="Variant.Filled"
@@ -150,6 +150,7 @@
             {
                 await MemberService.CreateAsync(dbModel);
             }
+
             Snackbar.Add(IsUpdate ? "The member has been updated." : "The member has been created.", Severity.Success);
             MudDialog.Close(DialogResult.Ok(true));
         }

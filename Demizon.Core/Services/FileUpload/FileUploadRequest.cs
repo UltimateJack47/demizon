@@ -1,4 +1,4 @@
-namespace Demizon.Core.Services;
+namespace Demizon.Core.Services.FileUpload;
 
 public class FileUploadRequest
 {

@@ -1,0 +1,51 @@
+﻿@using Demizon.Mvc.ViewModels
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            @Localizer[nameof(DemizonLocales.Attendance)]
+            - @Localizer[nameof(DemizonLocales.Form)]
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @Date
+        <MudCheckBox @bind-Value="Model.Attends" Label="@Localizer[nameof(DemizonLocales.Attends)]"/>
+        <MudTextField @bind-Value="Model.Comment" Label="@Localizer[nameof(DemizonLocales.Comment)]"/>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">@Localizer[nameof(DemizonLocales.Cancel)]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
+            @if (IsUpdate)
+            {
+                <span>@Localizer[nameof(DemizonLocales.Update)]</span>
+            }
+            else
+            {
+                <span>@Localizer[nameof(DemizonLocales.Create)]</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public AttendanceViewModel Model { get; set; } = new();
+
+    [Parameter] public bool IsUpdate { get; set; }
+
+    [Parameter] public DateTime Date { get; set; }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void ClickedOk()
+    {
+        MudDialog.Close(DialogResult.Ok(Model));
+    }
+
+}

@@ -45,6 +45,11 @@
         <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <MudIllegalParameters>V7IgnoreCase</MudIllegalParameters>
+        <MudAllowedAttributePattern>LowerCase</MudAllowedAttributePattern>
+    </PropertyGroup>
+
     <ItemGroup>
         <Compile Update="Locales\DemizonLocales.Designer.cs">
             <DesignTime>True</DesignTime>

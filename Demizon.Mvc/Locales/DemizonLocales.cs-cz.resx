@@ -155,4 +155,13 @@
     <data name="Page" xml:space="preserve">
         <value>Stránka</value>
     </data>
+    <data name="Attendance" xml:space="preserve">
+        <value>Docházka</value>
+    </data>
+    <data name="Attends" xml:space="preserve">
+        <value>Zúčastním se?</value>
+    </data>
+    <data name="Comment" xml:space="preserve">
+        <value>Poznámka</value>
+    </data>
 </root>

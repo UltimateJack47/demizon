@@ -2,7 +2,7 @@
 using ImageMagick;
 using Microsoft.Extensions.Options;
 
-namespace Demizon.Core.Services;
+namespace Demizon.Core.Services.FileUpload;
 
 public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) : IFileUploadService
 {

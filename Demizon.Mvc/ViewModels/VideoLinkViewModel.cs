@@ -6,7 +6,7 @@ namespace Demizon.Mvc.ViewModels;
 public class VideoLinkViewModel
 {
     public int Id { get; set; }
-    
+
     public string Name { get; set; } = null!;
 
     public bool IsVisible { get; set; } = false;
@@ -14,6 +14,10 @@ public class VideoLinkViewModel
     public string Url { get; set; } = null!;
 
     public int Year { get; set; }
+
+    public int? DanceId { get; set; }
+
+    public DanceViewModel? Dance { get; set; }
 
     public class DtoProfile : Profile
     {

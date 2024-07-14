@@ -8,6 +8,10 @@ public class File
 
     public int? MemberId { get; set; }
 
+    public int? DanceId { get; set; }
+
+    public virtual Dance? Dance { get; set; }
+
     public string Path { get; set; } = null!;
 
     public string FileExtension { get; set; } = null!;

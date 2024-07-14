@@ -21,16 +21,18 @@ public class MemberViewModel
     public string? Password { get; set; }
 
     public UserRole Role { get; set; }
-    
+
     public Gender Gender { get; set; }
 
     public bool IsVisible { get; set; } = false;
 
     public DateTime? Birthdate { get; set; }
-    
+
     public DateTime? MemberSince { get; set; }
 
-    public virtual List<FileViewModel> Photos { get; set; } = [];
+    public List<FileViewModel> Photos { get; set; } = [];
+
+    public List<AttendanceViewModel> Attendances { get; set; } = [];
 
     public class DtoProfile : Profile
     {

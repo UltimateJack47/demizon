@@ -101,6 +101,15 @@
     <data name="Administration" xml:space="preserve">
         <value>Administration</value>
     </data>
+    <data name="Attendance" xml:space="preserve">
+        <value>Attendance</value>
+    </data>
+    <data name="Attends" xml:space="preserve">
+        <value>Attends</value>
+    </data>
+    <data name="Comment" xml:space="preserve">
+        <value>Comment</value>
+    </data>
     <data name="Events" xml:space="preserve">
         <value>Events</value>
     </data>

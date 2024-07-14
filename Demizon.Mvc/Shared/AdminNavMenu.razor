@@ -18,5 +18,9 @@
             </Authorized>
         </AuthorizeView>
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Members")" Icon="@Icons.Material.Filled.People">@Localizer[nameof(DemizonLocales.Members)]</MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/MemberAttendance")"
+                    Icon="@Icons.Material.Filled.CalendarMonth">
+            @Localizer[nameof(DemizonLocales.Attendance)]
+        </MudNavLink>
     </MudNavMenu>
 </MudPaper>

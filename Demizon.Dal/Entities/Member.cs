@@ -15,16 +15,18 @@ public class Member
     public string PasswordHash { get; set; } = null!;
 
     public UserRole Role { get; set; } = UserRole.Standard;
-    
+
     public Gender Gender { get; set; }
 
     public bool IsVisible { get; set; } = false;
 
     public DateTime? BirthDate { get; set; }
-    
+
     public DateTime? MemberSince { get; set; }
 
     public virtual List<File> Photos { get; set; } = [];
+
+    public virtual List<Attendance> Attendances { get; set; } = [];
 }
 
 public enum UserRole

@@ -1,0 +1,16 @@
+﻿@page "/Admin/MemberAttendance"
+
+@attribute [Authorize(Roles = "Admin, Standard")]
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+@layout AdminMainLayout
+
+<MudStack Justify="Justify.Center" Row="true">
+    @foreach (var date in Dates)
+    {
+        <MudButton OnClick="() => SetAttendance(date)" Class="@GetThemeStyle(date)">
+            @date.ToString("dd.MM.")
+        </MudButton>
+    }
+</MudStack>

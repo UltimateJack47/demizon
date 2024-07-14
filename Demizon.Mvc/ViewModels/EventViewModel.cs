@@ -20,6 +20,8 @@ public class EventViewModel
 
     public bool IsPublic { get; set; }
 
+    public List<AttendanceViewModel> Attendances { get; set; } = [];
+
     public class DtoProfile : Profile
     {
         public DtoProfile()
@@ -27,7 +29,7 @@ public class EventViewModel
             CreateMap<Event, EventViewModel>()
                 .ForMember(x => x.Date,
                     opt => opt.MapFrom(y => new DateRange
-                        { Start = y.DateFrom, End = y.DateTo }))
+                        {Start = y.DateFrom, End = y.DateTo}))
                 .ReverseMap()
                 .ForMember(x => x.DateFrom, opt => opt.MapFrom(y => y.Date.Start!.Value))
                 .ForMember(x => x.DateTo, opt => opt.MapFrom(y => y.Date.End!.Value));
