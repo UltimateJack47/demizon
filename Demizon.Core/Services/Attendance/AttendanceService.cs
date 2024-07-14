@@ -21,6 +21,7 @@ public class AttendanceService(DemizonContext demizonContext) : IAttendanceServi
 
     public async Task<bool> CreateOrUpdateAsync(Dal.Entities.Attendance attendance)
     {
+        attendance.LastUpdated = DateTime.Now;
         try
         {
             if (attendance.Id != 0)
@@ -70,11 +71,12 @@ public class AttendanceService(DemizonContext demizonContext) : IAttendanceServi
         }
     }
 
-    public async Task<List<Dal.Entities.Attendance>> GetMemberAttendancesAsync(int memberId)
+    public async Task<List<Dal.Entities.Attendance>> GetMemberAttendancesAsync(int memberId, DateTime dateFrom,
+        DateTime dateTo)
     {
         return await DemizonContext.Attendances
             .Include(x => x.Event)
-            .Where(x => x.MemberId == memberId && x.Date >= DateTime.Today)
+            .Where(x => x.MemberId == memberId && x.Date >= dateFrom && x.Date <= dateTo)
             .ToListAsync();
     }
 }

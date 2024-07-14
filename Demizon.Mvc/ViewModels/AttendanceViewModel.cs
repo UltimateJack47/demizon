@@ -21,6 +21,8 @@ public class AttendanceViewModel
 
     public MemberViewModel Member { get; set; } = null!;
 
+    public DateTime LastUpdated { get; set; }
+
     public class DtoProfile : Profile
     {
         public DtoProfile()

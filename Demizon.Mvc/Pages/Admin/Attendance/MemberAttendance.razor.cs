@@ -49,8 +49,6 @@ public partial class MemberAttendance : ComponentBase
 
     private async Task LoadData()
     {
-        LoggedUser.Attendances =
-            Mapper.Map<List<AttendanceViewModel>>(await AttendanceService.GetMemberAttendancesAsync(LoggedUser.Id));
         StartDate = new DateTime(Year, Month, 1);
         var endDate = new DateTime(StartDate.AddMonths(3).Year, StartDate.AddMonths(3).Month, 1);
         var allDates = Enumerable.Range(0, 1 + endDate.Subtract(StartDate).Days)
@@ -73,11 +71,14 @@ public partial class MemberAttendance : ComponentBase
             Member = LoggedUser,
             Date = x.DateFrom
         }));
+        LoggedUser.Attendances =
+            Mapper.Map<List<AttendanceViewModel>>(
+                await AttendanceService.GetMemberAttendancesAsync(LoggedUser.Id, StartDate, endDate));
         foreach (var attendance in Attendances)
         {
             var userAttendance =
                 LoggedUser.Attendances.FirstOrDefault(x =>
-                    x.Date == attendance.Date || x.EventId == attendance.EventId);
+                    x.Date == attendance.Date || (x.EventId.HasValue && x.EventId == attendance.EventId));
             if (userAttendance is not null)
             {
                 attendance.Id = userAttendance.Id;

@@ -10,6 +10,8 @@ public class Attendance
 
     public DateTime Date { get; set; }
 
+    public DateTime LastUpdated { get; set; } = DateTime.Now;
+
     public int? EventId { get; set; }
 
     public virtual Event? Event { get; set; }
