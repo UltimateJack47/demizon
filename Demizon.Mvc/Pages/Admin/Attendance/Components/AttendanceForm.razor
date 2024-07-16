@@ -1,18 +1,19 @@
 ﻿@using Demizon.Mvc.ViewModels
 <MudDialog>
-    <TitleContent>
-        <MudText Typo="Typo.h6">
-            @Localizer[nameof(DemizonLocales.Attendance)]
-            - @Localizer[nameof(DemizonLocales.Form)]
-        </MudText>
-    </TitleContent>
-
     <DialogContent>
         @if (Model.Event is not null)
         {
             <MudText Align="Align.Center" Typo="Typo.h4">
-                @Model.Event.Name<br/>
-                @(Model.Event.DateFrom.ToString("dd.MM.") + " - " + Model.Event.DateTo.ToString("dd.MM."))
+                @(Model.Event.Name + " ")
+                @if (Model.Event.DateFrom == Model.Event.DateTo)
+                {
+                    @(Model.Event.DateFrom.ToString("dd.MM."))
+                }
+                else
+                {
+                    @(Model.Event.DateFrom.ToString("dd.MM.") + " - " + Model.Event.DateTo.ToString("dd.MM."))
+                }
+
             </MudText>
         }
         else
@@ -20,7 +21,7 @@
             @Model.Date.ToString("dd.MM.")
         }
         <MudCheckBox @bind-Value="Model.Attends" Label="@Localizer[nameof(DemizonLocales.Attends)]"/>
-        <MudTextField @bind-Value="Model.Comment" Label="@Localizer[nameof(DemizonLocales.Comment)]"/>
+        <MudTextField @bind-Value="Model.Comment" AutoGrow="true" Label="@Localizer[nameof(DemizonLocales.Comment)]"/>
     </DialogContent>
 
     <DialogActions>

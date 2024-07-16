@@ -32,7 +32,9 @@
         <MudTh>
             <b>@Localizer[nameof(DemizonLocales.Place)]</b>
         </MudTh>
-
+        <MudTh Style="width: 40px"></MudTh>
+        <MudTh Style="width: 40px"></MudTh>
+        <MudTh Style="width: 40px"></MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="upcomingEvent">
@@ -66,8 +68,12 @@
             }
         </MudTd>
         <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(upcomingEvent)"/>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(upcomingEvent.Id)"/>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(upcomingEvent)"/>
+        </MudTd>
+        <MudTd>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveEvent(upcomingEvent.Id)"/>
         </MudTd>
     </RowTemplate>

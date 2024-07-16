@@ -1,4 +1,5 @@
 ﻿@page "/Admin/MemberAttendance/"
+@using Demizon.Dal.Entities
 
 @attribute [Authorize(Roles = "Admin, Standard")]
 
@@ -6,7 +7,7 @@
 
 @layout AdminMainLayout
 
-<MudStack Justify="Justify.Center" Row="true">
+<MudStack Justify="Justify.Center" Row="true" Class="mb-2">
     <MudButton StartIcon="@Icons.Material.Filled.ArrowLeft" OnClick="() => ChangeDate(false)"></MudButton>
     <MudButton StartIcon="@Icons.Material.Filled.ArrowRight" OnClick="() => ChangeDate(true)"></MudButton>
 </MudStack>
@@ -35,4 +36,116 @@
             </MudButton>
         }
     </MudStack>
+</MudContainer>
+
+<MudContainer MaxWidth="MaxWidth.Large" Fixed="true" Class="mt-4">
+    <MudSimpleTable Striped="true">
+        <thead>
+        <th>Name</th>
+        @foreach (var attendance in Attendances)
+        {
+            <th>
+                @if (attendance.Event is not null)
+                {
+                    @attendance.Event.Name<br/>
+                    if (attendance.Event.DateFrom == attendance.Event.DateTo)
+                    {
+                        @attendance.Event.DateFrom.ToString("dd.MM.")
+                    }
+                    else
+                    {
+                        @(attendance.Event.DateFrom.ToString("dd.MM.") + " - " + attendance.Event.DateTo.ToString("dd.MM."))
+                    }
+                }
+                else
+                {
+                    @attendance.Date.ToString("dd.MM.")
+                }
+            </th>
+        }
+        </thead>
+
+        <tbody>
+        @foreach (var girl in TableMembers.Where(x => x.Gender == Gender.Female))
+        {
+            <tr>
+                <td>@girl.Name @girl.Surname</td>
+                @foreach (var attendance in Attendances)
+                {
+                    <td>
+                        @{
+                            var day = girl.Attendances.FirstOrDefault(x => x.Date == attendance.Date);
+                            if (day is not null)
+                            {
+                                if (day.Attends)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success"></MudIcon>
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Close" Color="Color.Error"></MudIcon>
+                                }
+                            }
+                        }
+                    </td>
+                }
+            </tr>
+        }
+
+        <tr>
+            <td><b>Sum girls</b></td>
+            @foreach (var attendance in Attendances)
+            {
+                <td><b>
+                    @TableMembers.Where(x=>x.Gender == Gender.Female).SelectMany(x=>x.Attendances).Where(y=>y.Date == attendance.Date).Count(y=> y.Attends)
+                    </b></td>
+            }
+
+        </tr>
+
+        @foreach (var boy in TableMembers.Where(x => x.Gender == Gender.Male))
+        {
+        <tr>
+            <td>@boy.Name @boy.Surname</td>
+            @foreach (var attendance in Attendances)
+            {
+            <td>
+                @{
+                var day = boy.Attendances.FirstOrDefault(x => x.Date == attendance.Date);
+                if (day is not null)
+                {
+                    if (day.Attends)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success"></MudIcon>
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Close" Color="Color.Error"></MudIcon>
+                    }
+                }
+                }
+            </td>
+            }
+        </tr>
+        }
+        <tr>
+            <td><b>Sum boys</b></td>
+            @foreach (var attendance in Attendances)
+            {
+                <td><b>
+                    @TableMembers.Where(x=>x.Gender == Gender.Male).SelectMany(x=>x.Attendances).Where(y=>y.Date == attendance.Date).Count(y=> y.Attends)
+                        </b></td>
+            }
+        </tr>
+        <tr>
+            <td><b>Sum</b></td>
+            @foreach (var attendance in Attendances)
+            {
+            <td><b>
+                @TableMembers.SelectMany(x=>x.Attendances).Where(y=>y.Date == attendance.Date).Count(y=> y.Attends)</b>
+            </td>
+            }
+        </tr>
+        </tbody>
+    </MudSimpleTable>
 </MudContainer>

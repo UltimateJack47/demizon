@@ -24,10 +24,13 @@ public partial class MemberAttendance : ComponentBase
     private int Year { get; set; }
     private int Month { get; set; }
     private DateTime StartDate { get; set; }
+    private DateTime EndDate { get; set; }
 
     private MemberViewModel LoggedUser { get; set; } = new();
 
     private List<AttendanceViewModel> Attendances { get; set; } = [];
+
+    private List<MemberViewModel> TableMembers { get; set; } = [];
 
     protected override void OnInitialized()
     {
@@ -50,13 +53,13 @@ public partial class MemberAttendance : ComponentBase
     private async Task LoadData()
     {
         StartDate = new DateTime(Year, Month, 1);
-        var endDate = new DateTime(StartDate.AddMonths(3).Year, StartDate.AddMonths(3).Month, 1);
-        var allDates = Enumerable.Range(0, 1 + endDate.Subtract(StartDate).Days)
+        EndDate = new DateTime(StartDate.AddMonths(3).Year, StartDate.AddMonths(3).Month, 1);
+        var allDates = Enumerable.Range(0, 1 + EndDate.Subtract(StartDate).Days)
             .Select(offset => StartDate.AddDays(offset))
             .ToList();
 
         var events = Mapper.Map<List<EventViewModel>>(EventService.GetAll()
-            .Where(x => x.DateFrom >= StartDate && x.DateFrom <= endDate).ToList());
+            .Where(x => x.DateFrom >= StartDate && x.DateFrom <= EndDate).ToList());
         Attendances = allDates.Where(date => date.DayOfWeek == DayOfWeek.Friday).Select(x => new AttendanceViewModel
         {
             Member = LoggedUser,
@@ -73,7 +76,7 @@ public partial class MemberAttendance : ComponentBase
         }));
         LoggedUser.Attendances =
             Mapper.Map<List<AttendanceViewModel>>(
-                await AttendanceService.GetMemberAttendancesAsync(LoggedUser.Id, StartDate, endDate));
+                await AttendanceService.GetMemberAttendancesAsync(LoggedUser.Id, StartDate, EndDate));
         foreach (var attendance in Attendances)
         {
             var userAttendance =
@@ -93,6 +96,17 @@ public partial class MemberAttendance : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
+        await LoadTableData();
+    }
+
+    private async Task LoadTableData()
+    {
+        TableMembers = Mapper.Map<List<MemberViewModel>>(MemberService.GetAll().Where(x => x.IsVisible).ToList());
+        var membersAttendances = Mapper.Map<List<AttendanceViewModel>>(await AttendanceService.GetMembersAttendancesAsync(TableMembers.Select(x => x.Id).ToList(), StartDate, EndDate));
+        foreach (var member in TableMembers)
+        {
+            member.Attendances = membersAttendances.Where(x => x.MemberId == member.Id).ToList();
+        }
     }
 
     private string GetThemeStyle(AttendanceViewModel date)
@@ -117,7 +131,7 @@ public partial class MemberAttendance : ComponentBase
         {
             {"Model", attendance}
         };
-        var dialog = await DialogService.ShowAsync<AttendanceForm>("Attendance form", parameters, options);
+        var dialog = await DialogService.ShowAsync<AttendanceForm>(null, parameters, options);
 
         var result = await dialog.Result;
 
@@ -128,6 +142,7 @@ public partial class MemberAttendance : ComponentBase
             {
                 await AttendanceService.CreateOrUpdateAsync(Mapper.Map<Dal.Entities.Attendance>(attendanceResult));
                 await LoadData();
+                await LoadTableData();
                 Snackbar.Add("The attendance has been updated.", Severity.Success);
             }
             catch (Exception)

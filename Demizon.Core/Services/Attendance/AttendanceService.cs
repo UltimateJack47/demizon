@@ -79,4 +79,13 @@ public class AttendanceService(DemizonContext demizonContext) : IAttendanceServi
             .Where(x => x.MemberId == memberId && x.Date >= dateFrom && x.Date <= dateTo)
             .ToListAsync();
     }
+
+    public async Task<List<Dal.Entities.Attendance>> GetMembersAttendancesAsync(List<int> memberIds, DateTime dateFrom,
+        DateTime dateTo)
+    {
+        return await DemizonContext.Attendances
+            .Include(x => x.Event)
+            .Where(x => memberIds.Contains(x.MemberId) && x.Date >= dateFrom && x.Date <= dateTo)
+            .ToListAsync();
+    }
 }
