@@ -135,7 +135,7 @@ public partial class MemberAttendance : ComponentBase
 
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (!result!.Canceled)
         {
             var attendanceResult = result.Data as AttendanceViewModel;
             try

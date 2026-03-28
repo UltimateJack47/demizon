@@ -97,7 +97,7 @@
 
     private async Task RemoveMember(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBox(Localizer[nameof(DemizonLocales.DeleteItem)], null, Localizer[nameof(DemizonLocales.Yes)], Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        var resultMessage = await DialogService.ShowMessageBoxAsync(Localizer[nameof(DemizonLocales.DeleteItem)], "", Localizer[nameof(DemizonLocales.Yes)], Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await MemberService.DeleteAsync(id);
@@ -124,7 +124,7 @@
         var dialog = await DialogService.ShowAsync<MemberForm>("Member form", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is true)
+        if (!result!.Canceled && result.Data is true)
         {
             await RefreshTable();
         }

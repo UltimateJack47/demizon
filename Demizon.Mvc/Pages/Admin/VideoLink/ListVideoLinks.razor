@@ -71,7 +71,7 @@
 
     private async Task RemoveVideoLink(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBox(@Localizer[nameof(DemizonLocales.DeleteItem)], null, @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        var resultMessage = await DialogService.ShowMessageBoxAsync(@Localizer[nameof(DemizonLocales.DeleteItem)], "", @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await VideoLinkService.DeleteAsync(id);
@@ -97,7 +97,7 @@
         var dialog = await DialogService.ShowAsync<VideoLinkForm>("Video Link form", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (!result!.Canceled)
         {
             var linkResult = result.Data as VideoLinkViewModel;
             try

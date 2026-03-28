@@ -55,7 +55,7 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
                 continue;
             }
 
-            image.Resize(resizeDimensions.Width, resizeDimensions.Height);
+            image.Resize((uint)resizeDimensions.Width, (uint)resizeDimensions.Height);
             string resizedFileName = resizeName.ToLower() + "_" + fileName;
             string resizedFile = Path.GetDirectoryName(fileUri.AbsolutePath) + "/" + resizedFileName;
             image.Write(resizedFile);

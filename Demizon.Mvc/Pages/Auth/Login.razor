@@ -14,10 +14,10 @@
     <NotAuthorized>
         <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.SignIn)]</MudText>
         <form action="/ProcessLogin" method="post">
-            <MudTextField @bind-Value="Model.Login" Name="Login" Required="true"
+            <MudTextField @bind-Value="Model.Login" name="Login" Required="true"
                           Label="@Localizer[nameof(DemizonLocales.Login)]">
             </MudTextField>
-            <MudTextField @bind-Value="Model.Password" Name="Password" Required="true"
+            <MudTextField @bind-Value="Model.Password" name="Password" Required="true"
                           Label="@Localizer[nameof(DemizonLocales.Password)]"
                           InputType="InputType.Password">
             </MudTextField>

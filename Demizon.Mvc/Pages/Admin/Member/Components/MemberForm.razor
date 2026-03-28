@@ -44,20 +44,19 @@
         </MudSelect>
 
         <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile" Accept="image/*">
-            <ButtonTemplate>
-                <MudButton HtmlTag="label"
-                           Variant="Variant.Filled"
+            <CustomContent Context="upload">
+                <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.CloudUpload"
-                           for="@context">
+                           OnClick="@upload.OpenFilePickerAsync">
                     @Localizer[nameof(DemizonLocales.UploadProfilePhoto)]
                 </MudButton>
-            </ButtonTemplate>
+            </CustomContent>
         </MudFileUpload>
         @if (File is not null)
         {
-            <MudList>
-                <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@File">
+            <MudList T="string">
+                <MudListItem T="string" Icon="@Icons.Material.Filled.AttachFile" @key="@File">
                     @File.Name <code>@File.Size bytes</code>
                     <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" OnClick="RemoveFile"></MudIconButton>
                 </MudListItem>
@@ -90,7 +89,7 @@
     [Inject] private IFileUploadService FileUploadService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 

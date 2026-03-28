@@ -63,7 +63,7 @@
 
     private async Task RemoveDance(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBox(@Localizer[nameof(DemizonLocales.DeleteItem)], null, @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        var resultMessage = await DialogService.ShowMessageBoxAsync(@Localizer[nameof(DemizonLocales.DeleteItem)], "", @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await DanceService.DeleteAsync(id);
@@ -89,7 +89,7 @@
         var dialog = await DialogService.ShowAsync<DanceForm>("Dance form", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (!result!.Canceled)
         {
             var danceResult = result.Data as DanceViewModel;
             try

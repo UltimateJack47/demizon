@@ -107,7 +107,7 @@
         var dialog = await DialogService.ShowAsync<EventForm>("Event form", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (!result!.Canceled)
         {
             var memberResult = result.Data as EventViewModel;
             try
@@ -139,7 +139,7 @@
 
     private async Task RemoveEvent(int id)
     {
-        var result = await DialogService.ShowMessageBox(@Localizer[nameof(DemizonLocales.DeleteItem)], null, @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)]);
+        var result = await DialogService.ShowMessageBoxAsync(@Localizer[nameof(DemizonLocales.DeleteItem)], "", @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)]);
         if (result.HasValue && result.Value)
         {
             await EventService.DeleteAsync(id);

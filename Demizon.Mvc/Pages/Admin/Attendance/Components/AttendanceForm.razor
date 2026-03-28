@@ -21,7 +21,7 @@
             @Model.Date.ToString("dd.MM.")
         }
         <MudCheckBox @bind-Value="Model.Attends" Label="@Localizer[nameof(DemizonLocales.Attends)]"/>
-        <MudTextField @bind-Value="Model.Comment" AutoGrow="true" Label="@Localizer[nameof(DemizonLocales.Comment)]"/>
+        <MudTextField @bind-Value="Model.Comment" Label="@Localizer[nameof(DemizonLocales.Comment)]"/>
     </DialogContent>
 
     <DialogActions>
@@ -34,7 +34,7 @@
 
 @code {
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter] public AttendanceViewModel Model { get; set; } = new();
 
