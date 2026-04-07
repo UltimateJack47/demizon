@@ -18,34 +18,38 @@
     <ToolBarContent>
         <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.Dances)]</MudText>
         <MudSpacer/>
-        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">@Localizer[nameof(DemizonLocales.Create)]</MudButton>
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"/>
+        <AuthorizeView Roles="Admin">
+            <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary"
+                       @onclick="() => OpenFormDialog()">
+                @Localizer[nameof(DemizonLocales.Create)]
+            </MudButton>
+        </AuthorizeView>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.Name)]</b>
-        </MudTh>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.IsVisible)]</b>
-        </MudTh>
-        <MudTh Style="width: 40px"></MudTh>
+        <MudTh><b>@Localizer[nameof(DemizonLocales.Name)]</b></MudTh>
+        <MudTh><b>Region</b></MudTh>
+        <MudTh><b>@Localizer[nameof(DemizonLocales.IsVisible)]</b></MudTh>
+        <MudTh Style="width: 120px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="dance">
         <MudTd>@dance.Name</MudTd>
         <MudTd>
-            @if (dance.IsVisible)
+            @if (!string.IsNullOrWhiteSpace(dance.Region))
             {
-                <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
-            }
-            else
-            {
-                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
+                <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@dance.Region</MudChip>
             }
         </MudTd>
         <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(dance)"/>
+            <MudIcon Icon="@(dance.IsVisible ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                     Color="@(dance.IsVisible ? Color.Success : Color.Error)"/>
+        </MudTd>
+        <MudTd>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(dance.Id)"/>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveDance(dance.Id)"/>
+            <AuthorizeView Roles="Admin">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(dance)"/>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="() => RemoveDance(dance.Id)"/>
+            </AuthorizeView>
         </MudTd>
     </RowTemplate>
 </MudTable>

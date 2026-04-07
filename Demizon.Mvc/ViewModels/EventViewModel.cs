@@ -22,6 +22,8 @@ public class EventViewModel
 
     public bool IsPublic { get; set; }
 
+    public int? NotifyBeforeDays { get; set; }
+
     public List<AttendanceViewModel> Attendances { get; set; } = [];
 
     public class DtoProfile : Profile

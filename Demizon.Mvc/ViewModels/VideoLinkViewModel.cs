@@ -15,6 +15,8 @@ public class VideoLinkViewModel
 
     public int Year { get; set; }
 
+    public bool IsInternal { get; set; } = false;
+
     public int? DanceId { get; set; }
 
     public DanceViewModel? Dance { get; set; }

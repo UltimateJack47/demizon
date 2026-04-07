@@ -2,25 +2,76 @@
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
-<MudList T="string">
-    <MudListItem T="string" Expanded="true" Text="Jana Vadura">
-        <NestedList>
-            <MudListItem T="string">@Localizer[nameof(DemizonLocales.EnglishAndGermanCommunicationText)]</MudListItem>
-            <MudListItem T="string">
-                <MudIcon Icon="@Icons.Material.Outlined.Email" Size="Size.Small" Class="mr-2"></MudIcon>
-                janab.kolenc@gmail.com
-            </MudListItem>
-            <MudListItem T="string"><MudIcon Icon="@Icons.Material.Outlined.Phone" Size="Size.Small" Class="mr-2"></MudIcon> +420 776 642 622</MudListItem>
-        </NestedList>
-    </MudListItem>
+<MudText Typo="Typo.h4" Class="mb-1">@Localizer[nameof(DemizonLocales.Contact)]</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+    Máte zájem o vystoupení nebo spolupráci? Neváhejte nás kontaktovat.
+</MudText>
 
-    <MudListItem T="string" Expanded="true" Text="Jiří Rybecký">
-        <NestedList>
-            <MudListItem T="string"><MudIcon Icon="@Icons.Material.Outlined.Phone" Size="Size.Small" Class="mr-2"></MudIcon> 720 686 138</MudListItem>
-            <MudListItem T="string"><MudIcon Icon="@Icons.Material.Outlined.Email" Size="Size.Small" Class="mr-2"></MudIcon> rjdesign@seznam.cz</MudListItem>
-        </NestedList>
-    </MudListItem>
-</MudList>
+<MudGrid Spacing="3">
+    <MudItem xs="12" sm="6">
+        <MudCard Elevation="2" Class="pa-2">
+            <MudCardContent>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                    <MudAvatar Color="Color.Primary" Size="Size.Large">JV</MudAvatar>
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.h6">Jana Vadura</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @Localizer[nameof(DemizonLocales.EnglishAndGermanCommunicationText)]
+                        </MudText>
+                    </MudStack>
+                </MudStack>
+                <MudStack Spacing="2">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Email" Color="Color.Primary" Size="Size.Small"/>
+                        <MudLink Href="mailto:janab.kolenc@gmail.com" Color="Color.Primary">janab.kolenc@gmail.com</MudLink>
+                    </MudStack>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Phone" Color="Color.Primary" Size="Size.Small"/>
+                        <MudLink Href="tel:+420776642622" Color="Color.Primary">+420 776 642 622</MudLink>
+                    </MudStack>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6">
+        <MudCard Elevation="2" Class="pa-2">
+            <MudCardContent>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                    <MudAvatar Color="Color.Primary" Size="Size.Large">JR</MudAvatar>
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.h6">Jiří Rybecký</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Vedoucí souboru</MudText>
+                    </MudStack>
+                </MudStack>
+                <MudStack Spacing="2">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Phone" Color="Color.Primary" Size="Size.Small"/>
+                        <MudLink Href="tel:720686138" Color="Color.Primary">720 686 138</MudLink>
+                    </MudStack>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Email" Color="Color.Primary" Size="Size.Small"/>
+                        <MudLink Href="mailto:rjdesign@seznam.cz" Color="Color.Primary">rjdesign@seznam.cz</MudLink>
+                    </MudStack>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudCard Elevation="1" Style="background: var(--mud-palette-background);">
+            <MudCardContent>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Primary"/>
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.subtitle1"><strong>FS Demižón Strážnice</strong></MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Orelská jednota Strážnice, 696 62 Strážnice</MudText>
+                    </MudStack>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
 
 @code {
 

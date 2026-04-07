@@ -3,7 +3,10 @@
     "allow": [
       "mcp__ide__getDiagnostics",
       "Bash(dotnet build:*)",
-      "Bash(dotnet run:*)"
+      "Bash(dotnet run:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet add:*)"
     ]
-  }
+  },
+  "outputStyle": "Explanatory"
 }

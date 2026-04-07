@@ -5,34 +5,54 @@
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
+<MudText Typo="Typo.h4" Class="mb-1">@Localizer[nameof(DemizonLocales.UpcomingEvents)]</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">Kde nás můžete vidět</MudText>
+
 @if (UpcomingEvents.Count == 0)
 {
-    <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageHeader)]</MudText>
-    <MudText Typo="Typo.body1">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageText)]</MudText>
-    <MudLink
-        Href="@(NavigationManager.BaseUri + "Contact")">
-        @Localizer[nameof(DemizonLocales.Contact)] @Localizer[nameof(DemizonLocales.Page)].ToString().ToLower()
-    </MudLink>
+    <MudCard Elevation="1" Class="pa-4" Style="text-align: center;">
+        <MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Large" Color="Color.Secondary" Style="font-size: 3rem;"/>
+        <MudText Typo="Typo.h6" Class="mt-2">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageHeader)]</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageText)]</MudText>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                   Href="@(NavigationManager.BaseUri + "Contact")"
+                   StartIcon="@Icons.Material.Filled.ContactPhone">
+            @Localizer[nameof(DemizonLocales.Contact)]
+        </MudButton>
+    </MudCard>
 }
 else
 {
-    <MudTimeline>
+    <MudTimeline TimelinePosition="TimelinePosition.Left">
         @foreach (var upcomingEvent in UpcomingEvents)
         {
-            <MudTimelineItem Color="Color.Info" TimelineAlign="TimelineAlign.End">
-                <ItemOpposite>
-                    @if (upcomingEvent.Date.Start == upcomingEvent.Date.End)
-                    {
-                        <MudText Color="Color.Info" Typo="Typo.body1">@upcomingEvent.Date.Start?.ToString("d. MMMM yyyy")</MudText>
-                    }
-                    else
-                    {
-                        <MudText Color="Color.Info" Typo="Typo.body1">@upcomingEvent.Date.Start?.ToString("d. MMMM") - @upcomingEvent.Date.End?.ToString("d. MMMM yyyy")</MudText>
-                    }
-                </ItemOpposite>
+            <MudTimelineItem Color="Color.Primary" Size="Size.Medium" Elevation="2">
                 <ItemContent>
-                    <MudText Typo="Typo.button">@upcomingEvent.Name</MudText>
-                    <MudText Typo="Typo.body2" Class="mud-text-secondary">@upcomingEvent.Place</MudText>
+                    <MudCard Elevation="2" Class="mb-2">
+                        <MudCardContent Class="py-3">
+                            <MudText Typo="Typo.subtitle1"><strong>@upcomingEvent.Name</strong></MudText>
+                            @if (!string.IsNullOrWhiteSpace(upcomingEvent.Place))
+                            {
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-1">
+                                    <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Color="Color.Secondary"/>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">@upcomingEvent.Place</MudText>
+                                </MudStack>
+                            }
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mt-1">
+                                <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Small" Color="Color.Primary"/>
+                                <MudText Typo="Typo.body2" Color="Color.Primary">
+                                    @if (upcomingEvent.Date.Start?.Date == upcomingEvent.Date.End?.Date)
+                                    {
+                                        @upcomingEvent.Date.Start?.ToString("d. MMMM yyyy")
+                                    }
+                                    else
+                                    {
+                                        @($"{upcomingEvent.Date.Start?.ToString("d. MMMM")} – {upcomingEvent.Date.End?.ToString("d. MMMM yyyy")}")
+                                    }
+                                </MudText>
+                            </MudStack>
+                        </MudCardContent>
+                    </MudCard>
                 </ItemContent>
             </MudTimelineItem>
         }

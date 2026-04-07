@@ -11,6 +11,10 @@ public class DanceViewModel
 
     public bool IsVisible { get; set; } = false;
 
+    public string? Region { get; set; }
+
+    public string? Description { get; set; }
+
     public List<VideoLinkViewModel> Videos { get; set; } = [];
 
     public List<FileViewModel> Files { get; set; } = [];

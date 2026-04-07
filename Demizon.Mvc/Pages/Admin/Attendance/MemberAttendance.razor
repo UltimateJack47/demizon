@@ -1,4 +1,4 @@
-﻿@page "/Admin/MemberAttendance/"
+@page "/Admin/MemberAttendance/"
 @using Demizon.Dal.Entities
 
 @attribute [Authorize(Roles = "Admin, Standard")]
@@ -7,145 +7,172 @@
 
 @layout AdminMainLayout
 
-<MudStack Justify="Justify.Center" Row="true" Class="mb-2">
-    <MudButton StartIcon="@Icons.Material.Filled.ArrowLeft" OnClick="() => ChangeDate(false)"></MudButton>
-    <MudButton StartIcon="@Icons.Material.Filled.ArrowRight" OnClick="() => ChangeDate(true)"></MudButton>
+<!-- ─── Měsíční navigace ─── -->
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+    <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Color="Color.Primary"
+                   OnClick="PreviousMonth" Size="Size.Large" title="Předchozí měsíc"/>
+    <MudText Typo="Typo.h5" Style="text-transform: capitalize; min-width: 180px; text-align: center;">
+        @MonthLabel
+    </MudText>
+    <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Primary"
+                   OnClick="NextMonth" Size="Size.Large" title="Následující měsíc"/>
 </MudStack>
 
-<MudContainer MaxWidth="MaxWidth.Large" Fixed="true">
-    <MudStack Justify="Justify.Center" Wrap="Wrap.Wrap" Row="true">
-        @foreach (var attendance in Attendances)
-        {
-            <MudButton OnClick="() => SetAttendance(attendance)" Class="@GetThemeStyle(attendance)">
-                @if (attendance.Event is not null)
-                {
-                    @attendance.Event.Name<br/>
-                    if (attendance.Event.DateFrom == attendance.Event.DateTo)
-                    {
-                        @attendance.Event.DateFrom.ToString("dd.MM.")
-                    }
-                    else
-                    {
-                        @(attendance.Event.DateFrom.ToString("dd.MM.") + " - " + attendance.Event.DateTo.ToString("dd.MM."))
-                    }
-                }
-                else
-                {
-                    @attendance.Date.ToString("dd.MM.")
-                }
-            </MudButton>
-        }
-    </MudStack>
-</MudContainer>
+<!-- ─── Akce v měsíci (barevné chipy) ─── -->
+<MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mb-3">
+    @foreach (var attendance in Attendances)
+    {
+        <MudButton OnClick="() => SetAttendance(attendance)"
+                   Variant="Variant.Filled"
+                   Size="Size.Small"
+                   Class="@($"demi-att-btn {GetThemeStyle(attendance)}")">
+            @if (attendance.Event is not null)
+            {
+                <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                    <span style="font-size: 0.7rem; font-weight: 600;">@attendance.Event.Name</span>
+                    <span style="font-size: 0.65rem;">
+                        @(attendance.Event.DateFrom.Date == attendance.Event.DateTo.Date
+                            ? attendance.Event.DateFrom.ToString("d.M.")
+                            : $"{attendance.Event.DateFrom:d.M.}–{attendance.Event.DateTo:d.M.}")
+                    </span>
+                </MudStack>
+            }
+            else
+            {
+                <span style="font-size: 0.75rem;">@attendance.Date.ToString("d.M.")</span>
+            }
+        </MudButton>
+    }
+</MudStack>
 
-<MudContainer MaxWidth="MaxWidth.Large" Fixed="true" Class="mt-4">
-    <MudSimpleTable Striped="true">
+<!-- ─── Filtr ─── -->
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mb-2" Wrap="Wrap.Wrap">
+    <MudSelect T="Gender?" @bind-Value="GenderFilter" Label="Pohlaví" Style="max-width: 160px;"
+               Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+        <MudSelectItem T="Gender?" Value="null">Vše</MudSelectItem>
+        <MudSelectItem T="Gender?" Value="Gender.Female">Ženy</MudSelectItem>
+        <MudSelectItem T="Gender?" Value="Gender.Male">Muži</MudSelectItem>
+    </MudSelect>
+    <MudCheckBox @bind-Value="ShowAttendanceHidden" Label="Zobrazit skryté v docházce" Color="Color.Secondary"/>
+</MudStack>
+
+<!-- ─── Tabulka docházky ─── -->
+<div class="demi-att-table-wrap">
+    <table class="demi-att-table">
         <thead>
-        <th>Name</th>
-        @foreach (var attendance in Attendances)
-        {
-            <th>
-                @if (attendance.Event is not null)
-                {
-                    @attendance.Event.Name<br/>
-                    if (attendance.Event.DateFrom == attendance.Event.DateTo)
-                    {
-                        @attendance.Event.DateFrom.ToString("dd.MM.")
-                    }
-                    else
-                    {
-                        @(attendance.Event.DateFrom.ToString("dd.MM.") + " - " + attendance.Event.DateTo.ToString("dd.MM."))
-                    }
-                }
-                else
-                {
-                    @attendance.Date.ToString("dd.MM.")
-                }
-            </th>
-        }
-        </thead>
-
-        <tbody>
-        @foreach (var girl in TableMembers.Where(x => x.Gender == Gender.Female))
-        {
             <tr>
-                <td>@girl.Name @girl.Surname</td>
-                @foreach (var attendance in Attendances)
+                <th class="demi-att-sticky">Člen</th>
+                @foreach (var col in Attendances)
                 {
-                    <td>
-                        @{
-                            var day = girl.Attendances.FirstOrDefault(x => x.Date == attendance.Date);
-                            if (day is not null)
-                            {
-                                if (day.Attends)
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success"></MudIcon>
-                                }
-                                else
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.Close" Color="Color.Error"></MudIcon>
-                                }
-                            }
+                    <th class="demi-att-col-header">
+                        @if (col.Event is not null)
+                        {
+                            <span class="demi-att-event-label">@col.Event.Name</span><br/>
+                            <span class="demi-att-date-label">
+                                @(col.Event.DateFrom.Date == col.Event.DateTo.Date
+                                    ? col.Event.DateFrom.ToString("d.M.")
+                                    : $"{col.Event.DateFrom:d.M.}–{col.Event.DateTo:d.M.}")
+                            </span>
                         }
-                    </td>
+                        else
+                        {
+                            <span class="demi-att-date-label">@col.Date.ToString("d.M.")</span><br/>
+                            <span style="font-size: 0.6rem; color: #aaa;">@col.Date.ToString("ddd")</span>
+                        }
+                    </th>
                 }
             </tr>
-        }
-
-        <tr>
-            <td><b>Sum girls</b></td>
-            @foreach (var attendance in Attendances)
+        </thead>
+        <tbody>
+            <!-- Ženy -->
+            @if (GenderFilter == null || GenderFilter == Gender.Female)
             {
-                <td><b>
-                    @TableMembers.Where(x=>x.Gender == Gender.Female).SelectMany(x=>x.Attendances).Where(y=>y.Date == attendance.Date).Count(y=> y.Attends)
-                    </b></td>
-            }
-
-        </tr>
-
-        @foreach (var boy in TableMembers.Where(x => x.Gender == Gender.Male))
-        {
-        <tr>
-            <td>@boy.Name @boy.Surname</td>
-            @foreach (var attendance in Attendances)
-            {
-            <td>
-                @{
-                var day = boy.Attendances.FirstOrDefault(x => x.Date == attendance.Date);
-                if (day is not null)
+                @foreach (var member in FilteredFemales)
                 {
-                    if (day.Attends)
-                    {
-                        <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success"></MudIcon>
-                    }
-                    else
-                    {
-                        <MudIcon Icon="@Icons.Material.Filled.Close" Color="Color.Error"></MudIcon>
-                    }
+                    <tr class="@(!member.IsAttendanceVisible ? "demi-att-row-hidden" : "")">
+                        <td class="demi-att-sticky demi-att-name">
+                            @member.Name @member.Surname
+                            @if (!member.IsAttendanceVisible)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Size="Size.Small"
+                                         Style="opacity:0.4; vertical-align: middle; margin-left: 4px;"/>
+                            }
+                        </td>
+                        @foreach (var col in Attendances)
+                        {
+                            <td class="demi-att-cell" @onclick="() => SetAttendanceMember(member, col)">
+                                @{
+                                    var day = member.Attendances.FirstOrDefault(x => x.Date == col.Date);
+                                }
+                                @if (day is not null)
+                                {
+                                    <MudIcon Icon="@(day.Attends ? Icons.Material.Filled.Check : Icons.Material.Filled.Close)"
+                                             Color="@(day.Attends ? Color.Success : Color.Error)"
+                                             Size="Size.Small"/>
+                                }
+                            </td>
+                        }
+                    </tr>
                 }
+                <tr class="demi-att-sum-row">
+                    <td class="demi-att-sticky"><b>Σ ženy</b></td>
+                    @foreach (var col in Attendances)
+                    {
+                        <td><b>@CountAttending(FilteredFemales, col.Date)</b></td>
+                    }
+                </tr>
+            }
+
+            <!-- Muži -->
+            @if (GenderFilter == null || GenderFilter == Gender.Male)
+            {
+                @foreach (var member in FilteredMales)
+                {
+                    <tr class="@(!member.IsAttendanceVisible ? "demi-att-row-hidden" : "")">
+                        <td class="demi-att-sticky demi-att-name">
+                            @member.Name @member.Surname
+                            @if (!member.IsAttendanceVisible)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Size="Size.Small"
+                                         Style="opacity:0.4; vertical-align: middle; margin-left: 4px;"/>
+                            }
+                        </td>
+                        @foreach (var col in Attendances)
+                        {
+                            <td class="demi-att-cell" @onclick="() => SetAttendanceMember(member, col)">
+                                @{
+                                    var day = member.Attendances.FirstOrDefault(x => x.Date == col.Date);
+                                }
+                                @if (day is not null)
+                                {
+                                    <MudIcon Icon="@(day.Attends ? Icons.Material.Filled.Check : Icons.Material.Filled.Close)"
+                                             Color="@(day.Attends ? Color.Success : Color.Error)"
+                                             Size="Size.Small"/>
+                                }
+                            </td>
+                        }
+                    </tr>
                 }
-            </td>
+                <tr class="demi-att-sum-row">
+                    <td class="demi-att-sticky"><b>Σ muži</b></td>
+                    @foreach (var col in Attendances)
+                    {
+                        <td><b>@CountAttending(FilteredMales, col.Date)</b></td>
+                    }
+                </tr>
             }
-        </tr>
-        }
-        <tr>
-            <td><b>Sum boys</b></td>
-            @foreach (var attendance in Attendances)
+
+            <!-- Celkový součet -->
+            @if (GenderFilter == null)
             {
-                <td><b>
-                    @TableMembers.Where(x=>x.Gender == Gender.Male).SelectMany(x=>x.Attendances).Where(y=>y.Date == attendance.Date).Count(y=> y.Attends)
-                        </b></td>
+                <tr class="demi-att-total-row">
+                    <td class="demi-att-sticky"><b>Σ celkem</b></td>
+                    @foreach (var col in Attendances)
+                    {
+                        <td><b>@CountAttending(FilteredFemales.Concat(FilteredMales), col.Date)</b></td>
+                    }
+                </tr>
             }
-        </tr>
-        <tr>
-            <td><b>Sum</b></td>
-            @foreach (var attendance in Attendances)
-            {
-            <td><b>
-                @TableMembers.SelectMany(x=>x.Attendances).Where(y=>y.Date == attendance.Date).Count(y=> y.Attends)</b>
-            </td>
-            }
-        </tr>
         </tbody>
-    </MudSimpleTable>
-</MudContainer>
+    </table>
+</div>

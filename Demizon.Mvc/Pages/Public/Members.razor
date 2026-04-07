@@ -6,39 +6,74 @@
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
-<MudText Typo="Typo.h4">@Localizer[nameof(DemizonLocales.Men)]</MudText>
-<MudItem >
-    @foreach (var member in VisibleMembers.Where(x => x.Gender == Gender.Male))
-    {
-        <MudCard>
-            @*<MudCardMedia Image="@member.Photos.FirstOrDefault()?.Path" Height="200"/>*@
-            @{
-                var photo = member.Photos.FirstOrDefault()?.Path;
-                if (photo is not null)
-                {
-                    <img src="@photo" alt="Profile photo"/>
-                }
-            }
-            <MudCardContent>
-                <MudText Typo="Typo.h5">@member.Name</MudText>
-            </MudCardContent>
-        </MudCard>
-    }
-</MudItem>
+<MudText Typo="Typo.h4" Class="mb-4">@Localizer[nameof(DemizonLocales.Members)]</MudText>
 
-<MudDivider Class="mt-1"></MudDivider>
-<MudText Typo="Typo.h4" Class="mt-1">@Localizer[nameof(DemizonLocales.Women)]</MudText>
-<MudItem>
-    @foreach (var member in VisibleMembers.Where(x => x.Gender == Gender.Female))
-    {
-        <MudCard>
-            <MudCardMedia Image="@member.Photos.FirstOrDefault()?.Path" Height="200"/>
-            <MudCardContent>
-                <MudText Typo="Typo.h5">@member.Name @member.Surname</MudText>
-            </MudCardContent>
-        </MudCard>
-    }
-</MudItem>
+@if (VisibleMembers.Count == 0)
+{
+    <MudText Typo="Typo.body1" Color="Color.Secondary">Žádní členové k zobrazení.</MudText>
+}
+else
+{
+    <MudText Typo="Typo.h5" Class="mb-3">@Localizer[nameof(DemizonLocales.Men)]</MudText>
+    <MudGrid Spacing="3" Class="mb-6">
+        @foreach (var member in VisibleMembers.Where(x => x.Gender == Gender.Male))
+        {
+            <MudItem xs="6" sm="4" md="3">
+                <MudCard Elevation="2" Class="demi-member-card">
+                    @{
+                        var photo = member.Photos.FirstOrDefault()?.Path;
+                    }
+                    @if (photo is not null)
+                    {
+                        <MudCardMedia Image="@photo" Height="180"/>
+                    }
+                    else
+                    {
+                        <div class="demi-member-avatar">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Style="color: rgba(155,26,26,0.3); font-size: 4rem;"/>
+                        </div>
+                    }
+                    <MudCardContent Class="pa-2">
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">
+                            <strong>@member.Name @member.Surname</strong>
+                        </MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+
+    <MudDivider Class="mb-4"/>
+
+    <MudText Typo="Typo.h5" Class="mb-3">@Localizer[nameof(DemizonLocales.Women)]</MudText>
+    <MudGrid Spacing="3">
+        @foreach (var member in VisibleMembers.Where(x => x.Gender == Gender.Female))
+        {
+            <MudItem xs="6" sm="4" md="3">
+                <MudCard Elevation="2" Class="demi-member-card">
+                    @{
+                        var photoF = member.Photos.FirstOrDefault()?.Path;
+                    }
+                    @if (photoF is not null)
+                    {
+                        <MudCardMedia Image="@photoF" Height="180"/>
+                    }
+                    else
+                    {
+                        <div class="demi-member-avatar">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Style="color: rgba(155,26,26,0.3); font-size: 4rem;"/>
+                        </div>
+                    }
+                    <MudCardContent Class="pa-2">
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center">
+                            <strong>@member.Name @member.Surname</strong>
+                        </MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
 
 @code {
 
@@ -49,7 +84,7 @@
     protected override async Task OnInitializedAsync()
     {
         PageService.SetTitle(@Localizer[nameof(DemizonLocales.Members)]);
-        var members = await MemberService.GetAll().Where(x => x.IsVisible).ToListAsync();
+        var members = await MemberService.GetAll().Where(x => x.IsVisible).OrderBy(x => x.Surname).ToListAsync();
         VisibleMembers = Mapper.Map<List<MemberViewModel>>(members);
     }
 

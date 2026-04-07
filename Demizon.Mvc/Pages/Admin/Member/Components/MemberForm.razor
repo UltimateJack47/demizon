@@ -64,7 +64,8 @@
         }
         @if (LoggedUser.Role == UserRole.Admin)
         {
-            <MudCheckBox @bind-Value="Model.IsVisible" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"></MudCheckBox>
+            <MudCheckBox @bind-Value="Model.IsVisible" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"/>
+            <MudCheckBox @bind-Value="Model.IsAttendanceVisible" Label="Zobrazovat v docházce"/>
         }
 
     </DialogContent>
@@ -115,6 +116,7 @@
         try
         {
             var dbModel = Mapper.Map<Member>(Model);
+
             if (File is not null)
             {
                 //TODO upload the files to the server

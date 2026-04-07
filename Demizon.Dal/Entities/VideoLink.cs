@@ -12,6 +12,8 @@ public class VideoLink
 
     public int Year { get; set; }
 
+    public bool IsInternal { get; set; } = false;
+
     public int? DanceId { get; set; }
 
     public virtual Dance? Dance { get; set; }

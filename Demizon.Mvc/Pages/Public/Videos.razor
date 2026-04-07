@@ -5,15 +5,39 @@
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
-<MudGrid Spacing="3" Justify="Justify.FlexStart">
-    @foreach (var video in VideoLinks)
-    {
-        <MudItem xs="6" Class="py-2">
-            <MudText Typo="Typo.h5">@video.Year - @video.Name</MudText>
-            <iframe width="560" height="315" src="@video.Url" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-        </MudItem>
-    }
-</MudGrid>
+<MudText Typo="Typo.h4" Class="mb-1">@Localizer[nameof(DemizonLocales.Videos)]</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">Záznamy z vystoupení a nácviků</MudText>
+
+@if (VideoLinks.Count == 0)
+{
+    <MudText Typo="Typo.body1" Color="Color.Secondary">Žádná videa k zobrazení.</MudText>
+}
+else
+{
+    <MudGrid Spacing="3" Justify="Justify.FlexStart">
+        @foreach (var video in VideoLinks)
+        {
+            <MudItem xs="12" sm="6" md="6">
+                <MudCard Elevation="2">
+                    <MudCardContent Class="pb-1">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">@video.Year</MudChip>
+                            <MudText Typo="Typo.subtitle1"><strong>@video.Name</strong></MudText>
+                        </MudStack>
+                    </MudCardContent>
+                    <div class="demi-video-embed">
+                        <iframe src="@video.Url"
+                                title="@video.Name"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen
+                                loading="lazy">
+                        </iframe>
+                    </div>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
 
 @code {
     private List<VideoLinkViewModel> VideoLinks { get; set; } = new();
@@ -23,7 +47,11 @@
     protected override async Task OnInitializedAsync()
     {
         PageService.SetTitle(Localizer[nameof(DemizonLocales.Videos)]);
-        var videos = await VideoLinkService.GetAll().Where(x => x.IsVisible).OrderByDescending(x => x.Year).Take(6).ToListAsync();
+        var videos = await VideoLinkService.GetAll()
+            .Where(x => x.IsVisible && !x.IsInternal)
+            .OrderByDescending(x => x.Year)
+            .Take(12)
+            .ToListAsync();
         VideoLinks = Mapper.Map<List<VideoLinkViewModel>>(videos);
     }
 

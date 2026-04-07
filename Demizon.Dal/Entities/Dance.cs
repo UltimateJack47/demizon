@@ -10,7 +10,13 @@ public class Dance
 
     public string? Lyrics { get; set; }
 
+    public string? Region { get; set; }
+
+    public string? Description { get; set; }
+
     public virtual List<File> Files { get; set; } = [];
 
     public virtual List<VideoLink> Videos { get; set; } = [];
+
+    public virtual List<DanceNumber> Numbers { get; set; } = [];
 }

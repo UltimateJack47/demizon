@@ -1,16 +1,81 @@
 @page "/"
 
-<MudText Typo="Typo.h3">O nás</MudText>
+<div class="demi-hero">
+    <MudStack Spacing="2" AlignItems="AlignItems.Center" Class="demi-hero-content">
+        <MudText Typo="Typo.h2" Class="demi-hero-title">FS Demižón</MudText>
+        <MudText Typo="Typo.h5" Class="demi-hero-subtitle">Folklorní soubor ze Strážnice</MudText>
+        <MudStack Row="true" Spacing="2" Class="mt-2" Justify="Justify.Center">
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Large"
+                       Href="@(NavigationManager.BaseUri + "Events")"
+                       StartIcon="@Icons.Material.Filled.CalendarMonth">
+                Plán akcí
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Large"
+                       Href="@(NavigationManager.BaseUri + "Dances")"
+                       StartIcon="@Icons.Material.Filled.Celebration"
+                       Style="color: white; border-color: white;">
+                Repertoár
+            </MudButton>
+        </MudStack>
+    </MudStack>
+</div>
 
-<MudList T="string">
-    <MudListItem T="string">Folklorní soubor Demižón vznikl v roce 1999, a od samého počátku pracujeme pod Orelskou jednotou ve Strážnici. Věk našich členů se pohybuje od 16 do 28 let. V této době má náš folklorní soubor 13 tanečních párů , které doprovází cimbálová muzika.</MudListItem>
-    <MudListItem T="string">Náš repertoár se skládá především z písní a tanců ze Strážnice a strážnického okolí. Ale pro zpestření programu si odskočíme i na Slovensko.</MudListItem>
-</MudList>
+<MudGrid Class="mt-6" Spacing="4">
+    <MudItem xs="12" md="6">
+        <MudCard Elevation="2" Class="demi-info-card">
+            <MudCardContent>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large"/>
+                    <MudText Typo="Typo.h5">O nás</MudText>
+                </MudStack>
+                <MudText Typo="Typo.body1" Class="mb-2">
+                    Folklorní soubor Demižón vznikl v roce 1999 a od samého počátku pracujeme pod Orelskou jednotou ve Strážnici.
+                    Věk našich členů se pohybuje od 16 do 28 let – v současnosti máme 13 tanečních párů doprovázených cimbálovou muzikou.
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    Náš repertoár se skládá především z písní a tanců ze Strážnice a strážnického okolí,
+                    ale pro zpestření programu si odskočíme i na Slovensko.
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
 
-<MudText Typo="Typo.h3">? Proč "Demižón" ?</MudText>
+    <MudItem xs="12" md="6">
+        <MudCard Elevation="2" Class="demi-info-card">
+            <MudCardContent>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.WineBar" Color="Color.Primary" Size="Size.Large"/>
+                    <MudText Typo="Typo.h5">Proč „Demižón"?</MudText>
+                </MudStack>
+                <MudText Typo="Typo.body1" Class="mb-2">
+                    Nad tímto názvem se řada lidí pozastavuje – a právě to nás vždy ujistí, že jsme se zapsali do povědomí dalšího člověka.
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mb-2">
+                    Do demižónu vkládá vinař výsledek své celoroční práce a nechává ji dozrát do nejlepší podoby.
+                    Stejně tak členové folklorního souboru Demižón – celoroční práce a námaha dozrává v krásné vystoupení.
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    A dozrávání tanečníků a muzikantů? Jako s vínem – čím starší, tím lepší. Ale potřebuje neustálou péči!
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
 
-<MudList T="string">
-    <MudListItem T="string">Nad tímto názvem se řada lidí pozastavuje. Ale takové krátké pozastavení nás vždy ujistí, že jsme se právě zapsali do povědomí dalšího člověka.</MudListItem>
-    <MudListItem T="string">Původně to bylo takové "plácnutí" z řad tanečníků. Ale po dlouhém rozjímání jsme dospěli k názoru, že to není tak špatný název, když si představíme co vlastně demižón znamená pro vinaře. Vždyť do demižónu vkládá vinař výsledek své celoroční práce a námahy a nechává ji zde dozrát do té nejlepší podoby. A použijeme-li toto přirovnání pro členy folklorní skupiny "Demižón" zjistíme, že zde opravdu vidíme tu celoroční práci a námahu.</MudListItem>
-    <MudListItem T="string">A dozrávání tanečníků a muzikantů? Je to stejné jako s vínem - čím starší tím je lepší. Ale pozor! Potřebuje neustálou péči a hlavně se nic nesmí zanedbat, jinak je celá námaha zbytečná.</MudListItem>
-</MudList>
+<MudDivider Class="my-6"/>
+
+<MudStack AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+    <MudText Typo="Typo.h5">Přijďte se podívat nebo se přidejte k nám!</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large"
+               Href="@(NavigationManager.BaseUri + "Join-Us")"
+               StartIcon="@Icons.Material.Filled.PersonAdd">
+        Přidej se k nám
+    </MudButton>
+</MudStack>
+
+@code {
+    protected override void OnInitialized()
+    {
+        PageService.SetTitle("FS Demižón Strážnice");
+    }
+}

@@ -19,19 +19,22 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Append.Blazor.Notifications" Version="1.1.0" />
         <PackageReference Include="AutoMapper" Version="16.1.1" />
-        <PackageReference Include="CryptoHelper" Version="4.0.0"/>
+        <PackageReference Include="CryptoHelper" Version="4.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="MudBlazor" Version="9.2.0" />
+        <PackageReference Include="WebPush" Version="1.0.12" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Demizon.Core\Demizon.Core.csproj"/>
-        <ProjectReference Include="..\Demizon.Dal\Demizon.Dal.csproj"/>
-        <ProjectReference Include="..\Demizon.Common\Demizon.Common.csproj"/>
+        <ProjectReference Include="..\Demizon.Core\Demizon.Core.csproj" />
+        <ProjectReference Include="..\Demizon.Dal\Demizon.Dal.csproj" />
+        <ProjectReference Include="..\Demizon.Common\Demizon.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,7 +1,8 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
 using Demizon.Core.Services.Member;
+using Demizon.Dal.Entities;
 using Demizon.Mvc.Locales;
 using Demizon.Mvc.Pages.Admin.Attendance.Components;
 using Demizon.Mvc.ViewModels;
@@ -21,28 +22,40 @@ public partial class MemberAttendance : ComponentBase
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
-    private int Year { get; set; }
-    private int Month { get; set; }
-    private DateTime StartDate { get; set; }
-    private DateTime EndDate { get; set; }
+    // Aktuálně zobrazený měsíc
+    private DateTime CurrentMonth { get; set; }
+    private DateTime StartDate => new(CurrentMonth.Year, CurrentMonth.Month, 1);
+    private DateTime EndDate => StartDate.AddMonths(1).AddDays(-1);
 
     private MemberViewModel LoggedUser { get; set; } = new();
 
+    // Sloupce tabulky (pátky + akce v měsíci)
     private List<AttendanceViewModel> Attendances { get; set; } = [];
 
+    // Řádky tabulky (členové)
     private List<MemberViewModel> TableMembers { get; set; } = [];
+
+    // Filtr pohlaví: null = vše, Male, Female
+    private Gender? GenderFilter { get; set; } = null;
+
+    // Zobrazit i skryté v docházce
+    private bool ShowAttendanceHidden { get; set; } = false;
+
+    private IEnumerable<MemberViewModel> FilteredFemales =>
+        TableMembers
+            .Where(x => x.Gender == Gender.Female)
+            .Where(x => GenderFilter == null || x.Gender == GenderFilter)
+            .Where(x => ShowAttendanceHidden || x.IsAttendanceVisible);
+
+    private IEnumerable<MemberViewModel> FilteredMales =>
+        TableMembers
+            .Where(x => x.Gender == Gender.Male)
+            .Where(x => GenderFilter == null || x.Gender == GenderFilter)
+            .Where(x => ShowAttendanceHidden || x.IsAttendanceVisible);
 
     protected override void OnInitialized()
     {
-        if (Year == 0)
-        {
-            Year = DateTime.Today.Year;
-        }
-
-        if (Month == 0)
-        {
-            Month = DateTime.Today.Month;
-        }
+        CurrentMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
 
         var loggedUserLogin = AuthenticationState?.Result.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
         LoggedUser = Mapper.Map<MemberViewModel>(MemberService.GetOneByLogin(loggedUserLogin));
@@ -50,22 +63,36 @@ public partial class MemberAttendance : ComponentBase
         PageService.SetTitle(Localizer[nameof(DemizonLocales.Attendance)]);
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        await LoadTableData();
+    }
+
     private async Task LoadData()
     {
-        StartDate = new DateTime(Year, Month, 1);
-        EndDate = new DateTime(StartDate.AddMonths(3).Year, StartDate.AddMonths(3).Month, 1);
-        var allDates = Enumerable.Range(0, 1 + EndDate.Subtract(StartDate).Days)
+        // Pátky v aktuálním měsíci
+        var allDates = Enumerable
+            .Range(0, 1 + EndDate.Subtract(StartDate).Days)
             .Select(offset => StartDate.AddDays(offset))
             .ToList();
 
         var events = Mapper.Map<List<EventViewModel>>(EventService.GetAll()
-            .Where(x => x.DateFrom >= StartDate && x.DateFrom <= EndDate).ToList());
-        Attendances = allDates.Where(date => date.DayOfWeek == DayOfWeek.Friday).Select(x => new AttendanceViewModel
-        {
-            Member = LoggedUser,
-            MemberId = LoggedUser.Id,
-            Date = x,
-        }).ToList();
+            .Where(x => x.DateFrom >= StartDate && x.DateFrom <= EndDate)
+            .ToList());
+
+        // Pátky bez akce
+        Attendances = allDates
+            .Where(date => date.DayOfWeek == DayOfWeek.Friday)
+            .Where(date => !events.Any(e => e.DateFrom.Date == date.Date))
+            .Select(x => new AttendanceViewModel
+            {
+                Member = LoggedUser,
+                MemberId = LoggedUser.Id,
+                Date = x,
+            }).ToList();
+
+        // Akce
         Attendances.AddRange(events.Select(x => new AttendanceViewModel
         {
             Event = x,
@@ -74,14 +101,15 @@ public partial class MemberAttendance : ComponentBase
             Member = LoggedUser,
             Date = x.DateFrom
         }));
-        LoggedUser.Attendances =
-            Mapper.Map<List<AttendanceViewModel>>(
-                await AttendanceService.GetMemberAttendancesAsync(LoggedUser.Id, StartDate, EndDate));
+
+        // Načteme docházku přihlášeného uživatele
+        LoggedUser.Attendances = Mapper.Map<List<AttendanceViewModel>>(
+            await AttendanceService.GetMemberAttendancesAsync(LoggedUser.Id, StartDate, EndDate));
+
         foreach (var attendance in Attendances)
         {
-            var userAttendance =
-                LoggedUser.Attendances.FirstOrDefault(x =>
-                    x.Date == attendance.Date || (x.EventId.HasValue && x.EventId == attendance.EventId));
+            var userAttendance = LoggedUser.Attendances.FirstOrDefault(x =>
+                x.Date == attendance.Date || (x.EventId.HasValue && x.EventId == attendance.EventId));
             if (userAttendance is not null)
             {
                 attendance.Id = userAttendance.Id;
@@ -93,16 +121,13 @@ public partial class MemberAttendance : ComponentBase
         Attendances = Attendances.OrderBy(x => x.Date).ToList();
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadData();
-        await LoadTableData();
-    }
-
     private async Task LoadTableData()
     {
+        // Načteme všechny viditelné členy (IsVisible = zobrazuje se na webu)
         TableMembers = Mapper.Map<List<MemberViewModel>>(MemberService.GetAll().Where(x => x.IsVisible).ToList());
-        var membersAttendances = Mapper.Map<List<AttendanceViewModel>>(await AttendanceService.GetMembersAttendancesAsync(TableMembers.Select(x => x.Id).ToList(), StartDate, EndDate));
+        var membersAttendances = Mapper.Map<List<AttendanceViewModel>>(
+            await AttendanceService.GetMembersAttendancesAsync(
+                TableMembers.Select(x => x.Id).ToList(), StartDate, EndDate));
         foreach (var member in TableMembers)
         {
             member.Attendances = membersAttendances.Where(x => x.MemberId == member.Id).ToList();
@@ -113,26 +138,21 @@ public partial class MemberAttendance : ComponentBase
     {
         var userAttendance = LoggedUser.Attendances.FirstOrDefault(x => x.Date == date.Date);
         if (userAttendance is null)
-        {
-            return date.Event is not null ? "pa-3 mud-theme-warning" : "pa-3 mud-theme-info";
-        }
+            return date.Event is not null ? "mud-theme-warning" : "mud-theme-info";
 
-        return userAttendance.Attends switch
-        {
-            true => "pa-3 mud-theme-success",
-            false => "pa-3 mud-theme-error"
-        };
+        return userAttendance.Attends ? "mud-theme-success" : "mud-theme-error";
     }
+
+    private int CountAttending(IEnumerable<MemberViewModel> members, DateTime date) =>
+        members.SelectMany(x => x.Attendances)
+            .Where(y => y.Date == date)
+            .Count(y => y.Attends);
 
     private async Task SetAttendance(AttendanceViewModel attendance)
     {
-        var options = new DialogOptions {CloseOnEscapeKey = true};
-        var parameters = new DialogParameters
-        {
-            {"Model", attendance}
-        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters { { "Model", attendance } };
         var dialog = await DialogService.ShowAsync<AttendanceForm>(null, parameters, options);
-
         var result = await dialog.Result;
 
         if (!result!.Canceled)
@@ -143,20 +163,69 @@ public partial class MemberAttendance : ComponentBase
                 await AttendanceService.CreateOrUpdateAsync(Mapper.Map<Dal.Entities.Attendance>(attendanceResult));
                 await LoadData();
                 await LoadTableData();
-                Snackbar.Add("The attendance has been updated.", Severity.Success);
+                Snackbar.Add("Docházka uložena.", Severity.Success);
             }
-            catch (Exception)
+            catch
             {
-                Snackbar.Add("Something went wrong.", Severity.Error);
+                Snackbar.Add("Chyba při ukládání.", Severity.Error);
             }
         }
     }
 
-    private async Task ChangeDate(bool isNext)
+    private async Task PreviousMonth()
     {
-        StartDate = isNext ? StartDate.AddMonths(3) : StartDate.AddMonths(-3);
-        Year = StartDate.Year;
-        Month = StartDate.Month;
+        CurrentMonth = CurrentMonth.AddMonths(-1);
         await LoadData();
+        await LoadTableData();
+    }
+
+    private async Task NextMonth()
+    {
+        CurrentMonth = CurrentMonth.AddMonths(1);
+        await LoadData();
+        await LoadTableData();
+    }
+
+    private string MonthLabel => CurrentMonth.ToString("MMMM yyyy");
+
+    // Kliknutí na buňku konkrétního člena v tabulce (admin může editovat kohokoliv)
+    private async Task SetAttendanceMember(MemberViewModel member, AttendanceViewModel col)
+    {
+        // Sestavíme attendance model pro daného člena a datum
+        var existing = member.Attendances.FirstOrDefault(x =>
+            x.Date == col.Date || (col.EventId.HasValue && x.EventId == col.EventId));
+
+        var model = existing ?? new AttendanceViewModel
+        {
+            MemberId = member.Id,
+            Member = member,
+            Date = col.Date,
+            EventId = col.EventId,
+            Event = col.Event,
+        };
+        if (existing is not null)
+        {
+            model.Event = col.Event;
+        }
+
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters { { "Model", model } };
+        var dialog = await DialogService.ShowAsync<AttendanceForm>(null, parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            var attendanceResult = result.Data as AttendanceViewModel;
+            try
+            {
+                await AttendanceService.CreateOrUpdateAsync(Mapper.Map<Dal.Entities.Attendance>(attendanceResult));
+                await LoadTableData();
+                Snackbar.Add("Docházka uložena.", Severity.Success);
+            }
+            catch
+            {
+                Snackbar.Add("Chyba při ukládání.", Severity.Error);
+            }
+        }
     }
 }

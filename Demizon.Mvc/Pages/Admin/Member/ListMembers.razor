@@ -10,6 +10,7 @@
 @inject IMapper Mapper
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Admin, Standard")]
 
 @layout AdminMainLayout
 <PageTitle>@Localizer[nameof(DemizonLocales.Members)]</PageTitle>
@@ -18,36 +19,24 @@
     <ToolBarContent>
         <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.Members)]</MudText>
         <MudSpacer/>
-        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary"
-                   @onclick="() => OpenFormDialog()">
-            @Localizer[nameof(DemizonLocales.Create)]
-        </MudButton>
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"/>
+        <AuthorizeView Roles="Admin">
+            <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary"
+                       @onclick="() => OpenFormDialog()">
+                @Localizer[nameof(DemizonLocales.Create)]
+            </MudButton>
+        </AuthorizeView>
     </ToolBarContent>
 
     <HeaderContent>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.FirstName)]</b>
-        </MudTh>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.Surname)]</b>
-        </MudTh>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.Login)]</b>
-        </MudTh>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.Email)]</b>
-        </MudTh>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.MemberSince)]</b>
-        </MudTh>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.Birthdate)]</b>
-        </MudTh>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.IsVisible)]</b>
-        </MudTh>
-        <MudTh Style="width: 40px"></MudTh>
+        <MudTh><b>@Localizer[nameof(DemizonLocales.FirstName)]</b></MudTh>
+        <MudTh><b>@Localizer[nameof(DemizonLocales.Surname)]</b></MudTh>
+        <MudTh><b>@Localizer[nameof(DemizonLocales.Login)]</b></MudTh>
+        <MudTh><b>@Localizer[nameof(DemizonLocales.Email)]</b></MudTh>
+        <MudTh><b>@Localizer[nameof(DemizonLocales.MemberSince)]</b></MudTh>
+        <MudTh><b>@Localizer[nameof(DemizonLocales.IsVisible)]</b></MudTh>
+        <MudTh><b>Docházka</b></MudTh>
+        <MudTh Style="width: 100px"></MudTh>
     </HeaderContent>
 
     <RowTemplate Context="member">
@@ -56,23 +45,24 @@
         <MudTd>@member.Login</MudTd>
         <MudTd>@member.Email</MudTd>
         <MudTd>@member.MemberSince?.ToShortDateString()</MudTd>
-        <MudTd>@member.Birthdate?.ToShortDateString()</MudTd>
         <MudTd>
-            @if (member.IsVisible)
-            {
-                <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
-            }
-            else
-            {
-                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
-            }
+            <MudIcon Icon="@(member.IsVisible ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                     Color="@(member.IsVisible ? Color.Success : Color.Error)"/>
+        </MudTd>
+        <MudTd>
+            <MudIcon Icon="@(member.IsAttendanceVisible ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                     Color="@(member.IsAttendanceVisible ? Color.Success : Color.Default)"
+                     title="@(member.IsAttendanceVisible ? "Zobrazuje se v docházce" : "Skryto v docházce")"/>
         </MudTd>
         <MudTd>
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(member.Id)"/>
             @if (member.Id == LoggedUser.Id || LoggedUser.Role == UserRole.Admin)
             {
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(member)"/>
-                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveMember(member.Id)"/>
+            }
+            @if (LoggedUser.Role == UserRole.Admin && member.Id != LoggedUser.Id)
+            {
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="() => RemoveMember(member.Id)"/>
             }
         </MudTd>
     </RowTemplate>

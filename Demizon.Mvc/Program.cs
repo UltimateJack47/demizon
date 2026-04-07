@@ -1,9 +1,11 @@
 using System.Globalization;
+using Append.Blazor.Notifications;
 using Demizon.Common.Configuration;
 using Demizon.Core.Extensions;
 using Demizon.Dal.Extensions;
 using Demizon.Mvc.Services.Authentication;
 using Demizon.Mvc.Services.Extensions;
+using Demizon.Mvc.Services.Notification;
 using Microsoft.AspNetCore.Localization;
 using MudBlazor.Services;
 
@@ -30,7 +32,12 @@ builder.Services.AddMudServices();
 
 builder.Services.AddCoreServices();
 builder.Services.AddMvcServices();
-builder.Services.AddAuthenticationServices();
+builder.Services.AddAuthenticationServices(builder.Configuration);
+
+builder.Services.AddOptions<VapidSettings>()
+    .BindConfiguration("Vapid");
+builder.Services.AddNotifications();
+builder.Services.AddHostedService<NotificationHostedService>();
 
 builder.Services.AddDatabase(DefaultConnectionString.DbConnectionString);
 
@@ -65,6 +72,10 @@ app.UseAuthorization();
 app.MapPost("/ProcessLogin",
     async (HttpContext context, IMyAuthenticationService service) => await service.Login(context));
 app.MapGet("/Logout", async (HttpContext context, IMyAuthenticationService service) => await service.Logout(context));
+
+// JWT token endpoint – pro budoucí API integraci (mobilní klient, externí nástroje)
+app.MapPost("/api/auth/token", async (HttpContext context, IMyAuthenticationService service) =>
+    await service.IssueToken(context));
 app.MapGet("/SetLanguage/{culture}", (HttpContext context, string culture) =>
 {
     var cultureInfo = culture == "cs" ? new CultureInfo("cs-CZ") : new CultureInfo("en-US");

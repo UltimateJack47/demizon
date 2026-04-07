@@ -1,12 +1,114 @@
-﻿@page "/Photos"
+@page "/Photos"
+@using Demizon.Core.Services.File
+@using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
-@code {
+<MudText Typo="Typo.h4" Class="mb-1">@Localizer[nameof(DemizonLocales.Photos)]</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">Fotky ze života souboru</MudText>
 
-    protected override void OnInitialized()
+@if (GalleryItems.Count == 0)
+{
+    <MudStack AlignItems="AlignItems.Center" Class="py-8">
+        <MudIcon Icon="@Icons.Material.Filled.PhotoAlbum" Style="font-size: 4rem; opacity: 0.3;"/>
+        <MudText Typo="Typo.body1" Color="Color.Secondary">Fotogalerie bude brzy doplněna.</MudText>
+    </MudStack>
+}
+else
+{
+    <div class="demi-gallery-grid">
+        @for (int i = 0; i < GalleryItems.Count; i++)
+        {
+            var index = i;
+            <div class="demi-gallery-item" @onclick="() => OpenLightbox(index)">
+                <img src="@GalleryItems[index].Path" alt="Foto @(index + 1)" loading="lazy"/>
+                <div class="demi-gallery-overlay">
+                    <MudIcon Icon="@Icons.Material.Filled.ZoomIn" Style="color: white; font-size: 2rem;"/>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- ─── Lightbox overlay ─── -->
+@if (LightboxOpen)
+{
+    <div class="demi-lightbox" @onclick="CloseLightbox" @onkeydown="OnKeyDown" tabindex="0" @ref="_lightboxRef">
+        <button class="demi-lightbox-close" @onclick:stopPropagation="true" @onclick="CloseLightbox">
+            <MudIcon Icon="@Icons.Material.Filled.Close" Style="color:white; font-size: 2rem;"/>
+        </button>
+
+        @if (GalleryItems.Count > 1)
+        {
+            <button class="demi-lightbox-prev" @onclick:stopPropagation="true" @onclick="PrevPhoto"
+                    disabled="@(LightboxIndex == 0)">
+                <MudIcon Icon="@Icons.Material.Filled.ChevronLeft" Style="color:white; font-size: 3rem;"/>
+            </button>
+        }
+
+        <div class="demi-lightbox-content" @onclick:stopPropagation="true">
+            <img src="@GalleryItems[LightboxIndex].Path" alt="Foto @(LightboxIndex + 1)"/>
+            <div class="demi-lightbox-counter">@(LightboxIndex + 1) / @GalleryItems.Count</div>
+        </div>
+
+        @if (GalleryItems.Count > 1)
+        {
+            <button class="demi-lightbox-next" @onclick:stopPropagation="true" @onclick="NextPhoto"
+                    disabled="@(LightboxIndex == GalleryItems.Count - 1)">
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Style="color:white; font-size: 3rem;"/>
+            </button>
+        }
+    </div>
+}
+
+@code {
+    [Inject] private IFileService FileService { get; set; } = null!;
+
+    private List<FileViewModel> GalleryItems { get; set; } = [];
+
+    private bool LightboxOpen { get; set; } = false;
+    private int LightboxIndex { get; set; } = 0;
+    private ElementReference _lightboxRef;
+
+    protected override async Task OnInitializedAsync()
     {
-        PageService.SetTitle(@Localizer[nameof(DemizonLocales.Photos)]);
+        PageService.SetTitle(Localizer[nameof(DemizonLocales.Photos)]);
+        // Načteme soubory bez přiřazení k členovi nebo tanci = obecná galerie
+        var files = await FileService.GetAll()
+            .Where(x => x.MemberId == null && x.DanceId == null)
+            .Where(x => x.ContentType.StartsWith("image/"))
+            .ToListAsync();
+        GalleryItems = Mapper.Map<List<FileViewModel>>(files);
     }
 
+    private async Task OpenLightbox(int index)
+    {
+        LightboxIndex = index;
+        LightboxOpen = true;
+        await Task.Delay(50); // Necháme Blazor vyrenderovat element
+        await _lightboxRef.FocusAsync();
+    }
+
+    private void CloseLightbox() => LightboxOpen = false;
+
+    private void PrevPhoto()
+    {
+        if (LightboxIndex > 0) LightboxIndex--;
+    }
+
+    private void NextPhoto()
+    {
+        if (LightboxIndex < GalleryItems.Count - 1) LightboxIndex++;
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "Escape": CloseLightbox(); break;
+            case "ArrowLeft": PrevPhoto(); break;
+            case "ArrowRight": NextPhoto(); break;
+        }
+    }
 }

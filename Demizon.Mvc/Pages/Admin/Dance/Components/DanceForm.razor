@@ -5,8 +5,10 @@
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="Model.Name" Label="@Localizer[nameof(DemizonLocales.Name)]" Required="true" RequiredError="Name is required!"/>
-        <MudCheckBox @bind-Value="Model.IsVisible" Label="@Localizer[nameof(DemizonLocales.IsVisible)]" Required="true" RequiredError="Visibility is required!"/>
+        <MudTextField @bind-Value="Model.Name" Label="@Localizer[nameof(DemizonLocales.Name)]" Required="true" RequiredError="Name is required!" Class="mb-2"/>
+        <MudTextField @bind-Value="Model.Region" Label="Region (Slovácko, Haná, Valašsko…)" Class="mb-2"/>
+        <MudTextField @bind-Value="Model.Description" Label="Popis tance" Lines="3" Class="mb-2"/>
+        <MudCheckBox @bind-Value="Model.IsVisible" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"/>
     </DialogContent>
 
     <DialogActions>

@@ -5,23 +5,54 @@
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
-<MudItem>
-    @foreach (var dance in VisibleDances)
-    {
-        <MudText>@dance.Name</MudText>
-    }
-</MudItem>
+<MudText Typo="Typo.h4" Class="mb-1">@Localizer[nameof(DemizonLocales.Dances)]</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+    Repertoár folklorního souboru Demižón ze Strážnice
+</MudText>
+
+@if (VisibleDances.Count == 0)
+{
+    <MudText Typo="Typo.body1" Color="Color.Secondary">Repertoár bude brzy doplněn.</MudText>
+}
+else
+{
+    <MudGrid Spacing="3">
+        @foreach (var dance in VisibleDances)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="2" Class="demi-dance-card">
+                    <MudCardContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Celebration" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6">@dance.Name</MudText>
+                        </MudStack>
+                        @if (!string.IsNullOrWhiteSpace(dance.Region))
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined" Class="mb-2">
+                                @dance.Region
+                            </MudChip>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(dance.Description))
+                        {
+                            <MudText Typo="Typo.body2" Class="mt-2">@dance.Description</MudText>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
 
 @code {
 
     [Inject] private IDanceService DanceService { get; set; } = null!;
 
-    private List<DanceViewModel> VisibleDances { get; set; } = [new DanceViewModel(), new DanceViewModel()];
+    private List<DanceViewModel> VisibleDances { get; set; } = [];
 
     protected override async Task OnInitializedAsync()
     {
         PageService.SetTitle(Localizer[nameof(DemizonLocales.Dances)]);
-        var dances = await DanceService.GetAll().Where(x => x.IsVisible).ToListAsync();
+        var dances = await DanceService.GetAll().Where(x => x.IsVisible).OrderBy(x => x.Name).ToListAsync();
         VisibleDances = Mapper.Map<List<DanceViewModel>>(dances);
     }
 

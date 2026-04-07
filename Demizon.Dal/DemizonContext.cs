@@ -13,6 +13,8 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
     public DbSet<VideoLink> VideoLinks { get; set; } = null!;
     public DbSet<Dance> Dances { get; set; } = null!;
     public DbSet<Attendance> Attendances { get; set; } = null!;
+    public DbSet<DanceNumber> DanceNumbers { get; set; } = null!;
+    public DbSet<PushSubscription> PushSubscriptions { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36,6 +38,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(s => s.PasswordHash).HasMaxLength(150);
             b.Property(s => s.Role).HasConversion<string>().IsRequired();
             b.Property(m => m.IsVisible).IsRequired();
+            b.Property(m => m.IsAttendanceVisible).HasDefaultValue(true).IsRequired();
             b.Property(m => m.Gender).HasConversion<string>().IsRequired();
             b.HasMany(m => m.Photos)
                 .WithOne(f => f.Member)
@@ -74,8 +77,29 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.HasMany<VideoLink>(x => x.Videos)
                 .WithOne(y => y.Dance)
                 .HasForeignKey(x => x.DanceId);
+            b.HasMany<DanceNumber>(x => x.Numbers)
+                .WithOne(y => y.Dance)
+                .HasForeignKey(x => x.DanceId);
             b.Property(s => s.Name).IsRequired();
             b.Property(s => s.IsVisible).IsRequired();
+        });
+
+        modelBuilder.Entity<DanceNumber>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(s => s.Title).HasMaxLength(200).IsRequired();
+        });
+
+        modelBuilder.Entity<PushSubscription>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Endpoint).IsRequired();
+            b.Property(x => x.P256dh).IsRequired();
+            b.Property(x => x.Auth).IsRequired();
+            b.HasOne(x => x.Member)
+                .WithMany(m => m.PushSubscriptions)
+                .HasForeignKey(x => x.MemberId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Attendance>(b =>

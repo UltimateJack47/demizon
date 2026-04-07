@@ -16,7 +16,7 @@ namespace Demizon.Dal.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.6")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Proxies:ChangeTracking", false)
                 .HasAnnotation("Proxies:CheckEquality", false)
                 .HasAnnotation("Proxies:LazyLoading", true);
@@ -62,6 +62,9 @@ namespace Demizon.Dal.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsVisible")
                         .HasColumnType("INTEGER");
 
@@ -72,9 +75,39 @@ namespace Demizon.Dal.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Region")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.ToTable("Dances");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.DanceNumber", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DanceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Lyrics")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DanceId");
+
+                    b.ToTable("DanceNumbers");
                 });
 
             modelBuilder.Entity("Demizon.Dal.Entities.Event", b =>
@@ -98,6 +131,9 @@ namespace Demizon.Dal.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("NotifyBeforeDays")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Place")
                         .HasColumnType("TEXT");
@@ -160,6 +196,11 @@ namespace Demizon.Dal.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsAttendanceVisible")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("IsVisible")
                         .HasColumnType("INTEGER");
 
@@ -193,6 +234,37 @@ namespace Demizon.Dal.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Members");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.PushSubscription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Auth")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("P256dh")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
+
+                    b.ToTable("PushSubscriptions");
                 });
 
             modelBuilder.Entity("Demizon.Dal.Entities.Setting", b =>
@@ -238,6 +310,9 @@ namespace Demizon.Dal.Migrations
                     b.Property<int?>("DanceId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsInternal")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsVisible")
                         .HasColumnType("INTEGER");
 
@@ -276,6 +351,17 @@ namespace Demizon.Dal.Migrations
                     b.Navigation("Member");
                 });
 
+            modelBuilder.Entity("Demizon.Dal.Entities.DanceNumber", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.Dance", "Dance")
+                        .WithMany("Numbers")
+                        .HasForeignKey("DanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Dance");
+                });
+
             modelBuilder.Entity("Demizon.Dal.Entities.File", b =>
                 {
                     b.HasOne("Demizon.Dal.Entities.Dance", "Dance")
@@ -287,6 +373,17 @@ namespace Demizon.Dal.Migrations
                         .HasForeignKey("MemberId");
 
                     b.Navigation("Dance");
+
+                    b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.PushSubscription", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.Member", "Member")
+                        .WithMany("PushSubscriptions")
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Member");
                 });
@@ -304,6 +401,8 @@ namespace Demizon.Dal.Migrations
                 {
                     b.Navigation("Files");
 
+                    b.Navigation("Numbers");
+
                     b.Navigation("Videos");
                 });
 
@@ -317,6 +416,8 @@ namespace Demizon.Dal.Migrations
                     b.Navigation("Attendances");
 
                     b.Navigation("Photos");
+
+                    b.Navigation("PushSubscriptions");
                 });
 #pragma warning restore 612, 618
         }

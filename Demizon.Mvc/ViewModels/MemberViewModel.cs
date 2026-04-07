@@ -26,6 +26,8 @@ public class MemberViewModel
 
     public bool IsVisible { get; set; } = false;
 
+    public bool IsAttendanceVisible { get; set; } = true;
+
     public DateTime? Birthdate { get; set; }
 
     public DateTime? MemberSince { get; set; }
@@ -41,7 +43,9 @@ public class MemberViewModel
             CreateMap<Member, MemberViewModel>()
                 .ReverseMap()
                 .ForMember(x => x.PasswordHash,
-                    opt => opt.MapFrom(y => Crypto.HashPassword(y.Password)));
+                    opt => opt.MapFrom(y => string.IsNullOrWhiteSpace(y.Password)
+                        ? y.PasswordHash
+                        : Crypto.HashPassword(y.Password)));
         }
     }
 }

@@ -1,23 +1,253 @@
-﻿@page "/Dances/Detail/{Id:int}"
+@page "/Dances/Detail/{Id:int}"
 @using Demizon.Core.Services.Dance
+@using Demizon.Core.Services.DanceNumber
+@using Demizon.Mvc.Pages.Admin.Dance.Components
 @using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
 
-@inject IDanceService DanceService;
-@inject IMapper Mapper;
+@inject IDanceService DanceService
+@inject IDanceNumberService DanceNumberService
+@inject IMapper Mapper
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 @layout AdminMainLayout
+@attribute [Authorize(Roles = "Admin, Standard")]
 
-<MudText>@Localizer[nameof(DemizonLocales.Name)]: @Model.Name</MudText>
-<MudText>@Localizer[nameof(DemizonLocales.IsVisible)]: @Model.IsVisible</MudText>
+@if (Model.Id == 0)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary"/>
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack"/>
+        <MudText Typo="Typo.h4">@Model.Name</MudText>
+        @if (!string.IsNullOrWhiteSpace(Model.Region))
+        {
+            <MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined" Size="Size.Small">@Model.Region</MudChip>
+        }
+        <MudSpacer/>
+        <AuthorizeView Roles="Admin">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="OpenEditDanceDialog"
+                           title="Upravit tanec"/>
+        </AuthorizeView>
+    </MudStack>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true">
+
+        <!-- TAB: Základní info -->
+        <MudTabPanel Text="Základní info" Icon="@Icons.Material.Filled.Info">
+            <MudGrid Spacing="3">
+                <MudItem xs="12" md="6">
+                    <MudStack Spacing="2">
+                        <MudField Label="Název" Variant="Variant.Outlined">@Model.Name</MudField>
+                        <MudField Label="Region" Variant="Variant.Outlined">@(Model.Region ?? "—")</MudField>
+                        <MudField Label="Viditelný na webu" Variant="Variant.Outlined">
+                            <MudIcon Icon="@(Model.IsVisible ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                                     Color="@(Model.IsVisible ? Color.Success : Color.Error)"/>
+                        </MudField>
+                    </MudStack>
+                </MudItem>
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <MudItem xs="12" md="6">
+                        <MudField Label="Popis tance" Variant="Variant.Outlined" Style="height: auto;">
+                            <MudText Typo="Typo.body2">@Model.Description</MudText>
+                        </MudField>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudTabPanel>
+
+        <!-- TAB: Čísla tance -->
+        <MudTabPanel Text="Čísla tance" Icon="@Icons.Material.Filled.QueueMusic">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+                <MudText Typo="Typo.h6">Čísla repertoáru</MudText>
+                <MudSpacer/>
+                <AuthorizeView Roles="Admin">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="() => OpenDanceNumberDialog()">
+                        Přidat číslo
+                    </MudButton>
+                </AuthorizeView>
+            </MudStack>
+
+            @if (DanceNumbers.Count == 0)
+            {
+                <MudText Color="Color.Secondary" Typo="Typo.body2">Žádná čísla k zobrazení.</MudText>
+            }
+            else
+            {
+                @foreach (var number in DanceNumbers)
+                {
+                    <MudCard Elevation="1" Class="mb-3">
+                        <MudCardContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.subtitle1"><strong>@number.Title</strong></MudText>
+                                <MudSpacer/>
+                                <AuthorizeView Roles="Admin">
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit"
+                                                   OnClick="() => OpenDanceNumberDialog(number)"/>
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   OnClick="() => DeleteDanceNumber(number.Id)"/>
+                                </AuthorizeView>
+                            </MudStack>
+                            @if (!string.IsNullOrWhiteSpace(number.Description))
+                            {
+                                <MudText Typo="Typo.body2" Class="mt-1">@number.Description</MudText>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(number.Lyrics))
+                            {
+                                <MudExpansionPanels Class="mt-2">
+                                    <MudExpansionPanel Text="Texty písní">
+                                        <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@number.Lyrics</MudText>
+                                    </MudExpansionPanel>
+                                </MudExpansionPanels>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                }
+            }
+        </MudTabPanel>
+
+        <!-- TAB: Videa -->
+        <MudTabPanel Text="Videa" Icon="@Icons.Material.Filled.VideoLibrary">
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Videa ke správě jsou dostupná v sekci <MudLink Href="@(NavigationManager.BaseUri + "Admin/Videos")">Video Links</MudLink>.
+            </MudText>
+            @if (Model.Videos.Count > 0)
+            {
+                <MudGrid Spacing="3" Class="mt-2">
+                    @foreach (var video in Model.Videos)
+                    {
+                        <MudItem xs="12" sm="6">
+                            <MudCard Elevation="1">
+                                <MudCardContent Class="pb-1">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Primary">@video.Year</MudChip>
+                                        <MudText Typo="Typo.subtitle2">@video.Name</MudText>
+                                        @if (video.IsInternal)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
+                                        }
+                                    </MudStack>
+                                </MudCardContent>
+                                <div class="demi-video-embed">
+                                    <iframe src="@video.Url" title="@video.Name" allowfullscreen loading="lazy"></iframe>
+                                </div>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+            else
+            {
+                <MudText Color="Color.Secondary" Typo="Typo.body2" Class="mt-2">Žádná videa přiřazena k tomuto tanci.</MudText>
+            }
+        </MudTabPanel>
+
+    </MudTabs>
+}
 
 @code {
-    [Parameter]
-    public int Id { get; set; }
+    [Parameter] public int Id { get; set; }
 
     private DanceViewModel Model { get; set; } = new();
-    
+    private List<DanceNumberViewModel> DanceNumbers { get; set; } = [];
+
     protected override async Task OnInitializedAsync()
     {
-        Model = Mapper.Map<DanceViewModel>(await DanceService.GetOneAsync(Id));
+        await LoadDance();
+        await LoadDanceNumbers();
     }
+
+    private async Task LoadDance()
+    {
+        var dance = await DanceService.GetOneAsync(Id);
+        Model = Mapper.Map<DanceViewModel>(dance);
+        // Načteme videa přes EF – potřebujeme Include
+        var danceWithVideos = await DanceService.GetAll()
+            .Include(x => x.Videos)
+            .FirstOrDefaultAsync(x => x.Id == Id);
+        if (danceWithVideos is not null)
+            Model.Videos = Mapper.Map<List<VideoLinkViewModel>>(danceWithVideos.Videos);
+    }
+
+    private async Task LoadDanceNumbers()
+    {
+        var numbers = await DanceNumberService.GetAllForDance(Id).OrderBy(x => x.Id).ToListAsync();
+        DanceNumbers = Mapper.Map<List<DanceNumberViewModel>>(numbers);
+    }
+
+    private async Task OpenEditDanceDialog()
+    {
+        var parameters = new DialogParameters { { "IsUpdate", true }, { "Model", Model } };
+        var dialog = await DialogService.ShowAsync<DanceForm>("Upravit tanec", parameters);
+        var result = await dialog.Result;
+        if (!result!.Canceled)
+        {
+            var updated = result.Data as DanceViewModel;
+            try
+            {
+                await DanceService.UpdateAsync(Id, Mapper.Map<Dal.Entities.Dance>(updated));
+                Snackbar.Add("Tanec byl aktualizován.", Severity.Success);
+                await LoadDance();
+            }
+            catch
+            {
+                Snackbar.Add("Chyba při ukládání.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task OpenDanceNumberDialog(DanceNumberViewModel? existing = null)
+    {
+        var isUpdate = existing is not null;
+        var model = existing is not null ? new DanceNumberViewModel
+        {
+            Id = existing.Id,
+            Title = existing.Title,
+            Description = existing.Description,
+            Lyrics = existing.Lyrics,
+            DanceId = existing.DanceId
+        } : new DanceNumberViewModel { DanceId = Id };
+
+        var parameters = new DialogParameters { { "IsUpdate", isUpdate }, { "Model", model } };
+        var dialog = await DialogService.ShowAsync<DanceNumberForm>("Číslo tance", parameters);
+        var result = await dialog.Result;
+        if (!result!.Canceled)
+        {
+            var data = result.Data as DanceNumberViewModel;
+            try
+            {
+                if (isUpdate)
+                    await DanceNumberService.UpdateAsync(existing!.Id, Mapper.Map<Dal.Entities.DanceNumber>(data));
+                else
+                    await DanceNumberService.CreateAsync(Mapper.Map<Dal.Entities.DanceNumber>(data));
+
+                Snackbar.Add(isUpdate ? "Číslo bylo aktualizováno." : "Číslo bylo přidáno.", Severity.Success);
+                await LoadDanceNumbers();
+            }
+            catch
+            {
+                Snackbar.Add("Chyba při ukládání.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task DeleteDanceNumber(int id)
+    {
+        var confirm = await DialogService.ShowMessageBoxAsync("Smazat číslo?", "", "Smazat", "Zrušit");
+        if (confirm is true)
+        {
+            await DanceNumberService.DeleteAsync(id);
+            Snackbar.Add("Číslo bylo smazáno.", Severity.Success);
+            await LoadDanceNumbers();
+        }
+    }
+
+    private void GoBack() => NavigationManager.NavigateTo(NavigationManager.BaseUri + "Admin/Dances");
 }

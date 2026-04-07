@@ -1,0 +1,251 @@
+@page "/Admin/Profile"
+@using System.Security.Claims
+@using Demizon.Core.Services.Member
+@using Demizon.Core.Services.Notification
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.ViewModels
+@using Microsoft.AspNetCore.Components.Authorization
+
+@attribute [Authorize(Roles = "Admin, Standard")]
+@layout AdminMainLayout
+
+<PageTitle>Profil</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Můj profil</MudText>
+
+@if (_member is not null)
+{
+    <MudGrid>
+        <!-- Základní info -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-2"/>
+                            Základní informace
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField @bind-Value="_member.Name" Label="Jméno" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2"/>
+                    <MudTextField @bind-Value="_member.Surname" Label="Příjmení" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2"/>
+                    <MudTextField @bind-Value="_member.Email" Label="E-mail" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" InputType="InputType.Email"/>
+                    <MudTextField @bind-Value="_newPassword" Label="Nové heslo (ponech prázdné pro zachování)" Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" Class="mb-2" InputType="InputType.Password"/>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveProfile" StartIcon="@Icons.Material.Filled.Save">
+                        Uložit změny
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <!-- Push notifikace -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.NotificationsActive" Class="mr-2"/>
+                            Push notifikace
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                        Zapni si notifikace, abys byl/a informován/a o blížících se akcích a nezapomněl/a vyplnit docházku.
+                    </MudText>
+
+                    @if (!_pushSupported)
+                    {
+                        <MudAlert Severity="Severity.Warning" Dense="true">
+                            Tvůj prohlížeč nepodporuje push notifikace.
+                        </MudAlert>
+                    }
+                    else if (_pushPermission == "denied")
+                    {
+                        <MudAlert Severity="Severity.Error" Dense="true">
+                            Notifikace jsou zablokované v nastavení prohlížeče. Povol je ručně.
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudSwitch Value="_notificationsEnabled"
+                                       ValueChanged="OnNotificationToggle"
+                                       T="bool"
+                                       Color="Color.Success"
+                                       Label="@(_notificationsEnabled ? "Notifikace zapnuty" : "Notifikace vypnuty")"
+                                       ThumbIcon="@(_notificationsEnabled ? Icons.Material.Filled.Notifications : Icons.Material.Filled.NotificationsOff)"
+                                       ThumbIconColor="Color.Surface"/>
+                            @if (_pushLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
+                            }
+                        </MudStack>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                            @(_subscriptions.Count > 0
+                                ? $"Aktivní na {_subscriptions.Count} zařízení/prohlížeči."
+                                : "Žádné aktivní zařízení.")
+                        </MudText>
+                    }
+                </MudCardContent>
+                @if (_subscriptions.Count > 0)
+                {
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteSweep"
+                                   OnClick="RemoveAllSubscriptions" Size="Size.Small">
+                            Odregistrovat všechna zařízení
+                        </MudButton>
+                    </MudCardActions>
+                }
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    [Inject] private IMemberService MemberService { get; set; } = null!;
+    [Inject] private IPushSubscriptionService PushSubscriptionService { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IConfiguration Configuration { get; set; } = null!;
+
+    private MemberViewModel? _member;
+    private string _newPassword = string.Empty;
+
+    private bool _pushSupported = true;
+    private string _pushPermission = "default";
+    private bool _notificationsEnabled;
+    private bool _pushLoading;
+    private List<Dal.Entities.PushSubscription> _subscriptions = [];
+
+    protected override void OnInitialized()
+    {
+        var login = AuthenticationState?.Result.User.Claims
+            .First(x => x.Type == ClaimTypes.Name).Value;
+        _member = Mapper.Map<MemberViewModel>(MemberService.GetOneByLogin(login));
+        PageService.SetTitle("Profil");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _member is null) return;
+
+        _subscriptions = await PushSubscriptionService.GetByMemberAsync(_member.Id);
+
+        try
+        {
+            _pushPermission = await JS.InvokeAsync<string>("demizonPush.getNotificationPermission");
+            _pushSupported = _pushPermission != "unsupported";
+            var currentSub = await JS.InvokeAsync<string?>("demizonPush.getSubscription");
+            _notificationsEnabled = currentSub is not null;
+        }
+        catch
+        {
+            _pushSupported = false;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task SaveProfile()
+    {
+        if (_member is null) return;
+
+        if (!string.IsNullOrWhiteSpace(_newPassword))
+            _member.Password = _newPassword;
+
+        try
+        {
+            await MemberService.UpdateAsync(_member.Id, Mapper.Map<Dal.Entities.Member>(_member));
+            _newPassword = string.Empty;
+            Snackbar.Add("Profil uložen.", Severity.Success);
+        }
+        catch
+        {
+            Snackbar.Add("Chyba při ukládání profilu.", Severity.Error);
+        }
+    }
+
+    private async Task OnNotificationToggle(bool enabled)
+    {
+        if (_member is null) return;
+        _pushLoading = true;
+
+        try
+        {
+            if (enabled)
+            {
+                var vapidPublicKey = Configuration["Vapid:PublicKey"];
+                var subJson = await JS.InvokeAsync<string?>("demizonPush.subscribe", vapidPublicKey);
+                if (subJson is null)
+                {
+                    _notificationsEnabled = false;
+                    Snackbar.Add("Notifikace nebyly povoleny.", Severity.Warning);
+                    return;
+                }
+
+                var sub = System.Text.Json.JsonSerializer.Deserialize<PushSubscriptionJson>(subJson)!;
+                await PushSubscriptionService.AddAsync(new Dal.Entities.PushSubscription
+                {
+                    MemberId = _member.Id,
+                    Endpoint = sub.Endpoint,
+                    P256dh = sub.Keys.P256dh,
+                    Auth = sub.Keys.Auth,
+                });
+                _subscriptions = await PushSubscriptionService.GetByMemberAsync(_member.Id);
+                Snackbar.Add("Notifikace zapnuty.", Severity.Success);
+            }
+            else
+            {
+                var currentSub = await JS.InvokeAsync<string?>("demizonPush.getSubscription");
+                if (currentSub is not null)
+                {
+                    var sub = System.Text.Json.JsonSerializer.Deserialize<PushSubscriptionJson>(currentSub)!;
+                    await JS.InvokeAsync<bool>("demizonPush.unsubscribe");
+                    await PushSubscriptionService.RemoveAsync(_member.Id, sub.Endpoint);
+                }
+                _subscriptions = await PushSubscriptionService.GetByMemberAsync(_member.Id);
+                Snackbar.Add("Notifikace vypnuty.", Severity.Info);
+            }
+
+            _pushPermission = await JS.InvokeAsync<string>("demizonPush.getNotificationPermission");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Chyba: {ex.Message}", Severity.Error);
+            _notificationsEnabled = !enabled;
+        }
+        finally
+        {
+            _pushLoading = false;
+        }
+    }
+
+    private async Task RemoveAllSubscriptions()
+    {
+        if (_member is null) return;
+
+        foreach (var sub in _subscriptions)
+            await PushSubscriptionService.RemoveAsync(_member.Id, sub.Endpoint);
+
+        await JS.InvokeAsync<bool>("demizonPush.unsubscribe");
+        _subscriptions = [];
+        _notificationsEnabled = false;
+        Snackbar.Add("Všechna zařízení odregistrována.", Severity.Info);
+    }
+
+    // Pomocné záznamy pro deserializaci JSON z prohlížeče
+    private sealed record PushSubscriptionJson(
+        string Endpoint,
+        PushSubscriptionKeysJson Keys);
+
+    private sealed record PushSubscriptionKeysJson(
+        string P256dh,
+        string Auth);
+}

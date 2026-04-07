@@ -12,6 +12,8 @@
                       Label="@Localizer[nameof(DemizonLocales.Information)]">
         </MudTextField>
         <MudCheckBox @bind-Value="EventModel.IsPublic" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"></MudCheckBox>
+        <MudNumericField @bind-Value="EventModel.NotifyBeforeDays" T="int?" Label="Push notifikace N dní předem (prázdné = nevysílat)"
+                         Min="0" Max="30" Clearable="true" Variant="Variant.Text" Class="mt-2"/>
     </DialogContent>
 
     <DialogActions>

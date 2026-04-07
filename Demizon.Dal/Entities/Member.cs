@@ -20,6 +20,8 @@ public class Member
 
     public bool IsVisible { get; set; } = false;
 
+    public bool IsAttendanceVisible { get; set; } = true;
+
     public DateTime? BirthDate { get; set; }
 
     public DateTime? MemberSince { get; set; }
@@ -27,6 +29,8 @@ public class Member
     public virtual List<File> Photos { get; set; } = [];
 
     public virtual List<Attendance> Attendances { get; set; } = [];
+
+    public virtual List<PushSubscription> PushSubscriptions { get; set; } = [];
 }
 
 public enum UserRole

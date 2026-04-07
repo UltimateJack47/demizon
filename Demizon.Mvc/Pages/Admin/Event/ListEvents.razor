@@ -13,68 +13,55 @@
 @inject IMapper Mapper
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin, Standard")]
 
 <MudTable @ref="EventsGrid" T="EventViewModel" Items="Events" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
         <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.Events)]</MudText>
         <MudSpacer/>
-        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">@Localizer[nameof(DemizonLocales.Create)]</MudButton>
+        <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"/>
+        <AuthorizeView Roles="Admin">
+            <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary"
+                       @onclick="() => OpenFormDialog()">
+                @Localizer[nameof(DemizonLocales.Create)]
+            </MudButton>
+        </AuthorizeView>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.Name)]</b>
-        </MudTh>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.Date)]</b>
-        </MudTh>
-        <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.Place)]</b>
-        </MudTh>
+        <MudTh><b>@Localizer[nameof(DemizonLocales.Name)]</b></MudTh>
+        <MudTh><b>@Localizer[nameof(DemizonLocales.Date)]</b></MudTh>
+        <MudTh><b>@Localizer[nameof(DemizonLocales.Place)]</b></MudTh>
         <MudTh Style="width: 40px"></MudTh>
-        <MudTh Style="width: 40px"></MudTh>
-        <MudTh Style="width: 40px"></MudTh>
-        <MudTh Style="width: 40px"></MudTh>
+        <MudTh Style="width: 80px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="upcomingEvent">
         <MudTd>@upcomingEvent.Name</MudTd>
-        @if (upcomingEvent.DateFrom != upcomingEvent.DateTo)
-        {
-            <MudTd>@upcomingEvent.DateFrom.ToString("d. MMMM yyyy") - @upcomingEvent.DateTo.ToLocalTime().ToString("dd. MMMM yyyy")</MudTd>
-        }
-        else
-        {
-            <MudTd>@upcomingEvent.DateFrom.ToString("dd. MMMM yyyy")</MudTd>
-        }
-
-
-        @if (upcomingEvent.Place is not null)
-        {
-            <MudTd>@upcomingEvent.Place</MudTd>
-        }
-        else
-        {
-            <MudTd></MudTd>
-        }
         <MudTd>
-            @if (upcomingEvent.IsPublic)
+            @if (upcomingEvent.DateFrom.Date != upcomingEvent.DateTo.Date)
             {
-                <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
+                @($"{upcomingEvent.DateFrom:d. MMMM yyyy} – {upcomingEvent.DateTo:d. MMMM yyyy}")
             }
             else
             {
-                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
+                @upcomingEvent.DateFrom.ToString("d. MMMM yyyy")
+            }
+        </MudTd>
+        <MudTd>@upcomingEvent.Place</MudTd>
+        <MudTd>
+            @if (upcomingEvent.IsPublic)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"/>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"/>
             }
         </MudTd>
         <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(upcomingEvent.Id)"/>
-        </MudTd>
-        <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(upcomingEvent)"/>
-        </MudTd>
-        <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveEvent(upcomingEvent.Id)"/>
+            <AuthorizeView Roles="Admin">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(upcomingEvent)"/>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="() => RemoveEvent(upcomingEvent.Id)"/>
+            </AuthorizeView>
         </MudTd>
     </RowTemplate>
 </MudTable>

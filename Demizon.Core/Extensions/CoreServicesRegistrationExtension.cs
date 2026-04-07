@@ -1,9 +1,11 @@
 ﻿using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Dance;
+using Demizon.Core.Services.DanceNumber;
 using Demizon.Core.Services.Event;
 using Demizon.Core.Services.File;
 using Demizon.Core.Services.FileUpload;
 using Demizon.Core.Services.Member;
+using Demizon.Core.Services.Notification;
 using Demizon.Core.Services.VideoLink;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,6 +22,8 @@ public static class CoreServicesRegistrationExtension
         services.AddTransient<IVideoLinkService, VideoLinkService>();
         services.AddTransient<IDanceService, DanceService>();
         services.AddTransient<IAttendanceService, AttendanceService>();
+        services.AddTransient<IDanceNumberService, DanceNumberService>();
+        services.AddTransient<IPushSubscriptionService, PushSubscriptionService>();
         return services;
     }
 }

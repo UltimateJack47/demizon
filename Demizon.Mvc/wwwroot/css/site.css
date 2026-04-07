@@ -1,7 +1,334 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: Georgia, serif;
+}
+
+/* ─── Hero sekce (homepage) ─── */
+.demi-hero {
+    background: linear-gradient(135deg, #9B1A1A 0%, #7A0E0E 50%, #4A0505 100%);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.demi-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+}
+
+.demi-hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.demi-hero-title {
+    color: white !important;
+    font-family: Georgia, serif !important;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.demi-hero-subtitle {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: normal;
+}
+
+/* ─── Info karty (homepage) ─── */
+.demi-info-card {
+    height: 100%;
+    border-left: 4px solid #9B1A1A;
+}
+
+/* ─── Člen kartičky ─── */
+.demi-member-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: default;
+}
+
+.demi-member-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(155, 26, 26, 0.2) !important;
+}
+
+.demi-member-avatar {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F5F0EB;
+}
+
+/* ─── Tance kartičky ─── */
+.demi-dance-card {
+    border-top: 3px solid #9B1A1A;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.demi-dance-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(155, 26, 26, 0.2) !important;
+}
+
+/* ─── Responzivní video embed ─── */
+.demi-video-embed {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+}
+
+.demi-video-embed iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* ─── Join-us kroky ─── */
+.demi-join-step {
+    border-left: 3px solid #C8912A;
+}
+
+/* ─── Fotogalerie ─── */
+.demi-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+}
+
+@media (min-width: 600px) {
+    .demi-gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+}
+
+.demi-gallery-item {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #f0ebe4;
+}
+
+.demi-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    display: block;
+}
+
+.demi-gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+.demi-gallery-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(155, 26, 26, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.demi-gallery-item:hover .demi-gallery-overlay {
+    opacity: 1;
+}
+
+/* ─── Lightbox ─── */
+.demi-lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+}
+
+.demi-lightbox-content {
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.demi-lightbox-content img {
+    max-width: 90vw;
+    max-height: 82vh;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+.demi-lightbox-counter {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.85rem;
+    margin-top: 8px;
+}
+
+.demi-lightbox-close,
+.demi-lightbox-prev,
+.demi-lightbox-next {
+    position: fixed;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+    z-index: 10000;
+}
+
+.demi-lightbox-close:disabled,
+.demi-lightbox-prev:disabled,
+.demi-lightbox-next:disabled {
+    opacity: 0.25;
+    cursor: default;
+}
+
+.demi-lightbox-close { top: 16px; right: 16px; }
+.demi-lightbox-prev  { left: 8px; top: 50%; transform: translateY(-50%); }
+.demi-lightbox-next  { right: 8px; top: 50%; transform: translateY(-50%); }
+
+/* ─── Docházka – tabulka ─── */
+.demi-att-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.12);
+}
+
+.demi-att-table {
+    border-collapse: collapse;
+    min-width: 100%;
+    font-size: 0.85rem;
+    background: white;
+}
+
+.demi-att-table td,
+.demi-att-table th {
+    border: 1px solid rgba(0,0,0,0.08);
+    padding: 4px 6px;
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Sticky levý sloupec – jméno člena */
+.demi-att-sticky {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 2;
+    text-align: left !important;
+    min-width: 120px;
+    max-width: 160px;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.08);
+}
+
+thead .demi-att-sticky {
+    background: #f5f0eb;
+    z-index: 3;
+}
+
+.demi-att-col-header {
+    min-width: 52px;
+    background: #f5f0eb;
+    font-size: 0.75rem;
+}
+
+.demi-att-event-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #9B1A1A;
+}
+
+.demi-att-date-label {
+    font-size: 0.72rem;
+}
+
+/* Buňka – klikatelná */
+.demi-att-cell {
+    cursor: pointer;
+    transition: background 0.15s;
+    min-width: 44px; /* min touch target */
+    min-height: 44px;
+}
+
+.demi-att-cell:hover {
+    background: rgba(155,26,26,0.06);
+}
+
+/* Jméno člena */
+.demi-att-name {
+    font-size: 0.82rem;
+    padding: 6px 8px;
+}
+
+/* Řádek skrytého člena */
+.demi-att-row-hidden td {
+    opacity: 0.45;
+    font-style: italic;
+}
+
+/* Součtové řádky */
+.demi-att-sum-row td {
+    background: #fdf5e6;
+    font-size: 0.8rem;
+}
+
+.demi-att-sum-row .demi-att-sticky {
+    background: #fdf5e6;
+}
+
+.demi-att-total-row td {
+    background: #f3e8e8;
+    font-size: 0.82rem;
+}
+
+.demi-att-total-row .demi-att-sticky {
+    background: #f3e8e8;
+}
+
+/* Tlačítka docházky (chipy v horní části) */
+.demi-att-btn {
+    min-height: 44px;
+    border-radius: 6px !important;
+    text-transform: none !important;
+    line-height: 1.2;
+}
+
+/* ─── Obecné úpravy ─── */
+.mud-nav-link.active {
+    color: #9B1A1A !important;
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    .demi-hero {
+        padding: 2rem 1rem;
+    }
+
+    .demi-hero-title {
+        font-size: 1.8rem !important;
+    }
 }
 
 h1:focus {
