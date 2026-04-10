@@ -9,17 +9,17 @@
 
 | # | Fáze | Priorita | Stav | Rozsah |
 |---|------|----------|------|--------|
-| R1 | Kritické opravy – blokující produkci | Kritická | 🔲 | ~8 úprav |
-| R2 | Bezpečnostní hardening | Vysoká | 🔲 | ~6 úprav |
-| R3 | Datová vrstva – integrita a výkon | Vysoká | 🔲 | ~7 úprav |
-| R4 | Frontend – kvalita a UX | Střední | 🔲 | ~9 úprav |
+| R1 | Kritické opravy – blokující produkci | Kritická | ✅ `afd5995` | ~8 úprav |
+| R2 | Bezpečnostní hardening | Vysoká | ✅ `3a25475` | ~6 úprav |
+| R3 | Datová vrstva – integrita a výkon | Vysoká | ✅ `1fb2bfd` | ~7 úprav |
+| R4 | Frontend – kvalita a UX | Střední | ✅ `a0f0897` | ~9 úprav |
 | R5 | Architektura – čistota kódu | Střední | 🔲 | ~6 úprav |
 | R6 | Lokalizace – CZ/EN public stránky | Střední | 🔲 | ~4 úprav |
 | R7 | Nové funkce | Nízká | 🔲 | ~8 návrhů |
 
 ---
 
-## FÁZE R1 – Kritické opravy 🔲
+## FÁZE R1 – Kritické opravy ✅
 
 > Tyto problémy brání správnému buildu nebo mohou způsobit runtime chyby.
 
@@ -153,7 +153,7 @@ protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 
 ---
 
-## FÁZE R2 – Bezpečnostní hardening 🔲
+## FÁZE R2 – Bezpečnostní hardening ✅
 
 > Ochrana před útoky a best practices pro produkční nasazení.
 
@@ -304,7 +304,7 @@ builder.Services.AddOptions<JwtSettings>()
 
 ---
 
-## FÁZE R3 – Datová vrstva – integrita a výkon 🔲
+## FÁZE R3 – Datová vrstva – integrita a výkon ✅
 
 > Opravy v EF Core konfiguraci, migracích a service vrstvě.
 
@@ -445,7 +445,7 @@ builder.Services.AddOptions<JwtSettings>()
 
 ---
 
-## FÁZE R4 – Frontend – kvalita a UX 🔲
+## FÁZE R4 – Frontend – kvalita a UX ✅
 
 > Vylepšení UI kódu, přístupnosti a CSS.
 
