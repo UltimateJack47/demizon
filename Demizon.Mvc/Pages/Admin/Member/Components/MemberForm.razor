@@ -8,35 +8,27 @@
     <TitleContent>
         <MudText
             Typo="Typo.h6">
-            @if (IsUpdate)
-            {
-                @Localizer[nameof(DemizonLocales.Update)]
-            }
-            else
-            {
-                @Localizer[nameof(DemizonLocales.Create)]
-            }
-            - @Localizer[nameof(DemizonLocales.Member)]
+            @(IsUpdate ? "Upravit" : "Vytvořit") - Člen
         </MudText>
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="Model.Name" T="string" Label="@Localizer[nameof(DemizonLocales.FirstName)]" Required="true" RequiredError="Name is required!"/>
-        <MudTextField @bind-Value="Model.Surname" T="string" Label="@Localizer[nameof(DemizonLocales.Surname)]"/>
-        <MudTextField @bind-Value="Model.Login" T="string" Label="@Localizer[nameof(DemizonLocales.Login)]" Required="true" RequiredError="Login is required!"/>
-        <MudTextField @bind-Value="Model.Email" T="string" Label="@Localizer[nameof(DemizonLocales.Email)]" Required="true" RequiredError="Email is required!"/>
+        <MudTextField @bind-Value="Model.Name" T="string" Label="Jméno" Required="true" RequiredError="Jméno je povinné!"/>
+        <MudTextField @bind-Value="Model.Surname" T="string" Label="Příjmení"/>
+        <MudTextField @bind-Value="Model.Login" T="string" Label="Login" Required="true" RequiredError="Login je povinný!"/>
+        <MudTextField @bind-Value="Model.Email" T="string" Label="E-mail" Required="true" RequiredError="E-mail je povinný!"/>
         @if ((IsUpdate && (Model.Id == LoggedUser.Id)) || !IsUpdate)
         {
-            <MudTextField @bind-Value="Model.Password" T="string" Label="@Localizer[nameof(DemizonLocales.Password)]"
+            <MudTextField @bind-Value="Model.Password" T="string" Label="Heslo"
                           Variant="Variant.Text" InputType="@_passwordInput" Adornment="Adornment.End"
                           AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="ChangeIsShow" Required="true"
-                          RequiredError="Password is required!"/>
+                          RequiredError="Heslo je povinné!"/>
         }
-        <MudDatePicker @bind-Date="Model.MemberSince" Label="@Localizer[nameof(DemizonLocales.MemberSince)]"
+        <MudDatePicker @bind-Date="Model.MemberSince" Label="Členem od"
                        Clearable="true" Editable="true" MaxDate="DateTime.Today"/>
-        <MudDatePicker @bind-Date="Model.BirthDate" Label="@Localizer[nameof(DemizonLocales.Birthdate)]"
+        <MudDatePicker @bind-Date="Model.BirthDate" Label="Narozeniny"
                        Clearable="true" Editable="true" MaxDate="DateTime.Today"/>
-        <MudSelect @bind-Value="Model.Gender" Label="@Localizer[nameof(DemizonLocales.Gender)]" T="Gender">
+        <MudSelect @bind-Value="Model.Gender" Label="Pohlaví" T="Gender">
             @foreach (Gender item in Enum.GetValues(typeof(Gender)))
             {
                 <MudSelectItem Value="@item">@item</MudSelectItem>
@@ -49,7 +41,7 @@
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.CloudUpload"
                            OnClick="@upload.OpenFilePickerAsync">
-                    @Localizer[nameof(DemizonLocales.UploadProfilePhoto)]
+                    Nahrát profilovku
                 </MudButton>
             </CustomContent>
         </MudFileUpload>
@@ -64,23 +56,16 @@
         }
         @if (LoggedUser.Role == UserRole.Admin)
         {
-            <MudCheckBox @bind-Value="Model.IsVisible" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"/>
+            <MudCheckBox @bind-Value="Model.IsVisible" Label="Veřejné?"/>
             <MudCheckBox @bind-Value="Model.IsAttendanceVisible" Label="Zobrazovat v docházce"/>
         }
 
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="Cancel">@Localizer[nameof(DemizonLocales.Cancel)]</MudButton>
+        <MudButton OnClick="Cancel">Zrušit</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
-            @if (IsUpdate)
-            {
-                <span>@Localizer[nameof(DemizonLocales.Update)]</span>
-            }
-            else
-            {
-                <span>@Localizer[nameof(DemizonLocales.Create)]</span>
-            }
+            @(IsUpdate ? "Upravit" : "Vytvořit")
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -152,12 +137,12 @@
                 await MemberService.CreateAsync(dbModel);
             }
 
-            Snackbar.Add(IsUpdate ? "The member has been updated." : "The member has been created.", Severity.Success);
+            Snackbar.Add(IsUpdate ? "Člen byl upraven." : "Člen byl vytvořen.", Severity.Success);
             MudDialog.Close(DialogResult.Ok(true));
         }
         catch (Exception)
         {
-            Snackbar.Add("Something went wrong.", Severity.Error);
+            Snackbar.Add("Něco se pokazilo.", Severity.Error);
             MudDialog.Close(DialogResult.Ok(false));
         }
     }
