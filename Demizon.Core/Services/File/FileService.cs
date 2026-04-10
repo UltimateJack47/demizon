@@ -1,10 +1,11 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Demizon.Core.Services.File;
 
-public class FileService(DemizonContext demizonContext) : IFileService
+public class FileService(DemizonContext demizonContext, ILogger<FileService> logger) : IFileService
 {
     private DemizonContext DemizonContext { get; set; } = demizonContext;
 
@@ -38,12 +39,13 @@ public class FileService(DemizonContext demizonContext) : IFileService
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process File operation.");
             return false;
         }
     }
-    
+
     public async Task<bool> DeleteAsync(int id)
     {
         try
@@ -53,13 +55,14 @@ public class FileService(DemizonContext demizonContext) : IFileService
             {
                 throw new EntityNotFoundException();
             }
-            
+
             DemizonContext.Files.Remove(entity);
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process File operation.");
             return false;
         }
     }

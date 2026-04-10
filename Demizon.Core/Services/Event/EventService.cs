@@ -1,10 +1,11 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Demizon.Core.Services.Event;
 
-public class EventService(DemizonContext demizonContext) : IEventService
+public class EventService(DemizonContext demizonContext, ILogger<EventService> logger) : IEventService
 {
     private DemizonContext DemizonContext { get; } = demizonContext;
 
@@ -38,8 +39,9 @@ public class EventService(DemizonContext demizonContext) : IEventService
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process Event operation.");
             return false;
         }
     }
@@ -58,8 +60,9 @@ public class EventService(DemizonContext demizonContext) : IEventService
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process Event operation.");
             return false;
         }
     }

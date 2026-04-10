@@ -1,6 +1,7 @@
 using Demizon.Common.Configuration;
 using Demizon.Core.Services.Event;
 using Demizon.Core.Services.Notification;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using WebPush;
 
@@ -57,6 +58,7 @@ public sealed class NotificationHostedService(
 
         // Najdeme akce, které mají nastavenou notifikaci a datum notifikace je dnes
         var upcomingEvents = eventService.GetAll()
+            .AsNoTracking()
             .Where(e => e.NotifyBeforeDays.HasValue && e.DateFrom > today)
             .ToList()
             .Where(e => e.DateFrom.Date == today.AddDays(e.NotifyBeforeDays!.Value))

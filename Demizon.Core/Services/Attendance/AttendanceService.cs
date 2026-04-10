@@ -1,10 +1,11 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Demizon.Core.Services.Attendance;
 
-public class AttendanceService(DemizonContext demizonContext) : IAttendanceService
+public class AttendanceService(DemizonContext demizonContext, ILogger<AttendanceService> logger) : IAttendanceService
 {
     private DemizonContext DemizonContext { get; } = demizonContext;
 
@@ -45,8 +46,9 @@ public class AttendanceService(DemizonContext demizonContext) : IAttendanceServi
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process Attendance operation.");
             return false;
         }
     }
@@ -65,8 +67,9 @@ public class AttendanceService(DemizonContext demizonContext) : IAttendanceServi
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process Attendance operation.");
             return false;
         }
     }

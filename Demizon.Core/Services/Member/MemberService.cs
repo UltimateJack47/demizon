@@ -1,10 +1,11 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Demizon.Core.Services.Member;
 
-public class MemberService(DemizonContext demizonContext) : IMemberService
+public class MemberService(DemizonContext demizonContext, ILogger<MemberService> logger) : IMemberService
 {
     private DemizonContext DemizonContext { get; set; } = demizonContext;
 
@@ -46,8 +47,9 @@ public class MemberService(DemizonContext demizonContext) : IMemberService
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process Member operation.");
             return false;
         }
     }
@@ -66,8 +68,9 @@ public class MemberService(DemizonContext demizonContext) : IMemberService
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process Member operation.");
             return false;
         }
     }

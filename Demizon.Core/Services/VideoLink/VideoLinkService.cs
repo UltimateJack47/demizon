@@ -1,10 +1,11 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Demizon.Core.Services.VideoLink;
 
-public class VideoLinkService(DemizonContext demizonContext) : IVideoLinkService
+public class VideoLinkService(DemizonContext demizonContext, ILogger<VideoLinkService> logger) : IVideoLinkService
 {
     private DemizonContext DemizonContext { get; } = demizonContext;
 
@@ -38,8 +39,9 @@ public class VideoLinkService(DemizonContext demizonContext) : IVideoLinkService
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process VideoLink operation.");
             return false;
         }
     }
@@ -58,8 +60,9 @@ public class VideoLinkService(DemizonContext demizonContext) : IVideoLinkService
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process VideoLink operation.");
             return false;
         }
     }

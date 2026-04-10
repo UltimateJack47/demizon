@@ -56,12 +56,14 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
         modelBuilder.Entity<File>(b =>
         {
             b.HasKey(x => x.Id);
+            b.HasIndex(x => x.DanceId);
             b.Property(s => s.Path).IsRequired();
         });
 
         modelBuilder.Entity<VideoLink>(b =>
         {
             b.HasKey(x => x.Id);
+            b.HasIndex(x => x.DanceId);
             b.Property(s => s.Name).IsRequired();
             b.Property(s => s.Url).IsRequired();
             b.Property(s => s.Year).IsRequired();
@@ -73,10 +75,12 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.HasKey(x => x.Id);
             b.HasMany<File>(x => x.Files)
                 .WithOne(y => y.Dance)
-                .HasForeignKey(x => x.DanceId);
+                .HasForeignKey(x => x.DanceId)
+                .OnDelete(DeleteBehavior.Cascade);
             b.HasMany<VideoLink>(x => x.Videos)
                 .WithOne(y => y.Dance)
-                .HasForeignKey(x => x.DanceId);
+                .HasForeignKey(x => x.DanceId)
+                .OnDelete(DeleteBehavior.Cascade);
             b.HasMany<DanceNumber>(x => x.Numbers)
                 .WithOne(y => y.Dance)
                 .HasForeignKey(x => x.DanceId);
@@ -93,9 +97,10 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
         modelBuilder.Entity<PushSubscription>(b =>
         {
             b.HasKey(x => x.Id);
-            b.Property(x => x.Endpoint).IsRequired();
-            b.Property(x => x.P256dh).IsRequired();
-            b.Property(x => x.Auth).IsRequired();
+            b.HasIndex(x => new { x.MemberId, x.Endpoint }).IsUnique();
+            b.Property(x => x.Endpoint).HasMaxLength(500).IsRequired();
+            b.Property(x => x.P256dh).HasMaxLength(128).IsRequired();
+            b.Property(x => x.Auth).HasMaxLength(48).IsRequired();
             b.HasOne(x => x.Member)
                 .WithMany(m => m.PushSubscriptions)
                 .HasForeignKey(x => x.MemberId)

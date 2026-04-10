@@ -1,10 +1,11 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Demizon.Core.Services.Dance;
 
-public class DanceService(DemizonContext demizonContext) : IDanceService
+public class DanceService(DemizonContext demizonContext, ILogger<DanceService> logger) : IDanceService
 {
     private DemizonContext DemizonContext { get; } = demizonContext;
 
@@ -38,8 +39,9 @@ public class DanceService(DemizonContext demizonContext) : IDanceService
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process Dance operation.");
             return false;
         }
     }
@@ -58,8 +60,9 @@ public class DanceService(DemizonContext demizonContext) : IDanceService
             await DemizonContext.SaveChangesAsync();
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to process Dance operation.");
             return false;
         }
     }
