@@ -15,7 +15,7 @@
 | R4 | Frontend – kvalita a UX | Střední | ✅ `a0f0897` | ~9 úprav |
 | R5 | Architektura – čistota kódu | Střední | ✅ `f844b60` | ~6 úprav |
 | R6 | Lokalizace – CZ/EN public stránky | Střední | ✅ `22ca424` | ~4 úprav |
-| R7 | Nové funkce | Nízká | ✅ (commit viz níže) | ~8 návrhů |
+| R7 | Nové funkce | Nízká | ✅ `d60a4d6` | ~8 návrhů |
 
 ---
 
@@ -733,7 +733,7 @@ public static string FormatRange(this (DateTime From, DateTime To) range)
 
 ---
 
-## FÁZE R7 – Nové funkce ✅
+## FÁZE R7 – Nové funkce ✅ `d60a4d6`
 
 > Implementováno. Code review provedeno, kritické nálezy opraveny před commitem.
 
