@@ -25,13 +25,25 @@ public sealed class NotificationHostedService(
     {
         logger.LogInformation("NotificationHostedService spuštěna.");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            var delay = GetDelayUntilNextCheck();
-            logger.LogInformation("Další kontrola notifikací za {Delay}.", delay);
-            await Task.Delay(delay, stoppingToken);
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                var delay = GetDelayUntilNextCheck();
+                logger.LogInformation("Další kontrola notifikací za {Delay}.", delay);
+                await Task.Delay(delay, stoppingToken);
 
-            await CheckAndSendNotificationsAsync(stoppingToken);
+                await CheckAndSendNotificationsAsync(stoppingToken);
+            }
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // Graceful shutdown – normální stav
+        }
+        catch (Exception ex)
+        {
+            logger.LogCritical(ex, "NotificationHostedService selhala s nepředvídanou chybou.");
+            throw;
         }
     }
 

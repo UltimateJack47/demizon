@@ -10,20 +10,25 @@ window.demizonPush = {
             return null;
         }
 
-        this.vapidPublicKey = vapidPublicKey;
+        try {
+            this.vapidPublicKey = vapidPublicKey;
 
-        const registration = await navigator.serviceWorker.register('/service-worker.js');
-        await navigator.serviceWorker.ready;
+            const registration = await navigator.serviceWorker.register('/service-worker.js');
+            await navigator.serviceWorker.ready;
 
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return null;
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return null;
 
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: this._urlBase64ToUint8Array(vapidPublicKey),
-        });
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: this._urlBase64ToUint8Array(vapidPublicKey),
+            });
 
-        return JSON.stringify(subscription);
+            return JSON.stringify(subscription);
+        } catch (error) {
+            console.error('Push subscription failed:', error);
+            return null;
+        }
     },
 
     // Odregistruje aktuální subscription

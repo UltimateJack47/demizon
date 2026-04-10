@@ -9,9 +9,11 @@
 
     <DialogContent>
         <MudTextField @bind-Value="Model.Title" Label="Název čísla" Required="true"
-                      RequiredError="Název je povinný!" Class="mb-2"/>
-        <MudTextField @bind-Value="Model.Description" Label="Popis (nepovinný)" Lines="3" Class="mb-2"/>
+                      RequiredError="Název je povinný!" MaxLength="200" Counter="200" Class="mb-2"/>
+        <MudTextField @bind-Value="Model.Description" Label="Popis (nepovinný)" Lines="3"
+                      MaxLength="2000" Counter="2000" Class="mb-2"/>
         <MudTextField @bind-Value="Model.Lyrics" Label="Texty písní (nepovinné)" Lines="6"
+                      MaxLength="5000" Counter="5000"
                       HelperText="Texty písní, které se zpívají při tomto čísle"/>
     </DialogContent>
 

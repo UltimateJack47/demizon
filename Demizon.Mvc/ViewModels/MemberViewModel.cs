@@ -28,7 +28,7 @@ public class MemberViewModel
 
     public bool IsAttendanceVisible { get; set; } = true;
 
-    public DateTime? Birthdate { get; set; }
+    public DateTime? BirthDate { get; set; }
 
     public DateTime? MemberSince { get; set; }
 

@@ -17,13 +17,11 @@ builder.Configuration
     .AddJsonFile("appsettings.Local.json", true, true)
     .AddJsonFile("appsettings.json", true, true)
     .AddJsonFile("appsettings.Development.json", true, true);
-var defaultConnectionString = builder.Configuration.GetConnectionString("Default");
+var defaultConnectionString = builder.Configuration.GetConnectionString("Default")
+    ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
 
-//builder.Services.Configure<UploadSettings>(builder.Configuration.GetSection("Upload"));
 builder.Services.AddOptions<UploadSettings>()
     .BindConfiguration("Upload");
-
-if (defaultConnectionString != null) DefaultConnectionString.DbConnectionString = defaultConnectionString;
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -39,7 +37,7 @@ builder.Services.AddOptions<VapidSettings>()
 builder.Services.AddNotifications();
 builder.Services.AddHostedService<NotificationHostedService>();
 
-builder.Services.AddDatabase(DefaultConnectionString.DbConnectionString);
+builder.Services.AddDatabase(defaultConnectionString);
 
 var app = builder.Build();
 

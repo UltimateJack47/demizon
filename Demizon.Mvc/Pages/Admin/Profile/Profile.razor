@@ -124,19 +124,20 @@
     private bool _pushLoading;
     private List<Dal.Entities.PushSubscription> _subscriptions = [];
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        var login = AuthenticationState?.Result.User.Claims
-            .First(x => x.Type == ClaimTypes.Name).Value;
+        var authState = await AuthenticationState!;
+        var login = authState.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
         _member = Mapper.Map<MemberViewModel>(MemberService.GetOneByLogin(login));
         PageService.SetTitle("Profil");
+
+        if (_member is not null)
+            _subscriptions = await PushSubscriptionService.GetByMemberAsync(_member.Id);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender || _member is null) return;
-
-        _subscriptions = await PushSubscriptionService.GetByMemberAsync(_member.Id);
 
         try
         {

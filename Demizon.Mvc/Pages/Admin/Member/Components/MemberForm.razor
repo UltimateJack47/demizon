@@ -34,7 +34,7 @@
         }
         <MudDatePicker @bind-Date="Model.MemberSince" Label="@Localizer[nameof(DemizonLocales.MemberSince)]"
                        Clearable="true" Editable="true" MaxDate="DateTime.Today"/>
-        <MudDatePicker @bind-Date="Model.Birthdate" Label="@Localizer[nameof(DemizonLocales.Birthdate)]"
+        <MudDatePicker @bind-Date="Model.BirthDate" Label="@Localizer[nameof(DemizonLocales.Birthdate)]"
                        Clearable="true" Editable="true" MaxDate="DateTime.Today"/>
         <MudSelect @bind-Value="Model.Gender" Label="@Localizer[nameof(DemizonLocales.Gender)]" T="Gender">
             @foreach (Gender item in Enum.GetValues(typeof(Gender)))

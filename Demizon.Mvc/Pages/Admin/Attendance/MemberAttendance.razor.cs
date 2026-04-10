@@ -53,18 +53,16 @@ public partial class MemberAttendance : ComponentBase
             .Where(x => GenderFilter == null || x.Gender == GenderFilter)
             .Where(x => ShowAttendanceHidden || x.IsAttendanceVisible);
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         CurrentMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
 
-        var loggedUserLogin = AuthenticationState?.Result.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
+        var authState = await AuthenticationState!;
+        var loggedUserLogin = authState.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
         LoggedUser = Mapper.Map<MemberViewModel>(MemberService.GetOneByLogin(loggedUserLogin));
 
         PageService.SetTitle(Localizer[nameof(DemizonLocales.Attendance)]);
-    }
 
-    protected override async Task OnInitializedAsync()
-    {
         await LoadData();
         await LoadTableData();
     }
