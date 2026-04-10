@@ -31,6 +31,13 @@ public class Member
     public virtual List<Attendance> Attendances { get; set; } = [];
 
     public virtual List<PushSubscription> PushSubscriptions { get; set; } = [];
+
+    public virtual List<RefreshToken> RefreshTokens { get; set; } = [];
+
+    /// <summary>
+    /// Soft delete – null = aktivní člen. Záznamy s hodnotou jsou filtrovány global query filtrem.
+    /// </summary>
+    public DateTime? DeletedAt { get; set; }
 }
 
 public enum UserRole

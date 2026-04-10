@@ -20,6 +20,10 @@
                     Icon="@Icons.Material.Filled.CalendarMonth">
             @Localizer[nameof(DemizonLocales.Attendance)]
         </MudNavLink>
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/AttendanceStats")"
+                    Icon="@Icons.Material.Filled.BarChart">
+            Statistiky docházky
+        </MudNavLink>
         <AuthorizeView Roles="Admin">
             <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Videos")"
                         Icon="@Icons.Material.Filled.VideoLibrary">

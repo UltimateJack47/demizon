@@ -1,4 +1,6 @@
-﻿using Demizon.Dal;
+﻿using Demizon.Common.Services;
+using Demizon.Dal;
+using Demizon.Mvc.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Mvc.Services.Extensions;
@@ -14,6 +16,8 @@ public static class MvcServicesRegistrationExtension
     {
         services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MvcServicesRegistrationExtension).Assembly));
         services.AddScoped<PageService>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
 
         return services;
     }

@@ -1,0 +1,88 @@
+@page "/Admin/AttendanceStats"
+@using Demizon.Core.Services.Attendance
+@attribute [Authorize]
+
+<PageTitle>Statistiky docházky</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-1">Statistiky docházky</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">Přehled docházky členů za zvolené období</MudText>
+
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudDatePicker @bind-Date="_dateFrom" Label="Od" Editable="true" MaxDate="DateTime.Today"/>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudDatePicker @bind-Date="_dateTo" Label="Do" Editable="true" MaxDate="DateTime.Today"/>
+        </MudItem>
+        <MudItem xs="12" md="4" Class="d-flex align-end">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="LoadStats" Disabled="_loading">
+                Zobrazit
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-4"/>
+}
+else if (_stats.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">Žádná data pro zvolené období.</MudAlert>
+}
+else
+{
+    <!-- Tabulka -->
+    <MudTable Items="_stats" Hover="true" Striped="true" Dense="true" Elevation="1" Class="mb-6">
+        <HeaderContent>
+            <MudTh>Člen</MudTh>
+            <MudTh Style="text-align:right">Přítomnosti</MudTh>
+            <MudTh Style="text-align:right">Celkem záznamů</MudTh>
+            <MudTh>Docházka</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.FullName</MudTd>
+            <MudTd Style="text-align:right">@context.AttendedCount</MudTd>
+            <MudTd Style="text-align:right">@context.TotalRecords</MudTd>
+            <MudTd>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudProgressLinear Value="@context.AttendanceRate" Color="@GetColor(context.AttendanceRate)"
+                                       Style="width:120px; height:8px; border-radius:4px;"/>
+                    <MudText Typo="Typo.body2">@context.AttendanceRate %</MudText>
+                </MudStack>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+}
+
+@code {
+    [Inject] private IAttendanceReportService ReportService { get; set; } = null!;
+
+    private List<MemberAttendanceStat> _stats = [];
+    private bool _loading;
+
+    private DateTime? _dateFrom = new DateTime(DateTime.Today.Year, 1, 1);
+    private DateTime? _dateTo = DateTime.Today;
+
+
+    protected override async Task OnInitializedAsync() => await LoadStats();
+
+    private async Task LoadStats()
+    {
+        if (_dateFrom is null || _dateTo is null) return;
+        _loading = true;
+        _stats = await ReportService.GetMemberStatsAsync(_dateFrom.Value, _dateTo.Value);
+        _loading = false;
+    }
+
+    private static Color GetColor(double rate) => rate switch
+    {
+        >= 80 => Color.Success,
+        >= 50 => Color.Warning,
+        _ => Color.Error
+    };
+}

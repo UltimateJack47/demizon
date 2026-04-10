@@ -64,7 +64,8 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
                 throw new EntityNotFoundException();
             }
 
-            DemizonContext.Members.Remove(entity);
+            // Soft delete – data pro historii docházky zůstanou, global query filter skryje člena
+            entity.DeletedAt = DateTime.UtcNow;
             await DemizonContext.SaveChangesAsync();
             return true;
         }

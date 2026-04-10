@@ -15,6 +15,8 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
     public DbSet<Attendance> Attendances { get; set; } = null!;
     public DbSet<DanceNumber> DanceNumbers { get; set; } = null!;
     public DbSet<PushSubscription> PushSubscriptions { get; set; } = null!;
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+    public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +45,12 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.HasMany(m => m.Photos)
                 .WithOne(f => f.Member)
                 .HasForeignKey(f => f.MemberId);
+            b.HasMany(m => m.RefreshTokens)
+                .WithOne(r => r.Member)
+                .HasForeignKey(r => r.MemberId)
+                .OnDelete(DeleteBehavior.Cascade);
+            // Soft delete – globální filtr skryje smazané členy
+            b.HasQueryFilter(m => m.DeletedAt == null);
         });
 
         modelBuilder.Entity<Event>(b =>
@@ -51,6 +59,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(s => s.Name).IsRequired();
             b.Property(s => s.DateFrom).IsRequired();
             b.Property(s => s.DateTo).IsRequired();
+            b.Property(s => s.Recurrence).HasConversion<string>().HasDefaultValue(RecurrenceType.None);
         });
 
         modelBuilder.Entity<File>(b =>
@@ -119,6 +128,23 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(s => s.Date).IsRequired();
             b.Property(s => s.Attends).HasDefaultValue(false).IsRequired();
             b.Property(s => s.MemberId).IsRequired();
+        });
+
+        modelBuilder.Entity<RefreshToken>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.TokenHash).HasMaxLength(256).IsRequired();
+            b.HasIndex(x => x.TokenHash).IsUnique();
+            b.Property(x => x.ExpiresAt).IsRequired();
+        });
+
+        modelBuilder.Entity<AuditLog>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.EntityType).HasMaxLength(100).IsRequired();
+            b.Property(x => x.EntityId).HasMaxLength(50).IsRequired();
+            b.Property(x => x.Action).HasMaxLength(20).IsRequired();
+            b.Property(x => x.UserId).HasMaxLength(100).IsRequired();
         });
     }
 }

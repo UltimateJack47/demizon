@@ -57,6 +57,7 @@ public static class MvcAuthenticationServicesRegistrationExtension
 
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<TokenService>();
+        services.AddScoped<RefreshTokenService>();
 
         return services;
     }

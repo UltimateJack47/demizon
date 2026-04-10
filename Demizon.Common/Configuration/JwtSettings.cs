@@ -15,4 +15,7 @@ public class JwtSettings
 
     [Range(1, 10080)]
     public int ExpirationMinutes { get; set; } = 60;
+
+    [Range(1, 365)]
+    public int RefreshTokenExpirationDays { get; set; } = 30;
 }

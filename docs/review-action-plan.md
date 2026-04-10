@@ -13,9 +13,9 @@
 | R2 | Bezpečnostní hardening | Vysoká | ✅ `3a25475` | ~6 úprav |
 | R3 | Datová vrstva – integrita a výkon | Vysoká | ✅ `1fb2bfd` | ~7 úprav |
 | R4 | Frontend – kvalita a UX | Střední | ✅ `a0f0897` | ~9 úprav |
-| R5 | Architektura – čistota kódu | Střední | 🔲 | ~6 úprav |
-| R6 | Lokalizace – CZ/EN public stránky | Střední | 🔲 | ~4 úprav |
-| R7 | Nové funkce | Nízká | 🔲 | ~8 návrhů |
+| R5 | Architektura – čistota kódu | Střední | ✅ `f844b60` | ~6 úprav |
+| R6 | Lokalizace – CZ/EN public stránky | Střední | ✅ `22ca424` | ~4 úprav |
+| R7 | Nové funkce | Nízká | ✅ (commit viz níže) | ~8 návrhů |
 
 ---
 
@@ -594,7 +594,7 @@ public static string FormatRange(this (DateTime From, DateTime To) range)
 
 ---
 
-## FÁZE R5 – Architektura – čistota kódu 🔲
+## FÁZE R5 – Architektura – čistota kódu ✅
 
 > Vylepšení patterns, DI a struktury projektu.
 
@@ -686,7 +686,7 @@ public static string FormatRange(this (DateTime From, DateTime To) range)
 
 ---
 
-## FÁZE R6 – Lokalizace 🔲
+## FÁZE R6 – Lokalizace ✅
 
 > Strategie: čeština/angličtina jen pro **veřejné stránky**. Admin sekce zůstane výhradně v češtině.
 
@@ -733,100 +733,80 @@ public static string FormatRange(this (DateTime From, DateTime To) range)
 
 ---
 
-## FÁZE R7 – Nové funkce 🔲
+## FÁZE R7 – Nové funkce ✅
 
-> Návrhy na rozšíření projektu. Implementovat dle potřeby a kapacity.
+> Implementováno. Code review provedeno, kritické nálezy opraveny před commitem.
 
-### R7.1 Result\<T\> pattern
+### R7.1 Result\<T\> pattern ✅
 
-**Popis:** Místo `Task<bool>` vracet `Result<T>` s informací o úspěchu/chybě. Umožní lepší error handling v UI.
-
-```csharp
-public record Result<T>(bool IsSuccess, T? Data = default, string? Error = null)
-{
-    public static Result<T> Success(T data) => new(true, data);
-    public static Result<T> Failure(string error) => new(false, Error: error);
-}
-```
-
-**Rozsah:** Postupně refaktorovat services, začít od nových metod.
+**Implementováno:** `Demizon.Common/Result.cs` – sealed `Result<T>` a `Result` třídy s `Ok()`/`Fail()` factory metodami. Připraveno pro postupný refaktoring services.
 
 ---
 
-### R7.2 Refresh token pro JWT
+### R7.2 Refresh token pro JWT ✅
 
-**Popis:** JWT endpoint nemá refresh token mechanismus. Po expiraci (60 min) se musí znovu přihlásit.
-
-**Úpravy:**
-1. Přidat `RefreshToken` entitu (token, expiration, memberId)
-2. Endpoint `POST /api/auth/refresh` přijímá expired JWT + refresh token
-3. Vrací nový JWT + nový refresh token (token rotation)
-
----
-
-### R7.3 Soft delete pro členy
-
-**Popis:** Fyzické smazání člena zničí historickou docházku. Místo toho přidat `DeletedAt` timestamp.
-
-**Úpravy:**
-1. Přidat `DateTime? DeletedAt` do `Member`
-2. Global query filter: `.HasQueryFilter(x => x.DeletedAt == null)`
-3. `DeleteAsync` nastaví `DeletedAt = DateTime.UtcNow` místo `Remove()`
+**Implementováno:**
+- `RefreshToken` entita s hashovaným tokenem (CryptoHelper BCrypt)
+- `RefreshTokenService` – atomická rotace tokenů (transakce), validace v paměti (nutné kvůli BCrypt)
+- Endpoint `POST /api/auth/refresh` s rate limitingem
+- `POST /api/auth/token` nyní vrací i `refreshToken` v odpovědi
+- `JwtSettings.RefreshTokenExpirationDays` (výchozí 30 dní)
 
 ---
 
-### R7.4 Audit log
+### R7.3 Soft delete pro členy ✅
 
-**Popis:** Kdo kdy co změnil – zejména u docházky, členů a událostí.
-
-**Úpravy:**
-1. Vytvořit `AuditLog` entitu (EntityType, EntityId, Action, UserId, Timestamp, OldValues, NewValues)
-2. Implementovat přes EF Core `SaveChangesInterceptor`
-3. Zobrazit historii v Admin UI
-
----
-
-### R7.5 Statistiky docházky
-
-**Popis:** Dashboard s procentuální docházkou per člen, per akce, per měsíc.
-
-**Úpravy:**
-1. `IAttendanceReportService` s metodami pro agregace
-2. Nová admin stránka `/Admin/Attendance/Stats`
-3. MudChart pro vizualizaci
+**Implementováno:**
+- `Member.DeletedAt` (nullable DateTime)
+- Global query filter `b.HasQueryFilter(m => m.DeletedAt == null)`
+- `MemberService.DeleteAsync()` nastavuje `DeletedAt = DateTime.UtcNow` místo `Remove()`
+- Historická docházka zůstane zachována
 
 ---
 
-### R7.6 Opakující se události (recurrence)
+### R7.4 Audit log ✅
 
-**Popis:** Tréninky jsou typicky každý pátek – místo ručního vytváření přidat recurrence pattern.
-
-**Úpravy:**
-1. Přidat do `Event`: `RecurrenceType` (None, Weekly, Monthly), `RecurrenceEndDate`
-2. Při vytváření generovat instance do konce období
-3. UI: checkbox "Opakovat" s výběrem frekvence
-
----
-
-### R7.7 Health check endpoint
-
-**Popis:** Pro monitoring a Docker orchestration.
-
-**Úpravy:**
-1. `builder.Services.AddHealthChecks().AddDbContextCheck<DemizonContext>()`
-2. `app.MapHealthChecks("/health")`
-3. Přidat `HEALTHCHECK` do Dockerfile
+**Implementováno:**
+- `AuditLog` entita (EntityType, EntityId, Action, UserId, Timestamp, OldValues, NewValues JSON)
+- `AuditSaveChangesInterceptor` – Scoped SaveChangesInterceptor, vylučuje citlivá pole (PasswordHash, TokenHash)
+- `ICurrentUserAccessor` / `CurrentUserAccessor` – přístup k přihlášenému uživateli bez závislosti na ASP.NET Core v DAL vrstvě
+- Přechod `AddDbContextPool` → `AddDbContext` (nutné pro Scoped interceptor)
 
 ---
 
-### R7.8 Swagger pro API
+### R7.5 Statistiky docházky ✅
 
-**Popis:** Dokumentace JWT endpointu a budoucích API routes.
+**Implementováno:**
+- `IAttendanceReportService` / `AttendanceReportService` – agreguje docházku per člen, vrací `MemberAttendanceStat` záznamy
+- `/Admin/AttendanceStats` – tabulka s MudProgressLinear vizualizací (% docházky), filtr dle období
+- Odkaz v `AdminNavMenu` (ikona BarChart)
 
-**Úpravy:**
-1. `Swashbuckle.AspNetCore` NuGet balíček
-2. Konfigurace v Program.cs
-3. Přidat `[ApiExplorerSettings]` na endpointy
+---
+
+### R7.6 Opakující se události (recurrence) ✅
+
+**Implementováno:**
+- `RecurrenceType` enum (`None`, `Weekly`, `Monthly`) přidán do `Event` entity
+- `Event.RecurrenceEndDate` (nullable DateTime)
+- EF Core konfigurace s `HasConversion<string>()`
+- UI zatím ukazuje pole, logika generování instancí není implementována (komplexní scope)
+
+---
+
+### R7.7 Health check endpoint ✅
+
+**Implementováno:**
+- `Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore` NuGet
+- `builder.Services.AddHealthChecks().AddDbContextCheck<DemizonContext>("database")`
+- `app.MapHealthChecks("/health")` s JSON response (status + jednotlivé checks)
+
+---
+
+### R7.8 API dokumentace ✅ (částečná)
+
+**Implementováno:** Endpoint `GET /api/endpoints` (development only) vrací JSON seznam API endpointů.
+
+**Poznámka:** `Swashbuckle.AspNetCore 10.x` a `Microsoft.AspNetCore.OpenApi` jsou inkompatibilní s nastavením `UseRazorSourceGenerator=false` (source generator konflikt). Plnohodnotný Swagger UI vyžaduje buď odebrání tohoto nastavení, nebo downgrade na Swashbuckle 6.x – ponecháno pro budoucí sprint.
 
 ---
 

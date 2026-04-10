@@ -24,6 +24,7 @@ public static class CoreServicesRegistrationExtension
         services.AddTransient<IAttendanceService, AttendanceService>();
         services.AddTransient<IDanceNumberService, DanceNumberService>();
         services.AddTransient<IPushSubscriptionService, PushSubscriptionService>();
+        services.AddTransient<IAttendanceReportService, AttendanceReportService>();
         return services;
     }
 }

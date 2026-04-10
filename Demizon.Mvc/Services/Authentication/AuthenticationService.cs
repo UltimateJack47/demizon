@@ -1,12 +1,18 @@
 using System.Security.Claims;
 using CryptoHelper;
+using Demizon.Common.Configuration;
 using Demizon.Core.Services.Member;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Options;
 
 namespace Demizon.Mvc.Services.Authentication;
 
-public sealed class AuthenticationService(IMemberService memberService, TokenService tokenService) : IAuthenticationService
+public sealed class AuthenticationService(
+    IMemberService memberService,
+    TokenService tokenService,
+    RefreshTokenService refreshTokenService,
+    IOptions<JwtSettings> jwtOptions) : IAuthenticationService
 {
     private IMemberService MemberService { get; set; } = memberService;
 
@@ -69,9 +75,11 @@ public sealed class AuthenticationService(IMemberService memberService, TokenSer
         }
 
         var token = tokenService.GenerateToken(userAccount);
+        var refreshToken = await refreshTokenService.CreateAsync(userAccount.Id, jwtOptions.Value.RefreshTokenExpirationDays);
         await context.Response.WriteAsJsonAsync(new
         {
             token,
+            refreshToken,
             expiresIn = tokenService.ExpirationMinutes * 60,
             role = userAccount.Role.ToString(),
         });

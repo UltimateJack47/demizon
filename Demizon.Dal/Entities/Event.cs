@@ -21,5 +21,16 @@ public class Event
     /// </summary>
     public int? NotifyBeforeDays { get; set; }
 
+    public RecurrenceType Recurrence { get; set; } = RecurrenceType.None;
+
+    public DateTime? RecurrenceEndDate { get; set; }
+
     public virtual List<Attendance> Attendances { get; set; } = [];
+}
+
+public enum RecurrenceType
+{
+    None = 0,
+    Weekly = 1,
+    Monthly = 2,
 }
