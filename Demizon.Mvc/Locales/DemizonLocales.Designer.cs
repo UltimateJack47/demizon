@@ -420,6 +420,15 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Profile.
+        /// </summary>
+        internal static string Profile {
+            get {
+                return ResourceManager.GetString("Profile", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Home - public.
         /// </summary>
         internal static string PublicHome {

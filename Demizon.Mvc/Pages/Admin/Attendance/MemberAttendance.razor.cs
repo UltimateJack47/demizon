@@ -148,26 +148,7 @@ public partial class MemberAttendance : ComponentBase
 
     private async Task SetAttendance(AttendanceViewModel attendance)
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true };
-        var parameters = new DialogParameters { { "Model", attendance } };
-        var dialog = await DialogService.ShowAsync<AttendanceForm>(null, parameters, options);
-        var result = await dialog.Result;
-
-        if (!result!.Canceled)
-        {
-            var attendanceResult = result.Data as AttendanceViewModel;
-            try
-            {
-                await AttendanceService.CreateOrUpdateAsync(Mapper.Map<Dal.Entities.Attendance>(attendanceResult));
-                await LoadData();
-                await LoadTableData();
-                Snackbar.Add("Docházka uložena.", Severity.Success);
-            }
-            catch
-            {
-                Snackbar.Add("Chyba při ukládání.", Severity.Error);
-            }
-        }
+        await SaveAttendanceAsync(attendance, refreshUserData: true);
     }
 
     private async Task PreviousMonth()
@@ -189,7 +170,6 @@ public partial class MemberAttendance : ComponentBase
     // Kliknutí na buňku konkrétního člena v tabulce (admin může editovat kohokoliv)
     private async Task SetAttendanceMember(MemberViewModel member, AttendanceViewModel col)
     {
-        // Sestavíme attendance model pro daného člena a datum
         var existing = member.Attendances.FirstOrDefault(x =>
             x.Date == col.Date || (col.EventId.HasValue && x.EventId == col.EventId));
 
@@ -206,24 +186,29 @@ public partial class MemberAttendance : ComponentBase
             model.Event = col.Event;
         }
 
+        await SaveAttendanceAsync(model, refreshUserData: false);
+    }
+
+    private async Task SaveAttendanceAsync(AttendanceViewModel model, bool refreshUserData)
+    {
         var options = new DialogOptions { CloseOnEscapeKey = true };
         var parameters = new DialogParameters { { "Model", model } };
         var dialog = await DialogService.ShowAsync<AttendanceForm>(null, parameters, options);
         var result = await dialog.Result;
 
-        if (!result!.Canceled)
+        if (result!.Canceled) return;
+
+        try
         {
             var attendanceResult = result.Data as AttendanceViewModel;
-            try
-            {
-                await AttendanceService.CreateOrUpdateAsync(Mapper.Map<Dal.Entities.Attendance>(attendanceResult));
-                await LoadTableData();
-                Snackbar.Add("Docházka uložena.", Severity.Success);
-            }
-            catch
-            {
-                Snackbar.Add("Chyba při ukládání.", Severity.Error);
-            }
+            await AttendanceService.CreateOrUpdateAsync(Mapper.Map<Dal.Entities.Attendance>(attendanceResult));
+            if (refreshUserData) await LoadData();
+            await LoadTableData();
+            Snackbar.Add("Docházka uložena.", Severity.Success);
+        }
+        catch
+        {
+            Snackbar.Add("Chyba při ukládání.", Severity.Error);
         }
     }
 }

@@ -170,4 +170,7 @@
     <data name="Information" xml:space="preserve">
         <value>Informace</value>
     </data>
+    <data name="Profile" xml:space="preserve">
+        <value>Profil</value>
+    </data>
 </root>
