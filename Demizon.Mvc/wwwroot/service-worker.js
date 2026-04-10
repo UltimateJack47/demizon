@@ -24,6 +24,8 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
     event.notification.close();
-    const url = event.notification.data?.url || '/';
+    const raw = event.notification.data?.url || '/';
+    // Povolit jen relativní cesty – ochrana proti javascript: a data: URL
+    const url = (typeof raw === 'string' && raw.startsWith('/')) ? raw : '/';
     event.waitUntil(clients.openWindow(url));
 });

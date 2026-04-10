@@ -9,5 +9,12 @@
   "ConnectionStrings": {
     "DefaultPGSQL": "Host=localhost;Database=demizon;Username=postgres;Password=postgres;Include Error Detail=true;",
     "Default": "Data Source=demizon.sqlite"
+  },
+  "Jwt": {
+    "SecretKey": "<min-32-znaku-tajny-klic-sem>"
+  },
+  "Vapid": {
+    "PublicKey": "<vapid-public-key>",
+    "PrivateKey": "<vapid-private-key>"
   }
 }

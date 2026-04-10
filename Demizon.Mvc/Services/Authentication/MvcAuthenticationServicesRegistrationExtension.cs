@@ -16,10 +16,13 @@ public static class MvcAuthenticationServicesRegistrationExtension
     /// <returns>Services that are used in the Api</returns>
     public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddOptions<JwtSettings>()
+            .BindConfiguration("Jwt")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>()
                           ?? throw new InvalidOperationException("JWT configuration ('Jwt' section) is missing.");
-
-        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
 
         services.Configure<CookiePolicyOptions>(options =>
         {

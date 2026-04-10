@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Append.Blazor.Notifications;
 using Demizon.Common.Configuration;
 using Demizon.Core.Extensions;
@@ -33,11 +35,24 @@ builder.Services.AddMvcServices();
 builder.Services.AddAuthenticationServices(builder.Configuration);
 
 builder.Services.AddOptions<VapidSettings>()
-    .BindConfiguration("Vapid");
+    .BindConfiguration("Vapid")
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 builder.Services.AddNotifications();
 builder.Services.AddHostedService<NotificationHostedService>();
 
 builder.Services.AddDatabase(defaultConnectionString);
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("auth", o =>
+    {
+        o.PermitLimit = 5;
+        o.Window = TimeSpan.FromMinutes(1);
+        o.QueueLimit = 0;
+    });
+});
 
 var app = builder.Build();
 
@@ -66,14 +81,17 @@ app.UseRouting();
 app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapPost("/ProcessLogin",
-    async (HttpContext context, IMyAuthenticationService service) => await service.Login(context));
+    async (HttpContext context, IMyAuthenticationService service) => await service.Login(context))
+    .RequireRateLimiting("auth");
 app.MapGet("/Logout", async (HttpContext context, IMyAuthenticationService service) => await service.Logout(context));
 
 // JWT token endpoint – pro budoucí API integraci (mobilní klient, externí nástroje)
 app.MapPost("/api/auth/token", async (HttpContext context, IMyAuthenticationService service) =>
-    await service.IssueToken(context));
+    await service.IssueToken(context))
+    .RequireRateLimiting("auth");
 app.MapGet("/SetLanguage/{culture}", (HttpContext context, string culture) =>
 {
     var cultureInfo = culture == "cs" ? new CultureInfo("cs-CZ") : new CultureInfo("en-US");

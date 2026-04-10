@@ -10,11 +10,14 @@ public sealed class MyAuthenticationService(IMemberService memberService, TokenS
 {
     private IMemberService MemberService { get; set; } = memberService;
 
+    // Konstantní dummy hash – zajistí stejný response time i pro neexistující uživatele
+    private static readonly string DummyHash = Crypto.HashPassword("timing-attack-defense");
+
     public async Task Login(HttpContext context)
     {
         var userAccount = MemberService.GetOneByLogin(context.Request.Form["Login"].ToString());
         var isPasswordCorrect =
-            Crypto.VerifyHashedPassword(userAccount?.PasswordHash, context.Request.Form["Password"]);
+            Crypto.VerifyHashedPassword(userAccount?.PasswordHash ?? DummyHash, context.Request.Form["Password"]);
         if (userAccount is null || !isPasswordCorrect)
         {
             context.Response.Redirect("/Login/true");
@@ -56,7 +59,7 @@ public sealed class MyAuthenticationService(IMemberService memberService, TokenS
         }
 
         var userAccount = MemberService.GetOneByLogin(login ?? string.Empty);
-        var isPasswordCorrect = Crypto.VerifyHashedPassword(userAccount?.PasswordHash, password ?? string.Empty);
+        var isPasswordCorrect = Crypto.VerifyHashedPassword(userAccount?.PasswordHash ?? DummyHash, password ?? string.Empty);
 
         if (userAccount is null || !isPasswordCorrect)
         {
