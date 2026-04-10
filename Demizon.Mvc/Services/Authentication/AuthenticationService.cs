@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using CryptoHelper;
 using Demizon.Core.Services.Member;
 using Microsoft.AspNetCore.Authentication;
@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace Demizon.Mvc.Services.Authentication;
 
-public sealed class MyAuthenticationService(IMemberService memberService, TokenService tokenService) : IMyAuthenticationService
+public sealed class AuthenticationService(IMemberService memberService, TokenService tokenService) : IAuthenticationService
 {
     private IMemberService MemberService { get; set; } = memberService;
 

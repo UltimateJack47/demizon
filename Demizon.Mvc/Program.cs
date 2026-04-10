@@ -18,7 +18,7 @@ builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.Local.json", true, true)
     .AddJsonFile("appsettings.json", true, true)
-    .AddJsonFile("appsettings.Development.json", true, true);
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
 var defaultConnectionString = builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
 
@@ -59,7 +59,30 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler(errorApp =>
+    {
+        errorApp.Run(async context =>
+        {
+            var exceptionFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+            if (exceptionFeature is not null)
+            {
+                var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogError(exceptionFeature.Error, "Neošetřená výjimka v požadavku {Method} {Path}",
+                    context.Request.Method, context.Request.Path);
+            }
+
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsJsonAsync(new { error = "An unexpected error occurred." });
+            }
+            else
+            {
+                context.Response.Redirect("/Error");
+            }
+        });
+    });
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
@@ -84,12 +107,12 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapPost("/ProcessLogin",
-    async (HttpContext context, IMyAuthenticationService service) => await service.Login(context))
+    async (HttpContext context, IAuthenticationService service) => await service.Login(context))
     .RequireRateLimiting("auth");
-app.MapGet("/Logout", async (HttpContext context, IMyAuthenticationService service) => await service.Logout(context));
+app.MapGet("/Logout", async (HttpContext context, IAuthenticationService service) => await service.Logout(context));
 
 // JWT token endpoint – pro budoucí API integraci (mobilní klient, externí nástroje)
-app.MapPost("/api/auth/token", async (HttpContext context, IMyAuthenticationService service) =>
+app.MapPost("/api/auth/token", async (HttpContext context, IAuthenticationService service) =>
     await service.IssueToken(context))
     .RequireRateLimiting("auth");
 app.MapGet("/SetLanguage/{culture}", (HttpContext context, string culture) =>

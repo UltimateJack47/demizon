@@ -55,7 +55,7 @@ public static class MvcAuthenticationServicesRegistrationExtension
                 };
             });
 
-        services.AddScoped<IMyAuthenticationService, MyAuthenticationService>();
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<TokenService>();
 
         return services;

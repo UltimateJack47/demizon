@@ -12,8 +12,8 @@ public static class MvcServicesRegistrationExtension
     /// <returns>Services that are used in the Api</returns>
     public static IServiceCollection AddMvcServices(this IServiceCollection services)
     {
-        services.AddAutoMapper(cfg => cfg.AddMaps(AppDomain.CurrentDomain.GetAssemblies()));
-        services.AddTransient<PageService>();
+        services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MvcServicesRegistrationExtension).Assembly));
+        services.AddScoped<PageService>();
 
         return services;
     }

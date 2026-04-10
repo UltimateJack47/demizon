@@ -1,6 +1,6 @@
-﻿namespace Demizon.Mvc.Services.Authentication;
+namespace Demizon.Mvc.Services.Authentication;
 
-public interface IMyAuthenticationService
+public interface IAuthenticationService
 {
     Task Login(HttpContext context);
     Task Logout(HttpContext context);

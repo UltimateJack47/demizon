@@ -37,6 +37,7 @@ public sealed class TokenService(IOptions<JwtSettings> jwtOptions)
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    // TODO: Využito v R7.2 – refresh token endpoint (POST /api/auth/refresh)
     public ClaimsPrincipal? ValidateToken(string token)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
