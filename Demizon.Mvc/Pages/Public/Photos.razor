@@ -6,13 +6,13 @@
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
 <MudText Typo="Typo.h4" Class="mb-1">@Localizer[nameof(DemizonLocales.Photos)]</MudText>
-<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">Fotky ze života souboru</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">@Localizer[nameof(DemizonLocales.PhotosSubtitle)]</MudText>
 
 @if (GalleryItems.Count == 0)
 {
     <MudStack AlignItems="AlignItems.Center" Class="py-8">
         <MudIcon Icon="@Icons.Material.Filled.PhotoAlbum" Style="font-size: 4rem; opacity: 0.3;"/>
-        <MudText Typo="Typo.body1" Color="Color.Secondary">Fotogalerie bude brzy doplněna.</MudText>
+        <MudText Typo="Typo.body1" Color="Color.Secondary">@Localizer[nameof(DemizonLocales.PhotosEmpty)]</MudText>
     </MudStack>
 }
 else

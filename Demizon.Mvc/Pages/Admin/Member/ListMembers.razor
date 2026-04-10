@@ -1,4 +1,4 @@
-﻿@page "/Admin/Members"
+@page "/Admin/Members"
 @using System.Security.Claims
 @using Demizon.Core.Services.Member
 @using Demizon.Dal.Entities
@@ -13,28 +13,28 @@
 @attribute [Authorize(Roles = "Admin, Standard")]
 
 @layout AdminMainLayout
-<PageTitle>@Localizer[nameof(DemizonLocales.Members)]</PageTitle>
+<PageTitle>Členové</PageTitle>
 
 <MudTable @ref="MembersGrid" T="MemberViewModel" Items="Members" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.Members)]</MudText>
+        <MudText Typo="Typo.h3">Členové</MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"/>
         <AuthorizeView Roles="Admin">
             <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary"
                        @onclick="() => OpenFormDialog()">
-                @Localizer[nameof(DemizonLocales.Create)]
+                Vytvořit
             </MudButton>
         </AuthorizeView>
     </ToolBarContent>
 
     <HeaderContent>
-        <MudTh><b>@Localizer[nameof(DemizonLocales.FirstName)]</b></MudTh>
-        <MudTh><b>@Localizer[nameof(DemizonLocales.Surname)]</b></MudTh>
-        <MudTh><b>@Localizer[nameof(DemizonLocales.Login)]</b></MudTh>
-        <MudTh><b>@Localizer[nameof(DemizonLocales.Email)]</b></MudTh>
-        <MudTh><b>@Localizer[nameof(DemizonLocales.MemberSince)]</b></MudTh>
-        <MudTh><b>@Localizer[nameof(DemizonLocales.IsVisible)]</b></MudTh>
+        <MudTh><b>Jméno</b></MudTh>
+        <MudTh><b>Příjmení</b></MudTh>
+        <MudTh><b>Login</b></MudTh>
+        <MudTh><b>E-mail</b></MudTh>
+        <MudTh><b>Členem od</b></MudTh>
+        <MudTh><b>Veřejné?</b></MudTh>
         <MudTh><b>Docházka</b></MudTh>
         <MudTh Style="width: 100px"></MudTh>
     </HeaderContent>
@@ -87,7 +87,7 @@
 
     private async Task RemoveMember(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBoxAsync(Localizer[nameof(DemizonLocales.DeleteItem)], "", Localizer[nameof(DemizonLocales.Yes)], Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        var resultMessage = await DialogService.ShowMessageBoxAsync("Smazat položku?", "", "Ano", "Zrušit", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await MemberService.DeleteAsync(id);

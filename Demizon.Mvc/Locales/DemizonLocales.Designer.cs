@@ -553,5 +553,117 @@ namespace Demizon.Mvc.Locales {
                 return ResourceManager.GetString("Yes", resourceCulture);
             }
         }
+
+        internal static string HeroSubtitle {
+            get { return ResourceManager.GetString("HeroSubtitle", resourceCulture); }
+        }
+
+        internal static string EventSchedule {
+            get { return ResourceManager.GetString("EventSchedule", resourceCulture); }
+        }
+
+        internal static string Repertoire {
+            get { return ResourceManager.GetString("Repertoire", resourceCulture); }
+        }
+
+        internal static string AboutUsText1 {
+            get { return ResourceManager.GetString("AboutUsText1", resourceCulture); }
+        }
+
+        internal static string AboutUsText2 {
+            get { return ResourceManager.GetString("AboutUsText2", resourceCulture); }
+        }
+
+        internal static string WhyDemizon {
+            get { return ResourceManager.GetString("WhyDemizon", resourceCulture); }
+        }
+
+        internal static string WhyDemizonText1 {
+            get { return ResourceManager.GetString("WhyDemizonText1", resourceCulture); }
+        }
+
+        internal static string WhyDemizonText2 {
+            get { return ResourceManager.GetString("WhyDemizonText2", resourceCulture); }
+        }
+
+        internal static string WhyDemizonText3 {
+            get { return ResourceManager.GetString("WhyDemizonText3", resourceCulture); }
+        }
+
+        internal static string JoinUsCta {
+            get { return ResourceManager.GetString("JoinUsCta", resourceCulture); }
+        }
+
+        internal static string NoMembersToDisplay {
+            get { return ResourceManager.GetString("NoMembersToDisplay", resourceCulture); }
+        }
+
+        internal static string DancesSubtitle {
+            get { return ResourceManager.GetString("DancesSubtitle", resourceCulture); }
+        }
+
+        internal static string DancesEmpty {
+            get { return ResourceManager.GetString("DancesEmpty", resourceCulture); }
+        }
+
+        internal static string VideosSubtitle {
+            get { return ResourceManager.GetString("VideosSubtitle", resourceCulture); }
+        }
+
+        internal static string VideosEmpty {
+            get { return ResourceManager.GetString("VideosEmpty", resourceCulture); }
+        }
+
+        internal static string ContactSubtitle {
+            get { return ResourceManager.GetString("ContactSubtitle", resourceCulture); }
+        }
+
+        internal static string EnsembleLeader {
+            get { return ResourceManager.GetString("EnsembleLeader", resourceCulture); }
+        }
+
+        internal static string JoinUsSubtitle {
+            get { return ResourceManager.GetString("JoinUsSubtitle", resourceCulture); }
+        }
+
+        internal static string JoinUsText1 {
+            get { return ResourceManager.GetString("JoinUsText1", resourceCulture); }
+        }
+
+        internal static string JoinUsText2 {
+            get { return ResourceManager.GetString("JoinUsText2", resourceCulture); }
+        }
+
+        internal static string ComeToRehearsal {
+            get { return ResourceManager.GetString("ComeToRehearsal", resourceCulture); }
+        }
+
+        internal static string EveryFridayEvening {
+            get { return ResourceManager.GetString("EveryFridayEvening", resourceCulture); }
+        }
+
+        internal static string OrContactUs {
+            get { return ResourceManager.GetString("OrContactUs", resourceCulture); }
+        }
+
+        internal static string ViaContactPage {
+            get { return ResourceManager.GetString("ViaContactPage", resourceCulture); }
+        }
+
+        internal static string ContactUsButton {
+            get { return ResourceManager.GetString("ContactUsButton", resourceCulture); }
+        }
+
+        internal static string EventsSubtitle {
+            get { return ResourceManager.GetString("EventsSubtitle", resourceCulture); }
+        }
+
+        internal static string PhotosSubtitle {
+            get { return ResourceManager.GetString("PhotosSubtitle", resourceCulture); }
+        }
+
+        internal static string PhotosEmpty {
+            get { return ResourceManager.GetString("PhotosEmpty", resourceCulture); }
+        }
     }
 }

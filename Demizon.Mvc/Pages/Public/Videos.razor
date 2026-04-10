@@ -6,11 +6,11 @@
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
 <MudText Typo="Typo.h4" Class="mb-1">@Localizer[nameof(DemizonLocales.Videos)]</MudText>
-<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">Záznamy z vystoupení a nácviků</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">@Localizer[nameof(DemizonLocales.VideosSubtitle)]</MudText>
 
 @if (VideoLinks.Count == 0)
 {
-    <MudText Typo="Typo.body1" Color="Color.Secondary">Žádná videa k zobrazení.</MudText>
+    <MudText Typo="Typo.body1" Color="Color.Secondary">@Localizer[nameof(DemizonLocales.VideosEmpty)]</MudText>
 }
 else
 {

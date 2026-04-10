@@ -7,17 +7,6 @@
             <MudAppBar Elevation="1" Dense="true">
                 <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="d-flex d-md-none" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())"/>
                 <MudSpacer/>
-                <MudIcon Icon="@Icons.Material.Filled.Language" Color="Color.Inherit"></MudIcon>
-                <MudText>
-                    <MudButton Size="Size.Small" Color="Color.Inherit" OnClick="@(() => SetCulture("cs"))">
-                        CS
-                    </MudButton>
-                    /
-                    <MudButton Size="Size.Small" Color="Color.Inherit" HtmlTag="span"
-                               OnClick="@(() => SetCulture("en"))">
-                        EN
-                    </MudButton>
-                </MudText>
                 <MudIconButton Href="@(NavigationManager.BaseUri + "Logout")"
                                Icon="@Icons.Material.Filled.Logout">
                 </MudIconButton>
@@ -52,11 +41,6 @@
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
-    }
-
-    private void SetCulture(string culture)
-    {
-        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"SetLanguage/{culture}", true);
     }
 
 }

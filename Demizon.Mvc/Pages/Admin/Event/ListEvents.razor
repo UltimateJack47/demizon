@@ -7,7 +7,7 @@
 
 @layout AdminMainLayout
 
-<PageTitle>Events</PageTitle>
+<PageTitle>Události</PageTitle>
 
 @inject IEventService EventService
 @inject IMapper Mapper
@@ -17,20 +17,20 @@
 
 <MudTable @ref="EventsGrid" T="EventViewModel" Items="Events" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.Events)]</MudText>
+        <MudText Typo="Typo.h3">Události</MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"/>
         <AuthorizeView Roles="Admin">
             <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary"
                        @onclick="() => OpenFormDialog()">
-                @Localizer[nameof(DemizonLocales.Create)]
+                Vytvořit
             </MudButton>
         </AuthorizeView>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh><b>@Localizer[nameof(DemizonLocales.Name)]</b></MudTh>
-        <MudTh><b>@Localizer[nameof(DemizonLocales.Date)]</b></MudTh>
-        <MudTh><b>@Localizer[nameof(DemizonLocales.Place)]</b></MudTh>
+        <MudTh><b>Název</b></MudTh>
+        <MudTh><b>Datum</b></MudTh>
+        <MudTh><b>Místo</b></MudTh>
         <MudTh Style="width: 40px"></MudTh>
         <MudTh Style="width: 80px"></MudTh>
     </HeaderContent>
@@ -102,19 +102,19 @@
                 if (isUpdate)
                 {
                     await EventService.UpdateAsync(viewModel!.Id, Mapper.Map<Event>(memberResult));
-                    Snackbar.Add("The event has been updated.", Severity.Success);
+                    Snackbar.Add("Událost byla upravena.", Severity.Success);
                 }
                 else
                 {
                     await EventService.CreateAsync(Mapper.Map<Event>(memberResult));
-                    Snackbar.Add("The event has been created.", Severity.Success);
+                    Snackbar.Add("Událost byla vytvořena.", Severity.Success);
                 }
 
                 await RefreshTable();
             }
             catch (Exception)
             {
-                Snackbar.Add("Something went wrong.", Severity.Error);
+                Snackbar.Add("Něco se pokazilo.", Severity.Error);
             }
         }
     }
@@ -126,7 +126,7 @@
 
     private async Task RemoveEvent(int id)
     {
-        var result = await DialogService.ShowMessageBoxAsync(@Localizer[nameof(DemizonLocales.DeleteItem)], "", @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)]);
+        var result = await DialogService.ShowMessageBoxAsync("Smazat položku?", "", "Ano", "Zrušit");
         if (result.HasValue && result.Value)
         {
             await EventService.DeleteAsync(id);

@@ -3,18 +3,18 @@
 <div class="demi-hero">
     <MudStack Spacing="2" AlignItems="AlignItems.Center" Class="demi-hero-content">
         <MudText Typo="Typo.h2" Class="demi-hero-title">FS Demižón</MudText>
-        <MudText Typo="Typo.h5" Class="demi-hero-subtitle">Folklorní soubor ze Strážnice</MudText>
+        <MudText Typo="Typo.h5" Class="demi-hero-subtitle">@Localizer[nameof(DemizonLocales.HeroSubtitle)]</MudText>
         <MudStack Row="true" Spacing="2" Class="mt-2" Justify="Justify.Center">
             <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Large"
                        Href="@(NavigationManager.BaseUri + "Events")"
                        StartIcon="@Icons.Material.Filled.CalendarMonth">
-                Plán akcí
+                @Localizer[nameof(DemizonLocales.EventSchedule)]
             </MudButton>
             <MudButton Variant="Variant.Outlined" Color="Color.Inherit" Size="Size.Large"
                        Href="@(NavigationManager.BaseUri + "Dances")"
                        StartIcon="@Icons.Material.Filled.Celebration"
                        Style="color: white; border-color: white;">
-                Repertoár
+                @Localizer[nameof(DemizonLocales.Repertoire)]
             </MudButton>
         </MudStack>
     </MudStack>
@@ -26,15 +26,13 @@
             <MudCardContent>
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
                     <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large"/>
-                    <MudText Typo="Typo.h5">O nás</MudText>
+                    <MudText Typo="Typo.h5">@Localizer[nameof(DemizonLocales.AboutUs)]</MudText>
                 </MudStack>
                 <MudText Typo="Typo.body1" Class="mb-2">
-                    Folklorní soubor Demižón vznikl v roce 1999 a od samého počátku pracujeme pod Orelskou jednotou ve Strážnici.
-                    Věk našich členů se pohybuje od 16 do 28 let – v současnosti máme 13 tanečních párů doprovázených cimbálovou muzikou.
+                    @Localizer[nameof(DemizonLocales.AboutUsText1)]
                 </MudText>
                 <MudText Typo="Typo.body1">
-                    Náš repertoár se skládá především z písní a tanců ze Strážnice a strážnického okolí,
-                    ale pro zpestření programu si odskočíme i na Slovensko.
+                    @Localizer[nameof(DemizonLocales.AboutUsText2)]
                 </MudText>
             </MudCardContent>
         </MudCard>
@@ -45,17 +43,16 @@
             <MudCardContent>
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
                     <MudIcon Icon="@Icons.Material.Filled.WineBar" Color="Color.Primary" Size="Size.Large"/>
-                    <MudText Typo="Typo.h5">Proč „Demižón"?</MudText>
+                    <MudText Typo="Typo.h5">@Localizer[nameof(DemizonLocales.WhyDemizon)]</MudText>
                 </MudStack>
                 <MudText Typo="Typo.body1" Class="mb-2">
-                    Nad tímto názvem se řada lidí pozastavuje – a právě to nás vždy ujistí, že jsme se zapsali do povědomí dalšího člověka.
+                    @Localizer[nameof(DemizonLocales.WhyDemizonText1)]
                 </MudText>
                 <MudText Typo="Typo.body1" Class="mb-2">
-                    Do demižónu vkládá vinař výsledek své celoroční práce a nechává ji dozrát do nejlepší podoby.
-                    Stejně tak členové folklorního souboru Demižón – celoroční práce a námaha dozrává v krásné vystoupení.
+                    @Localizer[nameof(DemizonLocales.WhyDemizonText2)]
                 </MudText>
                 <MudText Typo="Typo.body1">
-                    A dozrávání tanečníků a muzikantů? Jako s vínem – čím starší, tím lepší. Ale potřebuje neustálou péči!
+                    @Localizer[nameof(DemizonLocales.WhyDemizonText3)]
                 </MudText>
             </MudCardContent>
         </MudCard>
@@ -65,11 +62,11 @@
 <MudDivider Class="my-6"/>
 
 <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
-    <MudText Typo="Typo.h5">Přijďte se podívat nebo se přidejte k nám!</MudText>
+    <MudText Typo="Typo.h5">@Localizer[nameof(DemizonLocales.JoinUsCta)]</MudText>
     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large"
                Href="@(NavigationManager.BaseUri + "Join-Us")"
                StartIcon="@Icons.Material.Filled.PersonAdd">
-        Přidej se k nám
+        @Localizer[nameof(DemizonLocales.JoinUs)]
     </MudButton>
 </MudStack>
 

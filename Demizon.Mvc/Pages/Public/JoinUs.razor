@@ -1,21 +1,19 @@
-﻿@page "/Join-Us"
+@page "/Join-Us"
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
-<MudText Typo="Typo.h4" Class="mb-1">Přidej se k nám!</MudText>
+<MudText Typo="Typo.h4" Class="mb-1">@Localizer[nameof(DemizonLocales.JoinUs)]</MudText>
 <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
-    Hledáme nové tanečníky a muzikanty – bez ohledu na věk a zkušenosti
+    @Localizer[nameof(DemizonLocales.JoinUsSubtitle)]
 </MudText>
 
 <MudGrid Spacing="4">
     <MudItem xs="12" md="7">
         <MudText Typo="Typo.body1" Class="mb-3">
-            Pokud se chcete naučit tancovat – ať už vy sami, nebo znáte někoho takového –
-            stačí nás oslovit nebo rovnou v pátek přijít na nácvik!
+            @Localizer[nameof(DemizonLocales.JoinUsText1)]
         </MudText>
         <MudText Typo="Typo.body1" Class="mb-4">
-            Tancujeme mnoho různých tanců z Moravy a Slovenska, takže se určitě nikdo nudit nebude.
-            Těšíme se na vás!
+            @Localizer[nameof(DemizonLocales.JoinUsText2)]
         </MudText>
 
         <MudGrid Spacing="2">
@@ -25,8 +23,8 @@
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                             <MudIcon Icon="@Icons.Material.Filled.Celebration" Color="Color.Primary" Size="Size.Large"/>
                             <MudStack Spacing="0">
-                                <MudText Typo="Typo.subtitle2">Přijď na nácvik</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Každý pátek večer</MudText>
+                                <MudText Typo="Typo.subtitle2">@Localizer[nameof(DemizonLocales.ComeToRehearsal)]</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@Localizer[nameof(DemizonLocales.EveryFridayEvening)]</MudText>
                             </MudStack>
                         </MudStack>
                     </MudCardContent>
@@ -38,8 +36,8 @@
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                             <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Size="Size.Large"/>
                             <MudStack Spacing="0">
-                                <MudText Typo="Typo.subtitle2">Nebo nás kontaktuj</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Přes kontaktní stránku</MudText>
+                                <MudText Typo="Typo.subtitle2">@Localizer[nameof(DemizonLocales.OrContactUs)]</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@Localizer[nameof(DemizonLocales.ViaContactPage)]</MudText>
                             </MudStack>
                         </MudStack>
                     </MudCardContent>
@@ -50,7 +48,7 @@
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4"
                    Href="@(NavigationManager.BaseUri + "Contact")"
                    StartIcon="@Icons.Material.Filled.ContactPhone">
-            Kontaktovat nás
+            @Localizer[nameof(DemizonLocales.ContactUsButton)]
         </MudButton>
     </MudItem>
 
@@ -68,7 +66,7 @@
 
     protected override void OnInitialized()
     {
-        PageService.SetTitle("Přidej se k nám!");
+        PageService.SetTitle(Localizer[nameof(DemizonLocales.JoinUs)]);
     }
 
 }

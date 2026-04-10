@@ -173,4 +173,88 @@
     <data name="Profile" xml:space="preserve">
         <value>Profil</value>
     </data>
+    <data name="HeroSubtitle" xml:space="preserve">
+        <value>Folklorní soubor ze Strážnice</value>
+    </data>
+    <data name="EventSchedule" xml:space="preserve">
+        <value>Plán akcí</value>
+    </data>
+    <data name="Repertoire" xml:space="preserve">
+        <value>Repertoár</value>
+    </data>
+    <data name="AboutUsText1" xml:space="preserve">
+        <value>Folklorní soubor Demižón vznikl v roce 1999 a od samého počátku pracujeme pod Orelskou jednotou ve Strážnici. Věk našich členů se pohybuje od 16 do 28 let – v současnosti máme 13 tanečních párů doprovázených cimbálovou muzikou.</value>
+    </data>
+    <data name="AboutUsText2" xml:space="preserve">
+        <value>Náš repertoár se skládá především z písní a tanců ze Strážnice a strážnického okolí, ale pro zpestření programu si odskočíme i na Slovensko.</value>
+    </data>
+    <data name="WhyDemizon" xml:space="preserve">
+        <value>Proč „Demižón"?</value>
+    </data>
+    <data name="WhyDemizonText1" xml:space="preserve">
+        <value>Nad tímto názvem se řada lidí pozastavuje – a právě to nás vždy ujistí, že jsme se zapsali do povědomí dalšího člověka.</value>
+    </data>
+    <data name="WhyDemizonText2" xml:space="preserve">
+        <value>Do demižónu vkládá vinař výsledek své celoroční práce a nechává ji dozrát do nejlepší podoby. Stejně tak členové folklorního souboru Demižón – celoroční práce a námaha dozrává v krásné vystoupení.</value>
+    </data>
+    <data name="WhyDemizonText3" xml:space="preserve">
+        <value>A dozrávání tanečníků a muzikantů? Jako s vínem – čím starší, tím lepší. Ale potřebuje neustálou péči!</value>
+    </data>
+    <data name="JoinUsCta" xml:space="preserve">
+        <value>Přijďte se podívat nebo se přidejte k nám!</value>
+    </data>
+    <data name="NoMembersToDisplay" xml:space="preserve">
+        <value>Žádní členové k zobrazení.</value>
+    </data>
+    <data name="DancesSubtitle" xml:space="preserve">
+        <value>Repertoár folklorního souboru Demižón ze Strážnice</value>
+    </data>
+    <data name="DancesEmpty" xml:space="preserve">
+        <value>Repertoár bude brzy doplněn.</value>
+    </data>
+    <data name="VideosSubtitle" xml:space="preserve">
+        <value>Záznamy z vystoupení a nácviků</value>
+    </data>
+    <data name="VideosEmpty" xml:space="preserve">
+        <value>Žádná videa k zobrazení.</value>
+    </data>
+    <data name="ContactSubtitle" xml:space="preserve">
+        <value>Máte zájem o vystoupení nebo spolupráci? Neváhejte nás kontaktovat.</value>
+    </data>
+    <data name="EnsembleLeader" xml:space="preserve">
+        <value>Vedoucí souboru</value>
+    </data>
+    <data name="JoinUsSubtitle" xml:space="preserve">
+        <value>Hledáme nové tanečníky a muzikanty – bez ohledu na věk a zkušenosti</value>
+    </data>
+    <data name="JoinUsText1" xml:space="preserve">
+        <value>Pokud se chcete naučit tancovat – ať už vy sami, nebo znáte někoho takového – stačí nás oslovit nebo rovnou v pátek přijít na nácvik!</value>
+    </data>
+    <data name="JoinUsText2" xml:space="preserve">
+        <value>Tancujeme mnoho různých tanců z Moravy a Slovenska, takže se určitě nikdo nudit nebude. Těšíme se na vás!</value>
+    </data>
+    <data name="ComeToRehearsal" xml:space="preserve">
+        <value>Přijď na nácvik</value>
+    </data>
+    <data name="EveryFridayEvening" xml:space="preserve">
+        <value>Každý pátek večer</value>
+    </data>
+    <data name="OrContactUs" xml:space="preserve">
+        <value>Nebo nás kontaktuj</value>
+    </data>
+    <data name="ViaContactPage" xml:space="preserve">
+        <value>Přes kontaktní stránku</value>
+    </data>
+    <data name="ContactUsButton" xml:space="preserve">
+        <value>Kontaktovat nás</value>
+    </data>
+    <data name="EventsSubtitle" xml:space="preserve">
+        <value>Kde nás můžete vidět</value>
+    </data>
+    <data name="PhotosSubtitle" xml:space="preserve">
+        <value>Fotky ze života souboru</value>
+    </data>
+    <data name="PhotosEmpty" xml:space="preserve">
+        <value>Fotogalerie bude brzy doplněna.</value>
+    </data>
 </root>

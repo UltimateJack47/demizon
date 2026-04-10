@@ -188,4 +188,88 @@
     <data name="Profile" xml:space="preserve">
         <value>Profile</value>
     </data>
+    <data name="HeroSubtitle" xml:space="preserve">
+        <value>Folk ensemble from Strážnice</value>
+    </data>
+    <data name="EventSchedule" xml:space="preserve">
+        <value>Event Schedule</value>
+    </data>
+    <data name="Repertoire" xml:space="preserve">
+        <value>Repertoire</value>
+    </data>
+    <data name="AboutUsText1" xml:space="preserve">
+        <value>Folk ensemble Demižón was founded in 1999 and from the very beginning we have been working under the Orel association in Strážnice. Our members are between 16 and 28 years old – we currently have 13 dancing couples accompanied by cimbalom music.</value>
+    </data>
+    <data name="AboutUsText2" xml:space="preserve">
+        <value>Our repertoire consists mainly of songs and dances from Strážnice and its surroundings, but we also occasionally draw from Slovakia to add variety to our programme.</value>
+    </data>
+    <data name="WhyDemizon" xml:space="preserve">
+        <value>Why 'Demižón'?</value>
+    </data>
+    <data name="WhyDemizonText1" xml:space="preserve">
+        <value>Many people pause at this name – and that always reassures us that we have made our mark on another person's memory.</value>
+    </data>
+    <data name="WhyDemizonText2" xml:space="preserve">
+        <value>A winemaker places the result of their year's work into a demijohn and lets it mature into its finest form. The same goes for the members of folk ensemble Demižón – a year's work and effort matures into a beautiful performance.</value>
+    </data>
+    <data name="WhyDemizonText3" xml:space="preserve">
+        <value>And the maturing of dancers and musicians? Like wine – the older, the better. But it requires constant care!</value>
+    </data>
+    <data name="JoinUsCta" xml:space="preserve">
+        <value>Come see us or join us!</value>
+    </data>
+    <data name="NoMembersToDisplay" xml:space="preserve">
+        <value>No members to display.</value>
+    </data>
+    <data name="DancesSubtitle" xml:space="preserve">
+        <value>Repertoire of folk ensemble Demižón from Strážnice</value>
+    </data>
+    <data name="DancesEmpty" xml:space="preserve">
+        <value>Repertoire will be added soon.</value>
+    </data>
+    <data name="VideosSubtitle" xml:space="preserve">
+        <value>Recordings from performances and rehearsals</value>
+    </data>
+    <data name="VideosEmpty" xml:space="preserve">
+        <value>No videos to display.</value>
+    </data>
+    <data name="ContactSubtitle" xml:space="preserve">
+        <value>Interested in a performance or collaboration? Don't hesitate to contact us.</value>
+    </data>
+    <data name="EnsembleLeader" xml:space="preserve">
+        <value>Ensemble leader</value>
+    </data>
+    <data name="JoinUsSubtitle" xml:space="preserve">
+        <value>Looking for new dancers and musicians – regardless of age and experience</value>
+    </data>
+    <data name="JoinUsText1" xml:space="preserve">
+        <value>If you want to learn to dance – whether yourself or someone you know – just get in touch or come straight to rehearsal on Friday!</value>
+    </data>
+    <data name="JoinUsText2" xml:space="preserve">
+        <value>We dance many different dances from Moravia and Slovakia, so no one will ever be bored. We look forward to meeting you!</value>
+    </data>
+    <data name="ComeToRehearsal" xml:space="preserve">
+        <value>Come to rehearsal</value>
+    </data>
+    <data name="EveryFridayEvening" xml:space="preserve">
+        <value>Every Friday evening</value>
+    </data>
+    <data name="OrContactUs" xml:space="preserve">
+        <value>Or contact us</value>
+    </data>
+    <data name="ViaContactPage" xml:space="preserve">
+        <value>Via the contact page</value>
+    </data>
+    <data name="ContactUsButton" xml:space="preserve">
+        <value>Contact us</value>
+    </data>
+    <data name="EventsSubtitle" xml:space="preserve">
+        <value>Where you can see us</value>
+    </data>
+    <data name="PhotosSubtitle" xml:space="preserve">
+        <value>Photos from ensemble life</value>
+    </data>
+    <data name="PhotosEmpty" xml:space="preserve">
+        <value>Photo gallery will be added soon.</value>
+    </data>
 </root>

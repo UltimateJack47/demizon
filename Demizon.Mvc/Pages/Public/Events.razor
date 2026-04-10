@@ -6,7 +6,7 @@
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
 <MudText Typo="Typo.h4" Class="mb-1">@Localizer[nameof(DemizonLocales.UpcomingEvents)]</MudText>
-<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">Kde nás můžete vidět</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">@Localizer[nameof(DemizonLocales.EventsSubtitle)]</MudText>
 
 @if (UpcomingEvents.Count == 0)
 {

@@ -10,7 +10,7 @@
 
 @if (VisibleMembers.Count == 0)
 {
-    <MudText Typo="Typo.body1" Color="Color.Secondary">Žádní členové k zobrazení.</MudText>
+    <MudText Typo="Typo.body1" Color="Color.Secondary">@Localizer[nameof(DemizonLocales.NoMembersToDisplay)]</MudText>
 }
 else
 {

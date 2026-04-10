@@ -1,11 +1,11 @@
-﻿@page "/Admin/Videos"
+@page "/Admin/Videos"
 @using Demizon.Core.Services.VideoLink
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.VideoLink.Components
 @using Demizon.Mvc.ViewModels
 @using Microsoft.EntityFrameworkCore
 
-<PageTitle>Video Links</PageTitle>
+<PageTitle>Video odkazy</PageTitle>
 
 @inject IVideoLinkService VideoLinkService
 @inject IMapper Mapper
@@ -16,23 +16,23 @@
 
 <MudTable @ref="VideoLinksGrid" T="VideoLinkViewModel" Items="VideoLinks" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.VideoLinks)]</MudText>
+        <MudText Typo="Typo.h3">Video odkazy</MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
-        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">@Localizer[nameof(DemizonLocales.Create)]</MudButton>
+        <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Vytvořit</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.Name)]</b>
+            <b>Název</b>
         </MudTh>
         <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.Year)]</b>
+            <b>Rok</b>
         </MudTh>
         <MudTh>
             <b>URL</b>
         </MudTh>
         <MudTh>
-            <b>@Localizer[nameof(DemizonLocales.IsVisible)]</b>
+            <b>Veřejné?</b>
         </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
@@ -71,7 +71,7 @@
 
     private async Task RemoveVideoLink(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBoxAsync(@Localizer[nameof(DemizonLocales.DeleteItem)], "", @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        var resultMessage = await DialogService.ShowMessageBoxAsync("Smazat položku?", "", "Ano", "Zrušit", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await VideoLinkService.DeleteAsync(id);
@@ -105,19 +105,19 @@
                 if (isUpdate)
                 {
                     await VideoLinkService.UpdateAsync(viewModel!.Id, Mapper.Map<VideoLink>(linkResult));
-                    Snackbar.Add("The video link has been updated.", Severity.Success);
+                    Snackbar.Add("Video odkaz byl upraven.", Severity.Success);
                 }
                 else
                 {
                     await VideoLinkService.CreateAsync(Mapper.Map<VideoLink>(linkResult));
-                    Snackbar.Add("The video link has been created.", Severity.Success);
+                    Snackbar.Add("Video odkaz byl vytvořen.", Severity.Success);
                 }
 
                 await RefreshTable();
             }
             catch (Exception)
             {
-                Snackbar.Add("Something went wrong.", Severity.Error);
+                Snackbar.Add("Něco se pokazilo.", Severity.Error);
             }
         }
     }

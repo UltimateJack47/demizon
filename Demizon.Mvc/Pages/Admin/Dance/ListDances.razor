@@ -1,4 +1,4 @@
-﻿@page "/Admin"
+@page "/Admin"
 @page "/Admin/Dances"
 @using Demizon.Core.Services.Dance
 @using Demizon.Dal.Entities
@@ -6,7 +6,7 @@
 @using Demizon.Mvc.ViewModels
 @using Microsoft.EntityFrameworkCore
 
-<PageTitle>Dances</PageTitle>
+<PageTitle>Tance</PageTitle>
 @inject IDanceService DanceService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -16,20 +16,20 @@
 
 <MudTable @ref="DancesGrid" T="DanceViewModel" Items="Dances" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">@Localizer[nameof(DemizonLocales.Dances)]</MudText>
+        <MudText Typo="Typo.h3">Tance</MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"/>
         <AuthorizeView Roles="Admin">
             <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary"
                        @onclick="() => OpenFormDialog()">
-                @Localizer[nameof(DemizonLocales.Create)]
+                Vytvořit
             </MudButton>
         </AuthorizeView>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh><b>@Localizer[nameof(DemizonLocales.Name)]</b></MudTh>
+        <MudTh><b>Název</b></MudTh>
         <MudTh><b>Region</b></MudTh>
-        <MudTh><b>@Localizer[nameof(DemizonLocales.IsVisible)]</b></MudTh>
+        <MudTh><b>Veřejné?</b></MudTh>
         <MudTh Style="width: 120px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="dance">
@@ -67,7 +67,7 @@
 
     private async Task RemoveDance(int id)
     {
-        var resultMessage = await DialogService.ShowMessageBoxAsync(@Localizer[nameof(DemizonLocales.DeleteItem)], "", @Localizer[nameof(DemizonLocales.Yes)], @Localizer[nameof(DemizonLocales.Cancel)], null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
+        var resultMessage = await DialogService.ShowMessageBoxAsync("Smazat položku?", "", "Ano", "Zrušit", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
             await DanceService.DeleteAsync(id);
@@ -101,19 +101,19 @@
                 if (isUpdate)
                 {
                     await DanceService.UpdateAsync(viewModel!.Id, Mapper.Map<Dance>(danceResult));
-                    Snackbar.Add("The dance has been updated.", Severity.Success);
+                    Snackbar.Add("Tanec byl upraven.", Severity.Success);
                 }
                 else
                 {
                     await DanceService.CreateAsync(Mapper.Map<Dance>(danceResult));
-                    Snackbar.Add("The dance has been created.", Severity.Success);
+                    Snackbar.Add("Tanec byl vytvořen.", Severity.Success);
                 }
 
                 await RefreshTable();
             }
             catch (Exception)
             {
-                Snackbar.Add("Something went wrong.", Severity.Error);
+                Snackbar.Add("Něco se pokazilo.", Severity.Error);
             }
         }
     }

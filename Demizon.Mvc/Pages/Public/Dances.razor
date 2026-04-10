@@ -7,12 +7,12 @@
 
 <MudText Typo="Typo.h4" Class="mb-1">@Localizer[nameof(DemizonLocales.Dances)]</MudText>
 <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
-    Repertoár folklorního souboru Demižón ze Strážnice
+    @Localizer[nameof(DemizonLocales.DancesSubtitle)]
 </MudText>
 
 @if (VisibleDances.Count == 0)
 {
-    <MudText Typo="Typo.body1" Color="Color.Secondary">Repertoár bude brzy doplněn.</MudText>
+    <MudText Typo="Typo.body1" Color="Color.Secondary">@Localizer[nameof(DemizonLocales.DancesEmpty)]</MudText>
 }
 else
 {
