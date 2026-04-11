@@ -165,14 +165,12 @@ else
 
     private async Task LoadDance()
     {
-        var dance = await DanceService.GetOneAsync(Id);
-        Model = dance.ToViewModel();
-        // Načteme videa přes EF – potřebujeme Include
-        var danceWithVideos = await DanceService.GetAll()
+        var dance = await DanceService.GetAll()
             .Include(x => x.Videos)
             .FirstOrDefaultAsync(x => x.Id == Id);
-        if (danceWithVideos is not null)
-            Model.Videos = danceWithVideos.Videos.Select(x => x.ToViewModel()).ToList();
+        if (dance is null) return;
+        Model = dance.ToViewModel();
+        Model.Videos = dance.Videos.Select(x => x.ToViewModel()).ToList();
     }
 
     private async Task LoadDanceNumbers()
