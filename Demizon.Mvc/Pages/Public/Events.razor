@@ -10,10 +10,11 @@
 
 @if (UpcomingEvents.Count == 0)
 {
-    <MudCard Elevation="1" Class="pa-4" Style="text-align: center;">
+    <MudCard Elevation="1" Class="pa-4">
+        <MudStack AlignItems="AlignItems.Center" Spacing="0">
         <MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Large" Color="Color.Secondary" Style="font-size: 3rem;"/>
-        <MudText Typo="Typo.h6" Class="mt-2">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageHeader)]</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageText)]</MudText>
+        <MudText Typo="Typo.h6" Class="mt-2" Align="Align.Center">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageHeader)]</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3" Align="Align.Center">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageText)]</MudText>
         <MudStack Row="true" Justify="Justify.Center" Spacing="2" Wrap="Wrap.Wrap" Class="mb-2">
             <MudButton Variant="Variant.Filled"
                        Style="background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%); color: white;"
@@ -31,6 +32,7 @@
         <MudLink Href="/Contact" Color="Color.Secondary" Typo="Typo.caption">
             @Localizer[nameof(DemizonLocales.ContactUsButton)]
         </MudLink>
+        </MudStack>
     </MudCard>
 }
 else
