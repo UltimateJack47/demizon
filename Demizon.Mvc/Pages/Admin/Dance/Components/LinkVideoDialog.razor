@@ -1,0 +1,94 @@
+@using Demizon.Core.Services.VideoLink
+@using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
+
+@inject IVideoLinkService VideoLinkService
+@inject ISnackbar Snackbar
+
+<MudDialog Style="min-width: 500px;">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Propojit video s tancem</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (_videos.Count == 0)
+        {
+            <MudText Color="Color.Secondary" Typo="Typo.body2">
+                Žádná volná videa k dispojení. Všechna videa jsou již přiřazena k tanci.
+            </MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mb-3">Vyberte video, které chcete propojit s tímto tancem:</MudText>
+            <MudList T="VideoLinkViewModel">
+                @foreach (var video in _videos)
+                {
+                    <MudListItem T="VideoLinkViewModel" OnClick="() => _selected = video"
+                                 Style="@(_selected?.Id == video.Id ? "background-color: var(--mud-palette-action-default-hover);" : "")">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            @if (_selected?.Id == video.Id)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Primary" Size="Size.Small"/>
+                            }
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary">@video.Year</MudChip>
+                            <MudText Typo="Typo.body2">@video.Name</MudText>
+                            @if (video.IsInternal)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
+                            }
+                        </MudStack>
+                    </MudListItem>
+                }
+            </MudList>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Zrušit</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="_selected is null || _saving"
+                   OnClick="ConfirmLink">
+            Propojit
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int DanceId { get; set; }
+
+    private List<VideoLinkViewModel> _videos = [];
+    private VideoLinkViewModel? _selected;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var all = await VideoLinkService.GetAll()
+            .Where(x => x.DanceId == null)
+            .OrderByDescending(x => x.Year)
+            .ToListAsync();
+        _videos = all.Select(x => x.ToViewModel()).ToList();
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task ConfirmLink()
+    {
+        if (_selected is null) return;
+        _saving = true;
+        try
+        {
+            var entity = await VideoLinkService.GetOneAsync(_selected.Id);
+            entity.DanceId = DanceId;
+            await VideoLinkService.UpdateAsync(_selected.Id, entity);
+            Snackbar.Add($"Video \"{_selected.Name}\" bylo propojeno s tancem.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch
+        {
+            Snackbar.Add("Chyba při propojování videa.", Severity.Error);
+            _saving = false;
+        }
+    }
+}

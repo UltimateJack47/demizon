@@ -1,12 +1,13 @@
 @page "/Dances/Detail/{Id:int}"
 @using Demizon.Core.Services.Dance
-@using Demizon.Core.Services.DanceNumber
+@using Demizon.Core.Services.VideoLink
 @using Demizon.Mvc.Pages.Admin.Dance.Components
+@using Demizon.Mvc.Pages.Admin.VideoLink.Components
 @using Demizon.Mvc.ViewModels
 @using Microsoft.EntityFrameworkCore
 
 @inject IDanceService DanceService
-@inject IDanceNumberService DanceNumberService
+@inject IVideoLinkService VideoLinkService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -85,100 +86,72 @@ else
                             </MudListItem>
                         }
                     </MudList>
+                    @if (!string.IsNullOrWhiteSpace(Model.Lyrics))
+                    {
+                        <MudDivider Class="my-2"/>
+                        <MudExpansionPanels Elevation="0">
+                            <MudExpansionPanel Text="Texty písní" Dense="true">
+                                <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@Model.Lyrics</MudText>
+                            </MudExpansionPanel>
+                        </MudExpansionPanels>
+                    }
                 </MudCardContent>
             </MudCard>
         </MudItem>
 
-        <!-- ─── Čísla repertoáru ─── -->
+        <!-- ─── Videa ─── -->
         <MudItem xs="12" md="8">
             <MudCard Elevation="2" Style="height: 100%;">
                 <MudCardHeader>
                     <CardHeaderContent>
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                            <MudIcon Icon="@Icons.Material.Filled.QueueMusic" Color="Color.Primary"/>
-                            <MudText Typo="Typo.h6">Čísla repertoáru</MudText>
+                            <MudIcon Icon="@Icons.Material.Filled.VideoLibrary" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6">Videa</MudText>
                             <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
-                                @DanceNumbers.Count
+                                @Model.Videos.Count
                             </MudChip>
                         </MudStack>
                     </CardHeaderContent>
                     <CardHeaderActions>
                         <AuthorizeView Roles="Admin">
-                            <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary"
-                                           title="Přidat číslo" OnClick="() => OpenDanceNumberDialog()"/>
+                            <MudTooltip Text="Propojit existující video">
+                                <MudIconButton Icon="@Icons.Material.Filled.Link" Color="Color.Secondary"
+                                               OnClick="OpenLinkVideoDialog"/>
+                            </MudTooltip>
+                            <MudTooltip Text="Přidat nové video">
+                                <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary"
+                                               OnClick="OpenCreateVideoDialog"/>
+                            </MudTooltip>
                         </AuthorizeView>
                     </CardHeaderActions>
                 </MudCardHeader>
                 <MudCardContent>
-                    @if (DanceNumbers.Count == 0)
+                    @if (Model.Videos.Count == 0)
                     {
-                        <MudText Color="Color.Secondary" Typo="Typo.body2">Žádná čísla k zobrazení.</MudText>
+                        <MudText Color="Color.Secondary" Typo="Typo.body2">Žádná videa k zobrazení.</MudText>
                     }
                     else
                     {
-                        @foreach (var number in DanceNumbers)
-                        {
-                            <MudPaper Outlined="true" Class="pa-3 mb-2">
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                    <MudIcon Icon="@Icons.Material.Filled.MusicNote" Size="Size.Small" Color="Color.Secondary"/>
-                                    <MudText Typo="Typo.subtitle2">@number.Title</MudText>
-                                    <MudSpacer/>
-                                    <AuthorizeView Roles="Admin">
-                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit"
-                                                       OnClick="() => OpenDanceNumberDialog(number)"/>
-                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
-                                                       Color="Color.Error"
-                                                       OnClick="() => DeleteDanceNumber(number.Id)"/>
-                                    </AuthorizeView>
-                                </MudStack>
-                                @if (!string.IsNullOrWhiteSpace(number.Description))
-                                {
-                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1 ml-6">@number.Description</MudText>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(number.Lyrics))
-                                {
-                                    <MudExpansionPanels Class="mt-2" Elevation="0">
-                                        <MudExpansionPanel Text="Texty písní" Dense="true">
-                                            <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@number.Lyrics</MudText>
-                                        </MudExpansionPanel>
-                                    </MudExpansionPanels>
-                                }
-                            </MudPaper>
-                        }
-                    }
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-
-        <!-- ─── Videa (jen pokud existují) ─── -->
-        @if (Model.Videos.Count > 0)
-        {
-            <MudItem xs="12">
-                <MudCard Elevation="2">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudIcon Icon="@Icons.Material.Filled.VideoLibrary" Color="Color.Primary"/>
-                                <MudText Typo="Typo.h6">Videa</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                    Správa videí v sekci <MudLink Href="@(NavigationManager.BaseUri + "Admin/Videos")">Video Links</MudLink>
-                                </MudText>
-                            </MudStack>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudGrid Spacing="3">
+                        <MudGrid Spacing="2">
                             @foreach (var video in Model.Videos)
                             {
-                                <MudItem xs="12" sm="6" md="4">
+                                <MudItem xs="12" sm="6">
                                     <MudPaper Outlined="true">
                                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="pa-2">
                                             <MudChip T="string" Size="Size.Small" Color="Color.Primary">@video.Year</MudChip>
-                                            <MudText Typo="Typo.subtitle2">@video.Name</MudText>
+                                            <MudLink Href="@($"/Videos/Detail/{video.Id}")" Typo="Typo.subtitle2">@video.Name</MudLink>
                                             @if (video.IsInternal)
                                             {
                                                 <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
                                             }
+                                            <MudSpacer/>
+                                            <AuthorizeView Roles="Admin">
+                                                <MudTooltip Text="Odpojit video od tance">
+                                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.LinkOff"
+                                                                   Color="Color.Warning"
+                                                                   OnClick="() => UnlinkVideo(video.Id)"/>
+                                                </MudTooltip>
+                                            </AuthorizeView>
                                         </MudStack>
                                         <div class="demi-video-embed">
                                             <iframe src="@video.Url" title="@video.Name" allowfullscreen loading="lazy"></iframe>
@@ -187,10 +160,10 @@ else
                                 </MudItem>
                             }
                         </MudGrid>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-        }
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
 
     </MudGrid>
 }
@@ -199,12 +172,10 @@ else
     [Parameter] public int Id { get; set; }
 
     private DanceViewModel Model { get; set; } = new();
-    private List<DanceNumberViewModel> DanceNumbers { get; set; } = [];
 
     protected override async Task OnInitializedAsync()
     {
         await LoadDance();
-        await LoadDanceNumbers();
     }
 
     private async Task LoadDance()
@@ -214,14 +185,8 @@ else
             .FirstOrDefaultAsync(x => x.Id == Id);
         if (dance is null) return;
         Model = dance.ToViewModel();
-        Model.Videos = dance.Videos.Select(x => x.ToViewModel()).ToList();
+        Model.Videos = dance.Videos.OrderByDescending(x => x.Year).Select(x => x.ToViewModel()).ToList();
         PageService.SetTitle(Model.Name);
-    }
-
-    private async Task LoadDanceNumbers()
-    {
-        var numbers = await DanceNumberService.GetAllForDance(Id).OrderBy(x => x.Id).ToListAsync();
-        DanceNumbers = numbers.Select(x => x.ToViewModel()).ToList();
     }
 
     private async Task OpenEditDanceDialog()
@@ -245,49 +210,57 @@ else
         }
     }
 
-    private async Task OpenDanceNumberDialog(DanceNumberViewModel? existing = null)
+    private async Task OpenCreateVideoDialog()
     {
-        var isUpdate = existing is not null;
-        var model = existing is not null ? new DanceNumberViewModel
-        {
-            Id = existing.Id,
-            Title = existing.Title,
-            Description = existing.Description,
-            Lyrics = existing.Lyrics,
-            DanceId = existing.DanceId
-        } : new DanceNumberViewModel { DanceId = Id };
-
-        var parameters = new DialogParameters { { "IsUpdate", isUpdate }, { "Model", model } };
-        var dialog = await DialogService.ShowAsync<DanceNumberForm>("Číslo tance", parameters);
+        var newVideo = new VideoLinkViewModel { DanceId = Id };
+        var parameters = new DialogParameters { { "IsUpdate", false }, { "Model", newVideo } };
+        var dialog = await DialogService.ShowAsync<VideoLinkForm>("Přidat video", parameters);
         var result = await dialog.Result;
         if (!result!.Canceled)
         {
-            var data = result.Data as DanceNumberViewModel;
+            var data = result.Data as VideoLinkViewModel;
             try
             {
-                if (isUpdate)
-                    await DanceNumberService.UpdateAsync(existing!.Id, data!.ToEntity());
-                else
-                    await DanceNumberService.CreateAsync(data!.ToEntity());
-
-                Snackbar.Add(isUpdate ? "Číslo bylo aktualizováno." : "Číslo bylo přidáno.", Severity.Success);
-                await LoadDanceNumbers();
+                await VideoLinkService.CreateAsync(data!.ToEntity());
+                Snackbar.Add("Video bylo přidáno.", Severity.Success);
+                await LoadDance();
             }
             catch
             {
-                Snackbar.Add("Chyba při ukládání.", Severity.Error);
+                Snackbar.Add("Chyba při ukládání videa.", Severity.Error);
             }
         }
     }
 
-    private async Task DeleteDanceNumber(int id)
+    private async Task OpenLinkVideoDialog()
     {
-        var confirm = await DialogService.ShowMessageBoxAsync("Smazat číslo?", "", "Smazat", "Zrušit");
+        var parameters = new DialogParameters { { "DanceId", Id } };
+        var dialog = await DialogService.ShowAsync<LinkVideoDialog>("Propojit video s tancem", parameters);
+        var result = await dialog.Result;
+        if (!result!.Canceled)
+        {
+            await LoadDance();
+        }
+    }
+
+    private async Task UnlinkVideo(int videoId)
+    {
+        var confirm = await DialogService.ShowMessageBoxAsync("Odpojit video?",
+            "Video zůstane v systému, pouze nebude propojeno s tímto tancem.", "Odpojit", "Zrušit");
         if (confirm is true)
         {
-            await DanceNumberService.DeleteAsync(id);
-            Snackbar.Add("Číslo bylo smazáno.", Severity.Success);
-            await LoadDanceNumbers();
+            try
+            {
+                var entity = await VideoLinkService.GetOneAsync(videoId);
+                entity.DanceId = null;
+                await VideoLinkService.UpdateAsync(videoId, entity);
+                Snackbar.Add("Video bylo odpojeno.", Severity.Success);
+                await LoadDance();
+            }
+            catch
+            {
+                Snackbar.Add("Chyba při odpojování videa.", Severity.Error);
+            }
         }
     }
 

@@ -13,7 +13,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
     public DbSet<VideoLink> VideoLinks { get; set; } = null!;
     public DbSet<Dance> Dances { get; set; } = null!;
     public DbSet<Attendance> Attendances { get; set; } = null!;
-    public DbSet<DanceNumber> DanceNumbers { get; set; } = null!;
+
     public DbSet<PushSubscription> PushSubscriptions { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
@@ -93,19 +93,11 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.HasMany<VideoLink>(x => x.Videos)
                 .WithOne(y => y.Dance)
                 .HasForeignKey(x => x.DanceId)
-                .OnDelete(DeleteBehavior.Cascade);
-            b.HasMany<DanceNumber>(x => x.Numbers)
-                .WithOne(y => y.Dance)
-                .HasForeignKey(x => x.DanceId);
+                .OnDelete(DeleteBehavior.SetNull);
             b.Property(s => s.Name).IsRequired();
             b.Property(s => s.IsVisible).IsRequired();
         });
 
-        modelBuilder.Entity<DanceNumber>(b =>
-        {
-            b.HasKey(x => x.Id);
-            b.Property(s => s.Title).HasMaxLength(200).IsRequired();
-        });
 
         modelBuilder.Entity<PushSubscription>(b =>
         {

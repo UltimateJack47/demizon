@@ -14,6 +14,8 @@ public class DanceViewModel
 
     public string? Description { get; set; }
 
+    public string? Lyrics { get; set; }
+
     public List<VideoLinkViewModel> Videos { get; set; } = [];
 
     public List<FileViewModel> Files { get; set; } = [];
@@ -28,6 +30,7 @@ public static class DanceMappingExtensions
         IsVisible = entity.IsVisible,
         Region = entity.Region,
         Description = entity.Description,
+        Lyrics = entity.Lyrics,
         // Videos a Files caller nastavuje zvlášť
     };
 
@@ -38,5 +41,6 @@ public static class DanceMappingExtensions
         IsVisible = vm.IsVisible,
         Region = vm.Region,
         Description = vm.Description,
+        Lyrics = vm.Lyrics,
     };
 }

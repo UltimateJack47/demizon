@@ -17,6 +17,4 @@ public class Dance
     public virtual List<File> Files { get; set; } = [];
 
     public virtual List<VideoLink> Videos { get; set; } = [];
-
-    public virtual List<DanceNumber> Numbers { get; set; } = [];
 }
