@@ -22,7 +22,7 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
 
     public IQueryable<Dal.Entities.Member> GetAll()
     {
-        return DemizonContext.Members.AsQueryable();
+        return DemizonContext.Members.Where(x => x.DeletedAt == null);
     }
 
     public async Task UpdateAsync(int id, Dal.Entities.Member updatedMember)

@@ -55,7 +55,7 @@
         {
             <MudChip T="string" Size="Size.Small" Color="Color.Info" OnClick="ClearFilters"
                      Icon="@Icons.Material.Filled.FilterAltOff" Class="mr-1">
-                @FilteredMembers.Count() / @Members.Count
+                @FilteredMembers.Count / @Members.Count
             </MudChip>
         }
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"/>
@@ -158,14 +158,15 @@
 
     private bool HasActiveFilters => FilterVisible || FilterAttendance || FilterExternal || !string.IsNullOrEmpty(SearchText);
 
-    private IEnumerable<MemberViewModel> FilteredMembers => Members
+    private List<MemberViewModel> FilteredMembers => Members
         .Where(m => string.IsNullOrEmpty(SearchText) ||
                     m.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                     m.Surname.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                     m.Login.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
         .Where(m => !FilterVisible || m.IsVisible)
         .Where(m => !FilterAttendance || m.IsAttendanceVisible)
-        .Where(m => !FilterExternal || m.IsExternal);
+        .Where(m => !FilterExternal || m.IsExternal)
+        .ToList();
 
     private void ClearFilters()
     {
