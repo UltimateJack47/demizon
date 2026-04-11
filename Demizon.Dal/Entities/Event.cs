@@ -16,6 +16,8 @@ public class Event
 
     public bool IsPublic { get; set; } = false;
 
+    public bool IsCancelled { get; set; } = false;
+
     /// <summary>
     /// Kolik dní předem odeslat push notifikaci členům. Null = notifikace se neodesílá.
     /// </summary>

@@ -8,7 +8,11 @@
       "Bash(dotnet add:*)",
       "Bash(xargs grep:*)",
       "Bash(xargs head:*)",
-      "Bash(dotnet remove:*)"
+      "Bash(dotnet remove:*)",
+      "Bash(grep -E \"^-.*\\\\.cs$\")",
+      "Bash(xargs cat:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)"
     ]
   },
   "outputStyle": "Explanatory"

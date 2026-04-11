@@ -13,7 +13,8 @@
 @inject ISnackbar Snackbar
 @attribute [Authorize(Roles = "Admin, Standard")]
 
-<MudTable @ref="EventsGrid" T="EventViewModel" Items="Events" Hover="true" Striped="true" FixedHeader="true" Height="900px">
+<MudTable @ref="EventsGrid" T="EventViewModel" Items="Events" Hover="true" Striped="true" FixedHeader="true" Height="900px"
+          RowClassFunc="@((item, _) => item.IsCancelled ? "demi-event-row-cancelled" : "")">
     <ToolBarContent>
         <MudText Typo="Typo.h3">Události</MudText>
         <MudSpacer/>
@@ -54,11 +55,27 @@
             {
                 <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"/>
             }
+            @if (upcomingEvent.IsCancelled)
+            {
+                <MudChip T="string" Color="Color.Error" Size="Size.Small" Icon="@Icons.Material.Filled.Cancel" Class="ml-1">Zrušena</MudChip>
+            }
         </MudTd>
         <MudTd>
             <AuthorizeView Roles="Admin">
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(upcomingEvent)"/>
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="() => RemoveEvent(upcomingEvent.Id)"/>
+                @if (!upcomingEvent.IsCancelled)
+                {
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.EventBusy"
+                                   Color="Color.Error" title="Označit jako zrušenou"
+                                   OnClick="() => CancelEvent(upcomingEvent.Id, true)"/>
+                }
+                else
+                {
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.EventAvailable"
+                                   Color="Color.Success" title="Reaktivovat událost"
+                                   OnClick="() => CancelEvent(upcomingEvent.Id, false)"/>
+                }
             </AuthorizeView>
         </MudTd>
     </RowTemplate>
@@ -129,6 +146,25 @@
         {
             await EventService.DeleteAsync(id);
             Events.RemoveAll(x => x.Id == id);
+        }
+    }
+
+    private async Task CancelEvent(int id, bool isCancelled)
+    {
+        var action = isCancelled ? "zrušit" : "reaktivovat";
+        var result = await DialogService.ShowMessageBoxAsync($"Chcete {action} tuto událost?", "", "Ano", "Zrušit");
+        if (result.HasValue && result.Value)
+        {
+            try
+            {
+                await EventService.SetCancelledAsync(id, isCancelled);
+                Snackbar.Add(isCancelled ? "Událost byla zrušena." : "Událost byla reaktivována.", Severity.Success);
+                await RefreshTable();
+            }
+            catch (Exception)
+            {
+                Snackbar.Add("Něco se pokazilo.", Severity.Error);
+            }
         }
     }
 

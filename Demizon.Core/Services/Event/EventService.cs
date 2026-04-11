@@ -55,7 +55,7 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
             {
                 throw new EntityNotFoundException();
             }
-            
+
             DemizonContext.Events.Remove(entity);
             await DemizonContext.SaveChangesAsync();
             return true;
@@ -65,5 +65,13 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
             logger.LogError(ex, "Failed to process Event operation.");
             return false;
         }
+    }
+
+    public async Task SetCancelledAsync(int id, bool isCancelled)
+    {
+        var entity = await DemizonContext.Events.FindAsync(id)
+            ?? throw new EntityNotFoundException($"Event with id: {id} not found.");
+        entity.IsCancelled = isCancelled;
+        await DemizonContext.SaveChangesAsync();
     }
 }

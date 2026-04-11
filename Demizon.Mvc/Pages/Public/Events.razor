@@ -83,7 +83,7 @@ else
     {
         PageService.SetTitle(Localizer[nameof(DemizonLocales.UpcomingEvents)]);
         var events = await EventService.GetAll()
-            .Where(x => x.DateTo >= DateTime.Today && x.IsPublic)
+            .Where(x => x.DateTo >= DateTime.Today && x.IsPublic && !x.IsCancelled)
             .OrderBy(x => x.DateTo)
             .ToListAsync();
         UpcomingEvents = events.Select(x => x.ToViewModel()).ToList();

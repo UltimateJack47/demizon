@@ -37,10 +37,16 @@
                 <th class="demi-att-sticky">Člen</th>
                 @foreach (var col in Attendances)
                 {
-                    <th class="demi-att-col-header">
+                    <th class="demi-att-col-header @(col.Event?.IsCancelled == true ? "demi-att-col-cancelled" : "")">
                         @if (col.Event is not null)
                         {
-                            <span class="demi-att-event-label">@col.Event.Name</span><br/>
+                            <span class="demi-att-event-label">
+                                @col.Event.Name
+                                @if (col.Event.IsCancelled)
+                                {
+                                    <span style="font-size:0.6rem; margin-left:2px; opacity:0.7;">(zrušena)</span>
+                                }
+                            </span><br/>
                             <span class="demi-att-date-label">
                                 @(col.Event.DateFrom.Date == col.Event.DateTo.Date
                                     ? col.Event.DateFrom.ToString("d.M.")
@@ -73,7 +79,8 @@
                         </td>
                         @foreach (var col in Attendances)
                         {
-                            <td class="demi-att-cell" @onclick="() => SetAttendanceMember(member, col)">
+                            <td class="@(col.Event?.IsCancelled == true ? "demi-att-cell demi-att-cell-cancelled" : "demi-att-cell")"
+                                @onclick="@(async () => { if (col.Event?.IsCancelled != true) await SetAttendanceMember(member, col); })">
                                 @{
                                     var day = member.Attendances.FirstOrDefault(x => x.Date == col.Date);
                                 }
@@ -112,7 +119,8 @@
                         </td>
                         @foreach (var col in Attendances)
                         {
-                            <td class="demi-att-cell" @onclick="() => SetAttendanceMember(member, col)">
+                            <td class="@(col.Event?.IsCancelled == true ? "demi-att-cell demi-att-cell-cancelled" : "demi-att-cell")"
+                                @onclick="@(async () => { if (col.Event?.IsCancelled != true) await SetAttendanceMember(member, col); })">
                                 @{
                                     var day = member.Attendances.FirstOrDefault(x => x.Date == col.Date);
                                 }

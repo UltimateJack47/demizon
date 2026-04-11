@@ -21,6 +21,8 @@ public class EventViewModel
 
     public bool IsPublic { get; set; }
 
+    public bool IsCancelled { get; set; }
+
     public int? NotifyBeforeDays { get; set; }
 
     public List<AttendanceViewModel> Attendances { get; set; } = [];
@@ -35,6 +37,7 @@ public static class EventMappingExtensions
         Place = entity.Place,
         Information = entity.Information,
         IsPublic = entity.IsPublic,
+        IsCancelled = entity.IsCancelled,
         NotifyBeforeDays = entity.NotifyBeforeDays,
         DateFrom = entity.DateFrom,
         DateTo = entity.DateTo,
@@ -48,6 +51,7 @@ public static class EventMappingExtensions
         Place = vm.Place,
         Information = vm.Information,
         IsPublic = vm.IsPublic,
+        IsCancelled = vm.IsCancelled,
         NotifyBeforeDays = vm.NotifyBeforeDays,
         DateFrom = vm.Date.Start!.Value,
         DateTo = vm.Date.End!.Value,

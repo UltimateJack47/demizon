@@ -297,6 +297,30 @@ thead .demi-att-sticky {
     font-style: italic;
 }
 
+/* Zrušená událost – záhlaví sloupce v docházce */
+.demi-att-col-cancelled {
+    opacity: 0.45;
+    font-style: italic;
+}
+
+/* Buňka zrušené události – neklikatelná */
+.demi-att-cell-cancelled {
+    cursor: not-allowed;
+    opacity: 0.4;
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.demi-att-cell-cancelled:hover {
+    background: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Zrušená událost – řádek v admin tabulce */
+.demi-event-row-cancelled td {
+    opacity: 0.45;
+    font-style: italic;
+    text-decoration: line-through;
+}
+
 /* Součtové řádky */
 .demi-att-sum-row td {
     background: var(--demi-att-sum-bg);

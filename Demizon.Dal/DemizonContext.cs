@@ -60,6 +60,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(s => s.DateFrom).IsRequired();
             b.Property(s => s.DateTo).IsRequired();
             b.Property(s => s.Recurrence).HasConversion<string>().HasDefaultValue(RecurrenceType.None);
+            b.Property(s => s.IsCancelled).HasDefaultValue(false).IsRequired();
         });
 
         modelBuilder.Entity<File>(b =>
