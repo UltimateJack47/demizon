@@ -8,7 +8,7 @@
       "Bash(dotnet add:*)",
       "Bash(xargs grep:*)",
       "Bash(xargs head:*)",
-      "Bash(dotnet remove:*)",
+      "Bash(dotnet remove:*)"
     ]
   },
   "outputStyle": "Explanatory"
