@@ -75,7 +75,7 @@
         <value>Narozeniny</value>
     </data>
     <data name="IsVisible" xml:space="preserve">
-        <value>Veřejné?</value>
+        <value>Veřejné</value>
     </data>
     <data name="DeleteItem" xml:space="preserve">
         <value>Smazat položku?</value>

@@ -186,7 +186,7 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Contact us.
+        ///   Looks up a localized string similar to or all contacts.
         /// </summary>
         internal static string ContactUsButton {
             get {
@@ -393,7 +393,7 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Is visible?.
+        ///   Looks up a localized string similar to Is visible.
         /// </summary>
         internal static string IsVisible {
             get {
@@ -528,7 +528,7 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Follow us on Instagram or Facebook and you&apos;ll be the first to know about our upcoming events!.
+        ///   Looks up a localized string similar to Follow us on social media and you&apos;ll be the first to know about our upcoming events — or get in touch if you&apos;d like us to perform at your event!.
         /// </summary>
         internal static string NoUpcomingEventsPageText {
             get {
@@ -537,7 +537,7 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Or contact us.
+        ///   Looks up a localized string similar to Or reach us online.
         /// </summary>
         internal static string OrContactUs {
             get {
@@ -681,7 +681,7 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Via the contact page.
+        ///   Looks up a localized string similar to On Instagram or Facebook.
         /// </summary>
         internal static string ViaContactPage {
             get {

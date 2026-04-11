@@ -90,7 +90,7 @@
         <value>Birthdate</value>
     </data>
     <data name="IsVisible" xml:space="preserve">
-        <value>Is visible?</value>
+        <value>Is visible</value>
     </data>
     <data name="DeleteItem" xml:space="preserve">
         <value>Delete item?</value>
