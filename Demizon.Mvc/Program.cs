@@ -35,7 +35,7 @@ builder.Services.AddMudServices();
 
 builder.Services.AddCoreServices();
 builder.Services.AddMvcServices();
-builder.Services.AddAuthenticationServices(builder.Configuration);
+builder.Services.AddAuthenticationServices(builder.Configuration, builder.Environment);
 
 builder.Services.AddOptions<VapidSettings>()
     .BindConfiguration("Vapid")
@@ -108,7 +108,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseStaticFiles();
 

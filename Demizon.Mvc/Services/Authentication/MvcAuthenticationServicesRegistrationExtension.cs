@@ -14,7 +14,7 @@ public static class MvcAuthenticationServicesRegistrationExtension
     /// </summary>
     /// <param name="services">Collection of used services</param>
     /// <returns>Services that are used in the Api</returns>
-    public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
         services.AddOptions<JwtSettings>()
             .BindConfiguration("Jwt")
@@ -26,7 +26,9 @@ public static class MvcAuthenticationServicesRegistrationExtension
 
         services.Configure<CookiePolicyOptions>(options =>
         {
-            options.Secure = CookieSecurePolicy.Always;
+            options.Secure = environment.IsDevelopment()
+                ? CookieSecurePolicy.SameAsRequest
+                : CookieSecurePolicy.Always;
             options.MinimumSameSitePolicy = SameSiteMode.Lax;
             options.HttpOnly = HttpOnlyPolicy.Always;
         });
