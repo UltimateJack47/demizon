@@ -3,9 +3,12 @@ namespace Demizon.Core.Services.Attendance;
 public record MemberAttendanceStat(
     int MemberId,
     string FullName,
-    int TotalRecords,
-    int AttendedCount,
-    double AttendanceRate
+    int TotalRehearsals,
+    int AttendedRehearsals,
+    double RehearsalRate,
+    int TotalActions,
+    int AttendedActions,
+    double ActionRate
 );
 
 public interface IAttendanceReportService

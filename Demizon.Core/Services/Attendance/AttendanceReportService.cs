@@ -7,10 +7,21 @@ public class AttendanceReportService(DemizonContext db) : IAttendanceReportServi
 {
     public async Task<List<MemberAttendanceStat>> GetMemberStatsAsync(DateTime dateFrom, DateTime dateTo)
     {
-        // Načteme docházku všech viditelných a docházkových členů v daném období
+        var totalRehearsals = await db.Attendances
+            .Where(a => a.Date >= dateFrom && a.Date <= dateTo && a.EventId == null)
+            .Select(a => a.Date.Date)
+            .Distinct()
+            .CountAsync();
+
+        var totalActions = await db.Attendances
+            .Where(a => a.Date >= dateFrom && a.Date <= dateTo && a.EventId != null)
+            .Select(a => a.EventId)
+            .Distinct()
+            .CountAsync();
+
         var records = await db.Attendances
             .Where(a => a.Date >= dateFrom && a.Date <= dateTo && a.Member.IsAttendanceVisible)
-            .Select(a => new { a.MemberId, a.Member.Name, a.Member.Surname, a.Attends })
+            .Select(a => new { a.MemberId, a.Member.Name, a.Member.Surname, a.Attends, a.EventId })
             .ToListAsync();
 
         return records
@@ -18,17 +29,20 @@ public class AttendanceReportService(DemizonContext db) : IAttendanceReportServi
             .Select(g =>
             {
                 var first = g.First();
-                var attended = g.Count(x => x.Attends);
-                var total = g.Count();
+                var attendedRehearsals = g.Count(x => x.Attends && x.EventId == null);
+                var attendedActions = g.Count(x => x.Attends && x.EventId != null);
                 return new MemberAttendanceStat(
                     g.Key,
                     $"{first.Name} {first.Surname}",
-                    total,
-                    attended,
-                    total > 0 ? Math.Round((double)attended / total * 100, 1) : 0
+                    totalRehearsals,
+                    attendedRehearsals,
+                    totalRehearsals > 0 ? Math.Round((double)attendedRehearsals / totalRehearsals * 100, 1) : 0,
+                    totalActions,
+                    attendedActions,
+                    totalActions > 0 ? Math.Round((double)attendedActions / totalActions * 100, 1) : 0
                 );
             })
-            .OrderByDescending(s => s.AttendanceRate)
+            .OrderByDescending(s => s.RehearsalRate)
             .ToList();
     }
 }

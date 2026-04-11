@@ -418,5 +418,11 @@ a, .btn-link {
 }
 
     .blazor-error-boundary::after {
-        content: "An error has occurred."
+        content: "An error has occurred.";
     }
+
+/* ─── Admin sidebar ─── */
+.demi-admin-drawer {
+    overflow: hidden !important;
+}
+

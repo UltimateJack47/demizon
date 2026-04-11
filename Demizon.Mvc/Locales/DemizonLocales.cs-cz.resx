@@ -99,10 +99,10 @@
         <value>Aktuálně máme volný kalendář.</value>
     </data>
     <data name="NoUpcomingEventsPageText" xml:space="preserve">
-        <value>Chcete-li si nás objednat na vaši akci na stránce Kontakt zjistíte způsoby jak nás oslovit.</value>
+        <value>Sledujte nás na sociálních sítích a nic vám neunikne — nebo nás oslovte, pokud byste si nás rádi pozvali na vaši akci!</value>
     </data>
     <data name="EnglishAndGermanCommunicationText" xml:space="preserve">
-        <value>English/Deutsch contact:</value>
+        <value>English/Deutsch kontakt</value>
     </data>
     <data name="Men" xml:space="preserve">
         <value>Muži</value>
@@ -159,7 +159,7 @@
         <value>Docházka</value>
     </data>
     <data name="Attends" xml:space="preserve">
-        <value>Zúčastním se?</value>
+        <value>Zúčastním se</value>
     </data>
     <data name="Comment" xml:space="preserve">
         <value>Poznámka</value>
@@ -213,7 +213,7 @@
         <value>Repertoár bude brzy doplněn.</value>
     </data>
     <data name="VideosSubtitle" xml:space="preserve">
-        <value>Záznamy z vystoupení a nácviků</value>
+        <value>Záznamy z vystoupení</value>
     </data>
     <data name="VideosEmpty" xml:space="preserve">
         <value>Žádná videa k zobrazení.</value>
@@ -240,13 +240,13 @@
         <value>Každý pátek večer</value>
     </data>
     <data name="OrContactUs" xml:space="preserve">
-        <value>Nebo nás kontaktuj</value>
+        <value>Nebo nás oslovte online</value>
     </data>
     <data name="ViaContactPage" xml:space="preserve">
-        <value>Přes kontaktní stránku</value>
+        <value>Na Instagramu nebo Facebooku</value>
     </data>
     <data name="ContactUsButton" xml:space="preserve">
-        <value>Kontaktovat nás</value>
+        <value>nebo všechny kontakty</value>
     </data>
     <data name="EventsSubtitle" xml:space="preserve">
         <value>Kde nás můžete vidět</value>

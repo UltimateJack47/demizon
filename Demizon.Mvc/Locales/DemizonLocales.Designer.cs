@@ -69,6 +69,24 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Folk ensemble Demižón was founded in 1999 and from the very beginning we have been working under the Orel association in Strážnice. Our members are between 16 and 28 years old – we currently have 13 dancing couples accompanied by cimbalom music..
+        /// </summary>
+        internal static string AboutUsText1 {
+            get {
+                return ResourceManager.GetString("AboutUsText1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Our repertoire consists mainly of songs and dances from Strážnice and its surroundings, but we also occasionally draw from Slovakia to add variety to our programme..
+        /// </summary>
+        internal static string AboutUsText2 {
+            get {
+                return ResourceManager.GetString("AboutUsText2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Admin.
         /// </summary>
         internal static string Admin {
@@ -123,6 +141,15 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Come to rehearsal.
+        /// </summary>
+        internal static string ComeToRehearsal {
+            get {
+                return ResourceManager.GetString("ComeToRehearsal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Comment.
         /// </summary>
         internal static string Comment {
@@ -146,6 +173,24 @@ namespace Demizon.Mvc.Locales {
         internal static string Contact {
             get {
                 return ResourceManager.GetString("Contact", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interested in a performance or collaboration? Don&apos;t hesitate to contact us..
+        /// </summary>
+        internal static string ContactSubtitle {
+            get {
+                return ResourceManager.GetString("ContactSubtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Contact us.
+        /// </summary>
+        internal static string ContactUsButton {
+            get {
+                return ResourceManager.GetString("ContactUsButton", resourceCulture);
             }
         }
         
@@ -177,6 +222,24 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Repertoire will be added soon..
+        /// </summary>
+        internal static string DancesEmpty {
+            get {
+                return ResourceManager.GetString("DancesEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Repertoire of folk ensemble Demižón from Strážnice.
+        /// </summary>
+        internal static string DancesSubtitle {
+            get {
+                return ResourceManager.GetString("DancesSubtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Date.
         /// </summary>
         internal static string Date {
@@ -204,11 +267,20 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use this contact information if you want to communicate in English or German:.
+        ///   Looks up a localized string similar to English/Deutsch contact.
         /// </summary>
         internal static string EnglishAndGermanCommunicationText {
             get {
                 return ResourceManager.GetString("EnglishAndGermanCommunicationText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ensemble leader.
+        /// </summary>
+        internal static string EnsembleLeader {
+            get {
+                return ResourceManager.GetString("EnsembleLeader", resourceCulture);
             }
         }
         
@@ -227,6 +299,33 @@ namespace Demizon.Mvc.Locales {
         internal static string Events {
             get {
                 return ResourceManager.GetString("Events", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Event Schedule.
+        /// </summary>
+        internal static string EventSchedule {
+            get {
+                return ResourceManager.GetString("EventSchedule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Where you can see us.
+        /// </summary>
+        internal static string EventsSubtitle {
+            get {
+                return ResourceManager.GetString("EventsSubtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Every Friday evening.
+        /// </summary>
+        internal static string EveryFridayEvening {
+            get {
+                return ResourceManager.GetString("EveryFridayEvening", resourceCulture);
             }
         }
         
@@ -254,6 +353,15 @@ namespace Demizon.Mvc.Locales {
         internal static string Gender {
             get {
                 return ResourceManager.GetString("Gender", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folk ensemble from Strážnice.
+        /// </summary>
+        internal static string HeroSubtitle {
+            get {
+                return ResourceManager.GetString("HeroSubtitle", resourceCulture);
             }
         }
         
@@ -299,6 +407,42 @@ namespace Demizon.Mvc.Locales {
         internal static string JoinUs {
             get {
                 return ResourceManager.GetString("JoinUs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Come see us or join us!.
+        /// </summary>
+        internal static string JoinUsCta {
+            get {
+                return ResourceManager.GetString("JoinUsCta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Looking for new dancers and musicians – regardless of age and experience.
+        /// </summary>
+        internal static string JoinUsSubtitle {
+            get {
+                return ResourceManager.GetString("JoinUsSubtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If you want to learn to dance – whether yourself or someone you know – just get in touch or come straight to rehearsal on Friday!.
+        /// </summary>
+        internal static string JoinUsText1 {
+            get {
+                return ResourceManager.GetString("JoinUsText1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We dance many different dances from Moravia and Slovakia, so no one will ever be bored. We look forward to meeting you!.
+        /// </summary>
+        internal static string JoinUsText2 {
+            get {
+                return ResourceManager.GetString("JoinUsText2", resourceCulture);
             }
         }
         
@@ -366,6 +510,15 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No members to display..
+        /// </summary>
+        internal static string NoMembersToDisplay {
+            get {
+                return ResourceManager.GetString("NoMembersToDisplay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Our calendar is free at the moment..
         /// </summary>
         internal static string NoUpcomingEventsPageHeader {
@@ -375,11 +528,20 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to If you want us at your event you can find ways to contact us on the Contact page..
+        ///   Looks up a localized string similar to Follow us on Instagram or Facebook and you&apos;ll be the first to know about our upcoming events!.
         /// </summary>
         internal static string NoUpcomingEventsPageText {
             get {
                 return ResourceManager.GetString("NoUpcomingEventsPageText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Or contact us.
+        /// </summary>
+        internal static string OrContactUs {
+            get {
+                return ResourceManager.GetString("OrContactUs", resourceCulture);
             }
         }
         
@@ -411,6 +573,24 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Photo gallery will be added soon..
+        /// </summary>
+        internal static string PhotosEmpty {
+            get {
+                return ResourceManager.GetString("PhotosEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Photos from ensemble life.
+        /// </summary>
+        internal static string PhotosSubtitle {
+            get {
+                return ResourceManager.GetString("PhotosSubtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Place.
         /// </summary>
         internal static string Place {
@@ -427,13 +607,22 @@ namespace Demizon.Mvc.Locales {
                 return ResourceManager.GetString("Profile", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Home - public.
         /// </summary>
         internal static string PublicHome {
             get {
                 return ResourceManager.GetString("PublicHome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Repertoire.
+        /// </summary>
+        internal static string Repertoire {
+            get {
+                return ResourceManager.GetString("Repertoire", resourceCulture);
             }
         }
         
@@ -492,6 +681,15 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Via the contact page.
+        /// </summary>
+        internal static string ViaContactPage {
+            get {
+                return ResourceManager.GetString("ViaContactPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Video Link.
         /// </summary>
         internal static string VideoLink {
@@ -519,11 +717,65 @@ namespace Demizon.Mvc.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No videos to display..
+        /// </summary>
+        internal static string VideosEmpty {
+            get {
+                return ResourceManager.GetString("VideosEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recordings from performances.
+        /// </summary>
+        internal static string VideosSubtitle {
+            get {
+                return ResourceManager.GetString("VideosSubtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to When.
         /// </summary>
         internal static string When {
             get {
                 return ResourceManager.GetString("When", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Why &apos;Demižón&apos;?.
+        /// </summary>
+        internal static string WhyDemizon {
+            get {
+                return ResourceManager.GetString("WhyDemizon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Many people pause at this name – and that always reassures us that we have made our mark on another person&apos;s memory..
+        /// </summary>
+        internal static string WhyDemizonText1 {
+            get {
+                return ResourceManager.GetString("WhyDemizonText1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A winemaker places the result of their year&apos;s work into a demijohn and lets it mature into its finest form. The same goes for the members of folk ensemble Demižón – a year&apos;s work and effort matures into a beautiful performance..
+        /// </summary>
+        internal static string WhyDemizonText2 {
+            get {
+                return ResourceManager.GetString("WhyDemizonText2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to And the maturing of dancers and musicians? Like wine – the older, the better. But it requires constant care!.
+        /// </summary>
+        internal static string WhyDemizonText3 {
+            get {
+                return ResourceManager.GetString("WhyDemizonText3", resourceCulture);
             }
         }
         
@@ -552,118 +804,6 @@ namespace Demizon.Mvc.Locales {
             get {
                 return ResourceManager.GetString("Yes", resourceCulture);
             }
-        }
-
-        internal static string HeroSubtitle {
-            get { return ResourceManager.GetString("HeroSubtitle", resourceCulture); }
-        }
-
-        internal static string EventSchedule {
-            get { return ResourceManager.GetString("EventSchedule", resourceCulture); }
-        }
-
-        internal static string Repertoire {
-            get { return ResourceManager.GetString("Repertoire", resourceCulture); }
-        }
-
-        internal static string AboutUsText1 {
-            get { return ResourceManager.GetString("AboutUsText1", resourceCulture); }
-        }
-
-        internal static string AboutUsText2 {
-            get { return ResourceManager.GetString("AboutUsText2", resourceCulture); }
-        }
-
-        internal static string WhyDemizon {
-            get { return ResourceManager.GetString("WhyDemizon", resourceCulture); }
-        }
-
-        internal static string WhyDemizonText1 {
-            get { return ResourceManager.GetString("WhyDemizonText1", resourceCulture); }
-        }
-
-        internal static string WhyDemizonText2 {
-            get { return ResourceManager.GetString("WhyDemizonText2", resourceCulture); }
-        }
-
-        internal static string WhyDemizonText3 {
-            get { return ResourceManager.GetString("WhyDemizonText3", resourceCulture); }
-        }
-
-        internal static string JoinUsCta {
-            get { return ResourceManager.GetString("JoinUsCta", resourceCulture); }
-        }
-
-        internal static string NoMembersToDisplay {
-            get { return ResourceManager.GetString("NoMembersToDisplay", resourceCulture); }
-        }
-
-        internal static string DancesSubtitle {
-            get { return ResourceManager.GetString("DancesSubtitle", resourceCulture); }
-        }
-
-        internal static string DancesEmpty {
-            get { return ResourceManager.GetString("DancesEmpty", resourceCulture); }
-        }
-
-        internal static string VideosSubtitle {
-            get { return ResourceManager.GetString("VideosSubtitle", resourceCulture); }
-        }
-
-        internal static string VideosEmpty {
-            get { return ResourceManager.GetString("VideosEmpty", resourceCulture); }
-        }
-
-        internal static string ContactSubtitle {
-            get { return ResourceManager.GetString("ContactSubtitle", resourceCulture); }
-        }
-
-        internal static string EnsembleLeader {
-            get { return ResourceManager.GetString("EnsembleLeader", resourceCulture); }
-        }
-
-        internal static string JoinUsSubtitle {
-            get { return ResourceManager.GetString("JoinUsSubtitle", resourceCulture); }
-        }
-
-        internal static string JoinUsText1 {
-            get { return ResourceManager.GetString("JoinUsText1", resourceCulture); }
-        }
-
-        internal static string JoinUsText2 {
-            get { return ResourceManager.GetString("JoinUsText2", resourceCulture); }
-        }
-
-        internal static string ComeToRehearsal {
-            get { return ResourceManager.GetString("ComeToRehearsal", resourceCulture); }
-        }
-
-        internal static string EveryFridayEvening {
-            get { return ResourceManager.GetString("EveryFridayEvening", resourceCulture); }
-        }
-
-        internal static string OrContactUs {
-            get { return ResourceManager.GetString("OrContactUs", resourceCulture); }
-        }
-
-        internal static string ViaContactPage {
-            get { return ResourceManager.GetString("ViaContactPage", resourceCulture); }
-        }
-
-        internal static string ContactUsButton {
-            get { return ResourceManager.GetString("ContactUsButton", resourceCulture); }
-        }
-
-        internal static string EventsSubtitle {
-            get { return ResourceManager.GetString("EventsSubtitle", resourceCulture); }
-        }
-
-        internal static string PhotosSubtitle {
-            get { return ResourceManager.GetString("PhotosSubtitle", resourceCulture); }
-        }
-
-        internal static string PhotosEmpty {
-            get { return ResourceManager.GetString("PhotosEmpty", resourceCulture); }
         }
     }
 }

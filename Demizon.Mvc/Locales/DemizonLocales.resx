@@ -129,10 +129,10 @@
         <value>Our calendar is free at the moment.</value>
     </data>
     <data name="NoUpcomingEventsPageText" xml:space="preserve">
-        <value>If you want us at your event you can find ways to contact us on the Contact page.</value>
+        <value>Follow us on social media and you'll be the first to know about our upcoming events — or get in touch if you'd like us to perform at your event!</value>
     </data>
     <data name="EnglishAndGermanCommunicationText" xml:space="preserve">
-        <value>Use this contact information if you want to communicate in English or German:</value>
+        <value>English/Deutsch contact</value>
     </data>
     <data name="Men" xml:space="preserve">
         <value>Men</value>
@@ -228,7 +228,7 @@
         <value>Repertoire will be added soon.</value>
     </data>
     <data name="VideosSubtitle" xml:space="preserve">
-        <value>Recordings from performances and rehearsals</value>
+        <value>Recordings from performances</value>
     </data>
     <data name="VideosEmpty" xml:space="preserve">
         <value>No videos to display.</value>
@@ -255,13 +255,13 @@
         <value>Every Friday evening</value>
     </data>
     <data name="OrContactUs" xml:space="preserve">
-        <value>Or contact us</value>
+        <value>Or reach us online</value>
     </data>
     <data name="ViaContactPage" xml:space="preserve">
-        <value>Via the contact page</value>
+        <value>On Instagram or Facebook</value>
     </data>
     <data name="ContactUsButton" xml:space="preserve">
-        <value>Contact us</value>
+        <value>or all contacts</value>
     </data>
     <data name="EventsSubtitle" xml:space="preserve">
         <value>Where you can see us</value>

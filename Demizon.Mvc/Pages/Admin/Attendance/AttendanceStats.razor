@@ -1,6 +1,7 @@
 @page "/Admin/AttendanceStats"
 @using Demizon.Core.Services.Attendance
 @attribute [Authorize]
+@layout AdminMainLayout
 
 <PageTitle>Statistiky docházky</PageTitle>
 
@@ -35,23 +36,55 @@ else if (_stats.Count == 0)
 }
 else
 {
+    <!-- Souhrn -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6">
+            <MudPaper Class="pa-3" Elevation="1">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.FitnessCenter" Color="Color.Primary"/>
+                    <MudText Typo="Typo.body1">
+                        Zkoušek: <strong>@_stats[0].TotalRehearsals</strong>
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Class="pa-3" Elevation="1">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.Event" Color="Color.Secondary"/>
+                    <MudText Typo="Typo.body1">
+                        Akcí: <strong>@_stats[0].TotalActions</strong>
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
     <!-- Tabulka -->
     <MudTable Items="_stats" Hover="true" Striped="true" Dense="true" Elevation="1" Class="mb-6">
         <HeaderContent>
             <MudTh>Člen</MudTh>
-            <MudTh Style="text-align:right">Přítomnosti</MudTh>
-            <MudTh Style="text-align:right">Celkem záznamů</MudTh>
-            <MudTh>Docházka</MudTh>
+            <MudTh Style="text-align:center">Zkoušky</MudTh>
+            <MudTh>Docházka ze zkoušek</MudTh>
+            <MudTh Style="text-align:center">Akce</MudTh>
+            <MudTh>Docházka z akcí</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.FullName</MudTd>
-            <MudTd Style="text-align:right">@context.AttendedCount</MudTd>
-            <MudTd Style="text-align:right">@context.TotalRecords</MudTd>
+            <MudTd Style="text-align:center">@context.AttendedRehearsals / @context.TotalRehearsals</MudTd>
             <MudTd>
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                    <MudProgressLinear Value="@context.AttendanceRate" Color="@GetColor(context.AttendanceRate)"
-                                       Style="width:120px; height:8px; border-radius:4px;"/>
-                    <MudText Typo="Typo.body2">@context.AttendanceRate %</MudText>
+                    <MudProgressLinear Value="@context.RehearsalRate" Color="@GetColor(context.RehearsalRate)"
+                                       Style="width:100px; height:8px; border-radius:4px;"/>
+                    <MudText Typo="Typo.body2">@context.RehearsalRate %</MudText>
+                </MudStack>
+            </MudTd>
+            <MudTd Style="text-align:center">@context.AttendedActions / @context.TotalActions</MudTd>
+            <MudTd>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudProgressLinear Value="@context.ActionRate" Color="@GetColor(context.ActionRate)"
+                                       Style="width:100px; height:8px; border-radius:4px;"/>
+                    <MudText Typo="Typo.body2">@context.ActionRate %</MudText>
                 </MudStack>
             </MudTd>
         </RowTemplate>
@@ -85,4 +118,5 @@ else
         >= 50 => Color.Warning,
         _ => Color.Error
     };
+
 }

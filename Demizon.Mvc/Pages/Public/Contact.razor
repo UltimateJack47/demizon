@@ -8,16 +8,67 @@
 </MudText>
 
 <MudGrid Spacing="3">
-    <MudItem xs="12" sm="6">
-        <MudCard Elevation="2" Class="pa-2">
+    <!-- Řádek 1: soubor + sociální sítě -->
+    <MudItem xs="12" sm="6" Style="display: flex;">
+        <MudCard Elevation="2" Class="pa-2" Style="width: 100%;">
+            <MudCardContent>
+                <MudStack Spacing="3">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Primary"/>
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.subtitle1"><strong>FS Demižón Strážnice</strong></MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Orelská jednota Strážnice, 696 62 Strážnice</MudText>
+                        </MudStack>
+                    </MudStack>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Email" Color="Color.Primary"/>
+                        <MudLink Href="mailto:fs.demizon@gmail.com" Color="Color.Primary">fs.demizon@gmail.com</MudLink>
+                    </MudStack>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" Style="display: flex;">
+        <MudCard Elevation="2" Class="pa-2" Style="width: 100%;">
+            <MudCardContent>
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-3">Sledujte nás</MudText>
+                <MudStack Spacing="3">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudAvatar Style="background: #1877F2;" Size="Size.Medium">
+                            <MudIcon Icon="@Icons.Custom.Brands.Facebook" Style="color: white;"/>
+                        </MudAvatar>
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Facebook</MudText>
+                            <MudLink Href="https://www.facebook.com/fs.demizon" Target="_blank" Color="Color.Primary">fs.demizon</MudLink>
+                        </MudStack>
+                    </MudStack>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudAvatar Style="background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%);" Size="Size.Medium">
+                            <MudIcon Icon="@Icons.Custom.Brands.Instagram" Style="color: white;"/>
+                        </MudAvatar>
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Instagram</MudText>
+                            <MudLink Href="https://www.instagram.com/fs_demizon/" Target="_blank" Color="Color.Primary">fs_demizon</MudLink>
+                        </MudStack>
+                    </MudStack>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <!-- Řádek 2: vedoucí -->
+    <MudItem xs="12" sm="6" Style="display: flex;">
+        <MudCard Elevation="2" Class="pa-2" Style="width: 100%;">
             <MudCardContent>
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
                     <MudAvatar Color="Color.Primary" Size="Size.Large">JV</MudAvatar>
-                    <MudStack Spacing="0">
+                    <MudStack Spacing="1">
                         <MudText Typo="Typo.h6">Jana Vadura</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            @Localizer[nameof(DemizonLocales.EnglishAndGermanCommunicationText)]
-                        </MudText>
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@Localizer[nameof(DemizonLocales.EnsembleLeader)]</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@Localizer[nameof(DemizonLocales.EnglishAndGermanCommunicationText)]</MudChip>
+                        </MudStack>
                     </MudStack>
                 </MudStack>
                 <MudStack Spacing="2">
@@ -34,14 +85,16 @@
         </MudCard>
     </MudItem>
 
-    <MudItem xs="12" sm="6">
-        <MudCard Elevation="2" Class="pa-2">
+    <MudItem xs="12" sm="6" Style="display: flex;">
+        <MudCard Elevation="2" Class="pa-2" Style="width: 100%;">
             <MudCardContent>
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
                     <MudAvatar Color="Color.Primary" Size="Size.Large">JR</MudAvatar>
-                    <MudStack Spacing="0">
+                    <MudStack Spacing="1">
                         <MudText Typo="Typo.h6">Jiří Rybecký</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">@Localizer[nameof(DemizonLocales.EnsembleLeader)]</MudText>
+                        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@Localizer[nameof(DemizonLocales.EnsembleLeader)]</MudChip>
+                        </MudStack>
                     </MudStack>
                 </MudStack>
                 <MudStack Spacing="2">
@@ -52,20 +105,6 @@
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                         <MudIcon Icon="@Icons.Material.Outlined.Email" Color="Color.Primary" Size="Size.Small"/>
                         <MudLink Href="mailto:rjdesign@seznam.cz" Color="Color.Primary">rjdesign@seznam.cz</MudLink>
-                    </MudStack>
-                </MudStack>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-
-    <MudItem xs="12">
-        <MudCard Elevation="1" Style="background: var(--mud-palette-background);">
-            <MudCardContent>
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                    <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Primary"/>
-                    <MudStack Spacing="0">
-                        <MudText Typo="Typo.subtitle1"><strong>FS Demižón Strážnice</strong></MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Orelská jednota Strážnice, 696 62 Strážnice</MudText>
                     </MudStack>
                 </MudStack>
             </MudCardContent>

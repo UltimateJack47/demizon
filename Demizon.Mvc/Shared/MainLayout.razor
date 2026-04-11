@@ -41,11 +41,12 @@
             </MudStack>
         </MudDrawerHeader>
         <NavMenu></NavMenu>
-        <MudSpacer/>
-        <MudDivider/>
-        <MudText Typo="Typo.caption" Class="pa-3" Style="color: var(--mud-palette-text-secondary);">
-            © @DateTime.Now.Year FS Demižón Strážnice
-        </MudText>
+        <div style="margin-top: auto;">
+            <MudDivider Class="pb-1"/>
+            <MudText Typo="Typo.caption" Class="pa-3" Style="color: var(--mud-palette-text-secondary);">
+                © @DateTime.Now.Year FS Demižón Strážnice
+            </MudText>
+        </div>
     </MudDrawer>
 
     <MudMainContent>

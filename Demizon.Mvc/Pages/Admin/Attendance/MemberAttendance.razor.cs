@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
@@ -61,7 +62,7 @@ public partial class MemberAttendance : ComponentBase
         var loggedUserLogin = authState.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
         LoggedUser = MemberService.GetOneByLogin(loggedUserLogin)!.ToViewModel();
 
-        PageService.SetTitle(Localizer[nameof(DemizonLocales.Attendance)]);
+        PageService.SetTitle("Docházka");
 
         await LoadData();
         await LoadTableData();
@@ -156,11 +157,6 @@ public partial class MemberAttendance : ComponentBase
             .Where(y => y.Date == date)
             .Count(y => y.Attends);
 
-    private async Task SetAttendance(AttendanceViewModel attendance)
-    {
-        await SaveAttendanceAsync(attendance, refreshUserData: true);
-    }
-
     private async Task PreviousMonth()
     {
         CurrentMonth = CurrentMonth.AddMonths(-1);
@@ -175,7 +171,11 @@ public partial class MemberAttendance : ComponentBase
         await LoadTableData();
     }
 
-    private string MonthLabel => CurrentMonth.ToString("MMMM yyyy");
+    private static readonly CultureInfo CsCulture = new("cs-CZ");
+
+    private string MonthLabel => CurrentMonth.ToString("MMMM yyyy", CsCulture);
+
+    private string FormatDayAbbr(DateTime date) => date.ToString("ddd", CsCulture);
 
     // Kliknutí na buňku konkrétního člena v tabulce (admin může editovat kohokoliv)
     private async Task SetAttendanceMember(MemberViewModel member, AttendanceViewModel col)
@@ -211,10 +211,19 @@ public partial class MemberAttendance : ComponentBase
         try
         {
             var attendanceResult = result.Data as AttendanceViewModel;
-            await AttendanceService.CreateOrUpdateAsync(attendanceResult!.ToEntity());
+            if (attendanceResult is null)
+            {
+                if (model.Id != 0)
+                    await AttendanceService.DeleteAsync(model.Id);
+                Snackbar.Add("Docházka resetována.", Severity.Info);
+            }
+            else
+            {
+                await AttendanceService.CreateOrUpdateAsync(attendanceResult.ToEntity());
+                Snackbar.Add("Docházka uložena.", Severity.Success);
+            }
             if (refreshUserData) await LoadData();
             await LoadTableData();
-            Snackbar.Add("Docházka uložena.", Severity.Success);
         }
         catch
         {

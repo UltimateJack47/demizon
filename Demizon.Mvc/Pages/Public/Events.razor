@@ -14,11 +14,23 @@
         <MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Large" Color="Color.Secondary" Style="font-size: 3rem;"/>
         <MudText Typo="Typo.h6" Class="mt-2">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageHeader)]</MudText>
         <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">@Localizer[nameof(DemizonLocales.NoUpcomingEventsPageText)]</MudText>
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary"
-                   Href="@(NavigationManager.BaseUri + "Contact")"
-                   StartIcon="@Icons.Material.Filled.ContactPhone">
-            @Localizer[nameof(DemizonLocales.Contact)]
-        </MudButton>
+        <MudStack Row="true" Justify="Justify.Center" Spacing="2" Wrap="Wrap.Wrap" Class="mb-2">
+            <MudButton Variant="Variant.Filled"
+                       Style="background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%); color: white;"
+                       Href="https://www.instagram.com/fs_demizon/" Target="_blank"
+                       StartIcon="@Icons.Custom.Brands.Instagram">
+                Instagram
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Style="background: #1877F2; color: white;"
+                       Href="https://www.facebook.com/fs.demizon" Target="_blank"
+                       StartIcon="@Icons.Custom.Brands.Facebook">
+                Facebook
+            </MudButton>
+        </MudStack>
+        <MudLink Href="/Contact" Color="Color.Secondary" Typo="Typo.caption">
+            @Localizer[nameof(DemizonLocales.ContactUsButton)]
+        </MudLink>
     </MudCard>
 }
 else

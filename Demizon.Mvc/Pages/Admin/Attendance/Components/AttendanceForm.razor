@@ -20,14 +20,18 @@
         {
             @Model.Date.ToString("dd.MM.")
         }
-        <MudCheckBox @bind-Value="Model.Attends" Label="@Localizer[nameof(DemizonLocales.Attends)]"/>
-        <MudTextField @bind-Value="Model.Comment" Label="@Localizer[nameof(DemizonLocales.Comment)]"/>
+        <MudCheckBox @bind-Value="Model.Attends" Label="Zúčastním se"/>
+        <MudTextField @bind-Value="Model.Comment" Label="Poznámka"/>
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="Cancel">@Localizer[nameof(DemizonLocales.Cancel)]</MudButton>
+        <MudButton OnClick="Cancel">Zrušit</MudButton>
+        @if (Model.Id != 0)
+        {
+            <MudButton Color="Color.Warning" OnClick="ClickedReset">Resetovat</MudButton>
+        }
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
-            <span>@Localizer[nameof(DemizonLocales.Confirm)]</span>
+            <span>Potvrdit</span>
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -46,6 +50,11 @@
     private void ClickedOk()
     {
         MudDialog.Close(DialogResult.Ok(Model));
+    }
+
+    private void ClickedReset()
+    {
+        MudDialog.Close(DialogResult.Ok<AttendanceViewModel?>(null));
     }
 
 }
