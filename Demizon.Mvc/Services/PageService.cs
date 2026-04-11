@@ -11,7 +11,7 @@ public class PageService
         return PageTitle is null ? BasePageTitle : $"{PageTitle} | {BasePageTitle}";
     }
 
-    public void SetTitle(string pageTitle)
+    public void SetTitle(string? pageTitle)
     {
         PageTitle = pageTitle;
     }

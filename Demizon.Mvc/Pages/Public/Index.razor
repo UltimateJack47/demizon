@@ -2,8 +2,13 @@
 
 <div class="demi-hero">
     <MudStack Spacing="2" AlignItems="AlignItems.Center" Class="demi-hero-content">
-        <MudText Typo="Typo.h2" Class="demi-hero-title">FS Demižón</MudText>
-        <MudText Typo="Typo.h5" Class="demi-hero-subtitle">@Localizer[nameof(DemizonLocales.HeroSubtitle)]</MudText>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Justify="Justify.Center">
+            <MudImage Src="images/logo.jpg" Width="100" Height="100" ObjectFit="ObjectFit.Contain" Style="border-radius: 50%; background: white; padding: 6px; margin-right: 6px;"/>
+            <MudStack Spacing="0" AlignItems="AlignItems.Start">
+                <MudText Typo="Typo.h2" Class="demi-hero-title">FS Demižón</MudText>
+                <MudText Typo="Typo.h5" Class="demi-hero-subtitle">@Localizer[nameof(DemizonLocales.HeroSubtitle)]</MudText>
+            </MudStack>
+        </MudStack>
         <MudStack Row="true" Spacing="2" Class="mt-2" Justify="Justify.Center">
             <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Large"
                        Href="@(NavigationManager.BaseUri + "Events")"
@@ -73,6 +78,6 @@
 @code {
     protected override void OnInitialized()
     {
-        PageService.SetTitle("FS Demižón Strážnice");
+        PageService.SetTitle(null);
     }
 }

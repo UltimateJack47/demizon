@@ -29,12 +29,9 @@
 
     <MudDrawer @bind-Open="DrawerOpen" Elevation="2" Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Always" Class="demi-admin-drawer">
         <MudDrawerHeader Class="pa-4" Style="background: linear-gradient(135deg, var(--demi-primary) 0%, var(--demi-primary-light) 100%);">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                <MudImage Src="@(NavigationManager.BaseUri + "favicon.gif")" Width="36" Height="36" ObjectFit="ObjectFit.Contain"/>
-                <MudStack Spacing="0">
-                    <MudText Typo="Typo.h6" Style="color: white; line-height: 1.2;">FS Demižón</MudText>
-                    <MudText Typo="Typo.caption" Style="color: rgba(255,255,255,0.75);">Strážnice</MudText>
-                </MudStack>
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h6" Style="color: white; line-height: 1.2;">FS Demižón</MudText>
+                <MudText Typo="Typo.caption" Style="color: rgba(255,255,255,0.75);">Strážnice</MudText>
             </MudStack>
         </MudDrawerHeader>
         <NavMenu></NavMenu>
