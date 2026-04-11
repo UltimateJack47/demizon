@@ -30,6 +30,12 @@ public sealed class AuthenticationService(
             return;
         }
 
+        if (userAccount.IsExternal)
+        {
+            context.Response.Redirect("/Login/true");
+            return;
+        }
+
         await context.SignInAsync(new ClaimsPrincipal(new ClaimsIdentity(
             new List<Claim>
             {
@@ -68,6 +74,13 @@ public sealed class AuthenticationService(
         var isPasswordCorrect = Crypto.VerifyHashedPassword(userAccount?.PasswordHash ?? DummyHash, password ?? string.Empty);
 
         if (userAccount is null || !isPasswordCorrect)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsJsonAsync(new { error = "Invalid credentials." });
+            return;
+        }
+
+        if (userAccount.IsExternal)
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsJsonAsync(new { error = "Invalid credentials." });

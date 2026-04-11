@@ -37,6 +37,19 @@ else
                         <MudText Typo="Typo.subtitle1" Align="Align.Center">
                             <strong>@member.Name @member.Surname</strong>
                         </MudText>
+                        @if (member.IsDancer || member.IsMusician)
+                        {
+                            <MudStack Row="true" Justify="Justify.Center" Spacing="1" Class="mt-1">
+                                @if (member.IsDancer)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.DirectionsRun" Color="Color.Primary" Variant="Variant.Text">Tanečník</MudChip>
+                                }
+                                @if (member.IsMusician)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.MusicNote" Color="Color.Secondary" Variant="Variant.Text">Muzikant</MudChip>
+                                }
+                            </MudStack>
+                        }
                     </MudCardContent>
                 </MudCard>
             </MudItem>
@@ -68,6 +81,19 @@ else
                         <MudText Typo="Typo.subtitle1" Align="Align.Center">
                             <strong>@member.Name @member.Surname</strong>
                         </MudText>
+                        @if (member.IsDancer || member.IsMusician)
+                        {
+                            <MudStack Row="true" Justify="Justify.Center" Spacing="1" Class="mt-1">
+                                @if (member.IsDancer)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.DirectionsRun" Color="Color.Primary" Variant="Variant.Text">Tanečnice</MudChip>
+                                }
+                                @if (member.IsMusician)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.MusicNote" Color="Color.Secondary" Variant="Variant.Text">Muzikant</MudChip>
+                                }
+                            </MudStack>
+                        }
                     </MudCardContent>
                 </MudCard>
             </MudItem>

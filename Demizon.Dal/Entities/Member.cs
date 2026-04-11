@@ -22,6 +22,12 @@ public class Member
 
     public bool IsAttendanceVisible { get; set; } = true;
 
+    public bool IsDancer { get; set; } = false;
+
+    public bool IsMusician { get; set; } = false;
+
+    public bool IsExternal { get; set; } = false;
+
     public DateTime? BirthDate { get; set; }
 
     public DateTime? MemberSince { get; set; }

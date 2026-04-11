@@ -1,52 +1,58 @@
 @using Demizon.Mvc.ViewModels
-<MudDialog>
+<MudDialog Style="min-width: 520px;">
     <TitleContent>
-        <MudText Typo="Typo.h6">@Localizer[nameof(DemizonLocales.Event)] - @Localizer[nameof(DemizonLocales.Form)]</MudText>
+        <MudText Typo="Typo.h6">@(IsUpdate ? "Upravit" : "Vytvořit") - Akce</MudText>
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="EventModel.Name" Label="@Localizer[nameof(DemizonLocales.Name)]"></MudTextField>
-        <MudDateRangePicker @bind-DateRange="EventModel.Date" Label="@Localizer[nameof(DemizonLocales.When)]"></MudDateRangePicker>
-        <MudTextField @bind-Value="EventModel.Place" Label="@Localizer[nameof(DemizonLocales.Place)]"></MudTextField>
-        <MudTextField @bind-Value="EventModel.Information"
-                      Label="@Localizer[nameof(DemizonLocales.Information)]">
-        </MudTextField>
-        <MudCheckBox @bind-Value="EventModel.IsPublic" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"></MudCheckBox>
-        <MudNumericField @bind-Value="EventModel.NotifyBeforeDays" T="int?" Label="Push notifikace N dní předem (prázdné = nevysílat)"
-                         Min="0" Max="30" Clearable="true" Variant="Variant.Text" Class="mt-2"/>
+        <MudGrid Spacing="2">
+            <MudItem xs="12">
+                <MudTextField @bind-Value="EventModel.Name" Label="Název"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" RequiredError="Název je povinný!"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudDateRangePicker @bind-DateRange="EventModel.Date" Label="Kdy"
+                                    Variant="Variant.Outlined" Margin="Margin.Dense" Editable="true"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="EventModel.Place" Label="Místo"
+                              Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="EventModel.Information" Label="Informace"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudDivider Class="my-1"/>
+                <MudGrid Spacing="0">
+                    <MudItem xs="6">
+                        <MudCheckBox @bind-Value="EventModel.IsPublic" Label="Veřejné" Color="Color.Primary"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="EventModel.NotifyBeforeDays" T="int?"
+                                         Label="Push notifikace (dní předem)" Min="0" Max="30" Clearable="true"
+                                         Variant="Variant.Outlined" Margin="Margin.Dense"
+                                         HelperText="Prázdné = nevysílat"/>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="Cancel">@Localizer[nameof(DemizonLocales.Cancel)]</MudButton>
+        <MudButton OnClick="Cancel">Zrušit</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
-            @if (IsUpdate)
-            {
-                <span>@Localizer[nameof(DemizonLocales.Update)]</span>
-            }
-            else
-            {
-                <span>@Localizer[nameof(DemizonLocales.Create)]</span>
-            }
+            @(IsUpdate ? "Uložit" : "Vytvořit")
         </MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter] public EventViewModel EventModel { get; set; } = new();
-
     [Parameter] public bool IsUpdate { get; set; }
 
-    private void Cancel()
-    {
-        MudDialog.Cancel();
-    }
-
-    private void ClickedOk()
-    {
-        MudDialog.Close(DialogResult.Ok(EventModel));
-    }
-
+    private void Cancel() => MudDialog.Cancel();
+    private void ClickedOk() => MudDialog.Close(DialogResult.Ok(EventModel));
 }

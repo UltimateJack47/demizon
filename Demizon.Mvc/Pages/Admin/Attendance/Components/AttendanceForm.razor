@@ -1,27 +1,45 @@
-﻿@using Demizon.Mvc.ViewModels
-<MudDialog>
-    <DialogContent>
+@using Demizon.Mvc.ViewModels
+@using Demizon.Dal.Entities
+<MudDialog Style="min-width: 360px;">
+    <TitleContent>
         @if (Model.Event is not null)
         {
-            <MudText Align="Align.Center" Typo="Typo.h4">
-                @(Model.Event.Name + " ")
-                @if (Model.Event.DateFrom == Model.Event.DateTo)
-                {
-                    @(Model.Event.DateFrom.ToString("dd.MM."))
-                }
-                else
-                {
-                    @(Model.Event.DateFrom.ToString("dd.MM.") + " - " + Model.Event.DateTo.ToString("dd.MM."))
-                }
-
-            </MudText>
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h6">@Model.Event.Name</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    @(Model.Event.DateFrom.Date == Model.Event.DateTo.Date
+                        ? Model.Event.DateFrom.ToString("d. M. yyyy")
+                        : $"{Model.Event.DateFrom:d. M.} – {Model.Event.DateTo:d. M. yyyy}")
+                </MudText>
+            </MudStack>
         }
         else
         {
-            @Model.Date.ToString("dd.MM.")
+            <MudText Typo="Typo.h6">Zkouška @Model.Date.ToString("d. M. yyyy")</MudText>
         }
-        <MudCheckBox @bind-Value="Model.Attends" Label="Zúčastním se"/>
-        <MudTextField @bind-Value="Model.Comment" Label="Poznámka"/>
+    </TitleContent>
+
+    <DialogContent>
+        <MudGrid Spacing="2">
+            <MudItem xs="12">
+                <MudCheckBox @bind-Value="Model.Attends" Label="Zúčastním se" Color="Color.Primary"/>
+            </MudItem>
+            @if (Model.Member.IsDancer && Model.Member.IsMusician)
+            {
+                <MudItem xs="12">
+                    <MudSelect T="AttendanceActivityRole?" @bind-Value="Model.ActivityRole"
+                               Label="Role na akci" Clearable="true" Variant="Variant.Outlined"
+                               Margin="Margin.Dense" HelperText="Nevyplněno = muzikant (výchozí)">
+                        <MudSelectItem T="AttendanceActivityRole?" Value="AttendanceActivityRole.Dancer">Tanečník/Tanečnice</MudSelectItem>
+                        <MudSelectItem T="AttendanceActivityRole?" Value="AttendanceActivityRole.Musician">Muzikant</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            }
+            <MudItem xs="12">
+                <MudTextField @bind-Value="Model.Comment" Label="Poznámka"
+                              Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+        </MudGrid>
     </DialogContent>
 
     <DialogActions>
@@ -30,31 +48,16 @@
         {
             <MudButton Color="Color.Warning" OnClick="ClickedReset">Resetovat</MudButton>
         }
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
-            <span>Potvrdit</span>
-        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">Potvrdit</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter] public AttendanceViewModel Model { get; set; } = new();
 
-    private void Cancel()
-    {
-        MudDialog.Cancel();
-    }
-
-    private void ClickedOk()
-    {
-        MudDialog.Close(DialogResult.Ok(Model));
-    }
-
-    private void ClickedReset()
-    {
-        MudDialog.Close(DialogResult.Ok<AttendanceViewModel?>(null));
-    }
-
+    private void Cancel() => MudDialog.Cancel();
+    private void ClickedOk() => MudDialog.Close(DialogResult.Ok(Model));
+    private void ClickedReset() => MudDialog.Close(DialogResult.Ok<AttendanceViewModel?>(null));
 }

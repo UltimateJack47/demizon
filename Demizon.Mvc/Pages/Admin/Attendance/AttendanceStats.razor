@@ -3,9 +3,8 @@
 @attribute [Authorize]
 @layout AdminMainLayout
 
-<PageTitle>Statistiky docházky</PageTitle>
+<PageTitle>@PageService.GetTitle()</PageTitle>
 
-<MudText Typo="Typo.h5" Class="mb-1">Statistiky docházky</MudText>
 <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">Přehled docházky členů za zvolené období</MudText>
 
 <MudPaper Class="pa-4 mb-4" Elevation="1">
@@ -102,7 +101,11 @@ else
     private DateTime? _dateTo = DateTime.Today;
 
 
-    protected override async Task OnInitializedAsync() => await LoadStats();
+    protected override async Task OnInitializedAsync()
+    {
+        PageService.SetTitle("Statistiky docházky");
+        await LoadStats();
+    }
 
     private async Task LoadStats()
     {

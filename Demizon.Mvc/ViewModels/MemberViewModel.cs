@@ -27,6 +27,12 @@ public class MemberViewModel
 
     public bool IsAttendanceVisible { get; set; } = true;
 
+    public bool IsDancer { get; set; } = false;
+
+    public bool IsMusician { get; set; } = false;
+
+    public bool IsExternal { get; set; } = false;
+
     public DateTime? BirthDate { get; set; }
 
     public DateTime? MemberSince { get; set; }
@@ -50,6 +56,9 @@ public static class MemberMappingExtensions
         Gender = entity.Gender,
         IsVisible = entity.IsVisible,
         IsAttendanceVisible = entity.IsAttendanceVisible,
+        IsDancer = entity.IsDancer,
+        IsMusician = entity.IsMusician,
+        IsExternal = entity.IsExternal,
         BirthDate = entity.BirthDate,
         MemberSince = entity.MemberSince,
     };
@@ -66,8 +75,11 @@ public static class MemberMappingExtensions
             : Crypto.HashPassword(vm.Password),
         Role = vm.Role,
         Gender = vm.Gender,
-        IsVisible = vm.IsVisible,
+        IsVisible = !vm.IsExternal && vm.IsVisible,
         IsAttendanceVisible = vm.IsAttendanceVisible,
+        IsDancer = vm.IsDancer,
+        IsMusician = vm.IsMusician,
+        IsExternal = vm.IsExternal,
         BirthDate = vm.BirthDate,
         MemberSince = vm.MemberSince,
     };

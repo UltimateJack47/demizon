@@ -1,23 +1,193 @@
-﻿@page "/Members/Detail/{Id:int}"
+@page "/Members/Detail/{Id:int}"
 @using Demizon.Core.Services.Member
+@using Demizon.Dal.Entities
 @using Demizon.Mvc.ViewModels
 
-@inject IMemberService MemberService;
+@inject IMemberService MemberService
+@inject NavigationManager NavigationManager
 @layout AdminMainLayout
 
-<MudText>Member detail page of model with login: @Model.Login</MudText>
-<MudText>@Localizer[nameof(DemizonLocales.FirstName)]: @Model.Name</MudText>
-<MudText>@Localizer[nameof(DemizonLocales.Surname)]: @Model.Surname</MudText>
-<MudText>@Localizer[nameof(DemizonLocales.Email)]: @Model.Email</MudText>
+<PageTitle>@Model.Name @Model.Surname</PageTitle>
+
+<MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default"
+               OnClick="@(() => NavigationManager.NavigateTo("/Admin/Members"))"
+               title="Zpět na seznam" Class="mb-2"/>
+
+@if (_loaded)
+{
+    <MudGrid Spacing="3">
+
+        <!-- ─── Hlavička: foto + jméno ─── -->
+        <MudItem xs="12">
+            <MudCard Elevation="2">
+                <MudCardContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.Wrap">
+                        @{
+                            var photo = Model.Photos.FirstOrDefault()?.Path;
+                        }
+                        @if (photo is not null)
+                        {
+                            <MudAvatar Style="width: 100px; height: 100px;">
+                                <MudImage Src="@photo" ObjectFit="ObjectFit.Cover" Width="100" Height="100"/>
+                            </MudAvatar>
+                        }
+                        else
+                        {
+                            <MudAvatar Style="width: 100px; height: 100px; background: var(--demi-bg-warm);">
+                                <MudIcon Icon="@Icons.Material.Filled.Person" Style="font-size: 3.5rem; color: var(--demi-primary-light);"/>
+                            </MudAvatar>
+                        }
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.h4">@Model.Name @Model.Surname</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@@@Model.Login</MudText>
+                            <MudStack Row="true" Spacing="1" Class="mt-1" AlignItems="AlignItems.Center">
+                                <MudChip T="string" Size="Size.Small"
+                                         Icon="@(Model.Gender == Gender.Male ? Icons.Material.Filled.Male : Icons.Material.Filled.Female)"
+                                         Color="@(Model.Gender == Gender.Male ? Color.Info : Color.Secondary)"
+                                         Variant="Variant.Outlined">
+                                    @(Model.Gender == Gender.Male ? "Muž" : "Žena")
+                                </MudChip>
+                                @if (Model.IsDancer)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.DirectionsRun" Color="Color.Primary" Variant="Variant.Outlined">Tanec</MudChip>
+                                }
+                                @if (Model.IsMusician)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.MusicNote" Color="Color.Dark" Variant="Variant.Outlined">Muzika</MudChip>
+                                }
+                                @if (Model.IsExternal)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.PersonOff" Color="Color.Warning" Variant="Variant.Outlined">Externista</MudChip>
+                                }
+                                @if (Model.Role == UserRole.Admin)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.AdminPanelSettings" Color="Color.Warning" Variant="Variant.Outlined">Admin</MudChip>
+                                }
+                            </MudStack>
+                        </MudStack>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- ─── Kontakt & data ─── -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2" Style="height: 100%;">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.ContactMail" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6">Kontakt & data</MudText>
+                        </MudStack>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.Email" IconColor="Color.Default">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">E-mail</MudText>
+                                <MudText Typo="Typo.body2">@(Model.Email ?? "—")</MudText>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.Cake" IconColor="Color.Default">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Datum narození</MudText>
+                                <MudText Typo="Typo.body2">@(Model.BirthDate.HasValue ? Model.BirthDate.Value.ToString("d. M. yyyy") : "—")</MudText>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.EventAvailable" IconColor="Color.Default">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Členem od</MudText>
+                                <MudText Typo="Typo.body2">@(Model.MemberSince.HasValue ? Model.MemberSince.Value.ToString("d. M. yyyy") : "—")</MudText>
+                            </MudStack>
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- ─── Nastavení ─── -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2" Style="height: 100%;">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Settings" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6">Nastavení</MudText>
+                        </MudStack>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.body2">Veřejný profil</MudText>
+                                <MudIcon Icon="@(Model.IsVisible ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                         Color="@(Model.IsVisible ? Color.Success : Color.Error)" Size="Size.Small"/>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.body2">Zobrazuje se v docházce</MudText>
+                                <MudIcon Icon="@(Model.IsAttendanceVisible ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                         Color="@(Model.IsAttendanceVisible ? Color.Success : Color.Error)" Size="Size.Small"/>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.body2">Tanec</MudText>
+                                <MudIcon Icon="@(Model.IsDancer ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                         Color="@(Model.IsDancer ? Color.Success : Color.Error)" Size="Size.Small"/>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.body2">Muzika</MudText>
+                                <MudIcon Icon="@(Model.IsMusician ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                         Color="@(Model.IsMusician ? Color.Success : Color.Error)" Size="Size.Small"/>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.body2">Externista</MudText>
+                                <MudIcon Icon="@(Model.IsExternal ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                         Color="@(Model.IsExternal ? Color.Warning : Color.Error)" Size="Size.Small"/>
+                            </MudStack>
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+    </MudGrid>
+}
+else
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary"/>
+}
 
 @code {
     [Parameter] public int Id { get; set; }
 
     private MemberViewModel Model { get; set; } = new();
+    private bool _loaded = false;
 
     protected override async Task OnInitializedAsync()
     {
-        Model = (await MemberService.GetOneAsync(Id)).ToViewModel();
+        var entity = await MemberService.GetOneAsync(Id);
+        if (entity is null)
+        {
+            NavigationManager.NavigateTo("/Admin/Members");
+            return;
+        }
+        Model = entity.ToViewModel();
+        PageService.SetTitle($"{Model.Name} {Model.Surname}");
+        _loaded = true;
     }
-
 }

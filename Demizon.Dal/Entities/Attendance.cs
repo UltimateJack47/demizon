@@ -8,6 +8,8 @@ public class Attendance
 
     public string? Comment { get; set; }
 
+    public AttendanceActivityRole? ActivityRole { get; set; }
+
     public DateTime Date { get; set; }
 
     public DateTime LastUpdated { get; set; } = DateTime.Now;
@@ -19,4 +21,10 @@ public class Attendance
     public int MemberId { get; set; }
 
     public virtual Member Member { get; set; } = null!;
+}
+
+public enum AttendanceActivityRole
+{
+    Dancer,
+    Musician
 }

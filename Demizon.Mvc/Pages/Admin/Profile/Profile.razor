@@ -3,15 +3,14 @@
 @using Demizon.Core.Services.Member
 @using Demizon.Core.Services.Notification
 @using Demizon.Dal.Entities
+@using Demizon.Mvc.Helpers
 @using Demizon.Mvc.ViewModels
 @using Microsoft.AspNetCore.Components.Authorization
 
 @attribute [Authorize(Roles = "Admin, Standard")]
 @layout AdminMainLayout
 
-<PageTitle>Profil</PageTitle>
-
-<MudText Typo="Typo.h4" Class="mb-4">Můj profil</MudText>
+<PageTitle>@PageService.GetTitle()</PageTitle>
 
 @if (_member is not null)
 {
@@ -28,23 +27,29 @@
                     </CardHeaderContent>
                 </MudCardHeader>
                 <MudCardContent>
-                    <MudTextField @bind-Value="_member.Name" Label="Jméno" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2"/>
-                    <MudTextField @bind-Value="_member.Surname" Label="Příjmení" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2"/>
-                    <MudTextField @bind-Value="_member.Email" Label="E-mail" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" InputType="InputType.Email"/>
-                    <MudTextField @bind-Value="_newPassword" Label="Nové heslo (ponech prázdné pro zachování)" Variant="Variant.Outlined"
-                                  Margin="Margin.Dense" Class="mb-2"
-                                  InputType="@(_showPassword ? InputType.Text : InputType.Password)"
-                                  Adornment="Adornment.End"
-                                  AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
-                                  OnAdornmentClick="@(() => _showPassword = !_showPassword)"/>
-                    <MudTextField @bind-Value="_newPasswordConfirm" Label="Nové heslo znovu" Variant="Variant.Outlined"
-                                  Margin="Margin.Dense" Class="mb-2"
-                                  InputType="@(_showPassword ? InputType.Text : InputType.Password)"
-                                  Adornment="Adornment.End"
-                                  AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
-                                  OnAdornmentClick="@(() => _showPassword = !_showPassword)"
-                                  Error="@PasswordMismatch" ErrorText="Hesla se neshodují"
-                                  Disabled="@(string.IsNullOrEmpty(_newPassword))"/>
+                    <MudStack Spacing="4">
+                        <MudTextField @bind-Value="_member.Name" Label="Jméno" Variant="Variant.Outlined" Margin="Margin.Normal"/>
+                        <MudTextField @bind-Value="_member.Surname" Label="Příjmení" Variant="Variant.Outlined" Margin="Margin.Normal"/>
+                        <MudTextField @bind-Value="_member.Email" Label="E-mail" Variant="Variant.Outlined" Margin="Margin.Normal" InputType="InputType.Email"
+                                      Required="true" RequiredError="E-mail je povinný!"
+                                      Validation="@((Func<string?, string?>)ValidationHelpers.ValidateEmail)"/>
+                        <MudDivider/>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Změna hesla</MudText>
+                        <MudTextField @bind-Value="_newPassword" Label="Nové heslo (ponech prázdné pro zachování)" Variant="Variant.Outlined"
+                                      Margin="Margin.Normal"
+                                      InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                      OnAdornmentClick="@(() => _showPassword = !_showPassword)"/>
+                        <MudTextField @bind-Value="_newPasswordConfirm" Label="Nové heslo znovu" Variant="Variant.Outlined"
+                                      Margin="Margin.Normal"
+                                      InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                      OnAdornmentClick="@(() => _showPassword = !_showPassword)"
+                                      Error="@PasswordMismatch" ErrorText="Hesla se neshodují"
+                                      Disabled="@(string.IsNullOrEmpty(_newPassword))"/>
+                    </MudStack>
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveProfile" StartIcon="@Icons.Material.Filled.Save">
@@ -176,6 +181,18 @@
     private async Task SaveProfile()
     {
         if (_member is null) return;
+
+        if (string.IsNullOrWhiteSpace(_member.Email))
+        {
+            Snackbar.Add("E-mail je povinný.", Severity.Error);
+            return;
+        }
+
+        if (ValidationHelpers.ValidateEmail(_member.Email) is not null)
+        {
+            Snackbar.Add("Neplatný formát e-mailu.", Severity.Error);
+            return;
+        }
 
         if (!string.IsNullOrWhiteSpace(_newPassword))
         {

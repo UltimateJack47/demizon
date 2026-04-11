@@ -6,7 +6,7 @@
 
 @layout AdminMainLayout
 
-<PageTitle>Události</PageTitle>
+<PageTitle>@PageService.GetTitle()</PageTitle>
 
 @inject IEventService EventService
 @inject IDialogService DialogService
@@ -16,7 +16,7 @@
 <MudTable @ref="EventsGrid" T="EventViewModel" Items="Events" Hover="true" Striped="true" FixedHeader="true" Height="900px"
           RowClassFunc="@((item, _) => item.IsCancelled ? "demi-event-row-cancelled" : "")">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Události</MudText>
+        <MudText Typo="Typo.subtitle1"><b>Události</b></MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"/>
         <AuthorizeView Roles="Admin">
@@ -30,7 +30,7 @@
         <MudTh><b>Název</b></MudTh>
         <MudTh><b>Datum</b></MudTh>
         <MudTh><b>Místo</b></MudTh>
-        <MudTh Style="width: 40px"></MudTh>
+        <MudTh Style="width: 40px"><b>Veřejné</b></MudTh>
         <MudTh Style="width: 80px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="upcomingEvent">
@@ -47,20 +47,16 @@
         </MudTd>
         <MudTd>@upcomingEvent.Place</MudTd>
         <MudTd>
-            @if (upcomingEvent.IsPublic)
-            {
-                <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"/>
-            }
-            else
-            {
-                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"/>
-            }
+            <MudIcon Icon="@(upcomingEvent.IsPublic ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                     Color="@(upcomingEvent.IsPublic ? Color.Success : Color.Error)"/>
             @if (upcomingEvent.IsCancelled)
             {
                 <MudChip T="string" Color="Color.Error" Size="Size.Small" Icon="@Icons.Material.Filled.Cancel" Class="ml-1">Zrušena</MudChip>
             }
         </MudTd>
         <MudTd>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Style="white-space: nowrap;">
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility" OnClick="() => NavigateToDetail(upcomingEvent.Id)" title="Detail"/>
             <AuthorizeView Roles="Admin">
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(upcomingEvent)"/>
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="() => RemoveEvent(upcomingEvent.Id)"/>
@@ -77,6 +73,7 @@
                                    OnClick="() => CancelEvent(upcomingEvent.Id, false)"/>
                 }
             </AuthorizeView>
+            </MudStack>
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -88,6 +85,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        PageService.SetTitle("Události");
         Events = (await EventService.GetAll().ToListAsync()).Select(x => x.ToViewModel()).ToList();
     }
 

@@ -12,6 +12,8 @@
     --demi-overlay-primary: rgba(122, 90, 56, 0.45);
     --demi-att-sum-bg: #F5EEE0;
     --demi-att-total-bg: #EEE4D0;
+    --demi-att-dancer-bg: #EAF3E8;
+    --demi-att-musician-bg: #E8EAF6;
 }
 
 /* ─── Hero sekce (homepage) ─── */
@@ -304,6 +306,12 @@ thead .demi-att-sticky {
 }
 
 /* Buňka zrušené události – neklikatelná */
+.demi-att-cell-readonly {
+    cursor: default !important;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
 .demi-att-cell-cancelled {
     cursor: not-allowed;
     opacity: 0.4;
@@ -338,6 +346,21 @@ thead .demi-att-sticky {
 
 .demi-att-total-row .demi-att-sticky {
     background: var(--demi-att-total-bg);
+}
+
+/* Součtové řádky aktivit (tanečnice/tanečníci/muzikanti) */
+.demi-att-activity-row td {
+    font-size: 0.8rem;
+}
+
+.demi-att-dancer-row td,
+.demi-att-dancer-row .demi-att-sticky {
+    background: var(--demi-att-dancer-bg);
+}
+
+.demi-att-musician-row td,
+.demi-att-musician-row .demi-att-sticky {
+    background: var(--demi-att-musician-bg);
 }
 
 /* Tlačítka docházky (chipy v horní části) */

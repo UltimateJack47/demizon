@@ -13,15 +13,17 @@
 @layout AdminMainLayout
 @attribute [Authorize(Roles = "Admin, Standard")]
 
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
 @if (Model.Id == 0)
 {
-    <MudProgressCircular Indeterminate="true" Color="Color.Primary"/>
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary"/>
 }
 else
 {
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4" Wrap="Wrap.Wrap">
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack"/>
-        <MudText Typo="Typo.h4">@Model.Name</MudText>
+        <MudText Typo="Typo.h5">@Model.Name</MudText>
         @if (!string.IsNullOrWhiteSpace(Model.Region))
         {
             <MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined" Size="Size.Small">@Model.Region</MudChip>
@@ -33,122 +35,164 @@ else
         </AuthorizeView>
     </MudStack>
 
-    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true">
+    <MudGrid Spacing="3">
 
-        <!-- TAB: Základní info -->
-        <MudTabPanel Text="Základní info" Icon="@Icons.Material.Filled.Info">
-            <MudGrid Spacing="3">
-                <MudItem xs="12" md="6">
-                    <MudStack Spacing="2">
-                        <MudField Label="Název" Variant="Variant.Outlined">@Model.Name</MudField>
-                        <MudField Label="Region" Variant="Variant.Outlined">@(Model.Region ?? "—")</MudField>
-                        <MudField Label="Viditelný na webu" Variant="Variant.Outlined">
-                            <MudIcon Icon="@(Model.IsVisible ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
-                                     Color="@(Model.IsVisible ? Color.Success : Color.Error)"/>
-                        </MudField>
-                    </MudStack>
-                </MudItem>
-                @if (!string.IsNullOrWhiteSpace(Model.Description))
-                {
-                    <MudItem xs="12" md="6">
-                        <MudField Label="Popis tance" Variant="Variant.Outlined" Style="height: auto;">
-                            <MudText Typo="Typo.body2">@Model.Description</MudText>
-                        </MudField>
-                    </MudItem>
-                }
-            </MudGrid>
-        </MudTabPanel>
-
-        <!-- TAB: Čísla tance -->
-        <MudTabPanel Text="Čísla tance" Icon="@Icons.Material.Filled.QueueMusic">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
-                <MudText Typo="Typo.h6">Čísla repertoáru</MudText>
-                <MudSpacer/>
-                <AuthorizeView Roles="Admin">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                               StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="() => OpenDanceNumberDialog()">
-                        Přidat číslo
-                    </MudButton>
-                </AuthorizeView>
-            </MudStack>
-
-            @if (DanceNumbers.Count == 0)
-            {
-                <MudText Color="Color.Secondary" Typo="Typo.body2">Žádná čísla k zobrazení.</MudText>
-            }
-            else
-            {
-                @foreach (var number in DanceNumbers)
-                {
-                    <MudCard Elevation="1" Class="mb-3">
-                        <MudCardContent>
-                            <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudText Typo="Typo.subtitle1"><strong>@number.Title</strong></MudText>
-                                <MudSpacer/>
-                                <AuthorizeView Roles="Admin">
-                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit"
-                                                   OnClick="() => OpenDanceNumberDialog(number)"/>
-                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   OnClick="() => DeleteDanceNumber(number.Id)"/>
-                                </AuthorizeView>
+        <!-- ─── Info o tanci ─── -->
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="2" Style="height: 100%;">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.DirectionsRun" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6">O tanci</MudText>
+                        </MudStack>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.Title" IconColor="Color.Default">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Název</MudText>
+                                <MudText Typo="Typo.body2">@Model.Name</MudText>
                             </MudStack>
-                            @if (!string.IsNullOrWhiteSpace(number.Description))
-                            {
-                                <MudText Typo="Typo.body2" Class="mt-1">@number.Description</MudText>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(number.Lyrics))
-                            {
-                                <MudExpansionPanels Class="mt-2">
-                                    <MudExpansionPanel Text="Texty písní">
-                                        <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@number.Lyrics</MudText>
-                                    </MudExpansionPanel>
-                                </MudExpansionPanels>
-                            }
-                        </MudCardContent>
-                    </MudCard>
-                }
-            }
-        </MudTabPanel>
+                        </MudListItem>
+                        @if (!string.IsNullOrWhiteSpace(Model.Region))
+                        {
+                            <MudDivider/>
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Place" IconColor="Color.Default">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Region</MudText>
+                                    <MudText Typo="Typo.body2">@Model.Region</MudText>
+                                </MudStack>
+                            </MudListItem>
+                        }
+                        <MudDivider/>
+                        <MudListItem T="string">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.body2">Viditelný na webu</MudText>
+                                <MudIcon Icon="@(Model.IsVisible ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                         Color="@(Model.IsVisible ? Color.Success : Color.Error)" Size="Size.Small"/>
+                            </MudStack>
+                        </MudListItem>
+                        @if (!string.IsNullOrWhiteSpace(Model.Description))
+                        {
+                            <MudDivider/>
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Description" IconColor="Color.Default">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Popis</MudText>
+                                    <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@Model.Description</MudText>
+                                </MudStack>
+                            </MudListItem>
+                        }
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
 
-        <!-- TAB: Videa -->
-        <MudTabPanel Text="Videa" Icon="@Icons.Material.Filled.VideoLibrary">
-            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                Videa ke správě jsou dostupná v sekci <MudLink Href="@(NavigationManager.BaseUri + "Admin/Videos")">Video Links</MudLink>.
-            </MudText>
-            @if (Model.Videos.Count > 0)
-            {
-                <MudGrid Spacing="3" Class="mt-2">
-                    @foreach (var video in Model.Videos)
+        <!-- ─── Čísla repertoáru ─── -->
+        <MudItem xs="12" md="8">
+            <MudCard Elevation="2" Style="height: 100%;">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.QueueMusic" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6">Čísla repertoáru</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
+                                @DanceNumbers.Count
+                            </MudChip>
+                        </MudStack>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <AuthorizeView Roles="Admin">
+                            <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary"
+                                           title="Přidat číslo" OnClick="() => OpenDanceNumberDialog()"/>
+                        </AuthorizeView>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (DanceNumbers.Count == 0)
                     {
-                        <MudItem xs="12" sm="6">
-                            <MudCard Elevation="1">
-                                <MudCardContent Class="pb-1">
-                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                        <MudChip T="string" Size="Size.Small" Color="Color.Primary">@video.Year</MudChip>
-                                        <MudText Typo="Typo.subtitle2">@video.Name</MudText>
-                                        @if (video.IsInternal)
-                                        {
-                                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
-                                        }
-                                    </MudStack>
-                                </MudCardContent>
-                                <div class="demi-video-embed">
-                                    <iframe src="@video.Url" title="@video.Name" allowfullscreen loading="lazy"></iframe>
-                                </div>
-                            </MudCard>
-                        </MudItem>
+                        <MudText Color="Color.Secondary" Typo="Typo.body2">Žádná čísla k zobrazení.</MudText>
                     }
-                </MudGrid>
-            }
-            else
-            {
-                <MudText Color="Color.Secondary" Typo="Typo.body2" Class="mt-2">Žádná videa přiřazena k tomuto tanci.</MudText>
-            }
-        </MudTabPanel>
+                    else
+                    {
+                        @foreach (var number in DanceNumbers)
+                        {
+                            <MudPaper Outlined="true" Class="pa-3 mb-2">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                    <MudIcon Icon="@Icons.Material.Filled.MusicNote" Size="Size.Small" Color="Color.Secondary"/>
+                                    <MudText Typo="Typo.subtitle2">@number.Title</MudText>
+                                    <MudSpacer/>
+                                    <AuthorizeView Roles="Admin">
+                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit"
+                                                       OnClick="() => OpenDanceNumberDialog(number)"/>
+                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       OnClick="() => DeleteDanceNumber(number.Id)"/>
+                                    </AuthorizeView>
+                                </MudStack>
+                                @if (!string.IsNullOrWhiteSpace(number.Description))
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1 ml-6">@number.Description</MudText>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(number.Lyrics))
+                                {
+                                    <MudExpansionPanels Class="mt-2" Elevation="0">
+                                        <MudExpansionPanel Text="Texty písní" Dense="true">
+                                            <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@number.Lyrics</MudText>
+                                        </MudExpansionPanel>
+                                    </MudExpansionPanels>
+                                }
+                            </MudPaper>
+                        }
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
 
-    </MudTabs>
+        <!-- ─── Videa (jen pokud existují) ─── -->
+        @if (Model.Videos.Count > 0)
+        {
+            <MudItem xs="12">
+                <MudCard Elevation="2">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.VideoLibrary" Color="Color.Primary"/>
+                                <MudText Typo="Typo.h6">Videa</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    Správa videí v sekci <MudLink Href="@(NavigationManager.BaseUri + "Admin/Videos")">Video Links</MudLink>
+                                </MudText>
+                            </MudStack>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudGrid Spacing="3">
+                            @foreach (var video in Model.Videos)
+                            {
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudPaper Outlined="true">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="pa-2">
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Primary">@video.Year</MudChip>
+                                            <MudText Typo="Typo.subtitle2">@video.Name</MudText>
+                                            @if (video.IsInternal)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
+                                            }
+                                        </MudStack>
+                                        <div class="demi-video-embed">
+                                            <iframe src="@video.Url" title="@video.Name" allowfullscreen loading="lazy"></iframe>
+                                        </div>
+                                    </MudPaper>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+
+    </MudGrid>
 }
 
 @code {
@@ -171,6 +215,7 @@ else
         if (dance is null) return;
         Model = dance.ToViewModel();
         Model.Videos = dance.Videos.Select(x => x.ToViewModel()).ToList();
+        PageService.SetTitle(Model.Name);
     }
 
     private async Task LoadDanceNumbers()

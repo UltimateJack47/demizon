@@ -10,6 +10,8 @@ public class AttendanceViewModel
 
     public string? Comment { get; set; }
 
+    public AttendanceActivityRole? ActivityRole { get; set; }
+
     public DateTime Date { get; set; }
 
     public int? EventId { get; set; }
@@ -30,6 +32,7 @@ public static class AttendanceMappingExtensions
         Id = entity.Id,
         Attends = entity.Attends,
         Comment = entity.Comment,
+        ActivityRole = entity.ActivityRole,
         Date = entity.Date,
         EventId = entity.EventId,
         MemberId = entity.MemberId,
@@ -42,6 +45,7 @@ public static class AttendanceMappingExtensions
         Id = vm.Id,
         Attends = vm.Attends,
         Comment = vm.Comment,
+        ActivityRole = vm.ActivityRole,
         Date = vm.Date,
         EventId = vm.EventId,
         MemberId = vm.MemberId,

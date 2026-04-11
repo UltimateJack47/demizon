@@ -1,20 +1,29 @@
 @using Demizon.Mvc.ViewModels
 
-<MudDialog>
+<MudDialog Style="min-width: 520px;">
     <TitleContent>
-        <MudText Typo="Typo.h6">
-            @(IsUpdate ? "Upravit" : "Přidat") číslo tance
-        </MudText>
+        <MudText Typo="Typo.h6">@(IsUpdate ? "Upravit" : "Přidat") číslo tance</MudText>
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="Model.Title" Label="Název čísla" Required="true"
-                      RequiredError="Název je povinný!" MaxLength="200" Counter="200" Class="mb-2"/>
-        <MudTextField @bind-Value="Model.Description" Label="Popis (nepovinný)" Lines="3"
-                      MaxLength="2000" Counter="2000" Class="mb-2"/>
-        <MudTextField @bind-Value="Model.Lyrics" Label="Texty písní (nepovinné)" Lines="6"
-                      MaxLength="5000" Counter="5000"
-                      HelperText="Texty písní, které se zpívají při tomto čísle"/>
+        <MudGrid Spacing="2">
+            <MudItem xs="12">
+                <MudTextField @bind-Value="Model.Title" Label="Název čísla" Required="true"
+                              RequiredError="Název je povinný!" MaxLength="200" Counter="200"
+                              Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="Model.Description" Label="Popis (nepovinný)" Lines="3"
+                              MaxLength="2000" Counter="2000"
+                              Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="Model.Lyrics" Label="Texty písní (nepovinné)" Lines="5"
+                              MaxLength="5000" Counter="5000"
+                              HelperText="Texty písní, které se zpívají při tomto čísle"
+                              Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+        </MudGrid>
     </DialogContent>
 
     <DialogActions>

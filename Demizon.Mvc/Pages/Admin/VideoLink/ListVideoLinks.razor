@@ -4,7 +4,7 @@
 @using Demizon.Mvc.ViewModels
 @using Microsoft.EntityFrameworkCore
 
-<PageTitle>Video odkazy</PageTitle>
+<PageTitle>@PageService.GetTitle()</PageTitle>
 
 @inject IVideoLinkService VideoLinkService
 @inject IDialogService DialogService
@@ -14,23 +14,23 @@
 
 <MudTable @ref="VideoLinksGrid" T="VideoLinkViewModel" Items="VideoLinks" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Video odkazy</MudText>
+        <MudText Typo="Typo.subtitle1"><b>Video odkazy</b></MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"></MudIconButton>
         <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary" @onclick="() => OpenFormDialog()">Vytvořit</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>
-            <b>Název</b>
+            <MudTableSortLabel SortBy="new Func<VideoLinkViewModel, object>(x => x.Name)"><b>Název</b></MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <b>Rok</b>
+            <MudTableSortLabel SortBy="new Func<VideoLinkViewModel, object>(x => x.Year)" InitialDirection="SortDirection.Descending"><b>Rok</b></MudTableSortLabel>
         </MudTh>
         <MudTh>
             <b>URL</b>
         </MudTh>
         <MudTh>
-            <b>Veřejné?</b>
+            <b>Veřejné</b>
         </MudTh>
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
@@ -39,19 +39,15 @@
         <MudTd>@videoLink.Year</MudTd>
         <MudTd>@videoLink.Url</MudTd>
         <MudTd>
-            @if (videoLink.IsVisible)
-            {
-                <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Success"></MudIcon>
-            }
-            else
-            {
-                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Color="Color.Error"></MudIcon>
-            }
+            <MudIcon Icon="@(videoLink.IsVisible ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                     Color="@(videoLink.IsVisible ? Color.Success : Color.Error)"/>
         </MudTd>
         <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(videoLink)"/>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(videoLink.Id)"/>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveVideoLink(videoLink.Id)"/>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Style="white-space: nowrap;">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility" OnClick="() => NavigateToDetail(videoLink.Id)" title="Detail"/>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(videoLink)"/>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" OnClick="() => RemoveVideoLink(videoLink.Id)"/>
+            </MudStack>
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -64,6 +60,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        PageService.SetTitle("Video odkazy");
         VideoLinks = (await VideoLinkService.GetAll().OrderByDescending(x => x.Year).ToListAsync()).Select(x => x.ToViewModel()).ToList();
     }
 

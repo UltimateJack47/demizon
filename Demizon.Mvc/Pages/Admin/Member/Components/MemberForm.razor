@@ -2,64 +2,129 @@
 @using Demizon.Core.Services.FileUpload
 @using Demizon.Core.Services.Member
 @using Demizon.Dal.Entities
+@using Demizon.Mvc.Helpers
 @using Demizon.Mvc.ViewModels
 @using Color = MudBlazor.Color
-<MudDialog>
+<MudDialog Style="min-width: 520px;">
     <TitleContent>
-        <MudText
-            Typo="Typo.h6">
+        <MudText Typo="Typo.h6">
             @(IsUpdate ? "Upravit" : "Vytvořit") - Člen
         </MudText>
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="Model.Name" T="string" Label="Jméno" Required="true" RequiredError="Jméno je povinné!"/>
-        <MudTextField @bind-Value="Model.Surname" T="string" Label="Příjmení"/>
-        <MudTextField @bind-Value="Model.Login" T="string" Label="Login" Required="true" RequiredError="Login je povinný!"/>
-        <MudTextField @bind-Value="Model.Email" T="string" Label="E-mail" Required="true" RequiredError="E-mail je povinný!"/>
-        @if ((IsUpdate && (Model.Id == LoggedUser.Id)) || !IsUpdate)
-        {
-            <MudTextField @bind-Value="Model.Password" T="string" Label="Heslo"
-                          Variant="Variant.Text" InputType="@_passwordInput" Adornment="Adornment.End"
-                          AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="ChangeIsShow" Required="true"
-                          RequiredError="Heslo je povinné!"/>
-        }
-        <MudDatePicker @bind-Date="Model.MemberSince" Label="Členem od"
-                       Clearable="true" Editable="true" MaxDate="DateTime.Today"/>
-        <MudDatePicker @bind-Date="Model.BirthDate" Label="Narozeniny"
-                       Clearable="true" Editable="true" MaxDate="DateTime.Today"/>
-        <MudSelect @bind-Value="Model.Gender" Label="Pohlaví" T="Gender">
-            @foreach (Gender item in Enum.GetValues(typeof(Gender)))
+        <MudGrid Spacing="2">
+            <MudItem xs="6">
+                <MudTextField @bind-Value="Model.Name" T="string" Label="Jméno" Required="true" RequiredError="Jméno je povinné!"
+                              Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField @bind-Value="Model.Surname" T="string" Label="Příjmení"
+                              Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+            @if (!Model.IsExternal)
             {
-                <MudSelectItem Value="@item">@item</MudSelectItem>
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="Model.Login" T="string" Label="Login" Required="true" RequiredError="Login je povinný!"
+                                  Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="Model.Email" T="string" Label="E-mail" Required="true" RequiredError="E-mail je povinný!"
+                                  Variant="Variant.Outlined" Margin="Margin.Dense"
+                                  Validation="@((Func<string?, string?>)ValidationHelpers.ValidateEmail)"/>
+                </MudItem>
+                @if ((IsUpdate && (Model.Id == LoggedUser.Id)) || !IsUpdate)
+                {
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="Model.Password" T="string"
+                                      Label="@(IsUpdate ? "Nové heslo (ponech prázdné pro zachování)" : "Heslo")"
+                                      Variant="Variant.Outlined" Margin="Margin.Dense"
+                                      InputType="@_passwordInput" Adornment="Adornment.End"
+                                      AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="ChangeIsShow"
+                                      Required="@(!IsUpdate)" RequiredError="Heslo je povinné!"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_passwordConfirm" T="string"
+                                      Label="@(IsUpdate ? "Nové heslo znovu" : "Heslo znovu")"
+                                      Variant="Variant.Outlined" Margin="Margin.Dense"
+                                      InputType="@_passwordInput" Adornment="Adornment.End"
+                                      AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="ChangeIsShow"
+                                      Required="@(!IsUpdate)" RequiredError="Heslo je povinné!"
+                                      Error="@PasswordMismatch" ErrorText="Hesla se neshodují"
+                                      Disabled="@(string.IsNullOrEmpty(Model.Password))"/>
+                    </MudItem>
+                }
             }
-        </MudSelect>
-
-        <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile" Accept="image/*">
-            <CustomContent Context="upload">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.CloudUpload"
-                           OnClick="@upload.OpenFilePickerAsync">
-                    Nahrát profilovku
-                </MudButton>
-            </CustomContent>
-        </MudFileUpload>
-        @if (File is not null)
-        {
-            <MudList T="string">
-                <MudListItem T="string" Icon="@Icons.Material.Filled.AttachFile" @key="@File">
-                    @File.Name <code>@File.Size bytes</code>
-                    <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" OnClick="RemoveFile"></MudIconButton>
-                </MudListItem>
-            </MudList>
-        }
-        @if (LoggedUser.Role == UserRole.Admin)
-        {
-            <MudCheckBox @bind-Value="Model.IsVisible" Label="Veřejné?"/>
-            <MudCheckBox @bind-Value="Model.IsAttendanceVisible" Label="Zobrazovat v docházce"/>
-        }
-
+            <MudItem xs="6">
+                <MudDatePicker @bind-Date="Model.MemberSince" Label="Členem od"
+                               Clearable="true" Editable="true" MaxDate="DateTime.Today"
+                               Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+            <MudItem xs="6">
+                <MudDatePicker @bind-Date="Model.BirthDate" Label="Narozeniny"
+                               Clearable="true" Editable="true" MaxDate="DateTime.Today"
+                               Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+            <MudItem xs="6">
+                <MudSelect @bind-Value="Model.Gender" Label="Pohlaví" T="Gender"
+                           Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (Gender item in Enum.GetValues(typeof(Gender)))
+                    {
+                        <MudSelectItem Value="@item">@item</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" Class="d-flex align-center">
+                <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile" Accept="image/*">
+                    <CustomContent Context="upload">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.CloudUpload"
+                                   OnClick="@upload.OpenFilePickerAsync" Style="width: 100%;">
+                            Profilovka
+                        </MudButton>
+                    </CustomContent>
+                </MudFileUpload>
+            </MudItem>
+            @if (File is not null)
+            {
+                <MudItem xs="12">
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.AttachFile" @key="@File">
+                            @File.Name <code>@File.Size bytes</code>
+                            <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" OnClick="RemoveFile" Size="Size.Small"/>
+                        </MudListItem>
+                    </MudList>
+                </MudItem>
+            }
+            @if (LoggedUser.Role == UserRole.Admin)
+            {
+                <MudItem xs="12">
+                    <MudDivider Class="my-1"/>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">Nastavení admina</MudText>
+                    <MudGrid Spacing="0">
+                        <MudItem xs="12">
+                            <MudCheckBox T="bool" Value="Model.IsExternal" Label="Externista (zastupující člen)"
+                                         Color="Color.Warning" ValueChanged="OnIsExternalChanged"/>
+                        </MudItem>
+                        @if (!Model.IsExternal)
+                        {
+                            <MudItem xs="6">
+                                <MudCheckBox @bind-Value="Model.IsVisible" Label="Veřejné" Color="Color.Primary"/>
+                            </MudItem>
+                        }
+                        <MudItem xs="6">
+                            <MudCheckBox @bind-Value="Model.IsAttendanceVisible" Label="Zobrazovat v docházce" Color="Color.Primary"/>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudCheckBox @bind-Value="Model.IsDancer" Label="Tanec" Color="Color.Primary"/>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudCheckBox @bind-Value="Model.IsMusician" Label="Muzika" Color="Color.Primary"/>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+            }
+        </MudGrid>
     </DialogContent>
 
     <DialogActions>
@@ -88,6 +153,12 @@
     bool _isShow;
     InputType _passwordInput = InputType.Password;
     string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private string _passwordConfirm = string.Empty;
+    private bool PasswordMismatch =>
+        !string.IsNullOrEmpty(Model.Password) &&
+        !string.IsNullOrEmpty(_passwordConfirm) &&
+        Model.Password != _passwordConfirm;
+
     private IBrowserFile? File { get; set; }
 
     protected override void OnInitialized()
@@ -98,6 +169,15 @@
 
     private async Task ClickedOk()
     {
+        if (!string.IsNullOrEmpty(Model.Password) && Model.Password != _passwordConfirm)
+        {
+            Snackbar.Add("Hesla se neshodují.", Severity.Error);
+            return;
+        }
+
+        if (!Model.IsExternal && ValidationHelpers.ValidateEmail(Model.Email) is not null)
+            return;
+
         try
         {
             var dbModel = Model.ToEntity();
@@ -170,6 +250,30 @@
             _isShow = true;
             _passwordInputIcon = Icons.Material.Filled.Visibility;
             _passwordInput = InputType.Text;
+        }
+    }
+
+    private string? _originalLogin;
+    private string? _originalPassword;
+
+    private void OnIsExternalChanged(bool value)
+    {
+        Model.IsExternal = value;
+        if (value)
+        {
+            _originalLogin = Model.Login;
+            _originalPassword = Model.Password;
+            Model.IsVisible = false;
+            Model.Login = $"ext-{Guid.NewGuid():N}"[..16];
+            Model.Password = Guid.NewGuid().ToString("N");
+            Model.Email = null;
+        }
+        else
+        {
+            Model.Login = _originalLogin ?? Model.Login;
+            Model.Password = _originalPassword;
+            _originalLogin = null;
+            _originalPassword = null;
         }
     }
 

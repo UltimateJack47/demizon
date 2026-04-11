@@ -12,12 +12,52 @@
 @attribute [Authorize(Roles = "Admin, Standard")]
 
 @layout AdminMainLayout
-<PageTitle>Členové</PageTitle>
+<PageTitle>@PageService.GetTitle()</PageTitle>
 
-<MudTable @ref="MembersGrid" T="MemberViewModel" Items="Members" Hover="true" Striped="true" FixedHeader="true" Height="900px">
+<MudTable @ref="MembersGrid" T="MemberViewModel" Items="FilteredMembers" Hover="true" Striped="true" FixedHeader="true" Height="900px">
     <ToolBarContent>
-        <MudText Typo="Typo.h3">Členové</MudText>
+        <MudText Typo="Typo.subtitle1"><b>Členové</b></MudText>
         <MudSpacer/>
+        <MudTextField @bind-Value="SearchText" Placeholder="Hledat jméno, login…"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Small" Immediate="true" DebounceInterval="200"
+                      Clearable="true" Style="max-width: 220px;" Class="mr-2"/>
+        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Class="mr-2">
+            <MudTooltip Text="@(FilterVisible ? "Filtr: jen veřejní" : "Všichni (veřejnost)")">
+                <MudToggleIconButton @bind-Toggled="FilterVisible"
+                                     Icon="@Icons.Material.Outlined.Visibility"
+                                     ToggledIcon="@Icons.Material.Filled.Visibility"
+                                     Color="Color.Default"
+                                     ToggledColor="Color.Primary"
+                                     Size="Size.Medium"
+                                     title="Jen veřejné"/>
+            </MudTooltip>
+            <MudTooltip Text="@(FilterAttendance ? "Filtr: jen v docházce" : "Všichni (docházka)")">
+                <MudToggleIconButton @bind-Toggled="FilterAttendance"
+                                     Icon="@Icons.Material.Outlined.HowToReg"
+                                     ToggledIcon="@Icons.Material.Filled.HowToReg"
+                                     Color="Color.Default"
+                                     ToggledColor="Color.Primary"
+                                     Size="Size.Medium"
+                                     title="Jen v docházce"/>
+            </MudTooltip>
+            <MudTooltip Text="@(FilterExternal ? "Filtr: jen externisté" : "Všichni (ext.)")">
+                <MudToggleIconButton @bind-Toggled="FilterExternal"
+                                     Icon="@Icons.Material.Outlined.PersonOff"
+                                     ToggledIcon="@Icons.Material.Filled.PersonOff"
+                                     Color="Color.Default"
+                                     ToggledColor="Color.Warning"
+                                     Size="Size.Medium"
+                                     title="Jen externisté"/>
+            </MudTooltip>
+        </MudStack>
+        @if (HasActiveFilters)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" OnClick="ClearFilters"
+                     Icon="@Icons.Material.Filled.FilterAltOff" Class="mr-1">
+                @FilteredMembers.Count() / @Members.Count
+            </MudChip>
+        }
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"/>
         <AuthorizeView Roles="Admin">
             <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary"
@@ -28,14 +68,26 @@
     </ToolBarContent>
 
     <HeaderContent>
-        <MudTh><b>Jméno</b></MudTh>
-        <MudTh><b>Příjmení</b></MudTh>
-        <MudTh><b>Login</b></MudTh>
-        <MudTh><b>E-mail</b></MudTh>
-        <MudTh><b>Členem od</b></MudTh>
-        <MudTh><b>Veřejné?</b></MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<MemberViewModel, object>(x => x.Name)"><b>Jméno</b></MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<MemberViewModel, object>(x => x.Surname)"><b>Příjmení</b></MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<MemberViewModel, object>(x => x.Login)"><b>Login</b></MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<MemberViewModel, object>(x => x.Email ?? string.Empty)"><b>E-mail</b></MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<MemberViewModel, object>(x => x.MemberSince ?? DateTime.MinValue)" InitialDirection="SortDirection.Ascending"><b>Členem od</b></MudTableSortLabel>
+        </MudTh>
+        <MudTh><b>Veřejné</b></MudTh>
         <MudTh><b>Docházka</b></MudTh>
-        <MudTh Style="width: 100px"></MudTh>
+        <MudTh><b>Ext.</b></MudTh>
+        <MudTh><b>Role</b></MudTh>
+        <MudTh Style="width: 120px"></MudTh>
     </HeaderContent>
 
     <RowTemplate Context="member">
@@ -45,7 +97,7 @@
         <MudTd>@member.Email</MudTd>
         <MudTd>@member.MemberSince?.ToShortDateString()</MudTd>
         <MudTd>
-            <MudIcon Icon="@(member.IsVisible ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+            <MudIcon Icon="@(member.IsVisible ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
                      Color="@(member.IsVisible ? Color.Success : Color.Error)"/>
         </MudTd>
         <MudTd>
@@ -54,15 +106,36 @@
                      title="@(member.IsAttendanceVisible ? "Zobrazuje se v docházce" : "Skryto v docházce")"/>
         </MudTd>
         <MudTd>
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.List" OnClick="() => NavigateToDetail(member.Id)"/>
-            @if (member.Id == LoggedUser.Id || LoggedUser.Role == UserRole.Admin)
+            @if (member.IsExternal)
             {
-                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(member)"/>
+                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text"
+                         Icon="@Icons.Material.Filled.PersonOff" title="Externista">ext</MudChip>
             }
-            @if (LoggedUser.Role == UserRole.Admin && member.Id != LoggedUser.Id)
-            {
-                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="() => RemoveMember(member.Id)"/>
-            }
+        </MudTd>
+        <MudTd>
+            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Style="flex-wrap: wrap;">
+                @if (member.IsDancer)
+                {
+                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.DirectionsRun" Color="Color.Primary" Variant="Variant.Text">Tanec</MudChip>
+                }
+                @if (member.IsMusician)
+                {
+                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.MusicNote" Color="Color.Secondary" Variant="Variant.Text">Muzika</MudChip>
+                }
+            </MudStack>
+        </MudTd>
+        <MudTd>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Style="white-space: nowrap;">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility" OnClick="() => NavigateToDetail(member.Id)" title="Detail"/>
+                @if (member.Id == LoggedUser.Id || LoggedUser.Role == UserRole.Admin)
+                {
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(member)"/>
+                }
+                @if (LoggedUser.Role == UserRole.Admin && member.Id != LoggedUser.Id)
+                {
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="() => RemoveMember(member.Id)"/>
+                }
+            </MudStack>
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -77,8 +150,34 @@
 
     private MudTable<MemberViewModel> MembersGrid { get; set; } = null!;
 
+    // --- Filtry ---
+    private string SearchText { get; set; } = "";
+    private bool FilterVisible { get; set; } = false;
+    private bool FilterAttendance { get; set; } = false;
+    private bool FilterExternal { get; set; } = false;
+
+    private bool HasActiveFilters => FilterVisible || FilterAttendance || FilterExternal || !string.IsNullOrEmpty(SearchText);
+
+    private IEnumerable<MemberViewModel> FilteredMembers => Members
+        .Where(m => string.IsNullOrEmpty(SearchText) ||
+                    m.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                    m.Surname.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                    m.Login.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+        .Where(m => !FilterVisible || m.IsVisible)
+        .Where(m => !FilterAttendance || m.IsAttendanceVisible)
+        .Where(m => !FilterExternal || m.IsExternal);
+
+    private void ClearFilters()
+    {
+        SearchText = "";
+        FilterVisible = false;
+        FilterAttendance = false;
+        FilterExternal = false;
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        PageService.SetTitle("Členové");
         Members = (await MemberService.GetAll().ToListAsync()).Select(x => x.ToViewModel()).ToList();
         var loggedUserLogin = AuthenticationState?.Result.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
         LoggedUser = MemberService.GetOneByLogin(loggedUserLogin)!.ToViewModel();

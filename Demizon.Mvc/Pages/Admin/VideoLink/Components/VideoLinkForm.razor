@@ -1,50 +1,48 @@
-﻿@using Demizon.Mvc.ViewModels
-<MudDialog>
+@using Demizon.Mvc.ViewModels
+<MudDialog Style="min-width: 480px;">
     <TitleContent>
-        <MudText Typo="Typo.h6">@Localizer[nameof(DemizonLocales.VideoLink)] - @Localizer[nameof(DemizonLocales.Form)]</MudText>
+        <MudText Typo="Typo.h6">@(IsUpdate ? "Upravit" : "Vytvořit") - Video</MudText>
     </TitleContent>
 
     <DialogContent>
-        <MudTextField @bind-Value="Model.Name" Label="@Localizer[nameof(DemizonLocales.Name)]" Required="true" RequiredError="Name is required!"/>
-        <MudTextField @bind-Value="Model.Url" Label="Url" Required="true" RequiredError="URL is required!"/>
-        <MudTextField @bind-Value="Model.Year" Label="@Localizer[nameof(DemizonLocales.Year)]" Required="true" RequiredError="Year is required!"/>
-        <MudCheckBox @bind-Value="Model.IsVisible" Label="@Localizer[nameof(DemizonLocales.IsVisible)]"/>
+        <MudGrid Spacing="2">
+            <MudItem xs="8">
+                <MudTextField @bind-Value="Model.Name" Label="Název"
+                              Required="true" RequiredError="Název je povinný!"
+                              Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+            <MudItem xs="4">
+                <MudTextField @bind-Value="Model.Year" Label="Rok"
+                              Required="true" RequiredError="Rok je povinný!"
+                              Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="Model.Url" Label="URL (embed odkaz)"
+                              Required="true" RequiredError="URL je povinné!"
+                              Variant="Variant.Outlined" Margin="Margin.Dense"
+                              HelperText="Vložte embed URL z YouTube/Vimea"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudDivider Class="my-1"/>
+                <MudCheckBox @bind-Value="Model.IsVisible" Label="Veřejné" Color="Color.Primary"/>
+            </MudItem>
+        </MudGrid>
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="Cancel">@Localizer[nameof(DemizonLocales.Cancel)]</MudButton>
+        <MudButton OnClick="Cancel">Zrušit</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">
-            @if (IsUpdate)
-            {
-                <span>@Localizer[nameof(DemizonLocales.Update)]</span>
-            }
-            else
-            {
-                <span>@Localizer[nameof(DemizonLocales.Create)]</span>
-            }
+            @(IsUpdate ? "Uložit" : "Vytvořit")
         </MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
 
-    [CascadingParameter]
-    IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public bool IsUpdate { get; set; }
+    [Parameter] public VideoLinkViewModel Model { get; set; } = new();
 
-    [Parameter]
-    public bool IsUpdate { get; set; }
-
-    [Parameter]
-    public VideoLinkViewModel Model { get; set; } = new();
-
-    private void Cancel()
-    {
-        MudDialog.Cancel();
-    }
-
-    private void ClickedOk()
-    {
-        MudDialog.Close(DialogResult.Ok(Model));
-    }
-
+    private void Cancel() => MudDialog.Cancel();
+    private void ClickedOk() => MudDialog.Close(DialogResult.Ok(Model));
 }

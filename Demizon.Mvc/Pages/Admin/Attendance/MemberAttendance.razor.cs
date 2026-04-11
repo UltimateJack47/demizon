@@ -44,13 +44,21 @@ public partial class MemberAttendance : ComponentBase
 
     private IEnumerable<MemberViewModel> FilteredFemales =>
         TableMembers
+            .Where(x => !x.IsExternal)
             .Where(x => x.Gender == Gender.Female)
             .Where(x => GenderFilter == null || x.Gender == GenderFilter)
             .Where(x => ShowAttendanceHidden || x.IsAttendanceVisible);
 
     private IEnumerable<MemberViewModel> FilteredMales =>
         TableMembers
+            .Where(x => !x.IsExternal)
             .Where(x => x.Gender == Gender.Male)
+            .Where(x => GenderFilter == null || x.Gender == GenderFilter)
+            .Where(x => ShowAttendanceHidden || x.IsAttendanceVisible);
+
+    private IEnumerable<MemberViewModel> FilteredExternals =>
+        TableMembers
+            .Where(x => x.IsExternal)
             .Where(x => GenderFilter == null || x.Gender == GenderFilter)
             .Where(x => ShowAttendanceHidden || x.IsAttendanceVisible);
 
@@ -125,9 +133,9 @@ public partial class MemberAttendance : ComponentBase
 
     private async Task LoadTableData()
     {
-        // Načteme všechny viditelné členy (IsVisible = zobrazuje se na webu)
+        // Načteme viditelné členy a externisty
         TableMembers = MemberService.GetAll()
-            .Where(x => x.IsVisible)
+            .Where(x => x.IsVisible || x.IsExternal)
             .ToList()
             .Select(x => x.ToViewModel())
             .ToList();
@@ -156,6 +164,36 @@ public partial class MemberAttendance : ComponentBase
         members.SelectMany(x => x.Attendances)
             .Where(y => y.Date == date)
             .Count(y => y.Attends);
+
+    // Počítá ženy označené jako tanečnice, které jsou přítomné.
+    // Pokud je členka zároveň muzikantka, počítá se jako tanečnice jen pokud má ActivityRole = Dancer.
+    private int CountAttendingFemaleDancers(DateTime date) =>
+        FilteredFemales
+            .Concat(FilteredExternals.Where(x => x.Gender == Gender.Female))
+            .Where(m => m.IsDancer)
+            .Count(m => m.Attendances.Any(a =>
+                a.Date == date && a.Attends &&
+                (!m.IsMusician || a.ActivityRole == AttendanceActivityRole.Dancer)));
+
+    // Totéž pro muže tanečníky.
+    private int CountAttendingMaleDancers(DateTime date) =>
+        FilteredMales
+            .Concat(FilteredExternals.Where(x => x.Gender == Gender.Male))
+            .Where(m => m.IsDancer)
+            .Count(m => m.Attendances.Any(a =>
+                a.Date == date && a.Attends &&
+                (!m.IsMusician || a.ActivityRole == AttendanceActivityRole.Dancer)));
+
+    // Počítá všechny přítomné muzikanty (obě pohlaví).
+    // Pokud je muzikant zároveň tanečník, počítá se jako muzikant jen pokud ActivityRole != Dancer (nebo null = default).
+    private int CountAttendingMusicians(DateTime date) =>
+        TableMembers
+            .Where(x => x.IsMusician)
+            .Where(x => GenderFilter == null || x.Gender == GenderFilter)
+            .Where(x => ShowAttendanceHidden || x.IsAttendanceVisible)
+            .Count(m => m.Attendances.Any(a =>
+                a.Date == date && a.Attends &&
+                (!m.IsDancer || a.ActivityRole != AttendanceActivityRole.Dancer)));
 
     private async Task PreviousMonth()
     {
@@ -194,6 +232,7 @@ public partial class MemberAttendance : ComponentBase
         if (existing is not null)
         {
             model.Event = col.Event;
+            model.Member = member;
         }
 
         await SaveAttendanceAsync(model, refreshUserData: false);

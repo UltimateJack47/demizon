@@ -1,23 +1,151 @@
-﻿@page "/Videos/Detail/{Id:int}"
+@page "/Videos/Detail/{Id:int}"
 @using Demizon.Core.Services.VideoLink
+@using Demizon.Mvc.Pages.Admin.VideoLink.Components
 @using Demizon.Mvc.ViewModels
 
-@inject IVideoLinkService VideoLinkService;
+@inject IVideoLinkService VideoLinkService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 @layout AdminMainLayout
+@attribute [Authorize(Roles = "Admin, Standard")]
 
-<MudText>VideoLink detail page of model with name: @Model.Name</MudText>
-<MudText>URL: @Model.Url</MudText>
-<MudText>@Localizer[nameof(DemizonLocales.Year)]: @Model.Year</MudText>
-<MudText>@Localizer[nameof(DemizonLocales.IsVisible)]: @Model.IsVisible</MudText>
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+@if (!_loaded)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary"/>
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack"/>
+        <MudText Typo="Typo.h5">@Model.Name</MudText>
+        <MudChip T="string" Size="Size.Small" Color="Color.Primary">@Model.Year</MudChip>
+        @if (Model.IsInternal)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
+        }
+        <MudSpacer/>
+        <AuthorizeView Roles="Admin">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                           OnClick="OpenEditDialog" title="Upravit video"/>
+        </AuthorizeView>
+    </MudStack>
+
+    <MudGrid Spacing="3">
+
+        <!-- ─── Embed videa ─── -->
+        <MudItem xs="12" md="8">
+            <MudCard Elevation="2">
+                <div class="demi-video-embed">
+                    <iframe src="@Model.Url" title="@Model.Name" allowfullscreen loading="lazy"></iframe>
+                </div>
+            </MudCard>
+        </MudItem>
+
+        <!-- ─── Info karta ─── -->
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="2" Style="height: 100%;">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.VideoLibrary" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6">Informace</MudText>
+                        </MudStack>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.Title" IconColor="Color.Default">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Název</MudText>
+                                <MudText Typo="Typo.body2">@Model.Name</MudText>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.CalendarToday" IconColor="Color.Default">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Rok</MudText>
+                                <MudText Typo="Typo.body2">@Model.Year</MudText>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.Link" IconColor="Color.Default">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Embed URL</MudText>
+                                <MudText Typo="Typo.body2" Style="word-break: break-all; font-size: 0.75rem;">@Model.Url</MudText>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.Visibility" IconColor="Color.Default">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.body2">Viditelné na webu</MudText>
+                                <MudIcon Icon="@(Model.IsVisible ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                         Color="@(Model.IsVisible ? Color.Success : Color.Error)" Size="Size.Small"/>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.Lock" IconColor="Color.Default">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.body2">Interní (jen pro členy)</MudText>
+                                <MudIcon Icon="@(Model.IsInternal ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                         Color="@(Model.IsInternal ? Color.Warning : Color.Default)" Size="Size.Small"/>
+                            </MudStack>
+                        </MudListItem>
+                        @if (Model.Dance is not null)
+                        {
+                            <MudDivider/>
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.DirectionsRun" IconColor="Color.Default">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Přiřazený tanec</MudText>
+                                    <MudLink Href="@($"/Dances/Detail/{Model.DanceId}")" Typo="Typo.body2">@Model.Dance.Name</MudLink>
+                                </MudStack>
+                            </MudListItem>
+                        }
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+    </MudGrid>
+}
 
 @code {
-    [Parameter]
-    public int Id { get; set; }
+    [Parameter] public int Id { get; set; }
 
     private VideoLinkViewModel Model { get; set; } = new();
-    
+    private bool _loaded = false;
+
     protected override async Task OnInitializedAsync()
     {
-        Model = (await VideoLinkService.GetOneAsync(Id)).ToViewModel();
+        var entity = await VideoLinkService.GetOneAsync(Id);
+        Model = entity.ToViewModel();
+        if (entity.Dance is not null)
+            Model.Dance = entity.Dance.ToViewModel();
+        PageService.SetTitle(Model.Name);
+        _loaded = true;
     }
+
+    private async Task OpenEditDialog()
+    {
+        var parameters = new DialogParameters { { "IsUpdate", true }, { "Model", Model } };
+        var dialog = await DialogService.ShowAsync<VideoLinkForm>("Upravit video", parameters);
+        var result = await dialog.Result;
+        if (!result!.Canceled)
+        {
+            var updated = result.Data as VideoLinkViewModel;
+            try
+            {
+                await VideoLinkService.UpdateAsync(Id, updated!.ToEntity());
+                Snackbar.Add("Video bylo aktualizováno.", Severity.Success);
+                await OnInitializedAsync();
+            }
+            catch
+            {
+                Snackbar.Add("Chyba při ukládání.", Severity.Error);
+            }
+        }
+    }
+
+    private void GoBack() => NavigationManager.NavigateTo(NavigationManager.BaseUri + "Admin/Videos");
 }

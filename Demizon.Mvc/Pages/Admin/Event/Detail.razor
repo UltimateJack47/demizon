@@ -1,0 +1,278 @@
+@page "/Events/Detail/{Id:int}"
+@using Demizon.Core.Services.Event
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.Pages.Admin.Event.Components
+@using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
+
+@inject IEventService EventService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@layout AdminMainLayout
+@attribute [Authorize(Roles = "Admin, Standard")]
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+@if (!_loaded)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary"/>
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4" Wrap="Wrap.Wrap">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack"/>
+        <MudText Typo="Typo.h5">@Model.Name</MudText>
+        @if (Model.IsCancelled)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Error"
+                     Icon="@Icons.Material.Filled.Cancel">Zrušena</MudChip>
+        }
+        @if (!Model.IsPublic)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined"
+                     Icon="@Icons.Material.Filled.VisibilityOff">Neveřejná</MudChip>
+        }
+        <MudSpacer/>
+        <AuthorizeView Roles="Admin">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                           OnClick="OpenEditDialog" title="Upravit akci"/>
+        </AuthorizeView>
+    </MudStack>
+
+    <MudGrid Spacing="3">
+
+        <!-- ─── Info o akci ─── -->
+        <MudItem xs="12" md="8">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Event" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6">Detail akce</MudText>
+                        </MudStack>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.DateRange" IconColor="Color.Default">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Datum</MudText>
+                                <MudText Typo="Typo.body2">
+                                    @if (Model.DateFrom.Date == Model.DateTo.Date)
+                                    {
+                                        @Model.DateFrom.ToString("d. MMMM yyyy")
+                                    }
+                                    else
+                                    {
+                                        @($"{Model.DateFrom:d. MMMM yyyy} – {Model.DateTo:d. MMMM yyyy}")
+                                    }
+                                </MudText>
+                            </MudStack>
+                        </MudListItem>
+                        @if (!string.IsNullOrWhiteSpace(Model.Place))
+                        {
+                            <MudDivider/>
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Place" IconColor="Color.Default">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Místo</MudText>
+                                    <MudText Typo="Typo.body2">@Model.Place</MudText>
+                                </MudStack>
+                            </MudListItem>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Information))
+                        {
+                            <MudDivider/>
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Info" IconColor="Color.Default">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Informace</MudText>
+                                    <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@Model.Information</MudText>
+                                </MudStack>
+                            </MudListItem>
+                        }
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- ─── Nastavení ─── -->
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Settings" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6">Nastavení</MudText>
+                        </MudStack>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string" Dense="true">
+                        <MudListItem T="string">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.body2">Veřejná akce</MudText>
+                                <MudIcon Icon="@(Model.IsPublic ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                         Color="@(Model.IsPublic ? Color.Success : Color.Error)" Size="Size.Small"/>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.body2">Zrušena</MudText>
+                                <MudIcon Icon="@(Model.IsCancelled ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                         Color="@(Model.IsCancelled ? Color.Error : Color.Default)" Size="Size.Small"/>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider/>
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.NotificationsActive" IconColor="Color.Default">
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Push notifikace</MudText>
+                                <MudText Typo="Typo.body2">
+                                    @(Model.NotifyBeforeDays.HasValue ? $"{Model.NotifyBeforeDays} dní předem" : "Nevysílat")
+                                </MudText>
+                            </MudStack>
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- ─── Přehled docházky ─── -->
+        @{
+            var attending = _attendances.Where(a => a.Attends).ToList();
+            var notAttending = _attendances.Where(a => !a.Attends).ToList();
+        }
+        @if (_attendances.Count > 0)
+        {
+            <MudItem xs="12">
+                <MudCard Elevation="2">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary"/>
+                                <MudText Typo="Typo.h6">Docházka</MudText>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success">
+                                    @attending.Count přijde
+                                </MudChip>
+                                @if (notAttending.Count > 0)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">
+                                        @notAttending.Count nepřijde
+                                    </MudChip>
+                                }
+                            </MudStack>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudGrid Spacing="3">
+                            @if (attending.Count > 0)
+                            {
+                                <MudItem xs="12" md="6">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Success" Class="mb-2">Účastní se</MudText>
+                                    @foreach (var a in attending.OrderBy(a => a.Member.Surname))
+                                    {
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"/>
+                                            <MudText Typo="Typo.body2">@a.Member.Name @a.Member.Surname</MudText>
+                                            @if (a.ActivityRole == AttendanceActivityRole.Dancer)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Style="height: 20px;">Tanec</MudChip>
+                                            }
+                                            else if (a.ActivityRole == AttendanceActivityRole.Musician)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Dark" Variant="Variant.Outlined" Style="height: 20px;">Muzika</MudChip>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(a.Comment))
+                                            {
+                                                <MudTooltip Text="@a.Comment">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Comment" Size="Size.Small" Color="Color.Secondary"/>
+                                                </MudTooltip>
+                                            }
+                                        </MudStack>
+                                    }
+                                </MudItem>
+                            }
+                            @if (notAttending.Count > 0)
+                            {
+                                <MudItem xs="12" md="6">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Error" Class="mb-2">Neúčastní se</MudText>
+                                    @foreach (var a in notAttending.OrderBy(a => a.Member.Surname))
+                                    {
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+                                            <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small"/>
+                                            <MudText Typo="Typo.body2">@a.Member.Name @a.Member.Surname</MudText>
+                                            @if (!string.IsNullOrWhiteSpace(a.Comment))
+                                            {
+                                                <MudTooltip Text="@a.Comment">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Comment" Size="Size.Small" Color="Color.Secondary"/>
+                                                </MudTooltip>
+                                            }
+                                        </MudStack>
+                                    }
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+
+    </MudGrid>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private EventViewModel Model { get; set; } = new();
+    private List<AttendanceViewModel> _attendances = [];
+    private bool _loaded = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEvent();
+    }
+
+    private async Task LoadEvent()
+    {
+        var entity = await EventService.GetAll()
+            .Include(e => e.Attendances)
+            .ThenInclude(a => a.Member)
+            .FirstOrDefaultAsync(e => e.Id == Id);
+        if (entity is null) return;
+
+        Model = entity.ToViewModel();
+        _attendances = entity.Attendances
+            .Select(a =>
+            {
+                var vm = a.ToViewModel();
+                vm.Member = a.Member?.ToViewModel() ?? new MemberViewModel();
+                return vm;
+            })
+            .ToList();
+
+        PageService.SetTitle(Model.Name);
+        _loaded = true;
+    }
+
+    private async Task OpenEditDialog()
+    {
+        var parameters = new DialogParameters { { "IsUpdate", true }, { "EventModel", Model } };
+        var dialog = await DialogService.ShowAsync<EventForm>("Upravit akci", parameters);
+        var result = await dialog.Result;
+        if (!result!.Canceled)
+        {
+            if (result.Data is not EventViewModel updated) return;
+            try
+            {
+                await EventService.UpdateAsync(Id, updated.ToEntity());
+                Snackbar.Add("Akce byla aktualizována.", Severity.Success);
+                await LoadEvent();
+            }
+            catch
+            {
+                Snackbar.Add("Chyba při ukládání.", Severity.Error);
+            }
+        }
+    }
+
+    private void GoBack() => NavigationManager.NavigateTo(NavigationManager.BaseUri + "Admin/Events");
+}

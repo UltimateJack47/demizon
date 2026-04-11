@@ -79,8 +79,8 @@
                         </td>
                         @foreach (var col in Attendances)
                         {
-                            <td class="@(col.Event?.IsCancelled == true ? "demi-att-cell demi-att-cell-cancelled" : "demi-att-cell")"
-                                @onclick="@(async () => { if (col.Event?.IsCancelled != true) await SetAttendanceMember(member, col); })">
+                            <td class="@(col.Event?.IsCancelled == true ? "demi-att-cell demi-att-cell-cancelled" : "demi-att-cell") @(!member.IsAttendanceVisible ? "demi-att-cell-readonly" : "")"
+                                @onclick="@(async () => { if (col.Event?.IsCancelled != true && member.IsAttendanceVisible) await SetAttendanceMember(member, col); })">
                                 @{
                                     var day = member.Attendances.FirstOrDefault(x => x.Date == col.Date);
                                 }
@@ -101,6 +101,13 @@
                         <td><b>@CountAttending(FilteredFemales, col.Date)</b></td>
                     }
                 </tr>
+                <tr class="demi-att-activity-row demi-att-dancer-row">
+                    <td class="demi-att-sticky"><b>Σ tanečnice</b></td>
+                    @foreach (var col in Attendances)
+                    {
+                        <td>@CountAttendingFemaleDancers(col.Date)</td>
+                    }
+                </tr>
             }
 
             <!-- Muži -->
@@ -119,8 +126,8 @@
                         </td>
                         @foreach (var col in Attendances)
                         {
-                            <td class="@(col.Event?.IsCancelled == true ? "demi-att-cell demi-att-cell-cancelled" : "demi-att-cell")"
-                                @onclick="@(async () => { if (col.Event?.IsCancelled != true) await SetAttendanceMember(member, col); })">
+                            <td class="@(col.Event?.IsCancelled == true ? "demi-att-cell demi-att-cell-cancelled" : "demi-att-cell") @(!member.IsAttendanceVisible ? "demi-att-cell-readonly" : "")"
+                                @onclick="@(async () => { if (col.Event?.IsCancelled != true && member.IsAttendanceVisible) await SetAttendanceMember(member, col); })">
                                 @{
                                     var day = member.Attendances.FirstOrDefault(x => x.Date == col.Date);
                                 }
@@ -141,7 +148,71 @@
                         <td><b>@CountAttending(FilteredMales, col.Date)</b></td>
                     }
                 </tr>
+                <tr class="demi-att-activity-row demi-att-dancer-row">
+                    <td class="demi-att-sticky"><b>Σ tanečníci</b></td>
+                    @foreach (var col in Attendances)
+                    {
+                        <td>@CountAttendingMaleDancers(col.Date)</td>
+                    }
+                </tr>
             }
+            
+            <!-- Externisté -->
+            @if (FilteredExternals.Any())
+            {
+                <tr>
+                    <td class="demi-att-sticky" colspan="@(Attendances.Count + 1)"
+                        style="background: var(--mud-palette-warning-lighten); font-size:0.75rem; padding: 2px 8px;">
+                        Externisté
+                    </td>
+                </tr>
+                @foreach (var member in FilteredExternals)
+                {
+                    <tr class="@(!member.IsAttendanceVisible ? "demi-att-row-hidden" : "")">
+                        <td class="demi-att-sticky demi-att-name">
+                            @member.Name @member.Surname
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text"
+                                     Style="font-size:0.6rem; height:16px; padding: 0 4px;">ext</MudChip>
+                            @if (!member.IsAttendanceVisible)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.VisibilityOff" Size="Size.Small"
+                                         Style="opacity:0.4; vertical-align: middle; margin-left: 4px;"/>
+                            }
+                        </td>
+                        @foreach (var col in Attendances)
+                        {
+                            <td class="@(col.Event?.IsCancelled == true ? "demi-att-cell demi-att-cell-cancelled" : "demi-att-cell") @(!member.IsAttendanceVisible ? "demi-att-cell-readonly" : "")"
+                                @onclick="@(async () => { if (col.Event?.IsCancelled != true && member.IsAttendanceVisible) await SetAttendanceMember(member, col); })">
+                                @{
+                                    var extDay = member.Attendances.FirstOrDefault(x => x.Date == col.Date);
+                                }
+                                @if (extDay is not null)
+                                {
+                                    <MudIcon Icon="@(extDay.Attends ? Icons.Material.Filled.Check : Icons.Material.Filled.Close)"
+                                             Color="@(extDay.Attends ? Color.Success : Color.Error)"
+                                             Size="Size.Small"/>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+                <tr class="demi-att-sum-row">
+                    <td class="demi-att-sticky"><b>Σ externisté</b></td>
+                    @foreach (var col in Attendances)
+                    {
+                        <td><b>@CountAttending(FilteredExternals, col.Date)</b></td>
+                    }
+                </tr>
+            }
+
+            <!-- Σ muzikanti (vždy, nezávisle na pohlavním filtru) -->
+            <tr class="demi-att-activity-row demi-att-musician-row">
+                <td class="demi-att-sticky"><b>Σ muzikanti</b></td>
+                @foreach (var col in Attendances)
+                {
+                    <td>@CountAttendingMusicians(col.Date)</td>
+                }
+            </tr>
 
             <!-- Celkový součet -->
             @if (GenderFilter == null)
@@ -150,7 +221,7 @@
                     <td class="demi-att-sticky"><b>Σ celkem</b></td>
                     @foreach (var col in Attendances)
                     {
-                        <td><b>@CountAttending(FilteredFemales.Concat(FilteredMales), col.Date)</b></td>
+                        <td><b>@CountAttending(FilteredFemales.Concat(FilteredMales).Concat(FilteredExternals), col.Date)</b></td>
                     }
                 </tr>
             }

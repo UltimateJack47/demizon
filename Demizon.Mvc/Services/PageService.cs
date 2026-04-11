@@ -2,7 +2,7 @@
 
 public class PageService
 {
-    private const string BasePageTitle = "FS Demižón - Strážnice";
+    private const string BasePageTitle = "FS Demižón";
 
     private string? PageTitle { get; set; }
 

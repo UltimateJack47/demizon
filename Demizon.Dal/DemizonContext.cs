@@ -41,6 +41,9 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(s => s.Role).HasConversion<string>().IsRequired();
             b.Property(m => m.IsVisible).IsRequired();
             b.Property(m => m.IsAttendanceVisible).HasDefaultValue(true).IsRequired();
+            b.Property(m => m.IsDancer).HasDefaultValue(false).IsRequired();
+            b.Property(m => m.IsMusician).HasDefaultValue(false).IsRequired();
+            b.Property(m => m.IsExternal).HasDefaultValue(false).IsRequired();
             b.Property(m => m.Gender).HasConversion<string>().IsRequired();
             b.HasMany(m => m.Photos)
                 .WithOne(f => f.Member)
@@ -128,6 +131,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
                 .HasForeignKey(x => x.EventId);
             b.Property(s => s.Date).IsRequired();
             b.Property(s => s.Attends).HasDefaultValue(false).IsRequired();
+            b.Property(s => s.ActivityRole).HasConversion<string>();
             b.Property(s => s.MemberId).IsRequired();
         });
 
