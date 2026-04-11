@@ -3,13 +3,10 @@
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
 <MudLayout>
-    <MudAppBar Elevation="2" Dense="false">
+    <MudAppBar Elevation="2" Dense="true">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
                        Edge="Edge.Start" OnClick="@(_ => DrawerToggle())"
                        aria-label="Otevřít navigační menu"/>
-        <MudText Typo="Typo.h6" Class="ml-2 d-none d-sm-flex" Style="letter-spacing: 0.05em;">
-            FS Demižón
-        </MudText>
         <MudSpacer/>
         <MudIconButton Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" Size="Size.Small"
                        title="Jazyk / Language"/>
@@ -30,7 +27,7 @@
         </AuthorizeView>
     </MudAppBar>
 
-    <MudDrawer @bind-Open="DrawerOpen" Elevation="2" Variant="DrawerVariant.Temporary" ClipMode="DrawerClipMode.Always">
+    <MudDrawer @bind-Open="DrawerOpen" Elevation="2" Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Always" Class="demi-admin-drawer">
         <MudDrawerHeader Class="pa-4" Style="background: linear-gradient(135deg, var(--demi-primary) 0%, var(--demi-primary-light) 100%);">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                 <MudImage Src="@(NavigationManager.BaseUri + "favicon.gif")" Width="36" Height="36" ObjectFit="ObjectFit.Contain"/>
@@ -57,7 +54,7 @@
 </MudLayout>
 
 @code {
-    bool DrawerOpen = false;
+    bool DrawerOpen = true;
 
     void DrawerToggle()
     {
