@@ -59,7 +59,7 @@ public partial class MemberAttendance : ComponentBase
 
         var authState = await AuthenticationState!;
         var loggedUserLogin = authState.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
-        LoggedUser = Mapper.Map<MemberViewModel>(MemberService.GetOneByLogin(loggedUserLogin));
+        LoggedUser = MemberService.GetOneByLogin(loggedUserLogin)!.ToViewModel();
 
         PageService.SetTitle(Localizer[nameof(DemizonLocales.Attendance)]);
 
@@ -75,9 +75,11 @@ public partial class MemberAttendance : ComponentBase
             .Select(offset => StartDate.AddDays(offset))
             .ToList();
 
-        var events = Mapper.Map<List<EventViewModel>>(EventService.GetAll()
+        var events = EventService.GetAll()
             .Where(x => x.DateFrom >= StartDate && x.DateFrom <= EndDate)
-            .ToList());
+            .ToList()
+            .Select(x => x.ToViewModel())
+            .ToList();
 
         // Pátky bez akce
         Attendances = allDates
@@ -101,8 +103,9 @@ public partial class MemberAttendance : ComponentBase
         }));
 
         // Načteme docházku přihlášeného uživatele
-        LoggedUser.Attendances = Mapper.Map<List<AttendanceViewModel>>(
-            await AttendanceService.GetMemberAttendancesAsync(LoggedUser.Id, StartDate, EndDate));
+        LoggedUser.Attendances = (await AttendanceService.GetMemberAttendancesAsync(LoggedUser.Id, StartDate, EndDate))
+            .Select(x => x.ToViewModel())
+            .ToList();
 
         foreach (var attendance in Attendances)
         {
@@ -122,10 +125,17 @@ public partial class MemberAttendance : ComponentBase
     private async Task LoadTableData()
     {
         // Načteme všechny viditelné členy (IsVisible = zobrazuje se na webu)
-        TableMembers = Mapper.Map<List<MemberViewModel>>(MemberService.GetAll().Where(x => x.IsVisible).ToList());
-        var membersAttendances = Mapper.Map<List<AttendanceViewModel>>(
-            await AttendanceService.GetMembersAttendancesAsync(
-                TableMembers.Select(x => x.Id).ToList(), StartDate, EndDate));
+        TableMembers = MemberService.GetAll()
+            .Where(x => x.IsVisible)
+            .ToList()
+            .Select(x => x.ToViewModel())
+            .ToList();
+
+        var membersAttendances = (await AttendanceService.GetMembersAttendancesAsync(
+                TableMembers.Select(x => x.Id).ToList(), StartDate, EndDate))
+            .Select(x => x.ToViewModel())
+            .ToList();
+
         foreach (var member in TableMembers)
         {
             member.Attendances = membersAttendances.Where(x => x.MemberId == member.Id).ToList();
@@ -201,7 +211,7 @@ public partial class MemberAttendance : ComponentBase
         try
         {
             var attendanceResult = result.Data as AttendanceViewModel;
-            await AttendanceService.CreateOrUpdateAsync(Mapper.Map<Dal.Entities.Attendance>(attendanceResult));
+            await AttendanceService.CreateOrUpdateAsync(attendanceResult!.ToEntity());
             if (refreshUserData) await LoadData();
             await LoadTableData();
             Snackbar.Add("Docházka uložena.", Severity.Success);

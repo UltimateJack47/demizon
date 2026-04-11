@@ -1,4 +1,3 @@
-﻿using AutoMapper;
 using Demizon.Dal.Entities;
 
 namespace Demizon.Mvc.ViewModels;
@@ -20,13 +19,29 @@ public class VideoLinkViewModel
     public int? DanceId { get; set; }
 
     public DanceViewModel? Dance { get; set; }
+}
 
-    public class DtoProfile : Profile
+public static class VideoLinkMappingExtensions
+{
+    public static VideoLinkViewModel ToViewModel(this VideoLink entity) => new()
     {
-        public DtoProfile()
-        {
-            CreateMap<VideoLink, VideoLinkViewModel>()
-                .ReverseMap();
-        }
-    }
+        Id = entity.Id,
+        Name = entity.Name,
+        IsVisible = entity.IsVisible,
+        Url = entity.Url,
+        Year = entity.Year,
+        IsInternal = entity.IsInternal,
+        DanceId = entity.DanceId,
+    };
+
+    public static VideoLink ToEntity(this VideoLinkViewModel vm) => new()
+    {
+        Id = vm.Id,
+        Name = vm.Name,
+        IsVisible = vm.IsVisible,
+        Url = vm.Url,
+        Year = vm.Year,
+        IsInternal = vm.IsInternal,
+        DanceId = vm.DanceId,
+    };
 }

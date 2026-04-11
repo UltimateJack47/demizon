@@ -53,7 +53,7 @@ else
     {
         PageService.SetTitle(Localizer[nameof(DemizonLocales.Dances)]);
         var dances = await DanceService.GetAll().Where(x => x.IsVisible).OrderBy(x => x.Name).ToListAsync();
-        VisibleDances = Mapper.Map<List<DanceViewModel>>(dances);
+        VisibleDances = dances.Select(x => x.ToViewModel()).ToList();
     }
 
 }

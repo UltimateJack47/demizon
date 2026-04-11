@@ -128,7 +128,7 @@
     {
         var authState = await AuthenticationState!;
         var login = authState.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
-        _member = Mapper.Map<MemberViewModel>(MemberService.GetOneByLogin(login));
+        _member = MemberService.GetOneByLogin(login)?.ToViewModel();
         PageService.SetTitle("Profil");
 
         if (_member is not null)
@@ -163,7 +163,7 @@
 
         try
         {
-            await MemberService.UpdateAsync(_member.Id, Mapper.Map<Dal.Entities.Member>(_member));
+            await MemberService.UpdateAsync(_member.Id, _member.ToEntity());
             _newPassword = string.Empty;
             Snackbar.Add("Profil uložen.", Severity.Success);
         }

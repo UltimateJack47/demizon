@@ -1,4 +1,3 @@
-﻿using AutoMapper;
 using File = Demizon.Dal.Entities.File;
 
 namespace Demizon.Mvc.ViewModels;
@@ -6,7 +5,6 @@ namespace Demizon.Mvc.ViewModels;
 public class FileViewModel
 {
     public int Id { get; set; }
-
 
     public MemberViewModel? Member { get; set; }
 
@@ -23,13 +21,29 @@ public class FileViewModel
     public int? DanceId { get; set; }
 
     public DanceViewModel? Dance { get; set; }
+}
 
-    public class DtoProfile : Profile
+public static class FileMappingExtensions
+{
+    public static FileViewModel ToViewModel(this File entity) => new()
     {
-        public DtoProfile()
-        {
-            CreateMap<File, FileViewModel>()
-                .ReverseMap();
-        }
-    }
+        Id = entity.Id,
+        Path = entity.Path,
+        FileExtension = entity.FileExtension,
+        ContentType = entity.ContentType,
+        FileSize = entity.FileSize,
+        MemberId = entity.MemberId,
+        DanceId = entity.DanceId,
+    };
+
+    public static File ToEntity(this FileViewModel vm) => new()
+    {
+        Id = vm.Id,
+        Path = vm.Path,
+        FileExtension = vm.FileExtension,
+        ContentType = vm.ContentType,
+        FileSize = vm.FileSize,
+        MemberId = vm.MemberId,
+        DanceId = vm.DanceId,
+    };
 }

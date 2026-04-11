@@ -3,7 +3,6 @@
 @using Demizon.Mvc.ViewModels
 
 @inject IVideoLinkService VideoLinkService;
-@inject IMapper Mapper;
 @layout AdminMainLayout
 
 <MudText>VideoLink detail page of model with name: @Model.Name</MudText>
@@ -19,6 +18,6 @@
     
     protected override async Task OnInitializedAsync()
     {
-        Model = Mapper.Map<VideoLinkViewModel>(await VideoLinkService.GetOneAsync(Id));
+        Model = (await VideoLinkService.GetOneAsync(Id)).ToViewModel();
     }
 }

@@ -85,7 +85,7 @@ else
     {
         PageService.SetTitle(@Localizer[nameof(DemizonLocales.Members)]);
         var members = await MemberService.GetAll().Where(x => x.IsVisible).OrderBy(x => x.Surname).ToListAsync();
-        VisibleMembers = Mapper.Map<List<MemberViewModel>>(members);
+        VisibleMembers = members.Select(x => x.ToViewModel()).ToList();
     }
 
 }

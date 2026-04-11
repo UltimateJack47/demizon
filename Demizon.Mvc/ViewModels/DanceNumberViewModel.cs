@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using AutoMapper;
+using Demizon.Dal.Entities;
 
 namespace Demizon.Mvc.ViewModels;
 
@@ -18,12 +18,25 @@ public class DanceNumberViewModel
     public string? Lyrics { get; set; }
 
     public int DanceId { get; set; }
+}
 
-    public class DtoProfile : Profile
+public static class DanceNumberMappingExtensions
+{
+    public static DanceNumberViewModel ToViewModel(this DanceNumber entity) => new()
     {
-        public DtoProfile()
-        {
-            CreateMap<Dal.Entities.DanceNumber, DanceNumberViewModel>().ReverseMap();
-        }
-    }
+        Id = entity.Id,
+        Title = entity.Title,
+        Description = entity.Description,
+        Lyrics = entity.Lyrics,
+        DanceId = entity.DanceId,
+    };
+
+    public static DanceNumber ToEntity(this DanceNumberViewModel vm) => new()
+    {
+        Id = vm.Id,
+        Title = vm.Title,
+        Description = vm.Description,
+        Lyrics = vm.Lyrics,
+        DanceId = vm.DanceId,
+    };
 }

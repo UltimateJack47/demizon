@@ -52,7 +52,7 @@ else
             .OrderByDescending(x => x.Year)
             .Take(12)
             .ToListAsync();
-        VideoLinks = Mapper.Map<List<VideoLinkViewModel>>(videos);
+        VideoLinks = videos.Select(x => x.ToViewModel()).ToList();
     }
 
 }

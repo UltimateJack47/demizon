@@ -79,7 +79,7 @@ else
             .Where(x => x.MemberId == null && x.DanceId == null)
             .Where(x => x.ContentType.StartsWith("image/"))
             .ToListAsync();
-        GalleryItems = Mapper.Map<List<FileViewModel>>(files);
+        GalleryItems = files.Select(x => x.ToViewModel()).ToList();
     }
 
     private async Task OpenLightbox(int index)

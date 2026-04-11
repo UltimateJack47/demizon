@@ -1,4 +1,3 @@
-﻿using AutoMapper;
 using Demizon.Dal.Entities;
 
 namespace Demizon.Mvc.ViewModels;
@@ -18,13 +17,26 @@ public class DanceViewModel
     public List<VideoLinkViewModel> Videos { get; set; } = [];
 
     public List<FileViewModel> Files { get; set; } = [];
+}
 
-    public class DtoProfile : Profile
+public static class DanceMappingExtensions
+{
+    public static DanceViewModel ToViewModel(this Dance entity) => new()
     {
-        public DtoProfile()
-        {
-            CreateMap<Dance, DanceViewModel>()
-                .ReverseMap();
-        }
-    }
+        Id = entity.Id,
+        Name = entity.Name,
+        IsVisible = entity.IsVisible,
+        Region = entity.Region,
+        Description = entity.Description,
+        // Videos a Files caller nastavuje zvlášť
+    };
+
+    public static Dance ToEntity(this DanceViewModel vm) => new()
+    {
+        Id = vm.Id,
+        Name = vm.Name,
+        IsVisible = vm.IsVisible,
+        Region = vm.Region,
+        Description = vm.Description,
+    };
 }

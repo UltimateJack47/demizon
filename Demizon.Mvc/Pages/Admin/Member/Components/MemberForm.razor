@@ -93,14 +93,14 @@
     protected override void OnInitialized()
     {
         var loggedUserLogin = AuthenticationState?.Result.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
-        LoggedUser = Mapper.Map<MemberViewModel>(MemberService.GetOneByLogin(loggedUserLogin));
+        LoggedUser = MemberService.GetOneByLogin(loggedUserLogin)!.ToViewModel();
     }
 
     private async Task ClickedOk()
     {
         try
         {
-            var dbModel = Mapper.Map<Member>(Model);
+            var dbModel = Model.ToEntity();
 
             if (File is not null)
             {

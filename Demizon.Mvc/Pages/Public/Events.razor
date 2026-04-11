@@ -72,7 +72,7 @@ else
             .Where(x => x.DateTo >= DateTime.Today && x.IsPublic)
             .OrderBy(x => x.DateTo)
             .ToListAsync();
-        UpcomingEvents = Mapper.Map<List<EventViewModel>>(events);
+        UpcomingEvents = events.Select(x => x.ToViewModel()).ToList();
     }
 
 }

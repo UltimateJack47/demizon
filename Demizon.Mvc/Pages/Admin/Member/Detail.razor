@@ -3,7 +3,6 @@
 @using Demizon.Mvc.ViewModels
 
 @inject IMemberService MemberService;
-@inject IMapper Mapper;
 @layout AdminMainLayout
 
 <MudText>Member detail page of model with login: @Model.Login</MudText>
@@ -18,7 +17,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Model = Mapper.Map<MemberViewModel>(await MemberService.GetOneAsync(Id));
+        Model = (await MemberService.GetOneAsync(Id)).ToViewModel();
     }
 
 }

@@ -7,7 +7,6 @@
 
 @inject IDanceService DanceService
 @inject IDanceNumberService DanceNumberService
-@inject IMapper Mapper
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -167,19 +166,19 @@ else
     private async Task LoadDance()
     {
         var dance = await DanceService.GetOneAsync(Id);
-        Model = Mapper.Map<DanceViewModel>(dance);
+        Model = dance.ToViewModel();
         // Načteme videa přes EF – potřebujeme Include
         var danceWithVideos = await DanceService.GetAll()
             .Include(x => x.Videos)
             .FirstOrDefaultAsync(x => x.Id == Id);
         if (danceWithVideos is not null)
-            Model.Videos = Mapper.Map<List<VideoLinkViewModel>>(danceWithVideos.Videos);
+            Model.Videos = danceWithVideos.Videos.Select(x => x.ToViewModel()).ToList();
     }
 
     private async Task LoadDanceNumbers()
     {
         var numbers = await DanceNumberService.GetAllForDance(Id).OrderBy(x => x.Id).ToListAsync();
-        DanceNumbers = Mapper.Map<List<DanceNumberViewModel>>(numbers);
+        DanceNumbers = numbers.Select(x => x.ToViewModel()).ToList();
     }
 
     private async Task OpenEditDanceDialog()
@@ -192,7 +191,7 @@ else
             var updated = result.Data as DanceViewModel;
             try
             {
-                await DanceService.UpdateAsync(Id, Mapper.Map<Dal.Entities.Dance>(updated));
+                await DanceService.UpdateAsync(Id, updated!.ToEntity());
                 Snackbar.Add("Tanec byl aktualizován.", Severity.Success);
                 await LoadDance();
             }
@@ -224,9 +223,9 @@ else
             try
             {
                 if (isUpdate)
-                    await DanceNumberService.UpdateAsync(existing!.Id, Mapper.Map<Dal.Entities.DanceNumber>(data));
+                    await DanceNumberService.UpdateAsync(existing!.Id, data!.ToEntity());
                 else
-                    await DanceNumberService.CreateAsync(Mapper.Map<Dal.Entities.DanceNumber>(data));
+                    await DanceNumberService.CreateAsync(data!.ToEntity());
 
                 Snackbar.Add(isUpdate ? "Číslo bylo aktualizováno." : "Číslo bylo přidáno.", Severity.Success);
                 await LoadDanceNumbers();

@@ -10,7 +10,6 @@
 <PageTitle>Události</PageTitle>
 
 @inject IEventService EventService
-@inject IMapper Mapper
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @attribute [Authorize(Roles = "Admin, Standard")]
@@ -73,12 +72,12 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Events = Mapper.Map<List<EventViewModel>>(await EventService.GetAll().ToListAsync());
+        Events = (await EventService.GetAll().ToListAsync()).Select(x => x.ToViewModel()).ToList();
     }
 
     private async Task RefreshTable()
     {
-        Events = Mapper.Map<List<EventViewModel>>(await EventService.GetAll().OrderByDescending(x => x.DateFrom).ToListAsync());
+        Events = (await EventService.GetAll().OrderByDescending(x => x.DateFrom).ToListAsync()).Select(x => x.ToViewModel()).ToList();
         StateHasChanged();
     }
 
@@ -101,12 +100,12 @@
             {
                 if (isUpdate)
                 {
-                    await EventService.UpdateAsync(viewModel!.Id, Mapper.Map<Event>(memberResult));
+                    await EventService.UpdateAsync(viewModel!.Id, memberResult!.ToEntity());
                     Snackbar.Add("Událost byla upravena.", Severity.Success);
                 }
                 else
                 {
-                    await EventService.CreateAsync(Mapper.Map<Event>(memberResult));
+                    await EventService.CreateAsync(memberResult!.ToEntity());
                     Snackbar.Add("Událost byla vytvořena.", Severity.Success);
                 }
 

@@ -7,7 +7,6 @@
 @using Microsoft.EntityFrameworkCore
 
 @inject IMemberService MemberService
-@inject IMapper Mapper
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @attribute [Authorize(Roles = "Admin, Standard")]
@@ -80,9 +79,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Members = Mapper.Map<List<MemberViewModel>>(await MemberService.GetAll().ToListAsync());
+        Members = (await MemberService.GetAll().ToListAsync()).Select(x => x.ToViewModel()).ToList();
         var loggedUserLogin = AuthenticationState?.Result.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
-        LoggedUser = Mapper.Map<MemberViewModel>(MemberService.GetOneByLogin(loggedUserLogin));
+        LoggedUser = MemberService.GetOneByLogin(loggedUserLogin)!.ToViewModel();
     }
 
     private async Task RemoveMember(int id)
@@ -97,7 +96,7 @@
 
     private async Task RefreshTable()
     {
-        Members = Mapper.Map<List<MemberViewModel>>(await MemberService.GetAll().ToListAsync());
+        Members = (await MemberService.GetAll().ToListAsync()).Select(x => x.ToViewModel()).ToList();
         StateHasChanged();
     }
 

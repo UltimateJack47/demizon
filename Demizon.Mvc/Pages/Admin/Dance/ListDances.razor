@@ -62,7 +62,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Dances = Mapper.Map<List<DanceViewModel>>(await DanceService.GetAll().OrderBy(x => x.Id).ToListAsync());
+        Dances = (await DanceService.GetAll().OrderBy(x => x.Id).ToListAsync()).Select(x => x.ToViewModel()).ToList();
     }
 
     private async Task RemoveDance(int id)
@@ -77,7 +77,7 @@
 
     private async Task RefreshTable()
     {
-        Dances = Mapper.Map<List<DanceViewModel>>(await DanceService.GetAll().ToListAsync());
+        Dances = (await DanceService.GetAll().ToListAsync()).Select(x => x.ToViewModel()).ToList();
         StateHasChanged();
     }
 
@@ -100,12 +100,12 @@
             {
                 if (isUpdate)
                 {
-                    await DanceService.UpdateAsync(viewModel!.Id, Mapper.Map<Dance>(danceResult));
+                    await DanceService.UpdateAsync(viewModel!.Id, danceResult!.ToEntity());
                     Snackbar.Add("Tanec byl upraven.", Severity.Success);
                 }
                 else
                 {
-                    await DanceService.CreateAsync(Mapper.Map<Dance>(danceResult));
+                    await DanceService.CreateAsync(danceResult!.ToEntity());
                     Snackbar.Add("Tanec byl vytvořen.", Severity.Success);
                 }
 

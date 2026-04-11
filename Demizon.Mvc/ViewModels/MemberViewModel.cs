@@ -1,4 +1,3 @@
-﻿using AutoMapper;
 using CryptoHelper;
 using Demizon.Dal.Entities;
 
@@ -35,17 +34,41 @@ public class MemberViewModel
     public List<FileViewModel> Photos { get; set; } = [];
 
     public List<AttendanceViewModel> Attendances { get; set; } = [];
+}
 
-    public class DtoProfile : Profile
+public static class MemberMappingExtensions
+{
+    public static MemberViewModel ToViewModel(this Member entity) => new()
     {
-        public DtoProfile()
-        {
-            CreateMap<Member, MemberViewModel>()
-                .ReverseMap()
-                .ForMember(x => x.PasswordHash,
-                    opt => opt.MapFrom(y => string.IsNullOrWhiteSpace(y.Password)
-                        ? y.PasswordHash
-                        : Crypto.HashPassword(y.Password)));
-        }
-    }
+        Id = entity.Id,
+        Name = entity.Name,
+        Surname = entity.Surname,
+        Login = entity.Login,
+        Email = entity.Email,
+        PasswordHash = entity.PasswordHash,
+        Role = entity.Role,
+        Gender = entity.Gender,
+        IsVisible = entity.IsVisible,
+        IsAttendanceVisible = entity.IsAttendanceVisible,
+        BirthDate = entity.BirthDate,
+        MemberSince = entity.MemberSince,
+    };
+
+    public static Member ToEntity(this MemberViewModel vm) => new()
+    {
+        Id = vm.Id,
+        Name = vm.Name,
+        Surname = vm.Surname,
+        Login = vm.Login,
+        Email = vm.Email,
+        PasswordHash = string.IsNullOrWhiteSpace(vm.Password)
+            ? vm.PasswordHash
+            : Crypto.HashPassword(vm.Password),
+        Role = vm.Role,
+        Gender = vm.Gender,
+        IsVisible = vm.IsVisible,
+        IsAttendanceVisible = vm.IsAttendanceVisible,
+        BirthDate = vm.BirthDate,
+        MemberSince = vm.MemberSince,
+    };
 }

@@ -1,4 +1,3 @@
-﻿using AutoMapper;
 using Demizon.Dal.Entities;
 using MudBlazor;
 
@@ -25,17 +24,32 @@ public class EventViewModel
     public int? NotifyBeforeDays { get; set; }
 
     public List<AttendanceViewModel> Attendances { get; set; } = [];
+}
 
-    public class DtoProfile : Profile
+public static class EventMappingExtensions
+{
+    public static EventViewModel ToViewModel(this Event entity) => new()
     {
-        public DtoProfile()
-        {
-            CreateMap<Event, EventViewModel>()
-                .ForMember(x => x.Date,
-                    opt => opt.MapFrom(y => new DateRange(y.DateFrom, y.DateTo)))
-                .ReverseMap()
-                .ForMember(x => x.DateFrom, opt => opt.MapFrom(y => y.Date.Start!.Value))
-                .ForMember(x => x.DateTo, opt => opt.MapFrom(y => y.Date.End!.Value));
-        }
-    }
+        Id = entity.Id,
+        Name = entity.Name,
+        Place = entity.Place,
+        Information = entity.Information,
+        IsPublic = entity.IsPublic,
+        NotifyBeforeDays = entity.NotifyBeforeDays,
+        DateFrom = entity.DateFrom,
+        DateTo = entity.DateTo,
+        Date = new DateRange(entity.DateFrom, entity.DateTo),
+    };
+
+    public static Event ToEntity(this EventViewModel vm) => new()
+    {
+        Id = vm.Id,
+        Name = vm.Name,
+        Place = vm.Place,
+        Information = vm.Information,
+        IsPublic = vm.IsPublic,
+        NotifyBeforeDays = vm.NotifyBeforeDays,
+        DateFrom = vm.Date.Start!.Value,
+        DateTo = vm.Date.End!.Value,
+    };
 }

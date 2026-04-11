@@ -8,7 +8,6 @@
 <PageTitle>Video odkazy</PageTitle>
 
 @inject IVideoLinkService VideoLinkService
-@inject IMapper Mapper
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @attribute [Authorize(Roles = "Admin")]
@@ -66,7 +65,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        VideoLinks = Mapper.Map<List<VideoLinkViewModel>>(await VideoLinkService.GetAll().OrderByDescending(x => x.Year).ToListAsync());
+        VideoLinks = (await VideoLinkService.GetAll().OrderByDescending(x => x.Year).ToListAsync()).Select(x => x.ToViewModel()).ToList();
     }
 
     private async Task RemoveVideoLink(int id)
@@ -81,7 +80,7 @@
 
     private async Task RefreshTable()
     {
-        VideoLinks = Mapper.Map<List<VideoLinkViewModel>>(await VideoLinkService.GetAll().ToListAsync());
+        VideoLinks = (await VideoLinkService.GetAll().ToListAsync()).Select(x => x.ToViewModel()).ToList();
         StateHasChanged();
     }
 
@@ -104,12 +103,12 @@
             {
                 if (isUpdate)
                 {
-                    await VideoLinkService.UpdateAsync(viewModel!.Id, Mapper.Map<VideoLink>(linkResult));
+                    await VideoLinkService.UpdateAsync(viewModel!.Id, linkResult!.ToEntity());
                     Snackbar.Add("Video odkaz byl upraven.", Severity.Success);
                 }
                 else
                 {
-                    await VideoLinkService.CreateAsync(Mapper.Map<VideoLink>(linkResult));
+                    await VideoLinkService.CreateAsync(linkResult!.ToEntity());
                     Snackbar.Add("Video odkaz byl vytvořen.", Severity.Success);
                 }
 
