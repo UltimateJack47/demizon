@@ -1,22 +1,22 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 :root {
-    --demi-primary: #8B6A4A;
-    --demi-primary-dark: #5C3D25;
-    --demi-primary-light: #C4A882;
-    --demi-accent: #A07850;
-    --demi-bg-warm: #F5EDE0;
-    --demi-bg-gallery: #EDE0CC;
+    --demi-primary: #A8845E;
+    --demi-primary-dark: #7A5A38;
+    --demi-primary-light: #D4B898;
+    --demi-accent: #B89470;
+    --demi-bg-warm: #FAF3E8;
+    --demi-bg-gallery: #F2E8D8;
     --demi-shadow: rgba(0, 0, 0, 0.07);
-    --demi-shadow-primary: rgba(139, 106, 74, 0.20);
-    --demi-overlay-primary: rgba(92, 61, 37, 0.50);
-    --demi-att-sum-bg: #F0E8D8;
-    --demi-att-total-bg: #E8DCC8;
+    --demi-shadow-primary: rgba(168, 132, 94, 0.20);
+    --demi-overlay-primary: rgba(122, 90, 56, 0.45);
+    --demi-att-sum-bg: #F5EEE0;
+    --demi-att-total-bg: #EEE4D0;
 }
 
 /* ─── Hero sekce (homepage) ─── */
 .demi-hero {
-    background: linear-gradient(135deg, #8B6A4A 0%, #6A4A2A 50%, #3E2A10 100%);
+    background: linear-gradient(135deg, #A8845E 0%, #8A6440 50%, #5A3E20 100%);
     border-radius: 12px;
     padding: 3rem 2rem;
     margin-bottom: 1rem;
