@@ -5,7 +5,10 @@
       "Bash(dotnet build:*)",
       "Bash(dotnet run:*)",
       "Bash(dotnet ef:*)",
-      "Bash(dotnet add:*)"
+      "Bash(dotnet add:*)",
+      "Bash(xargs grep:*)",
+      "Bash(xargs head:*)",
+      "Bash(dotnet remove:*)",
     ]
   },
   "outputStyle": "Explanatory"
