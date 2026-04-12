@@ -95,6 +95,9 @@
     <data name="InvalidSignIn" xml:space="preserve">
         <value>Špatný login nebo heslo</value>
     </data>
+    <data name="RememberMe" xml:space="preserve">
+        <value>Zapamatovat mě</value>
+    </data>
     <data name="NoUpcomingEventsPageHeader" xml:space="preserve">
         <value>Aktuálně máme volný kalendář.</value>
     </data>

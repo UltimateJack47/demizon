@@ -391,7 +391,16 @@ namespace Demizon.Mvc.Locales {
                 return ResourceManager.GetString("InvalidSignIn", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Remember me.
+        /// </summary>
+        internal static string RememberMe {
+            get {
+                return ResourceManager.GetString("RememberMe", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Is visible.
         /// </summary>

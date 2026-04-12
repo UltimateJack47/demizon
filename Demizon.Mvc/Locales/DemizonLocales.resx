@@ -122,6 +122,9 @@
     <data name="InvalidSignIn" xml:space="preserve">
         <value>Invalid Login or Password</value>
     </data>
+    <data name="RememberMe" xml:space="preserve">
+        <value>Remember me</value>
+    </data>
     <data name="Information" xml:space="preserve">
         <value>Information</value>
     </data>

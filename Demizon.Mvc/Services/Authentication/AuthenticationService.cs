@@ -36,13 +36,19 @@ public sealed class AuthenticationService(
             return;
         }
 
+        var rememberMe = context.Request.Form.ContainsKey("RememberMe");
+        var properties = new AuthenticationProperties
+        {
+            IsPersistent = rememberMe,
+        };
+
         await context.SignInAsync(new ClaimsPrincipal(new ClaimsIdentity(
             new List<Claim>
             {
                 new(ClaimTypes.Name, userAccount.Login),
                 new(ClaimTypes.Role, userAccount.Role.ToString()),
                 new(ClaimTypes.PrimarySid, userAccount.Id.ToString())
-            }, CookieAuthenticationDefaults.AuthenticationScheme)));
+            }, CookieAuthenticationDefaults.AuthenticationScheme)), properties);
 
         context.Response.Redirect("/Admin");
     }

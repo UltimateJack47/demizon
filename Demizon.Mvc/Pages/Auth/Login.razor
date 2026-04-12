@@ -21,6 +21,7 @@
                           Label="@Localizer[nameof(DemizonLocales.Password)]"
                           InputType="InputType.Password">
             </MudTextField>
+            <MudCheckBox name="RememberMe" Value="false" Label="@Localizer[nameof(DemizonLocales.RememberMe)]" />
             @if (E)
             {
                 <MudText Typo="Typo.body1">@Localizer[nameof(DemizonLocales.InvalidSignIn)]</MudText>
