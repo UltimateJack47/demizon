@@ -36,6 +36,13 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         DemizonContext.Entry(entity).CurrentValues.SetValues(updatedMember);
         entity.Photos = updatedMember.Photos;
         DemizonContext.Entry(entity).State = EntityState.Modified;
+
+        // Google tokeny jsou spravovány dedikovanými metodami (Connect/Disconnect) – nikdy je nepřepisuj z formuláře
+        var entry = DemizonContext.Entry(entity);
+        entry.Property(m => m.GoogleRefreshToken).IsModified = false;
+        entry.Property(m => m.GoogleCalendarId).IsModified = false;
+        entry.Property(m => m.GoogleConnectedAt).IsModified = false;
+
         await DemizonContext.SaveChangesAsync();
     }
 
