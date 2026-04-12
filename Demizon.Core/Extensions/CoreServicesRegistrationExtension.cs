@@ -3,6 +3,7 @@ using Demizon.Core.Services.Dance;
 using Demizon.Core.Services.Event;
 using Demizon.Core.Services.File;
 using Demizon.Core.Services.FileUpload;
+using Demizon.Core.Services.GoogleCalendar;
 using Demizon.Core.Services.Member;
 using Demizon.Core.Services.Notification;
 using Demizon.Core.Services.VideoLink;
@@ -23,6 +24,7 @@ public static class CoreServicesRegistrationExtension
         services.AddTransient<IAttendanceService, AttendanceService>();
         services.AddTransient<IPushSubscriptionService, PushSubscriptionService>();
         services.AddTransient<IAttendanceReportService, AttendanceReportService>();
+        services.AddTransient<IGoogleCalendarService, GoogleCalendarService>();
         return services;
     }
 }

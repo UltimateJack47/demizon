@@ -14,6 +14,11 @@ public class Attendance
 
     public DateTime LastUpdated { get; set; } = DateTime.Now;
 
+    /// <summary>
+    /// ID události v Google Calendar vytvořené pro tento záznam docházky. Null = žádná událost.
+    /// </summary>
+    public string? GoogleEventId { get; set; }
+
     public int? EventId { get; set; }
 
     public virtual Event? Event { get; set; }

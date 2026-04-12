@@ -52,6 +52,8 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
                 .WithOne(r => r.Member)
                 .HasForeignKey(r => r.MemberId)
                 .OnDelete(DeleteBehavior.Cascade);
+            b.Property(m => m.GoogleRefreshToken).HasMaxLength(512);
+            b.Property(m => m.GoogleCalendarId).HasMaxLength(256);
             // Soft delete – globální filtr skryje smazané členy
             b.HasQueryFilter(m => m.DeletedAt == null);
         });
@@ -125,6 +127,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(s => s.Attends).HasDefaultValue(false).IsRequired();
             b.Property(s => s.ActivityRole).HasConversion<string>();
             b.Property(s => s.MemberId).IsRequired();
+            b.Property(s => s.GoogleEventId).HasMaxLength(256);
         });
 
         modelBuilder.Entity<RefreshToken>(b =>

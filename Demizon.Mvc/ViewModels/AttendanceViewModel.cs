@@ -23,6 +23,8 @@ public class AttendanceViewModel
     public MemberViewModel Member { get; set; } = null!;
 
     public DateTime LastUpdated { get; set; }
+
+    public string? GoogleEventId { get; set; }
 }
 
 public static class AttendanceMappingExtensions
@@ -37,6 +39,7 @@ public static class AttendanceMappingExtensions
         EventId = entity.EventId,
         MemberId = entity.MemberId,
         LastUpdated = entity.LastUpdated,
+        GoogleEventId = entity.GoogleEventId,
         // Member a Event jsou navigační properties – caller je nastavuje dle potřeby
     };
 
@@ -50,5 +53,6 @@ public static class AttendanceMappingExtensions
         EventId = vm.EventId,
         MemberId = vm.MemberId,
         LastUpdated = vm.LastUpdated,
+        GoogleEventId = vm.GoogleEventId,
     };
 }

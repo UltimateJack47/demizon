@@ -175,8 +175,11 @@
             return;
         }
 
-        if (!Model.IsExternal && ValidationHelpers.ValidateEmail(Model.Email) is not null)
+        if (!Model.IsExternal && ValidationHelpers.ValidateEmail(Model.Email) is { } emailError)
+        {
+            Snackbar.Add(emailError, Severity.Error);
             return;
+        }
 
         try
         {

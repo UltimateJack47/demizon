@@ -59,6 +59,57 @@
             </MudCard>
         </MudItem>
 
+        <!-- Google Calendar -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Class="mr-2"/>
+                            Google Calendar
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                        Propoj svůj Google Calendar – docházka se automaticky zobrazí jako události.
+                    </MudText>
+                    @if (_member?.GoogleConnectedAt is not null)
+                    {
+                        <MudAlert Severity="Severity.Success" Dense="true">
+                            Propojeno @_member.GoogleConnectedAt.Value.ToLocalTime().ToString("d. M. yyyy")
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true">
+                            Google Calendar není propojen.
+                        </MudAlert>
+                    }
+                </MudCardContent>
+                <MudCardActions>
+                    @if (_member?.GoogleConnectedAt is null)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Link"
+                                   OnClick="ConnectGoogleCalendar">
+                            Propojit Google Calendar
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Error"
+                                   StartIcon="@Icons.Material.Filled.LinkOff"
+                                   OnClick="DisconnectGoogleCalendar">
+                            Odpojit Google Calendar
+                        </MudButton>
+                    }
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
         <!-- Push notifikace -->
         <MudItem xs="12" md="6">
             <MudCard Elevation="2">
@@ -132,6 +183,8 @@
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private IConfiguration Configuration { get; set; } = null!;
 
+    [SupplyParameterFromQuery] public string? Gcal { get; set; }
+
     private MemberViewModel? _member;
     private string _newPassword = string.Empty;
     private string _newPasswordConfirm = string.Empty;
@@ -157,6 +210,12 @@
 
         if (_member is not null)
             _subscriptions = await PushSubscriptionService.GetByMemberAsync(_member.Id);
+
+        // Feedback po OAuth redirectu
+        if (Gcal == "connected") Snackbar.Add("Google Calendar byl úspěšně propojen.", Severity.Success);
+        else if (Gcal == "disconnected") Snackbar.Add("Google Calendar odpojen.", Severity.Info);
+        else if (Gcal == "denied") Snackbar.Add("Propojení Google Calendar bylo zrušeno.", Severity.Warning);
+        else if (Gcal == "error") Snackbar.Add("Chyba při propojování Google Calendar. Zkus to znovu.", Severity.Error);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -269,6 +328,29 @@
         finally
         {
             _pushLoading = false;
+        }
+    }
+
+    private void ConnectGoogleCalendar() =>
+        NavigationManager.NavigateTo("/google/connect", forceLoad: true);
+
+    private async Task DisconnectGoogleCalendar()
+    {
+        if (_member is null) return;
+
+        _member.GoogleRefreshToken = null;
+        _member.GoogleCalendarId = null;
+        _member.GoogleConnectedAt = null;
+
+        try
+        {
+            await MemberService.UpdateAsync(_member.Id, _member.ToEntity());
+            Snackbar.Add("Google Calendar odpojen.", Severity.Info);
+            StateHasChanged();
+        }
+        catch
+        {
+            Snackbar.Add("Chyba při odpojování Google Calendar.", Severity.Error);
         }
     }
 

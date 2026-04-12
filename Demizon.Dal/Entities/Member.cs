@@ -44,6 +44,21 @@ public class Member
     /// Soft delete – null = aktivní člen. Záznamy s hodnotou jsou filtrovány global query filtrem.
     /// </summary>
     public DateTime? DeletedAt { get; set; }
+
+    /// <summary>
+    /// OAuth refresh token pro Google Calendar. Null = nepropojeno.
+    /// </summary>
+    public string? GoogleRefreshToken { get; set; }
+
+    /// <summary>
+    /// ID Google Calendar, do kterého se zapisují události (obvykle "primary").
+    /// </summary>
+    public string? GoogleCalendarId { get; set; }
+
+    /// <summary>
+    /// UTC čas, kdy bylo propojení s Google Calendar navázáno.
+    /// </summary>
+    public DateTime? GoogleConnectedAt { get; set; }
 }
 
 public enum UserRole

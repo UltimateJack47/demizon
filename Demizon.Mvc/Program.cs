@@ -1,9 +1,14 @@
 using System.Globalization;
+using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Append.Blazor.Notifications;
 using Demizon.Common.Configuration;
 using Demizon.Core.Extensions;
+using Demizon.Core.Services.GoogleCalendar;
+using Demizon.Core.Services.Member;
+using Microsoft.Extensions.Options;
 using Demizon.Dal;
 using Demizon.Dal.Extensions;
 using Demizon.Mvc.Services.Authentication;
@@ -39,6 +44,10 @@ builder.Services.AddAuthenticationServices(builder.Configuration, builder.Enviro
 
 builder.Services.AddOptions<VapidSettings>()
     .BindConfiguration("Vapid")
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddOptions<GoogleCalendarSettings>()
+    .BindConfiguration("GoogleCalendar")
     .ValidateDataAnnotations()
     .ValidateOnStart();
 builder.Services.AddNotifications();
@@ -134,6 +143,86 @@ app.MapPost("/ProcessLogin",
     async (HttpContext context, IAuthenticationService service) => await service.Login(context))
     .RequireRateLimiting("auth");
 app.MapGet("/Logout", async (HttpContext context, IAuthenticationService service) => await service.Logout(context));
+
+// Google Calendar OAuth – inicializace propojení
+app.MapGet("/google/connect", (HttpContext ctx, IOptions<GoogleCalendarSettings> opts) =>
+{
+    var state = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+        .Replace("+", "-").Replace("/", "_").TrimEnd('=');
+
+    ctx.Response.Cookies.Append("gcal_oauth_state", state, new CookieOptions
+    {
+        HttpOnly = true,
+        Secure = !ctx.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment(),
+        SameSite = SameSiteMode.Lax,
+        MaxAge = TimeSpan.FromMinutes(10)
+    });
+
+    var s = opts.Value;
+    var authUrl = $"https://accounts.google.com/o/oauth2/v2/auth" +
+                  $"?client_id={Uri.EscapeDataString(s.ClientId)}" +
+                  $"&redirect_uri={Uri.EscapeDataString(s.RedirectUri)}" +
+                  $"&response_type=code" +
+                  $"&scope={Uri.EscapeDataString("https://www.googleapis.com/auth/calendar")}" +
+                  $"&access_type=offline" +
+                  $"&prompt=consent" +
+                  $"&state={Uri.EscapeDataString(state)}";
+
+    return Results.Redirect(authUrl);
+}).RequireAuthorization();
+
+// Google Calendar OAuth – callback po autorizaci
+app.MapGet("/google/callback", async (
+    HttpContext ctx,
+    IGoogleCalendarService gcalService,
+    IMemberService memberService,
+    IOptions<GoogleCalendarSettings> opts,
+    ILogger<Program> logger,
+    string? code,
+    string? state,
+    string? error) =>
+{
+    if (!string.IsNullOrEmpty(error))
+    {
+        logger.LogWarning("Google OAuth zamítnut uživatelem: {Error}", error);
+        return Results.Redirect("/Admin/Profile?gcal=denied");
+    }
+
+    var cookieState = ctx.Request.Cookies["gcal_oauth_state"];
+    ctx.Response.Cookies.Delete("gcal_oauth_state");
+
+    if (string.IsNullOrEmpty(state) || state != cookieState)
+    {
+        logger.LogWarning("Google OAuth neplatný state parametr (CSRF ochrana).");
+        return Results.Redirect("/Admin/Profile?gcal=error");
+    }
+
+    if (string.IsNullOrEmpty(code))
+        return Results.Redirect("/Admin/Profile?gcal=error");
+
+    var login = ctx.User.FindFirstValue(ClaimTypes.Name);
+    if (login is null)
+        return Results.Redirect("/Login");
+
+    var member = memberService.GetOneByLogin(login);
+    if (member is null)
+        return Results.Redirect("/Admin/Profile?gcal=error");
+
+    var refreshToken = await gcalService.ExchangeCodeForRefreshTokenAsync(code);
+    if (refreshToken is null)
+    {
+        logger.LogError("Selhala výměna kódu za token pro člena {Login}.", login);
+        return Results.Redirect("/Admin/Profile?gcal=error");
+    }
+
+    member.GoogleRefreshToken = refreshToken;
+    member.GoogleCalendarId = opts.Value.DefaultCalendarId;
+    member.GoogleConnectedAt = DateTime.UtcNow;
+    await memberService.UpdateAsync(member.Id, member);
+
+    logger.LogInformation("Google Calendar úspěšně propojen pro člena {Login}.", login);
+    return Results.Redirect("/Admin/Profile?gcal=connected");
+}).RequireAuthorization();
 
 // JWT token endpoint – pro budoucí API integraci (mobilní klient, externí nástroje)
 app.MapPost("/api/auth/token", async (HttpContext context, IAuthenticationService service) =>

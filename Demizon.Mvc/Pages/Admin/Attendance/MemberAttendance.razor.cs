@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Claims;
 using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
+using Demizon.Core.Services.GoogleCalendar;
 using Demizon.Core.Services.Member;
 using Demizon.Dal.Entities;
 using Demizon.Mvc.Locales;
@@ -22,6 +23,7 @@ public partial class MemberAttendance : ComponentBase
     [Inject] private IEventService EventService { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IGoogleCalendarService GoogleCalendarService { get; set; } = null!;
 
     // Aktuálně zobrazený měsíc
     private DateTime CurrentMonth { get; set; }
@@ -125,6 +127,7 @@ public partial class MemberAttendance : ComponentBase
                 attendance.Id = userAttendance.Id;
                 attendance.Attends = userAttendance.Attends;
                 attendance.Comment = userAttendance.Comment;
+                attendance.GoogleEventId = userAttendance.GoogleEventId;
             }
         }
 
@@ -133,9 +136,8 @@ public partial class MemberAttendance : ComponentBase
 
     private async Task LoadTableData()
     {
-        // Načteme viditelné členy a externisty
+        // Načteme všechny členy – viditelnost v docházce řídí IsAttendanceVisible, ne IsVisible
         TableMembers = MemberService.GetAll()
-            .Where(x => x.IsVisible || x.IsExternal)
             .ToList()
             .Select(x => x.ToViewModel())
             .ToList();
@@ -247,6 +249,14 @@ public partial class MemberAttendance : ComponentBase
 
         if (result!.Canceled) return;
 
+        // Zachytit existující Google Event ID před uložením (pro případné smazání)
+        var previousGoogleEventId = model.Id != 0
+            ? LoggedUser.Attendances.FirstOrDefault(a => a.Id == model.Id)?.GoogleEventId
+            : null;
+
+        bool isSelf = model.MemberId == LoggedUser.Id;
+        bool attendsAfterSave = false;
+
         try
         {
             var attendanceResult = result.Data as AttendanceViewModel;
@@ -255,11 +265,14 @@ public partial class MemberAttendance : ComponentBase
                 if (model.Id != 0)
                     await AttendanceService.DeleteAsync(model.Id);
                 Snackbar.Add("Docházka resetována.", Severity.Info);
+                attendsAfterSave = false;
             }
             else
             {
                 await AttendanceService.CreateOrUpdateAsync(attendanceResult.ToEntity());
                 Snackbar.Add("Docházka uložena.", Severity.Success);
+                attendsAfterSave = attendanceResult.Attends;
+                model.Id = attendanceResult.Id;
             }
             if (refreshUserData) await LoadData();
             await LoadTableData();
@@ -267,6 +280,71 @@ public partial class MemberAttendance : ComponentBase
         catch
         {
             Snackbar.Add("Chyba při ukládání.", Severity.Error);
+            return;
+        }
+
+        // Google Calendar sync – pouze pro vlastní docházku přihlášeného člena
+        if (isSelf)
+        {
+            try
+            {
+                await SyncGoogleCalendarAsync(model, attendsAfterSave, previousGoogleEventId);
+            }
+            catch
+            {
+                Snackbar.Add("Docházka uložena, ale synchronizace s Google Calendar selhala.", Severity.Warning);
+            }
+        }
+    }
+
+    private async Task SyncGoogleCalendarAsync(AttendanceViewModel model, bool attends, string? previousGoogleEventId)
+    {
+        // Načteme čerstvá data člena pro aktuální Google tokeny
+        var member = await MemberService.GetOneAsync(LoggedUser.Id);
+        if (string.IsNullOrEmpty(member.GoogleRefreshToken) || string.IsNullOrEmpty(member.GoogleCalendarId))
+            return;
+
+        if (attends)
+        {
+            var title = model.Event is not null
+                ? model.Event.Name
+                : $"Zkouška Demizon – {model.Date:d. M. yyyy}";
+
+            var eventDate = model.Event is not null ? model.Event.DateFrom : model.Date;
+
+            var createdId = await GoogleCalendarService.CreateEventAsync(
+                member.GoogleRefreshToken,
+                member.GoogleCalendarId,
+                eventDate,
+                title);
+
+            if (createdId is not null && model.Id != 0)
+            {
+                var attendance = await AttendanceService.GetOneAsync(model.Id);
+                attendance.GoogleEventId = createdId;
+                await AttendanceService.CreateOrUpdateAsync(attendance);
+            }
+        }
+        else if (!string.IsNullOrEmpty(previousGoogleEventId))
+        {
+            await GoogleCalendarService.DeleteEventAsync(
+                member.GoogleRefreshToken,
+                member.GoogleCalendarId,
+                previousGoogleEventId);
+
+            if (model.Id != 0)
+            {
+                try
+                {
+                    var attendance = await AttendanceService.GetOneAsync(model.Id);
+                    attendance.GoogleEventId = null;
+                    await AttendanceService.CreateOrUpdateAsync(attendance);
+                }
+                catch
+                {
+                    // Záznam docházky byl smazán (reset) – ignorujeme
+                }
+            }
         }
     }
 }
