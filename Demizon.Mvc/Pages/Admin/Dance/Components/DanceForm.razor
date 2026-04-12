@@ -1,5 +1,5 @@
 @using Demizon.Mvc.ViewModels
-<MudDialog Style="min-width: 460px;">
+<MudDialog Style="min-width: min(460px, calc(100vw - 32px))">
     <TitleContent>
         <MudText Typo="Typo.h6">@(IsUpdate ? "Upravit" : "Vytvořit") - Tanec</MudText>
     </TitleContent>

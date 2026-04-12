@@ -5,7 +5,7 @@
 @using Demizon.Mvc.Helpers
 @using Demizon.Mvc.ViewModels
 @using Color = MudBlazor.Color
-<MudDialog Style="min-width: 520px;">
+<MudDialog Style="min-width: min(520px, calc(100vw - 32px))">
     <TitleContent>
         <MudText Typo="Typo.h6">
             @(IsUpdate ? "Upravit" : "Vytvořit") - Člen
@@ -14,21 +14,21 @@
 
     <DialogContent>
         <MudGrid Spacing="2">
-            <MudItem xs="6">
+            <MudItem xs="12" sm="6">
                 <MudTextField @bind-Value="Model.Name" T="string" Label="Jméno" Required="true" RequiredError="Jméno je povinné!"
                               Variant="Variant.Outlined" Margin="Margin.Dense"/>
             </MudItem>
-            <MudItem xs="6">
+            <MudItem xs="12" sm="6">
                 <MudTextField @bind-Value="Model.Surname" T="string" Label="Příjmení"
                               Variant="Variant.Outlined" Margin="Margin.Dense"/>
             </MudItem>
             @if (!Model.IsExternal)
             {
-                <MudItem xs="6">
+                <MudItem xs="12" sm="6">
                     <MudTextField @bind-Value="Model.Login" T="string" Label="Login" Required="true" RequiredError="Login je povinný!"
                                   Variant="Variant.Outlined" Margin="Margin.Dense"/>
                 </MudItem>
-                <MudItem xs="6">
+                <MudItem xs="12" sm="6">
                     <MudTextField @bind-Value="Model.Email" T="string" Label="E-mail" Required="true" RequiredError="E-mail je povinný!"
                                   Variant="Variant.Outlined" Margin="Margin.Dense"
                                   Validation="@((Func<string?, string?>)ValidationHelpers.ValidateEmail)"/>
@@ -55,17 +55,17 @@
                     </MudItem>
                 }
             }
-            <MudItem xs="6">
+            <MudItem xs="12" sm="6">
                 <MudDatePicker @bind-Date="Model.MemberSince" Label="Členem od"
                                Clearable="true" Editable="true" MaxDate="DateTime.Today"
                                Variant="Variant.Outlined" Margin="Margin.Dense"/>
             </MudItem>
-            <MudItem xs="6">
+            <MudItem xs="12" sm="6">
                 <MudDatePicker @bind-Date="Model.BirthDate" Label="Narozeniny"
                                Clearable="true" Editable="true" MaxDate="DateTime.Today"
                                Variant="Variant.Outlined" Margin="Margin.Dense"/>
             </MudItem>
-            <MudItem xs="6">
+            <MudItem xs="12" sm="6">
                 <MudSelect @bind-Value="Model.Gender" Label="Pohlaví" T="Gender"
                            Variant="Variant.Outlined" Margin="Margin.Dense">
                     @foreach (Gender item in Enum.GetValues(typeof(Gender)))
@@ -74,7 +74,7 @@
                     }
                 </MudSelect>
             </MudItem>
-            <MudItem xs="6" Class="d-flex align-center">
+            <MudItem xs="12" sm="6" Class="d-flex align-center">
                 <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile" Accept="image/*">
                     <CustomContent Context="upload">
                         <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"

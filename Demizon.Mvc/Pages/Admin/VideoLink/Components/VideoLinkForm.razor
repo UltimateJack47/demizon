@@ -3,19 +3,19 @@
 @using Microsoft.EntityFrameworkCore
 @inject IDanceService DanceService
 
-<MudDialog Style="min-width: 480px;">
+<MudDialog Style="min-width: min(480px, calc(100vw - 32px))">
     <TitleContent>
         <MudText Typo="Typo.h6">@(IsUpdate ? "Upravit" : "Vytvořit") - Video</MudText>
     </TitleContent>
 
     <DialogContent>
         <MudGrid Spacing="2">
-            <MudItem xs="8">
+            <MudItem xs="12" sm="8">
                 <MudTextField @bind-Value="Model.Name" Label="Název"
                               Required="true" RequiredError="Název je povinný!"
                               Variant="Variant.Outlined" Margin="Margin.Dense"/>
             </MudItem>
-            <MudItem xs="4">
+            <MudItem xs="12" sm="4">
                 <MudTextField @bind-Value="Model.Year" Label="Rok"
                               Required="true" RequiredError="Rok je povinný!"
                               Variant="Variant.Outlined" Margin="Margin.Dense"/>

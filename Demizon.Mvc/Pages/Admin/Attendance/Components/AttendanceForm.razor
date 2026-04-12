@@ -1,6 +1,6 @@
 @using Demizon.Mvc.ViewModels
 @using Demizon.Dal.Entities
-<MudDialog Style="min-width: 360px;">
+<MudDialog Style="min-width: min(360px, calc(100vw - 32px))">
     <TitleContent>
         @if (Model.Event is not null)
         {
