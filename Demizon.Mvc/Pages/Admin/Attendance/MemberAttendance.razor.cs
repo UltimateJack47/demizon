@@ -5,7 +5,6 @@ using Demizon.Core.Services.Event;
 using Demizon.Core.Services.GoogleCalendar;
 using Demizon.Core.Services.Member;
 using Demizon.Dal.Entities;
-using Demizon.Mvc.Locales;
 using Demizon.Mvc.Pages.Admin.Attendance.Components;
 using Demizon.Mvc.ViewModels;
 using Microsoft.AspNetCore.Components;
@@ -306,6 +305,10 @@ public partial class MemberAttendance : ComponentBase
 
         if (attends)
         {
+            // Pokud událost v kalendáři již existuje, neopakuj vytvoření (ochrana proti duplikátům)
+            if (!string.IsNullOrEmpty(model.GoogleEventId))
+                return;
+
             var title = model.Event is not null
                 ? model.Event.Name
                 : $"Zkouška Demizon – {model.Date:d. M. yyyy}";

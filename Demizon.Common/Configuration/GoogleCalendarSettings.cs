@@ -32,4 +32,9 @@ public class GoogleCalendarSettings
     /// Hodina konce páteční zkoušky (24h formát).
     /// </summary>
     public int RehearsalEndHour { get; set; } = 21;
+
+    /// <summary>
+    /// Délka události s reálným DateFrom (akce) v hodinách.
+    /// </summary>
+    public int EventDurationHours { get; set; } = 2;
 }

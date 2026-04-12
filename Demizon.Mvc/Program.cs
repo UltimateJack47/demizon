@@ -1,22 +1,21 @@
 using System.Globalization;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.RateLimiting;
 using Append.Blazor.Notifications;
 using Demizon.Common.Configuration;
 using Demizon.Core.Extensions;
 using Demizon.Core.Services.GoogleCalendar;
 using Demizon.Core.Services.Member;
-using Microsoft.Extensions.Options;
 using Demizon.Dal;
 using Demizon.Dal.Extensions;
 using Demizon.Mvc.Services.Authentication;
 using Demizon.Mvc.Services.Extensions;
 using Demizon.Mvc.Services.Notification;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -93,7 +92,7 @@ if (!app.Environment.IsDevelopment())
     {
         errorApp.Run(async context =>
         {
-            var exceptionFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+            var exceptionFeature = context.Features.Get<IExceptionHandlerFeature>();
             if (exceptionFeature is not null)
             {
                 var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
@@ -215,10 +214,7 @@ app.MapGet("/google/callback", async (
         return Results.Redirect("/Admin/Profile?gcal=error");
     }
 
-    member.GoogleRefreshToken = refreshToken;
-    member.GoogleCalendarId = opts.Value.DefaultCalendarId;
-    member.GoogleConnectedAt = DateTime.UtcNow;
-    await memberService.UpdateAsync(member.Id, member);
+    await memberService.ConnectGoogleCalendarAsync(member.Id, refreshToken, opts.Value.DefaultCalendarId);
 
     logger.LogInformation("Google Calendar úspěšně propojen pro člena {Login}.", login);
     return Results.Redirect("/Admin/Profile?gcal=connected");
@@ -231,7 +227,7 @@ app.MapPost("/api/auth/token", async (HttpContext context, IAuthenticationServic
 
 // Refresh token endpoint – vydá nový access token na základě platného refresh tokenu
 app.MapPost("/api/auth/refresh", async (HttpContext context, RefreshTokenService refreshService,
-    TokenService tokenService, Demizon.Core.Services.Member.IMemberService memberService) =>
+    TokenService tokenService, IMemberService memberService) =>
 {
     string? rawRefreshToken = null;
 
@@ -262,7 +258,7 @@ app.MapPost("/api/auth/refresh", async (HttpContext context, RefreshTokenService
 
     var member = await memberService.GetOneAsync(memberId.Value);
     var newAccessToken = tokenService.GenerateToken(member);
-    var jwtSettings = context.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<Demizon.Common.Configuration.JwtSettings>>().Value;
+    var jwtSettings = context.RequestServices.GetRequiredService<IOptions<JwtSettings>>().Value;
     var newRefreshToken = await refreshService.CreateAsync(member.Id, jwtSettings.RefreshTokenExpirationDays);
 
     await context.Response.WriteAsJsonAsync(new

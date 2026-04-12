@@ -41,10 +41,6 @@ public class MemberViewModel
 
     public List<AttendanceViewModel> Attendances { get; set; } = [];
 
-    public string? GoogleRefreshToken { get; set; }
-
-    public string? GoogleCalendarId { get; set; }
-
     public DateTime? GoogleConnectedAt { get; set; }
 }
 
@@ -67,8 +63,6 @@ public static class MemberMappingExtensions
         IsExternal = entity.IsExternal,
         BirthDate = entity.BirthDate,
         MemberSince = entity.MemberSince,
-        GoogleRefreshToken = entity.GoogleRefreshToken,
-        GoogleCalendarId = entity.GoogleCalendarId,
         GoogleConnectedAt = entity.GoogleConnectedAt,
     };
 
@@ -91,8 +85,5 @@ public static class MemberMappingExtensions
         IsExternal = vm.IsExternal,
         BirthDate = vm.BirthDate,
         MemberSince = vm.MemberSince,
-        GoogleRefreshToken = vm.GoogleRefreshToken,
-        GoogleCalendarId = vm.GoogleCalendarId,
-        GoogleConnectedAt = vm.GoogleConnectedAt,
     };
 }

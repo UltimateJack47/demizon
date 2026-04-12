@@ -1,4 +1,6 @@
+using System.Net;
 using Demizon.Common.Configuration;
+using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
@@ -11,21 +13,36 @@ using CalendarEventDateTime = Google.Apis.Calendar.v3.Data.EventDateTime;
 
 namespace Demizon.Core.Services.GoogleCalendar;
 
-public sealed class GoogleCalendarService(
-    IOptions<GoogleCalendarSettings> options,
-    ILogger<GoogleCalendarService> logger)
-    : IGoogleCalendarService
+public sealed class GoogleCalendarService : IGoogleCalendarService, IDisposable
 {
-    private readonly GoogleCalendarSettings _settings = options.Value;
+    private readonly GoogleCalendarSettings _settings;
+    private readonly ILogger<GoogleCalendarService> _logger;
+    private readonly GoogleAuthorizationCodeFlow _flow;
     private const string ApplicationName = "Demizon";
+
+    public GoogleCalendarService(
+        IOptions<GoogleCalendarSettings> options,
+        ILogger<GoogleCalendarService> logger)
+    {
+        _settings = options.Value;
+        _logger = logger;
+        _flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+        {
+            ClientSecrets = new ClientSecrets
+            {
+                ClientId = _settings.ClientId,
+                ClientSecret = _settings.ClientSecret
+            },
+            Scopes = [CalendarService.Scope.Calendar]
+        });
+    }
 
     public async Task<string?> ExchangeCodeForRefreshTokenAsync(
         string authorizationCode, CancellationToken ct = default)
     {
         try
         {
-            var flow = BuildFlow();
-            var tokenResponse = await flow.ExchangeCodeForTokenAsync(
+            var tokenResponse = await _flow.ExchangeCodeForTokenAsync(
                 userId: "user",
                 code: authorizationCode,
                 redirectUri: _settings.RedirectUri,
@@ -35,7 +52,7 @@ public sealed class GoogleCalendarService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Selhalo získání refresh tokenu výměnou za autorizační kód.");
+            _logger.LogError(ex, "Selhalo získání refresh tokenu výměnou za autorizační kód.");
             return null;
         }
     }
@@ -62,9 +79,9 @@ public sealed class GoogleCalendarService(
             }
             else
             {
-                // Akce s reálným DateFrom — použijeme skutečný čas
+                // Akce s reálným DateFrom — použijeme skutečný čas akce
                 startTime = date;
-                endTime = date.AddHours(2);
+                endTime = date.AddHours(_settings.EventDurationHours);
             }
 
             var calEvent = new CalendarEvent
@@ -72,12 +89,12 @@ public sealed class GoogleCalendarService(
                 Summary = eventTitle ?? "Zkouška Demizon",
                 Start = new CalendarEventDateTime
                 {
-                    DateTimeDateTimeOffset = new DateTimeOffset(startTime, TimeSpan.FromHours(1)),
+                    DateTimeDateTimeOffset = ToLocalOffset(startTime),
                     TimeZone = _settings.TimeZone
                 },
                 End = new CalendarEventDateTime
                 {
-                    DateTimeDateTimeOffset = new DateTimeOffset(endTime, TimeSpan.FromHours(1)),
+                    DateTimeDateTimeOffset = ToLocalOffset(endTime),
                     TimeZone = _settings.TimeZone
                 },
                 Description = "Automaticky přidáno systémem Demizon."
@@ -85,12 +102,12 @@ public sealed class GoogleCalendarService(
 
             var request = service.Events.Insert(calEvent, calendarId);
             var createdEvent = await request.ExecuteAsync(ct);
-            logger.LogInformation("Vytvořena Google Calendar událost {EventId} pro datum {Date}.", createdEvent.Id, date);
+            _logger.LogInformation("Vytvořena Google Calendar událost {EventId} pro datum {Date}.", createdEvent.Id, date);
             return createdEvent.Id;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Selhalo vytvoření Google Calendar události pro datum {Date}.", date);
+            _logger.LogError(ex, "Selhalo vytvoření Google Calendar události pro datum {Date}.", date);
             return null;
         }
     }
@@ -105,40 +122,38 @@ public sealed class GoogleCalendarService(
         {
             var service = await BuildCalendarServiceAsync(refreshToken, ct);
             await service.Events.Delete(calendarId, googleEventId).ExecuteAsync(ct);
-            logger.LogInformation("Smazána Google Calendar událost {EventId}.", googleEventId);
+            _logger.LogInformation("Smazána Google Calendar událost {EventId}.", googleEventId);
             return true;
         }
-        catch (Google.GoogleApiException ex) when
-            (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound ||
-             ex.HttpStatusCode == System.Net.HttpStatusCode.Gone)
+        catch (GoogleApiException ex) when
+            (ex.HttpStatusCode == HttpStatusCode.NotFound ||
+             ex.HttpStatusCode == HttpStatusCode.Gone)
         {
             // Událost již neexistuje — považujeme za úspěch
-            logger.LogWarning("Google Calendar událost {EventId} nebyla nalezena při mazání (pravděpodobně již smazána).", googleEventId);
+            _logger.LogWarning("Google Calendar událost {EventId} nebyla nalezena při mazání (pravděpodobně již smazána).", googleEventId);
             return true;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Selhalo smazání Google Calendar události {EventId}.", googleEventId);
+            _logger.LogError(ex, "Selhalo smazání Google Calendar události {EventId}.", googleEventId);
             return false;
         }
     }
 
-    private GoogleAuthorizationCodeFlow BuildFlow() => new(
-        new GoogleAuthorizationCodeFlow.Initializer
-        {
-            ClientSecrets = new ClientSecrets
-            {
-                ClientId = _settings.ClientId,
-                ClientSecret = _settings.ClientSecret
-            },
-            Scopes = [CalendarService.Scope.Calendar]
-        });
+    /// <summary>
+    /// Převede lokální DateTime (Prague) na DateTimeOffset se správným offsetem pro dané datum,
+    /// včetně letního času (UTC+2 v létě, UTC+1 v zimě).
+    /// </summary>
+    private DateTimeOffset ToLocalOffset(DateTime localTime)
+    {
+        var tz = TimeZoneInfo.FindSystemTimeZoneById(_settings.TimeZone);
+        return new DateTimeOffset(localTime, tz.GetUtcOffset(localTime));
+    }
 
     private async Task<CalendarService> BuildCalendarServiceAsync(string refreshToken, CancellationToken ct)
     {
-        var flow = BuildFlow();
         var tokenResponse = new TokenResponse { RefreshToken = refreshToken };
-        var credential = new UserCredential(flow, "user", tokenResponse);
+        var credential = new UserCredential(_flow, "user", tokenResponse);
 
         // Získá čerstvý access token na základě uloženého refresh tokenu
         await credential.RefreshTokenAsync(ct);
@@ -149,4 +164,6 @@ public sealed class GoogleCalendarService(
             ApplicationName = ApplicationName
         });
     }
+
+    public void Dispose() => _flow.Dispose();
 }

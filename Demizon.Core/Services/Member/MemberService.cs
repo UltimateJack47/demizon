@@ -54,6 +54,28 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         }
     }
 
+    public async Task ConnectGoogleCalendarAsync(int memberId, string refreshToken, string calendarId)
+    {
+        var entity = await DemizonContext.Members.FindAsync(memberId)
+            ?? throw new EntityNotFoundException($"Member with id: {memberId} not found.");
+
+        entity.GoogleRefreshToken = refreshToken;
+        entity.GoogleCalendarId = calendarId;
+        entity.GoogleConnectedAt = DateTime.UtcNow;
+        await DemizonContext.SaveChangesAsync();
+    }
+
+    public async Task DisconnectGoogleCalendarAsync(int memberId)
+    {
+        var entity = await DemizonContext.Members.FindAsync(memberId)
+            ?? throw new EntityNotFoundException($"Member with id: {memberId} not found.");
+
+        entity.GoogleRefreshToken = null;
+        entity.GoogleCalendarId = null;
+        entity.GoogleConnectedAt = null;
+        await DemizonContext.SaveChangesAsync();
+    }
+
     public async Task<bool> DeleteAsync(int id)
     {
         try

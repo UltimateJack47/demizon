@@ -8,4 +8,6 @@ public interface IMemberService
     Task UpdateAsync(int id, Dal.Entities.Member updatedMember);
     Task<bool> CreateAsync(Dal.Entities.Member member);
     Task<bool> DeleteAsync(int id);
+    Task ConnectGoogleCalendarAsync(int memberId, string refreshToken, string calendarId);
+    Task DisconnectGoogleCalendarAsync(int memberId);
 }

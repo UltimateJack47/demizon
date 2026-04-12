@@ -12,10 +12,7 @@
       "Bash(grep -E \"^-.*\\\\.cs$\")",
       "Bash(xargs cat:*)",
       "Bash(find:*)",
-      "Bash(grep:*)",
-      "Bash(grep -n \"NavigationManager\" Demizon.Mvc/Razor/_Imports.razor)",
-      "Bash(grep -rn \"inject NavigationManager\" Demizon.Mvc/Shared/)",
-      "Bash(grep -n \"NavigationManager\" \"Demizon.Mvc/_Imports.razor\")"
+      "Bash(grep:*)"
     ]
   },
   "outputStyle": "Explanatory"

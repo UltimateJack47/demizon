@@ -1,11 +1,12 @@
 @page "/Admin/Profile"
 @using System.Security.Claims
+@using System.Text.Json
+@using System.Text.Json.Serialization
 @using Demizon.Core.Services.Member
 @using Demizon.Core.Services.Notification
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Helpers
 @using Demizon.Mvc.ViewModels
-@using Microsoft.AspNetCore.Components.Authorization
 
 @attribute [Authorize(Roles = "Admin, Standard")]
 @layout AdminMainLayout
@@ -199,7 +200,7 @@
     private string _pushPermission = "default";
     private bool _notificationsEnabled;
     private bool _pushLoading;
-    private List<Dal.Entities.PushSubscription> _subscriptions = [];
+    private List<PushSubscription> _subscriptions = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -294,8 +295,8 @@
                     return;
                 }
 
-                var sub = System.Text.Json.JsonSerializer.Deserialize<PushSubscriptionJson>(subJson)!;
-                await PushSubscriptionService.AddAsync(new Dal.Entities.PushSubscription
+                var sub = JsonSerializer.Deserialize<PushSubscriptionJson>(subJson)!;
+                await PushSubscriptionService.AddAsync(new PushSubscription
                 {
                     MemberId = _member.Id,
                     Endpoint = sub.Endpoint,
@@ -310,7 +311,7 @@
                 var currentSub = await JS.InvokeAsync<string?>("demizonPush.getSubscription");
                 if (currentSub is not null)
                 {
-                    var sub = System.Text.Json.JsonSerializer.Deserialize<PushSubscriptionJson>(currentSub)!;
+                    var sub = JsonSerializer.Deserialize<PushSubscriptionJson>(currentSub)!;
                     await JS.InvokeAsync<bool>("demizonPush.unsubscribe");
                     await PushSubscriptionService.RemoveAsync(_member.Id, sub.Endpoint);
                 }
@@ -338,13 +339,10 @@
     {
         if (_member is null) return;
 
-        _member.GoogleRefreshToken = null;
-        _member.GoogleCalendarId = null;
-        _member.GoogleConnectedAt = null;
-
         try
         {
-            await MemberService.UpdateAsync(_member.Id, _member.ToEntity());
+            await MemberService.DisconnectGoogleCalendarAsync(_member.Id);
+            _member.GoogleConnectedAt = null;
             Snackbar.Add("Google Calendar odpojen.", Severity.Info);
             StateHasChanged();
         }
@@ -369,10 +367,10 @@
 
     // Pomocné záznamy pro deserializaci JSON z prohlížeče
     private sealed record PushSubscriptionJson(
-        [property: System.Text.Json.Serialization.JsonPropertyName("endpoint")] string Endpoint,
-        [property: System.Text.Json.Serialization.JsonPropertyName("keys")] PushSubscriptionKeysJson Keys);
+        [property: JsonPropertyName("endpoint")] string Endpoint,
+        [property: JsonPropertyName("keys")] PushSubscriptionKeysJson Keys);
 
     private sealed record PushSubscriptionKeysJson(
-        [property: System.Text.Json.Serialization.JsonPropertyName("p256dh")] string P256dh,
-        [property: System.Text.Json.Serialization.JsonPropertyName("auth")] string Auth);
+        [property: JsonPropertyName("p256dh")] string P256dh,
+        [property: JsonPropertyName("auth")] string Auth);
 }
