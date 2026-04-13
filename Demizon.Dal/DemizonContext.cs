@@ -137,7 +137,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(x => x.TokenHash).HasMaxLength(256).IsRequired();
             b.HasIndex(x => x.TokenHash).IsUnique();
             b.Property(x => x.TokenPrefix).HasMaxLength(8).IsRequired().HasDefaultValue("");
-            b.HasIndex(x => x.TokenPrefix);
+            b.HasIndex(x => new { x.TokenPrefix, x.IsRevoked });
             b.Property(x => x.ExpiresAt).IsRequired();
         });
 
@@ -145,10 +145,10 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
         {
             b.HasKey(x => x.Id);
             b.Property(x => x.Token).HasMaxLength(256).IsRequired();
-            b.Property(x => x.Platform).HasMaxLength(8).IsRequired();
-            b.HasIndex(x => new { x.MemberId, x.Token }).IsUnique();
+            b.Property(x => x.Platform).HasConversion<string>().IsRequired();
+            b.HasIndex(x => x.Token).IsUnique();
             b.HasOne(x => x.Member)
-                .WithMany()
+                .WithMany(m => m.DeviceTokens)
                 .HasForeignKey(x => x.MemberId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

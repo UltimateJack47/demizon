@@ -40,6 +40,8 @@ public class Member
 
     public virtual List<RefreshToken> RefreshTokens { get; set; } = [];
 
+    public virtual List<DeviceToken> DeviceTokens { get; set; } = [];
+
     /// <summary>
     /// Soft delete – null = aktivní člen. Záznamy s hodnotou jsou filtrovány global query filtrem.
     /// </summary>

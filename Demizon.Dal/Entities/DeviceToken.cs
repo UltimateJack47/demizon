@@ -1,5 +1,11 @@
 namespace Demizon.Dal.Entities;
 
+public enum DevicePlatform
+{
+    Android,
+    Ios
+}
+
 public class DeviceToken
 {
     public int Id { get; set; }
@@ -11,10 +17,7 @@ public class DeviceToken
     /// </summary>
     public string Token { get; set; } = null!;
 
-    /// <summary>
-    /// Platforma zařízení: "android" nebo "ios".
-    /// </summary>
-    public string Platform { get; set; } = null!;
+    public DevicePlatform Platform { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
