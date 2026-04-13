@@ -9,6 +9,12 @@ public class RefreshToken
     /// </summary>
     public string TokenHash { get; set; } = null!;
 
+    /// <summary>
+    /// Prvních 8 znaků raw tokenu (plaintext) – slouží jako DB index pro filtrování
+    /// před bcrypt ověřením a odstraňuje O(n) scan všech aktivních tokenů.
+    /// </summary>
+    public string TokenPrefix { get; set; } = "";
+
     public DateTime ExpiresAt { get; set; }
 
     public bool IsRevoked { get; set; } = false;

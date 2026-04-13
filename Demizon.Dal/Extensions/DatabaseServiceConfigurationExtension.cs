@@ -33,4 +33,16 @@ public static class DatabaseServiceConfigurationExtension
         });
         return services;
     }
+
+    /// <summary>
+    /// Aktivuje WAL mode a nastaví busy_timeout pro souběžný přístup více procesů (Mvc + Api).
+    /// Volat jednou při startu aplikace po registraci DI.
+    /// </summary>
+    public static void EnableWalMode(this IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<DemizonContext>();
+        db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+        db.Database.ExecuteSqlRaw("PRAGMA busy_timeout=5000;");
+    }
 }

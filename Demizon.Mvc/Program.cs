@@ -134,6 +134,8 @@ var localizationOptions = new RequestLocalizationOptions()
     .AddSupportedUICultures(supportedCultures);
 app.UseRequestLocalization(localizationOptions);
 
+app.Services.EnableWalMode();
+
 app.UseRouting();
 
 app.UseCookiePolicy();

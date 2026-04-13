@@ -16,6 +16,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
 
     public DbSet<PushSubscription> PushSubscriptions { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+    public DbSet<DeviceToken> DeviceTokens { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -135,7 +136,21 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.HasKey(x => x.Id);
             b.Property(x => x.TokenHash).HasMaxLength(256).IsRequired();
             b.HasIndex(x => x.TokenHash).IsUnique();
+            b.Property(x => x.TokenPrefix).HasMaxLength(8).IsRequired().HasDefaultValue("");
+            b.HasIndex(x => x.TokenPrefix);
             b.Property(x => x.ExpiresAt).IsRequired();
+        });
+
+        modelBuilder.Entity<DeviceToken>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Token).HasMaxLength(256).IsRequired();
+            b.Property(x => x.Platform).HasMaxLength(8).IsRequired();
+            b.HasIndex(x => new { x.MemberId, x.Token }).IsUnique();
+            b.HasOne(x => x.Member)
+                .WithMany()
+                .HasForeignKey(x => x.MemberId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<AuditLog>(b =>

@@ -35,6 +35,7 @@ public class RefreshTokenService(DemizonContext db)
         {
             MemberId = memberId,
             TokenHash = tokenHash,
+            TokenPrefix = rawToken[..8],
             ExpiresAt = DateTime.UtcNow.AddDays(expirationDays),
             CreatedAt = DateTime.UtcNow,
         });
@@ -46,12 +47,16 @@ public class RefreshTokenService(DemizonContext db)
 
     /// <summary>
     /// Ověří raw token – vrátí MemberId pokud je platný, jinak null.
+    /// Filtruje přes TokenPrefix index v DB, bcrypt ověření probíhá jen na 1–2 kandidátech.
     /// </summary>
     public async Task<int?> ValidateAsync(string rawToken)
     {
-        // Musíme iterovat platné tokeny tohoto časového okna – hash musíme ověřit Crypto.VerifyHashedPassword
+        if (rawToken.Length < 8)
+            return null;
+
+        var prefix = rawToken[..8];
         var candidates = await db.RefreshTokens
-            .Where(t => !t.IsRevoked && t.ExpiresAt > DateTime.UtcNow)
+            .Where(t => !t.IsRevoked && t.ExpiresAt > DateTime.UtcNow && t.TokenPrefix == prefix)
             .ToListAsync();
 
         var match = candidates.FirstOrDefault(t => Crypto.VerifyHashedPassword(t.TokenHash, rawToken));

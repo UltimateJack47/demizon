@@ -68,11 +68,11 @@ Demizon.Mvc  → Core + Dal + Common  [beze změny]
 
 | # | Úkol | Soubor | Stav |
 |---|---|---|---|
-| 2.1 | Vytvořit `DeviceToken` entitu | `Demizon.Dal/Entities/DeviceToken.cs` — Id, MemberId (FK), Token (string), Platform ("android"/"ios"), CreatedAt, LastSeenAt | 🔲 |
-| 2.2 | Přidat `DbSet<DeviceToken>` do DbContextu | `Demizon.Dal/DemizonContext.cs` | 🔲 |
-| 2.3 | Přidat `TokenPrefix` sloupec do `RefreshToken` entity | `Demizon.Dal/Entities/RefreshToken.cs` — `string TokenPrefix` (prvních 8 znaků raw tokenu, plaintext); aktualizovat `RefreshTokenService.CreateAsync` pro uložení prefixu a `ValidateAsync` pro filtrování `WHERE TokenPrefix = @prefix` před bcrypt ověřením — odstraní O(n) scan všech tokenů | 🔲 |
-| 2.4 | Přidat WAL mode pragma | `Demizon.Dal/Extensions/DatabaseServiceConfigurationExtension.cs` — `PRAGMA journal_mode=WAL` při startu | 🔲 |
-| 2.5 | Vytvořit EF migraci | `dotnet ef migrations add AddDeviceTokenWalModeAndRefreshTokenPrefix` | 🔲 |
+| 2.1 | Vytvořit `DeviceToken` entitu | `Demizon.Dal/Entities/DeviceToken.cs` — Id, MemberId (FK), Token (string), Platform ("android"/"ios"), CreatedAt, LastSeenAt | ✅ |
+| 2.2 | Přidat `DbSet<DeviceToken>` do DbContextu | `Demizon.Dal/DemizonContext.cs` | ✅ |
+| 2.3 | Přidat `TokenPrefix` sloupec do `RefreshToken` entity | `Demizon.Dal/Entities/RefreshToken.cs` — `string TokenPrefix` (prvních 8 znaků raw tokenu, plaintext); aktualizovat `RefreshTokenService.CreateAsync` pro uložení prefixu a `ValidateAsync` pro filtrování `WHERE TokenPrefix = @prefix` před bcrypt ověřením — odstraní O(n) scan všech tokenů | ✅ |
+| 2.4 | Přidat WAL mode pragma | `Demizon.Dal/Extensions/DatabaseServiceConfigurationExtension.cs` — `PRAGMA journal_mode=WAL` při startu | ✅ |
+| 2.5 | Vytvořit EF migraci | `dotnet ef migrations add AddDeviceTokenWalModeAndRefreshTokenPrefix` | ✅ |
 | 2.6 | Ověřit migraci | Spustit Mvc → DB se aktualizuje bez chyb | 🔲 |
 
 ---
