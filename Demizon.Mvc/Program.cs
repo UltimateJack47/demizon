@@ -3,11 +3,14 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Append.Blazor.Notifications;
 using Demizon.Common.Configuration;
+using Demizon.Common.Exceptions;
 using Demizon.Core.Extensions;
 using Demizon.Core.Services.GoogleCalendar;
 using Demizon.Core.Services.Member;
 using Demizon.Dal;
+using Demizon.Dal.Entities;
 using Demizon.Dal.Extensions;
+using Demizon.Core.Services.Authentication;
 using Demizon.Mvc.Services.Authentication;
 using Demizon.Mvc.Services.Extensions;
 using Demizon.Mvc.Services.Notification;
@@ -256,7 +259,15 @@ app.MapPost("/api/auth/refresh", async (HttpContext context, RefreshTokenService
         return;
     }
 
-    var member = await memberService.GetOneAsync(memberId.Value);
+    Member member;
+    try { member = await memberService.GetOneAsync(memberId.Value); }
+    catch (EntityNotFoundException)
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        await context.Response.WriteAsJsonAsync(new { error = "Member no longer exists." });
+        return;
+    }
+
     var newAccessToken = tokenService.GenerateToken(member);
     var jwtSettings = context.RequestServices.GetRequiredService<IOptions<JwtSettings>>().Value;
     var newRefreshToken = await refreshService.CreateAsync(member.Id, jwtSettings.RefreshTokenExpirationDays);

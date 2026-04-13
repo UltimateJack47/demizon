@@ -2,19 +2,20 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Demizon.Common.Configuration;
-using Demizon.Dal.Entities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Demizon.Mvc.Services.Authentication;
+namespace Demizon.Core.Services.Authentication;
 
 public sealed class TokenService(IOptions<JwtSettings> jwtOptions)
 {
+    private static readonly JwtSecurityTokenHandler _tokenHandler = new();
+
     private readonly JwtSettings _settings = jwtOptions.Value;
 
     public int ExpirationMinutes => _settings.ExpirationMinutes;
 
-    public string GenerateToken(Member member)
+    public string GenerateToken(global::Demizon.Dal.Entities.Member member)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -34,18 +35,16 @@ public sealed class TokenService(IOptions<JwtSettings> jwtOptions)
             expires: DateTime.UtcNow.AddMinutes(_settings.ExpirationMinutes),
             signingCredentials: credentials);
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return _tokenHandler.WriteToken(token);
     }
 
-    // TODO: Využito v R7.2 – refresh token endpoint (POST /api/auth/refresh)
     public ClaimsPrincipal? ValidateToken(string token)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
-        var handler = new JwtSecurityTokenHandler();
 
         try
         {
-            return handler.ValidateToken(token, new TokenValidationParameters
+            return _tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = key,
@@ -57,7 +56,7 @@ public sealed class TokenService(IOptions<JwtSettings> jwtOptions)
                 ClockSkew = TimeSpan.Zero,
             }, out _);
         }
-        catch
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             return null;
         }

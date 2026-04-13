@@ -3,7 +3,7 @@ using Demizon.Dal;
 using Demizon.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Demizon.Mvc.Services.Authentication;
+namespace Demizon.Core.Services.Authentication;
 
 /// <summary>
 /// Spravuje refresh tokeny – generování, validaci a rotaci.

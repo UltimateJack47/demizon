@@ -14,9 +14,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="CryptoHelper" Version="4.0.0" />
         <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
         <PackageReference Include="Google.Apis.Calendar.v3" Version="1.73.0.4073" />
         <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.11.1" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.9.0" />
     </ItemGroup>
     
 </Project>

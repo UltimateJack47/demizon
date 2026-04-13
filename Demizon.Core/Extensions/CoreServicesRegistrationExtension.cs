@@ -1,4 +1,5 @@
 ﻿using Demizon.Core.Services.Attendance;
+using Demizon.Core.Services.Authentication;
 using Demizon.Core.Services.Dance;
 using Demizon.Core.Services.Event;
 using Demizon.Core.Services.File;
@@ -25,6 +26,8 @@ public static class CoreServicesRegistrationExtension
         services.AddTransient<IPushSubscriptionService, PushSubscriptionService>();
         services.AddTransient<IAttendanceReportService, AttendanceReportService>();
         services.AddTransient<IGoogleCalendarService, GoogleCalendarService>();
+        services.AddSingleton<TokenService>();
+        services.AddScoped<RefreshTokenService>();
         return services;
     }
 }

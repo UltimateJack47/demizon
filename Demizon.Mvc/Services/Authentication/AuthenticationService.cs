@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using CryptoHelper;
 using Demizon.Common.Configuration;
+using Demizon.Core.Services.Authentication;
 using Demizon.Core.Services.Member;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
