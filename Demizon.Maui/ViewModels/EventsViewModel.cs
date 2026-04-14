@@ -1,21 +1,36 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Demizon.Contracts.Events;
 using Demizon.Maui.Services;
 using System.Collections.ObjectModel;
 
 namespace Demizon.Maui.ViewModels;
 
-public partial class EventsViewModel(IApiClient apiClient) : ObservableObject
+public partial class EventsViewModel : ObservableObject, IRecipient<EventsChangedMessage>
 {
+    private readonly IApiClient _apiClient;
+
+    public EventsViewModel(IApiClient apiClient)
+    {
+        _apiClient = apiClient;
+        WeakReferenceMessenger.Default.Register(this);
+    }
+
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasEvents))]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
     private ObservableCollection<EventDto> _events = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
     private bool _isBusy;
 
     [ObservableProperty]
     private string? _errorMessage;
+
+    public bool HasEvents => Events.Count > 0;
+    public bool IsEmpty => !IsBusy && Events.Count == 0;
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -26,7 +41,7 @@ public partial class EventsViewModel(IApiClient apiClient) : ObservableObject
 
         try
         {
-            var result = await apiClient.GetUpcomingEventsAsync();
+            var result = await _apiClient.GetUpcomingEventsAsync();
             Events = new ObservableCollection<EventDto>(result);
         }
         catch (Exception)
@@ -37,5 +52,22 @@ public partial class EventsViewModel(IApiClient apiClient) : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task NavigateToDetail(EventDto eventDto)
+    {
+        await Shell.Current.GoToAsync($"events/detail?eventId={eventDto.Id}");
+    }
+
+    [RelayCommand]
+    private async Task NavigateToCreate()
+    {
+        await Shell.Current.GoToAsync("events/create");
+    }
+
+    public void Receive(EventsChangedMessage message)
+    {
+        MainThread.BeginInvokeOnMainThread(() => LoadCommand.Execute(null));
     }
 }

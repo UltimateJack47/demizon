@@ -51,4 +51,37 @@ public class EventsController(IEventService eventService) : ControllerBase
             return NotFound();
         }
     }
+
+    [HttpPost]
+    public async Task<ActionResult<EventDto>> Create([FromBody] CreateEventRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "Název akce je povinný." });
+
+        if (request.DateFrom >= request.DateTo)
+            return BadRequest(new { error = "Datum začátku musí být před datem konce." });
+
+        var recurrence = request.Recurrence?.ToLowerInvariant() switch
+        {
+            "weekly" => Dal.Entities.RecurrenceType.Weekly,
+            "monthly" => Dal.Entities.RecurrenceType.Monthly,
+            _ => Dal.Entities.RecurrenceType.None
+        };
+
+        var ev = new Dal.Entities.Event
+        {
+            Name = request.Name,
+            DateFrom = request.DateFrom,
+            DateTo = request.DateTo,
+            Place = request.Place,
+            NotifyBeforeDays = request.NotifyBeforeDays,
+            Recurrence = recurrence,
+        };
+
+        var success = await eventService.CreateAsync(ev);
+        if (!success)
+            return StatusCode(500, new { error = "Failed to create event." });
+
+        return CreatedAtAction(nameof(GetOne), new { id = ev.Id }, ev.ToDto());
+    }
 }

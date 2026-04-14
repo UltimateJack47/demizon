@@ -1,14 +1,39 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
-    <Color x:Key="Primary">#512BD4</Color>
-    <Color x:Key="Secondary">#DFD8F7</Color>
-    <Color x:Key="Tertiary">#2B0B98</Color>
-    <Color x:Key="White">White</Color>
-    <Color x:Key="Black">Black</Color>
-    <Color x:Key="Gray100">#E1E1E1</Color>
-    <Color x:Key="Gray200">#C8C8C8</Color>
-    <Color x:Key="Gray600">#404040</Color>
+    <!-- Demizon brand colors -->
+    <Color x:Key="Primary">#A8845E</Color>
+    <Color x:Key="PrimaryDark">#7A5A38</Color>
+    <Color x:Key="PrimaryLight">#D4B898</Color>
+    <Color x:Key="Secondary">#B89470</Color>
+    <Color x:Key="SecondaryDark">#8A6A48</Color>
+    <Color x:Key="Accent">#9A7450</Color>
+    
+    <!-- Backgrounds -->
+    <Color x:Key="PageBackground">#FEFBF5</Color>
+    <Color x:Key="CardBackground">#FFFFFF</Color>
+    <Color x:Key="DrawerBackground">#FAF3E8</Color>
+    <Color x:Key="WarmBeige">#F5EEE0</Color>
+    
+    <!-- Text -->
+    <Color x:Key="TextPrimary">#4A3420</Color>
+    <Color x:Key="TextSecondary">#8A6848</Color>
+    <Color x:Key="TextOnPrimary">#FFFFFF</Color>
+    
+    <!-- Semantic -->
     <Color x:Key="AttendanceGreen">#27AE60</Color>
+    <Color x:Key="AttendanceRed">#E74C3C</Color>
     <Color x:Key="AttendanceGray">#BDC3C7</Color>
+    <Color x:Key="CancelledOverlay">#80000000</Color>
+    <Color x:Key="ErrorColor">#E74C3C</Color>
+    <Color x:Key="SuccessColor">#27AE60</Color>
+    
+    <!-- Standard -->
+    <Color x:Key="White">#FFFFFF</Color>
+    <Color x:Key="Black">#000000</Color>
+    <Color x:Key="Gray100">#F0F0F0</Color>
+    <Color x:Key="Gray200">#E0E0E0</Color>
+    <Color x:Key="Gray300">#C8C8C8</Color>
+    <Color x:Key="Gray400">#A0A0A0</Color>
+    <Color x:Key="Gray600">#606060</Color>
 </ResourceDictionary>

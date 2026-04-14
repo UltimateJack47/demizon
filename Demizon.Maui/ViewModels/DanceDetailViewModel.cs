@@ -17,11 +17,37 @@ public partial class DanceDetailViewModel(IApiClient apiClient) : ObservableObje
     [ObservableProperty]
     private bool _isBusy;
 
+    [ObservableProperty]
+    private bool _isLyricsExpanded;
+
     [RelayCommand]
     public async Task LoadAsync()
     {
         IsBusy = true;
         try { Dance = await apiClient.GetDanceAsync(DanceId); }
         finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private void ToggleLyrics() => IsLyricsExpanded = !IsLyricsExpanded;
+
+    [RelayCommand]
+    private async Task OpenVideoAsync(string url)
+    {
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            try
+            {
+                await Launcher.OpenAsync(uri);
+            }
+            catch
+            {
+                await Shell.Current.DisplayAlert("Chyba", "Nepodařilo se otevřít video.", "OK");
+            }
+        }
+        else
+        {
+            await Shell.Current.DisplayAlert("Chyba", "Neplatný odkaz na video.", "OK");
+        }
     }
 }

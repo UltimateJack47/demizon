@@ -1,30 +1,111 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!-- TODO: Requires MAUI workload. Scaffold only. -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:Demizon.Maui.ViewModels"
              x:Class="Demizon.Maui.Pages.LoginPage"
-             Title="Přihlášení">
-    <VerticalStackLayout Padding="32" Spacing="16" VerticalOptions="Center">
-        <Label Text="Demizon" FontSize="32" HorizontalOptions="Center" FontAttributes="Bold" />
+             Title="Přihlášení"
+             BackgroundColor="{StaticResource PageBackground}">
 
-        <Entry Placeholder="Přihlašovací jméno"
-               Text="{Binding Login}"
-               AutomationId="LoginEntry" />
+    <Grid RowDefinitions="Auto,*">
 
-        <Entry Placeholder="Heslo"
-               Text="{Binding Password}"
-               IsPassword="True"
-               AutomationId="PasswordEntry" />
+        <!-- Hero gradient section -->
+        <BoxView Grid.Row="0"
+                 HeightRequest="320">
+            <BoxView.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+                    <GradientStop Color="{StaticResource PrimaryDark}" Offset="1.0" />
+                </LinearGradientBrush>
+            </BoxView.Background>
+        </BoxView>
 
-        <Label Text="{Binding ErrorMessage}"
-               TextColor="Red"
-               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+        <!-- Hero content (logo + titles) -->
+        <VerticalStackLayout Grid.Row="0"
+                             Spacing="8"
+                             Padding="0,56,0,72"
+                             HorizontalOptions="Center"
+                             VerticalOptions="Center">
 
-        <Button Text="Přihlásit se"
-                Command="{Binding LoginCommand}"
-                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+            <!-- Circular logo placeholder -->
+            <Border StrokeShape="RoundRectangle 45"
+                    Stroke="{StaticResource TextOnPrimary}"
+                    StrokeThickness="3"
+                    BackgroundColor="{StaticResource CardBackground}"
+                    WidthRequest="90"
+                    HeightRequest="90"
+                    HorizontalOptions="Center">
+                <Label Text="🎻"
+                       FontSize="40"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </Border>
 
-        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
-    </VerticalStackLayout>
+            <Label Text="FS Demižón"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource TextOnPrimary}"
+                   HorizontalOptions="Center" />
+
+            <Label Text="Strážnice"
+                   FontSize="16"
+                   TextColor="{StaticResource TextOnPrimary}"
+                   Opacity="0.75"
+                   HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <!-- Login form card -->
+        <Border Grid.Row="0"
+                Grid.RowSpan="2"
+                Margin="24,280,24,0"
+                Padding="24,28"
+                VerticalOptions="Start"
+                StrokeShape="RoundRectangle 12"
+                Stroke="Transparent"
+                BackgroundColor="{StaticResource CardBackground}"
+                Shadow="{Shadow Brush=Black, Offset='0,4', Radius=16, Opacity=0.12}">
+
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+
+                <!-- Login entry -->
+                <Entry Grid.Row="0"
+                       Placeholder="👤  Přihlašovací jméno"
+                       Text="{Binding Login}"
+                       AutomationId="LoginEntry"
+                       Margin="0,0,0,12" />
+
+                <!-- Password entry -->
+                <Entry Grid.Row="1"
+                       Placeholder="Heslo"
+                       Text="{Binding Password}"
+                       IsPassword="True"
+                       AutomationId="PasswordEntry"
+                       Margin="0,0,0,12" />
+
+                <!-- Error message -->
+                <Label Grid.Row="2"
+                       Text="{Binding ErrorMessage}"
+                       TextColor="Red"
+                       FontSize="13"
+                       Margin="0,0,0,8"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+                <!-- Login button -->
+                <Button Grid.Row="3"
+                        Text="Přihlásit se"
+                        Command="{Binding LoginCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                        Margin="0,4,0,0"
+                        HeightRequest="48" />
+
+                <!-- Loading indicator overlay -->
+                <ActivityIndicator Grid.Row="3"
+                                   IsRunning="{Binding IsBusy}"
+                                   IsVisible="{Binding IsBusy}"
+                                   Color="{StaticResource Primary}"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center" />
+            </Grid>
+        </Border>
+
+    </Grid>
 </ContentPage>

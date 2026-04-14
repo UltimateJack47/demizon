@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Demizon.Maui.Pages.ProfilePage"
+             Title="Profil"
+             BackgroundColor="#FAF3E8">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <!-- Header -->
+            <Border StrokeShape="RoundRectangle 12"
+                    Stroke="#E8DDD0"
+                    BackgroundColor="White"
+                    Padding="20">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="{Binding Login, StringFormat='Přihlášen jako {0}'}"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#3E2723" />
+                    <Border StrokeShape="RoundRectangle 8"
+                            Stroke="Transparent"
+                            BackgroundColor="#A8845E"
+                            Padding="8,4"
+                            HorizontalOptions="Start">
+                        <Label Text="{Binding Role}"
+                               FontSize="12"
+                               TextColor="White" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Google Calendar card -->
+            <Border StrokeShape="RoundRectangle 12"
+                    Stroke="#E8DDD0"
+                    BackgroundColor="White"
+                    Padding="20">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Google Calendar"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#3E2723" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="Stav:"
+                               TextColor="#5D4037"
+                               VerticalOptions="Center" />
+                        <Label FontSize="14"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding IsGoogleCalendarConnected}"
+                                             Value="True">
+                                    <Setter Property="Text" Value="Propojeno" />
+                                    <Setter Property="TextColor" Value="{StaticResource AttendanceGreen}" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding IsGoogleCalendarConnected}"
+                                             Value="False">
+                                    <Setter Property="Text" Value="Nepropojeno" />
+                                    <Setter Property="TextColor" Value="#C0392B" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                    </HorizontalStackLayout>
+                    <Label Text="Propojení s Google Calendar probíhá přes webovou administraci na demizon.cz"
+                           FontSize="12"
+                           TextColor="#8D6E63" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Notifications card -->
+            <Border StrokeShape="RoundRectangle 12"
+                    Stroke="#E8DDD0"
+                    BackgroundColor="White"
+                    Padding="20">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Notifikace"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#3E2723" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Push notifikace"
+                               TextColor="#5D4037"
+                               VerticalOptions="Center" />
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding NotificationsEnabled}"
+                                OnColor="#A8845E"
+                                ThumbColor="#9A7450" />
+                    </Grid>
+                    <Label FontSize="12" TextColor="#8D6E63">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label"
+                                         Binding="{Binding NotificationsEnabled}"
+                                         Value="True">
+                                <Setter Property="Text" Value="Notifikace jsou zapnuté" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Label"
+                                         Binding="{Binding NotificationsEnabled}"
+                                         Value="False">
+                                <Setter Property="Text" Value="Notifikace jsou vypnuté" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- App info -->
+            <Label Text="{Binding AppVersion, StringFormat='Verze aplikace: {0}'}"
+                   FontSize="12"
+                   TextColor="#8D6E63"
+                   HorizontalOptions="Center" />
+
+            <!-- Logout button -->
+            <Button Text="Odhlásit se"
+                    Command="{Binding LogoutCommand}"
+                    BackgroundColor="Transparent"
+                    TextColor="#C0392B"
+                    BorderColor="#C0392B"
+                    BorderWidth="1"
+                    CornerRadius="12"
+                    FontAttributes="Bold"
+                    Margin="0,8,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

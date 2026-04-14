@@ -1,25 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!--
-    TODO: Requires MAUI workload. Scaffold only.
-    Shell with tabs: Events / Dances. LoginPage as pre-auth route.
--->
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:pages="clr-namespace:Demizon.Maui.Pages"
-       x:Class="Demizon.Maui.AppShell">
+       x:Class="Demizon.Maui.AppShell"
+       FlyoutBehavior="Disabled"
+       Shell.BackgroundColor="#9A7450"
+       Shell.ForegroundColor="White"
+       Shell.TitleColor="White"
+       Shell.TabBarBackgroundColor="#FAF3E8"
+       Shell.TabBarTitleColor="#A8845E"
+       Shell.TabBarUnselectedColor="#8A6848"
+       Shell.TabBarForegroundColor="#A8845E">
 
-    <!-- Pre-auth route -->
+    <!-- Pre-auth route (no navbar, no tab bar) -->
     <ShellContent Route="login"
                   ContentTemplate="{DataTemplate pages:LoginPage}"
-                  Shell.NavBarIsVisible="False" />
+                  Shell.NavBarIsVisible="False"
+                  Shell.TabBarIsVisible="False" />
 
     <!-- Post-auth tabs -->
-    <TabBar>
+    <TabBar Route="main">
         <ShellContent Title="Akce"
                       Route="events"
                       ContentTemplate="{DataTemplate pages:EventsPage}" />
         <ShellContent Title="Tance"
                       Route="dances"
                       ContentTemplate="{DataTemplate pages:DancesPage}" />
+        <ShellContent Title="Profil"
+                      Route="profile"
+                      ContentTemplate="{DataTemplate pages:ProfilePage}" />
     </TabBar>
 </Shell>

@@ -43,6 +43,8 @@ public static class MauiProgram
         services.AddTransient<EventDetailViewModel>();
         services.AddTransient<DancesViewModel>();
         services.AddTransient<DanceDetailViewModel>();
+        services.AddTransient<ProfileViewModel>();
+        services.AddTransient<CreateEventViewModel>();
 
         // Pages
         services.AddTransient<LoginPage>();
@@ -50,6 +52,8 @@ public static class MauiProgram
         services.AddTransient<EventDetailPage>();
         services.AddTransient<DancesPage>();
         services.AddTransient<DanceDetailPage>();
+        services.AddTransient<ProfilePage>();
+        services.AddTransient<CreateEventPage>();
 
         // Shell + App
         services.AddSingleton<AppShell>();

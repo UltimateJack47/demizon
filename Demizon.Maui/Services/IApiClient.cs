@@ -21,6 +21,9 @@ public interface IApiClient
     [Get("/api/events/{id}")]
     Task<EventDto> GetEventAsync(int id);
     
+    [Post("/api/events")]
+    Task<EventDto> CreateEventAsync([Body] CreateEventRequest request);
+    
     [Get("/api/attendances/me")]
     Task<List<AttendanceDto>> GetMyAttendancesAsync();
     

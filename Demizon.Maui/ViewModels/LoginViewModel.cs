@@ -29,7 +29,7 @@ public partial class LoginViewModel(IApiClient apiClient, TokenStorage tokenStor
         try
         {
             var response = await apiClient.LoginAsync(new TokenRequest(Login, Password));
-            await tokenStorage.SaveAsync(response.Token, response.RefreshToken);
+            await tokenStorage.SaveAsync(response, Login);
             await Shell.Current.GoToAsync("//events");
         }
         catch (Exception)

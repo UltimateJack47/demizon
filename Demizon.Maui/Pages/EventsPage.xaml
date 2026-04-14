@@ -1,27 +1,93 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!-- TODO: Requires MAUI workload. Scaffold only. -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:Demizon.Maui.ViewModels"
+             xmlns:dto="clr-namespace:Demizon.Contracts.Events;assembly=Demizon.Contracts"
              x:Class="Demizon.Maui.Pages.EventsPage"
+             x:DataType="vm:EventsViewModel"
              Title="Akce">
-    <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
-        <CollectionView ItemsSource="{Binding Events}">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Grid Padding="16,8" ColumnDefinitions="*,Auto">
-                        <VerticalStackLayout Grid.Column="0">
-                            <Label Text="{Binding Name}" FontAttributes="Bold" />
-                            <Label Text="{Binding DateFrom, StringFormat='{0:dd.MM.yyyy}'}" FontSize="Small" />
-                            <Label Text="{Binding Place}" FontSize="Small" TextColor="Gray" />
+
+    <Grid>
+        <!-- Main content -->
+        <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+            <Grid>
+                <!-- Event list -->
+                <CollectionView ItemsSource="{Binding Events}"
+                                IsVisible="{Binding HasEvents}">
+                    <CollectionView.Header>
+                        <VerticalStackLayout Padding="20,20,20,8">
+                            <Label Text="Nadcházející akce" Style="{StaticResource TitleLabel}" />
                         </VerticalStackLayout>
-                        <!-- Attendance indicator: green = has attendance, gray = no attendance -->
-                        <BoxView Grid.Column="1" WidthRequest="12" HeightRequest="12"
-                                 CornerRadius="6" VerticalOptions="Center"
-                                 Color="{Binding MyAttendance, Converter={StaticResource AttendanceColorConverter}}" />
-                    </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-    </RefreshView>
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="dto:EventDto">
+                            <Border Style="{StaticResource CardBorder}" Margin="16,6">
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsCancelled}" Value="True">
+                                        <Setter Property="Opacity" Value="0.45" />
+                                    </DataTrigger>
+                                </Border.Triggers>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EventsViewModel}}, Path=NavigateToDetailCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                        <Label Text="{Binding Name}"
+                                               FontAttributes="Bold"
+                                               FontSize="18"
+                                               TextColor="{StaticResource TextPrimary}" />
+                                        <HorizontalStackLayout Spacing="6">
+                                            <Label Text="📅" FontSize="14" VerticalOptions="Center" />
+                                            <Label Text="{Binding DateFrom, StringFormat='{0:dd.MM.yyyy}'}"
+                                                   Style="{StaticResource CaptionLabel}" VerticalOptions="Center" />
+                                        </HorizontalStackLayout>
+                                        <HorizontalStackLayout Spacing="6"
+                                                               IsVisible="{Binding Place, Converter={StaticResource StringToBoolConverter}}">
+                                            <Label Text="📍" FontSize="14" VerticalOptions="Center" />
+                                            <Label Text="{Binding Place}"
+                                                   Style="{StaticResource CaptionLabel}" VerticalOptions="Center" />
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+                                    <BoxView Grid.Column="1"
+                                             WidthRequest="14" HeightRequest="14"
+                                             CornerRadius="7"
+                                             VerticalOptions="Center"
+                                             Color="{Binding MyAttendance, Converter={StaticResource AttendanceColorConverter}}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    <CollectionView.Footer>
+                        <BoxView HeightRequest="80" Color="Transparent" />
+                    </CollectionView.Footer>
+                </CollectionView>
+
+                <!-- Empty state -->
+                <VerticalStackLayout IsVisible="{Binding IsEmpty}"
+                                     VerticalOptions="Center"
+                                     HorizontalOptions="Center"
+                                     Spacing="12">
+                    <Label Text="📅" FontSize="48" HorizontalOptions="Center" />
+                    <Label Text="Žádné nadcházející akce"
+                           Style="{StaticResource SubtitleLabel}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Grid>
+        </RefreshView>
+
+        <!-- FAB button -->
+        <Button Text="＋"
+                Style="{StaticResource PrimaryButton}"
+                FontSize="24"
+                WidthRequest="60"
+                HeightRequest="60"
+                CornerRadius="30"
+                Padding="0"
+                HorizontalOptions="End"
+                VerticalOptions="End"
+                Margin="0,0,20,20"
+                Command="{Binding NavigateToCreateCommand}" />
+    </Grid>
 </ContentPage>

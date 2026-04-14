@@ -1,33 +1,123 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!-- TODO: Requires MAUI workload. Scaffold only. -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Demizon.Maui.ViewModels"
              x:Class="Demizon.Maui.Pages.EventDetailPage"
+             x:DataType="vm:EventDetailViewModel"
              Title="{Binding Event.Name}">
     <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="12">
-            <Label Text="{Binding Event.Name}" FontSize="Large" FontAttributes="Bold" />
-            <Label Text="{Binding Event.DateFrom, StringFormat='Datum: {0:dd.MM.yyyy HH:mm}'}" />
-            <Label Text="{Binding Event.Place, StringFormat='Místo: {0}'}" IsVisible="{Binding Event.Place, Converter={StaticResource StringToBoolConverter}}" />
+        <VerticalStackLayout Padding="20" Spacing="16">
 
-            <BoxView HeightRequest="1" Color="LightGray" />
-            <Label Text="Moje docházka" FontAttributes="Bold" />
+            <!-- Hero card -->
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="{Binding Event.Name}"
+                           Style="{StaticResource TitleLabel}" />
 
-            <HorizontalStackLayout Spacing="8">
-                <Label Text="Přijdu:" VerticalOptions="Center" />
-                <Switch IsToggled="{Binding Attends}" />
-            </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="📅" FontSize="16" VerticalOptions="Center" />
+                        <Label Text="{Binding Event.DateFrom, Converter={StaticResource DateFormatConverter}}"
+                               Style="{StaticResource SubtitleLabel}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
 
-            <Picker Title="Role" SelectedItem="{Binding ActivityRole}">
-                <Picker.Items>
-                    <x:String>Dancer</x:String>
-                    <x:String>Musician</x:String>
-                </Picker.Items>
-            </Picker>
+                    <HorizontalStackLayout Spacing="8"
+                                           IsVisible="{Binding Event.Place, Converter={StaticResource StringToBoolConverter}}">
+                        <Label Text="📍" FontSize="16" VerticalOptions="Center" />
+                        <Label Text="{Binding Event.Place}"
+                               TextColor="{StaticResource TextSecondary}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
 
-            <Editor Placeholder="Komentář..." Text="{Binding Comment}" HeightRequest="80" />
+                    <!-- Cancelled badge -->
+                    <Border BackgroundColor="{StaticResource AttendanceRed}"
+                            StrokeShape="RoundRectangle 6"
+                            Stroke="Transparent"
+                            Padding="10,4"
+                            HorizontalOptions="Start"
+                            IsVisible="{Binding Event.IsCancelled}">
+                        <Label Text="ZRUŠENO"
+                               TextColor="White"
+                               FontAttributes="Bold"
+                               FontSize="13" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
 
-            <Button Text="Uložit" Command="{Binding SaveAttendanceCommand}" />
+            <!-- Attendance section -->
+            <Label Text="Moje docházka"
+                   FontAttributes="Bold"
+                   FontSize="18"
+                   Margin="0,8,0,0" />
+
+            <!-- Toggle buttons -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <!-- Přijdu button: green filled when Attends=true, outlined when false -->
+                <Button x:Name="BtnAttend"
+                        Grid.Column="0"
+                        Text="✓ Přijdu"
+                        Command="{Binding SetAttendsCommand}"
+                        CommandParameter="{x:Boolean True}"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource AttendanceGreen}"
+                        BorderColor="{StaticResource AttendanceGreen}"
+                        BorderWidth="2"
+                        CornerRadius="12"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        HeightRequest="52">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding Attends}" Value="True">
+                            <Setter Property="BackgroundColor" Value="{StaticResource AttendanceGreen}" />
+                            <Setter Property="TextColor" Value="White" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <!-- Nepřijdu button: red filled when Attends=false, outlined when true -->
+                <Button x:Name="BtnDecline"
+                        Grid.Column="1"
+                        Text="✗ Nepřijdu"
+                        Command="{Binding SetAttendsCommand}"
+                        CommandParameter="{x:Boolean False}"
+                        BackgroundColor="{StaticResource AttendanceRed}"
+                        TextColor="White"
+                        BorderColor="{StaticResource AttendanceRed}"
+                        BorderWidth="2"
+                        CornerRadius="12"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        HeightRequest="52">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding Attends}" Value="True">
+                            <Setter Property="BackgroundColor" Value="Transparent" />
+                            <Setter Property="TextColor" Value="{StaticResource AttendanceRed}" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </Grid>
+
+            <!-- Role picker - visible only when attending -->
+            <Border Style="{StaticResource CardBorder}"
+                    IsVisible="{Binding Attends}"
+                    Padding="12">
+                <Picker Title="Vyberte roli"
+                        ItemsSource="{Binding RoleOptions}"
+                        SelectedItem="{Binding ActivityRole}" />
+            </Border>
+
+            <!-- Comment -->
+            <Border Style="{StaticResource CardBorder}" Padding="12">
+                <Editor Placeholder="Poznámka..."
+                        Text="{Binding Comment}"
+                        HeightRequest="100"
+                        AutoSize="TextChanges" />
+            </Border>
+
+            <!-- Save button -->
+            <Button Text="Uložit docházku"
+                    Style="{StaticResource PrimaryButton}"
+                    Command="{Binding SaveAttendanceCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                    Margin="0,8,0,20" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

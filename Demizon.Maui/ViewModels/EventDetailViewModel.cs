@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Demizon.Contracts.Attendances;
 using Demizon.Contracts.Events;
 using Demizon.Maui.Services;
@@ -27,6 +28,8 @@ public partial class EventDetailViewModel(IApiClient apiClient) : ObservableObje
     [ObservableProperty]
     private bool _isBusy;
 
+    public List<string> RoleOptions { get; } = ["Tanečník", "Muzikant"];
+
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -40,8 +43,20 @@ public partial class EventDetailViewModel(IApiClient apiClient) : ObservableObje
                 Comment = att.Comment;
                 ActivityRole = att.ActivityRole;
             }
+            else
+            {
+                Attends = false;
+                Comment = null;
+                ActivityRole = null;
+            }
         }
         finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private void SetAttends(bool value)
+    {
+        Attends = value;
     }
 
     [RelayCommand]
@@ -52,6 +67,7 @@ public partial class EventDetailViewModel(IApiClient apiClient) : ObservableObje
         {
             var request = new UpsertAttendanceRequest(Attends, Comment, ActivityRole);
             await apiClient.UpsertAttendanceAsync(EventId, request);
+            WeakReferenceMessenger.Default.Send(new EventsChangedMessage());
             await Shell.Current.GoToAsync("..");
         }
         finally { IsBusy = false; }

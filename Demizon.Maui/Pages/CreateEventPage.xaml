@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Demizon.Maui.ViewModels"
+             x:Class="Demizon.Maui.Pages.CreateEventPage"
+             x:DataType="vm:CreateEventViewModel"
+             Title="Nová akce">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <Label Text="Nová akce" Style="{StaticResource TitleLabel}" />
+
+            <!-- Name -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Název akce" Style="{StaticResource CaptionLabel}" />
+                <Border Style="{StaticResource CardBorder}" Padding="8,4">
+                    <Entry Placeholder="Např. Zkoušky, Vystoupení..."
+                           Text="{Binding Name}" />
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Date From -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Začátek" Style="{StaticResource CaptionLabel}" />
+                <Border Style="{StaticResource CardBorder}" Padding="12,8">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <DatePicker Grid.Column="0"
+                                    Date="{Binding DateFromDate}"
+                                    Format="dd.MM.yyyy"
+                                    MinimumDate="{x:Static sys:DateTime.Today}"
+                                    xmlns:sys="clr-namespace:System;assembly=System.Runtime" />
+                        <TimePicker Grid.Column="1"
+                                    Time="{Binding DateFromTime}"
+                                    Format="HH:mm" />
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Date To -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Konec" Style="{StaticResource CaptionLabel}" />
+                <Border Style="{StaticResource CardBorder}" Padding="12,8">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <DatePicker Grid.Column="0"
+                                    Date="{Binding DateToDate}"
+                                    Format="dd.MM.yyyy"
+                                    MinimumDate="{x:Static sys:DateTime.Today}"
+                                    xmlns:sys="clr-namespace:System;assembly=System.Runtime" />
+                        <TimePicker Grid.Column="1"
+                                    Time="{Binding DateToTime}"
+                                    Format="HH:mm" />
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Place -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Místo (volitelné)" Style="{StaticResource CaptionLabel}" />
+                <Border Style="{StaticResource CardBorder}" Padding="8,4">
+                    <Entry Placeholder="Např. Sokolovna, Sál..."
+                           Text="{Binding Place}" />
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- NotifyBeforeDays -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Upozornění předem" Style="{StaticResource CaptionLabel}" />
+                <Border Style="{StaticResource CardBorder}" Padding="8,4">
+                    <Picker Title="Vyberte..."
+                            ItemsSource="{Binding NotifyOptions}"
+                            SelectedIndex="{Binding NotifyBeforeDaysIndex}" />
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Recurrence -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Opakování" Style="{StaticResource CaptionLabel}" />
+                <Border Style="{StaticResource CardBorder}" Padding="8,4">
+                    <Picker Title="Vyberte..."
+                            ItemsSource="{Binding RecurrenceOptions}"
+                            SelectedIndex="{Binding RecurrenceIndex}" />
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Error message -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource ErrorColor}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}"
+                   FontSize="14" />
+
+            <!-- Create button -->
+            <Button Text="Vytvořit akci"
+                    Style="{StaticResource PrimaryButton}"
+                    Command="{Binding CreateCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                    Margin="0,8,0,20" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

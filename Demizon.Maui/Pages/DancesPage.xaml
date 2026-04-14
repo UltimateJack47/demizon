@@ -1,19 +1,64 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!-- TODO: Requires MAUI workload. Scaffold only. -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Demizon.Maui.ViewModels"
+             xmlns:dto="clr-namespace:Demizon.Contracts.Dances;assembly=Demizon.Contracts"
              x:Class="Demizon.Maui.Pages.DancesPage"
-             Title="Tance">
-    <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
-        <CollectionView ItemsSource="{Binding Dances}">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <VerticalStackLayout Padding="16,8">
-                        <Label Text="{Binding Name}" FontAttributes="Bold" />
-                        <Label Text="{Binding Region}" FontSize="Small" TextColor="Gray" />
-                    </VerticalStackLayout>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-    </RefreshView>
+             x:DataType="vm:DancesViewModel"
+             Title="Tance"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <Grid RowDefinitions="Auto,*">
+        <SearchBar Grid.Row="0"
+                   Placeholder="Hledat tance..."
+                   Text="{Binding SearchText}"
+                   Margin="16,8" />
+
+        <RefreshView Grid.Row="1"
+                     Command="{Binding LoadCommand}"
+                     IsRefreshing="{Binding IsBusy}">
+            <CollectionView ItemsSource="{Binding FilteredDances}">
+                <CollectionView.EmptyView>
+                    <Label Text="Žádné tance k zobrazení"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Style="{StaticResource SubtitleLabel}"
+                           Margin="0,40" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="dto:DanceDto">
+                        <Border Style="{StaticResource CardBorder}"
+                                Margin="16,6">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DancesViewModel}}, Path=NavigateToDetailCommand}"
+                                                      CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Name}"
+                                       FontAttributes="Bold"
+                                       FontSize="17"
+                                       TextColor="{StaticResource TextPrimary}" />
+                                <HorizontalStackLayout Spacing="4"
+                                                       IsVisible="{Binding Region, Converter={StaticResource StringToBoolConverter}}">
+                                    <Label Text="📍"
+                                           FontSize="13" />
+                                    <Label Text="{Binding Region}"
+                                           Style="{StaticResource CaptionLabel}" />
+                                </HorizontalStackLayout>
+                                <Label FontSize="12"
+                                       TextColor="{StaticResource TextSecondary}"
+                                       IsVisible="{Binding Videos.Count}">
+                                    <Label.Text>
+                                        <MultiBinding StringFormat="🎥 {0} videí">
+                                            <Binding Path="Videos.Count" />
+                                        </MultiBinding>
+                                    </Label.Text>
+                                </Label>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
 </ContentPage>
