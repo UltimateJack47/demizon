@@ -3,14 +3,13 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Append.Blazor.Notifications;
 using Demizon.Common.Configuration;
-using Demizon.Common.Exceptions;
 using Demizon.Core.Extensions;
 using Demizon.Core.Services.GoogleCalendar;
 using Demizon.Core.Services.Member;
 using Demizon.Dal;
-using Demizon.Dal.Entities;
 using Demizon.Dal.Extensions;
 using Demizon.Core.Services.Authentication;
+using Demizon.Mvc.Services;
 using Demizon.Mvc.Services.Authentication;
 using Demizon.Mvc.Services.Extensions;
 using Demizon.Mvc.Services.Notification;
@@ -57,6 +56,10 @@ builder.Services.AddHostedService<NotificationHostedService>();
 
 builder.Services.AddDatabase(defaultConnectionString);
 
+builder.Services.AddControllers();
+builder.Services.AddSingleton<FcmService>();
+builder.Services.AddHostedService<AttendanceReminderBackgroundService>();
+
 // Health check – ověří dostupnost DB
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<DemizonContext>("database");
@@ -83,9 +86,17 @@ if (app.Environment.IsDevelopment())
 {
     app.MapGet("/api/endpoints", () => new[]
     {
-        new { method = "POST", path = "/api/auth/token", description = "Vydá JWT token (login/heslo)" },
-        new { method = "POST", path = "/api/auth/refresh", description = "Vydá nový JWT token z refresh tokenu" },
-        new { method = "GET",  path = "/health", description = "Health check stav databáze" },
+        new { method = "POST", path = "/api/auth/token",           description = "Vydá JWT token (login/heslo)" },
+        new { method = "POST", path = "/api/auth/refresh",         description = "Vydá nový JWT token z refresh tokenu" },
+        new { method = "GET",  path = "/api/events/upcoming",      description = "Seznam nadcházejících akcí s docházkou přihlášeného člena" },
+        new { method = "GET",  path = "/api/events/{id}",          description = "Detail akce" },
+        new { method = "GET",  path = "/api/attendances/me",       description = "Docházka přihlášeného člena" },
+        new { method = "PUT",  path = "/api/attendances/{eventId}", description = "Upsert docházky na akci (+ Google Calendar sync)" },
+        new { method = "GET",  path = "/api/dances",               description = "Seznam viditelných tanců" },
+        new { method = "GET",  path = "/api/dances/{id}",          description = "Detail tance" },
+        new { method = "POST", path = "/api/notifications/device", description = "Registrace FCM device tokenu" },
+        new { method = "DELETE", path = "/api/notifications/device", description = "Odregistrování FCM device tokenu" },
+        new { method = "GET",  path = "/health",                   description = "Health check stav databáze" },
     }).ExcludeFromDescription();
 }
 
@@ -142,6 +153,8 @@ app.UseCookiePolicy();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
+
+app.MapControllers();
 
 app.MapPost("/ProcessLogin",
     async (HttpContext context, IAuthenticationService service) => await service.Login(context))
@@ -225,63 +238,6 @@ app.MapGet("/google/callback", async (
     return Results.Redirect("/Admin/Profile?gcal=connected");
 }).RequireAuthorization();
 
-// JWT token endpoint – pro budoucí API integraci (mobilní klient, externí nástroje)
-app.MapPost("/api/auth/token", async (HttpContext context, IAuthenticationService service) =>
-    await service.IssueToken(context))
-    .RequireRateLimiting("auth");
-
-// Refresh token endpoint – vydá nový access token na základě platného refresh tokenu
-app.MapPost("/api/auth/refresh", async (HttpContext context, RefreshTokenService refreshService,
-    TokenService tokenService, IMemberService memberService) =>
-{
-    string? rawRefreshToken = null;
-
-    if (context.Request.HasJsonContentType())
-    {
-        var body = await context.Request.ReadFromJsonAsync<RefreshRequest>();
-        rawRefreshToken = body?.RefreshToken;
-    }
-    else
-    {
-        rawRefreshToken = context.Request.Form["refreshToken"].ToString();
-    }
-
-    if (string.IsNullOrWhiteSpace(rawRefreshToken))
-    {
-        context.Response.StatusCode = StatusCodes.Status400BadRequest;
-        await context.Response.WriteAsJsonAsync(new { error = "Missing refresh token." });
-        return;
-    }
-
-    var memberId = await refreshService.ValidateAsync(rawRefreshToken);
-    if (memberId is null)
-    {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        await context.Response.WriteAsJsonAsync(new { error = "Invalid or expired refresh token." });
-        return;
-    }
-
-    Member member;
-    try { member = await memberService.GetOneAsync(memberId.Value); }
-    catch (EntityNotFoundException)
-    {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        await context.Response.WriteAsJsonAsync(new { error = "Member no longer exists." });
-        return;
-    }
-
-    var newAccessToken = tokenService.GenerateToken(member);
-    var jwtSettings = context.RequestServices.GetRequiredService<IOptions<JwtSettings>>().Value;
-    var newRefreshToken = await refreshService.CreateAsync(member.Id, jwtSettings.RefreshTokenExpirationDays);
-
-    await context.Response.WriteAsJsonAsync(new
-    {
-        token = newAccessToken,
-        refreshToken = newRefreshToken,
-        expiresIn = tokenService.ExpirationMinutes * 60
-    });
-}).RequireRateLimiting("auth");
-
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     ResponseWriter = async (context, report) =>
@@ -311,7 +267,6 @@ app.MapFallbackToPage("/_Host");
 
 app.ApplyDbMigrations();
 
-app.Run();
+FcmService.Initialize(app.Configuration, app.Logger);
 
-// Lokální record pro deserializaci těla refresh požadavku
-internal sealed record RefreshRequest(string RefreshToken);
+app.Run();

@@ -21,6 +21,7 @@
     <ItemGroup>
         <PackageReference Include="Append.Blazor.Notifications" Version="1.1.0" />
         <PackageReference Include="CryptoHelper" Version="4.0.0" />
+        <PackageReference Include="FirebaseAdmin" Version="3.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
             <PrivateAssets>all</PrivateAssets>
@@ -32,6 +33,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Demizon.Contracts\Demizon.Contracts.csproj" />
         <ProjectReference Include="..\Demizon.Core\Demizon.Core.csproj" />
         <ProjectReference Include="..\Demizon.Dal\Demizon.Dal.csproj" />
         <ProjectReference Include="..\Demizon.Common\Demizon.Common.csproj" />

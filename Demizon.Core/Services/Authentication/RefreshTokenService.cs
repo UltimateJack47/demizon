@@ -48,6 +48,8 @@ public class RefreshTokenService(DemizonContext db)
     /// <summary>
     /// Ověří raw token – vrátí MemberId pokud je platný, jinak null.
     /// Filtruje přes TokenPrefix index v DB, bcrypt ověření probíhá jen na 1–2 kandidátech.
+    /// Revokace je atomická podmíněným UPDATE (WHERE IsRevoked = 0) — zabraňuje replay útoku
+    /// při souběžných požadavcích se stejným tokenem.
     /// </summary>
     public async Task<int?> ValidateAsync(string? rawToken)
     {
@@ -64,11 +66,14 @@ public class RefreshTokenService(DemizonContext db)
         if (match is null)
             return null;
 
-        // Revokujeme použitý token atomicky (token rotation – každé použití vydá nový)
-        await using var tx = await db.Database.BeginTransactionAsync();
-        match.IsRevoked = true;
-        await db.SaveChangesAsync();
-        await tx.CommitAsync();
+        // Atomicky revokujeme token podmíněným UPDATE — vrátí 0 pokud již byl revokován
+        // souběžným požadavkem (token rotation replay ochrana).
+        var updated = await db.RefreshTokens
+            .Where(t => t.Id == match.Id && !t.IsRevoked)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.IsRevoked, true));
+
+        if (updated == 0)
+            return null;
 
         return match.MemberId;
     }
