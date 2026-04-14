@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- TODO: Requires MAUI workload. Scaffold only. -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Demizon.Maui.ViewModels"
+             x:Class="Demizon.Maui.Pages.LoginPage"
+             Title="Přihlášení">
+    <VerticalStackLayout Padding="32" Spacing="16" VerticalOptions="Center">
+        <Label Text="Demizon" FontSize="32" HorizontalOptions="Center" FontAttributes="Bold" />
+
+        <Entry Placeholder="Přihlašovací jméno"
+               Text="{Binding Login}"
+               AutomationId="LoginEntry" />
+
+        <Entry Placeholder="Heslo"
+               Text="{Binding Password}"
+               IsPassword="True"
+               AutomationId="PasswordEntry" />
+
+        <Label Text="{Binding ErrorMessage}"
+               TextColor="Red"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+        <Button Text="Přihlásit se"
+                Command="{Binding LoginCommand}"
+                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}" />
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+    </VerticalStackLayout>
+</ContentPage>

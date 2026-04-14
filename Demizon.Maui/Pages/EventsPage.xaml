@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- TODO: Requires MAUI workload. Scaffold only. -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Demizon.Maui.ViewModels"
+             x:Class="Demizon.Maui.Pages.EventsPage"
+             Title="Akce">
+    <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+        <CollectionView ItemsSource="{Binding Events}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="16,8" ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" />
+                            <Label Text="{Binding DateFrom, StringFormat='{0:dd.MM.yyyy}'}" FontSize="Small" />
+                            <Label Text="{Binding Place}" FontSize="Small" TextColor="Gray" />
+                        </VerticalStackLayout>
+                        <!-- Attendance indicator: green = has attendance, gray = no attendance -->
+                        <BoxView Grid.Column="1" WidthRequest="12" HeightRequest="12"
+                                 CornerRadius="6" VerticalOptions="Center"
+                                 Color="{Binding MyAttendance, Converter={StaticResource AttendanceColorConverter}}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </RefreshView>
+</ContentPage>

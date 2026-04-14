@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    TODO: Requires MAUI workload. Scaffold only.
+    Shell with tabs: Events / Dances. LoginPage as pre-auth route.
+-->
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:Demizon.Maui.Pages"
+       x:Class="Demizon.Maui.AppShell">
+
+    <!-- Pre-auth route -->
+    <ShellContent Route="login"
+                  ContentTemplate="{DataTemplate pages:LoginPage}"
+                  Shell.NavBarIsVisible="False" />
+
+    <!-- Post-auth tabs -->
+    <TabBar>
+        <ShellContent Title="Akce"
+                      Route="events"
+                      ContentTemplate="{DataTemplate pages:EventsPage}" />
+        <ShellContent Title="Tance"
+                      Route="dances"
+                      ContentTemplate="{DataTemplate pages:DancesPage}" />
+    </TabBar>
+</Shell>

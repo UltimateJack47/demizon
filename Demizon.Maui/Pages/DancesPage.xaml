@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- TODO: Requires MAUI workload. Scaffold only. -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Demizon.Maui.Pages.DancesPage"
+             Title="Tance">
+    <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+        <CollectionView ItemsSource="{Binding Dances}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <VerticalStackLayout Padding="16,8">
+                        <Label Text="{Binding Name}" FontAttributes="Bold" />
+                        <Label Text="{Binding Region}" FontSize="Small" TextColor="Gray" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </RefreshView>
+</ContentPage>

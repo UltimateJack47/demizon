@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- TODO: Requires MAUI workload. Scaffold only. -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Demizon.Maui.Pages.DanceDetailPage"
+             Title="{Binding Dance.Name}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label Text="{Binding Dance.Name}" FontSize="Large" FontAttributes="Bold" />
+            <Label Text="{Binding Dance.Region}" TextColor="Gray" />
+            <Label Text="{Binding Dance.Description}" />
+
+            <BoxView HeightRequest="1" Color="LightGray" IsVisible="{Binding Dance.Lyrics, Converter={StaticResource StringToBoolConverter}}" />
+            <Label Text="Text písně" FontAttributes="Bold" IsVisible="{Binding Dance.Lyrics, Converter={StaticResource StringToBoolConverter}}" />
+            <Label Text="{Binding Dance.Lyrics}" />
+
+            <BoxView HeightRequest="1" Color="LightGray" />
+            <Label Text="Videa" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding Dance.Videos}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <VerticalStackLayout Padding="0,4">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" />
+                            <!-- TODO: WebView or YouTube player for video URL -->
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

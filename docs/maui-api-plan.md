@@ -1,6 +1,6 @@
 # Demizon — Implementační plán: Api + Maui
 
-**Stav:** 🔲 Čeká na implementaci  
+**Stav:** 🔄 Fáze 3+4 dokončeny, Fáze 5 scaffolding hotov  
 **Poslední aktualizace:** 2026-04-13
 
 ---
@@ -83,14 +83,14 @@ Demizon.Mvc  → Core + Dal + Common  [beze změny]
 
 | # | Úkol | Soubor | Stav |
 |---|---|---|---|
-| 3.1 | Vytvořit projekt + přidat do solution | `Demizon.Contracts/Demizon.Contracts.csproj` (net10.0, žádné NuGet, žádné project refs) | 🔲 |
-| 3.2 | Auth DTOs | `Auth/TokenRequest.cs`, `Auth/TokenResponse.cs`, `Auth/RefreshRequest.cs` | 🔲 |
-| 3.3 | Events DTOs | `Events/EventDto.cs` — Id, Name, DateFrom, DateTo, Place, IsCancelled, RecurrenceType | 🔲 |
-| 3.4 | Attendance DTOs | `Attendances/AttendanceDto.cs`, `Attendances/UpsertAttendanceRequest.cs` — bool? Attends, string? Comment, string? Role | 🔲 |
-| 3.5 | Dances DTOs | `Dances/DanceDto.cs`, `Dances/VideoLinkDto.cs` | 🔲 |
-| 3.6 | Members DTOs | `Members/MemberProfileDto.cs` — bez PasswordHash | 🔲 |
-| 3.7 | Notifications DTOs | `Notifications/RegisterDeviceRequest.cs` — record(string Token, string Platform) | 🔲 |
-| 3.8 | Build Contracts | `dotnet build Demizon.Contracts` | 🔲 |
+| 3.1 | Vytvořit projekt + přidat do solution | `Demizon.Contracts/Demizon.Contracts.csproj` (net10.0, žádné NuGet, žádné project refs) | ✅ |
+| 3.2 | Auth DTOs | `Auth/TokenRequest.cs`, `Auth/TokenResponse.cs`, `Auth/RefreshRequest.cs` | ✅ |
+| 3.3 | Events DTOs | `Events/EventDto.cs` — Id, Name, DateFrom, DateTo, Place, IsCancelled, RecurrenceType | ✅ |
+| 3.4 | Attendance DTOs | `Attendances/AttendanceDto.cs`, `Attendances/UpsertAttendanceRequest.cs` — bool? Attends, string? Comment, string? Role | ✅ |
+| 3.5 | Dances DTOs | `Dances/DanceDto.cs`, `Dances/VideoLinkDto.cs` | ✅ |
+| 3.6 | Members DTOs | `Members/MemberProfileDto.cs` — bez PasswordHash | ✅ |
+| 3.7 | Notifications DTOs | `Notifications/RegisterDeviceRequest.cs` — record(string Token, string Platform) | ✅ |
+| 3.8 | Build Contracts | `dotnet build Demizon.Contracts` | ✅ |
 
 ---
 
@@ -102,31 +102,31 @@ Demizon.Mvc  → Core + Dal + Common  [beze změny]
 
 | # | Úkol | Soubor | Stav |
 |---|---|---|---|
-| 4.1 | Vytvořit projekt + přidat do solution | `Demizon.Api/Demizon.Api.csproj` — `Microsoft.NET.Sdk.Web`, `net10.0`, refs: Core+Dal+Common+Contracts | 🔲 |
-| 4.2 | Přidat NuGet balíčky | `JwtBearer`, `CryptoHelper`, `Scalar.AspNetCore`, `FirebaseAdmin`, `HealthChecks.EntityFrameworkCore` | 🔲 |
-| 4.3 | `appsettings.json` | Connection string na stejný `.sqlite` soubor, sekce `Jwt` (stejné hodnoty jako Mvc), `Firebase` sekce | 🔲 |
-| 4.4 | `ApiAuthServicesExtension.cs` | JWT-only auth (bez cookies), stejné `JwtSettings` z Common | 🔲 |
-| 4.4b | Ověřit využití `TokenService.ValidateToken` | JwtBearer middleware pokrývá standardní validaci automaticky — pokud žádný controller/handler `ValidateToken` nevolá manuálně, metodu odebrat z `TokenService` | 🔲 |
-| 4.5 | `CurrentUserAccessor.cs` | Implementace `ICurrentUserAccessor` čtením z JWT claims přes `IHttpContextAccessor` | 🔲 |
-| 4.6 | `ContractMappingExtensions.cs` | Extension metody: entita → DTO (Events, Attendances, Dances) | 🔲 |
-| 4.7 | `Program.cs` | JWT auth, CORS, rate limiter (auth endpointy), health checks, Scalar OpenAPI, WAL mode | 🔲 |
+| 4.1 | Vytvořit projekt + přidat do solution | `Demizon.Api/Demizon.Api.csproj` — `Microsoft.NET.Sdk.Web`, `net10.0`, refs: Core+Dal+Common+Contracts | ✅ |
+| 4.2 | Přidat NuGet balíčky | `JwtBearer`, `CryptoHelper`, `Scalar.AspNetCore`, `FirebaseAdmin`, `HealthChecks.EntityFrameworkCore` | ✅ |
+| 4.3 | `appsettings.json` | Connection string na stejný `.sqlite` soubor, sekce `Jwt` (stejné hodnoty jako Mvc), `Firebase` sekce | ✅ |
+| 4.4 | `ApiAuthServicesExtension.cs` | JWT-only auth (bez cookies), stejné `JwtSettings` z Common | ✅ |
+| 4.4b | Ověřit využití `TokenService.ValidateToken` | JwtBearer middleware pokrývá standardní validaci automaticky — pokud žádný controller/handler `ValidateToken` nevolá manuálně, metodu odebrat z `TokenService` | ✅ |
+| 4.5 | `CurrentUserAccessor.cs` | Implementace `ICurrentUserAccessor` čtením z JWT claims přes `IHttpContextAccessor` | ✅ |
+| 4.6 | `ContractMappingExtensions.cs` | Extension metody: entita → DTO (Events, Attendances, Dances) | ✅ |
+| 4.7 | `Program.cs` | JWT auth, CORS, rate limiter (auth endpointy), health checks, Scalar OpenAPI, WAL mode | ✅ |
 
 ### 4B — Controllery
 
 | # | Úkol | Soubor | Stav |
 |---|---|---|---|
-| 4.8 | `AuthController.cs` | `POST /api/auth/token`, `POST /api/auth/refresh` (přepoužít TokenService+RefreshTokenService z Core) | 🔲 |
-| 4.9 | `EventsController.cs` | `GET /api/events/upcoming`, `GET /api/events/{id}` (s mou docházkou v odpovědi) | 🔲 |
-| 4.10 | `AttendancesController.cs` | `GET /api/attendances/me`, `PUT /api/attendances/{eventId}` (+ Google Calendar sync přes `IGoogleCalendarService`) | 🔲 |
-| 4.11 | `DancesController.cs` | `GET /api/dances`, `GET /api/dances/{id}` (s videi) | 🔲 |
-| 4.12 | `NotificationsController.cs` | `POST /api/notifications/device`, `DELETE /api/notifications/device` | 🔲 |
+| 4.8 | `AuthController.cs` | `POST /api/auth/token`, `POST /api/auth/refresh` (přepoužít TokenService+RefreshTokenService z Core) | ✅ |
+| 4.9 | `EventsController.cs` | `GET /api/events/upcoming`, `GET /api/events/{id}` (s mou docházkou v odpovědi) | ✅ |
+| 4.10 | `AttendancesController.cs` | `GET /api/attendances/me`, `PUT /api/attendances/{eventId}` (+ Google Calendar sync přes `IGoogleCalendarService`) | ✅ |
+| 4.11 | `DancesController.cs` | `GET /api/dances`, `GET /api/dances/{id}` (s videi) | ✅ |
+| 4.12 | `NotificationsController.cs` | `POST /api/notifications/device`, `DELETE /api/notifications/device` | ✅ |
 
 ### 4C — Push notifikace
 
 | # | Úkol | Soubor | Stav |
 |---|---|---|---|
-| 4.13 | `FcmService.cs` | Wrapper nad Firebase Admin SDK pro odesílání FCM zpráv na device token | 🔲 |
-| 4.14 | Background service pro nevyplněnou docházku | Periodická kontrola: člen má akci bez záznamu docházky → FCM push | 🔲 |
+| 4.13 | `FcmService.cs` | Wrapper nad Firebase Admin SDK pro odesílání FCM zpráv na device token | ✅ |
+| 4.14 | Background service pro nevyplněnou docházku | Periodická kontrola: člen má akci bez záznamu docházky → FCM push | ✅ |
 
 ### 4D — Ověření Api
 
@@ -149,20 +149,20 @@ Demizon.Mvc  → Core + Dal + Common  [beze změny]
 
 | # | Úkol | Soubor | Stav |
 |---|---|---|---|
-| 5.1 | Vytvořit MAUI projekt + přidat do solution | `Demizon.Maui/Demizon.Maui.csproj` — `<UseMaui>true</UseMaui>`, `net10.0-android;net10.0-ios`, ref: Contracts | 🔲 |
-| 5.2 | Přidat NuGet balíčky | `CommunityToolkit.Maui`, `CommunityToolkit.Mvvm`, `Refit`, `Refit.HttpClientFactory`, `Plugin.Firebase.CloudMessaging` | 🔲 |
-| 5.3 | Firebase setup — Android | `Platforms/Android/google-services.json` + inicializace FCM v `MainApplication.cs` | 🔲 |
-| 5.4 | Firebase setup — iOS | `Platforms/iOS/GoogleService-Info.plist` + inicializace v `AppDelegate.cs` | 🔲 |
-| 5.5 | `TokenStorage.cs` | Wrapper nad `SecureStorage.Default` pro uložení JWT + refresh tokenu | 🔲 |
-| 5.6 | `AuthHandler.cs` | `DelegatingHandler`: přidá Bearer header, na 401 refresh → retry jednou | 🔲 |
-| 5.7 | `IApiClient.cs` | Refit interface pro všechny endpointy s Contracts typy | 🔲 |
-| 5.8 | `MauiProgram.cs` | DI setup: Refit client, AuthHandler, ViewModels, base URL (`#if ANDROID` → `10.0.2.2`) | 🔲 |
+| 5.1 | Vytvořit MAUI projekt + přidat do solution | `Demizon.Maui/Demizon.Maui.csproj` — `<UseMaui>true</UseMaui>`, `net10.0-android;net10.0-ios`, ref: Contracts | ✅ |
+| 5.2 | Přidat NuGet balíčky | `CommunityToolkit.Maui`, `CommunityToolkit.Mvvm`, `Refit`, `Refit.HttpClientFactory`, `Plugin.Firebase.CloudMessaging` | ✅ |
+| 5.3 | Firebase setup — Android | `Platforms/Android/google-services.json` + inicializace FCM v `MainApplication.cs` | ✅ |
+| 5.4 | Firebase setup — iOS | `Platforms/iOS/GoogleService-Info.plist` + inicializace v `AppDelegate.cs` | ✅ |
+| 5.5 | `TokenStorage.cs` | Wrapper nad `SecureStorage.Default` pro uložení JWT + refresh tokenu | ✅ |
+| 5.6 | `AuthHandler.cs` | `DelegatingHandler`: přidá Bearer header, na 401 refresh → retry jednou | ✅ |
+| 5.7 | `IApiClient.cs` | Refit interface pro všechny endpointy s Contracts typy | ✅ |
+| 5.8 | `MauiProgram.cs` | DI setup: Refit client, AuthHandler, ViewModels, base URL (`#if ANDROID` → `10.0.2.2`) | ✅ |
 
 ### 5B — Shell a navigace
 
 | # | Úkol | Soubor | Stav |
 |---|---|---|---|
-| 5.9 | `AppShell.xaml` | Tab bar: **Akce** / **Tance**; LoginPage jako pre-auth route (bez tabů) | 🔲 |
+| 5.9 | `AppShell.xaml` | Tab bar: **Akce** / **Tance**; LoginPage jako pre-auth route (bez tabů) | ✅ |
 
 ### 5C — Login
 
@@ -212,7 +212,7 @@ Demizon.Mvc  → Core + Dal + Common  [beze změny]
 
 | Riziko | Mitigace |
 |---|---|
-| SQLite souběžný přístup Mvc + Api | WAL mode + busy timeout (fáze 2.3) |
+| SQLite souběžný přístup Mvc + Api | WAL mode + busy timeout (fáze 2.4) |
 | FCM vyžaduje Firebase projekt + konfigurační soubory | Vytvořit Firebase projekt před fází 4.13 a 5.3 |
 | APNs na iOS → Apple Developer Program ($99/rok) | iOS push testovat až po registraci; Android emulátor postačí pro MVP |
 | Android emulátor → `localhost` nedosažitelný | `#if ANDROID` switch v MauiProgram.cs → `10.0.2.2` |

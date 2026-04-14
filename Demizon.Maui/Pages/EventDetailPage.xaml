@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- TODO: Requires MAUI workload. Scaffold only. -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Demizon.Maui.Pages.EventDetailPage"
+             Title="{Binding Event.Name}">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label Text="{Binding Event.Name}" FontSize="Large" FontAttributes="Bold" />
+            <Label Text="{Binding Event.DateFrom, StringFormat='Datum: {0:dd.MM.yyyy HH:mm}'}" />
+            <Label Text="{Binding Event.Place, StringFormat='Místo: {0}'}" IsVisible="{Binding Event.Place, Converter={StaticResource StringToBoolConverter}}" />
+
+            <BoxView HeightRequest="1" Color="LightGray" />
+            <Label Text="Moje docházka" FontAttributes="Bold" />
+
+            <HorizontalStackLayout Spacing="8">
+                <Label Text="Přijdu:" VerticalOptions="Center" />
+                <Switch IsToggled="{Binding Attends}" />
+            </HorizontalStackLayout>
+
+            <Picker Title="Role" SelectedItem="{Binding ActivityRole}">
+                <Picker.Items>
+                    <x:String>Dancer</x:String>
+                    <x:String>Musician</x:String>
+                </Picker.Items>
+            </Picker>
+
+            <Editor Placeholder="Komentář..." Text="{Binding Comment}" HeightRequest="80" />
+
+            <Button Text="Uložit" Command="{Binding SaveAttendanceCommand}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

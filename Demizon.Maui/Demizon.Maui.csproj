@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- iOS odstraněno – nainstalovaný workload je pouze maui-android -->
+    <TargetFrameworks>net10.0-android</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <UseMaui>true</UseMaui>
+    <RootNamespace>Demizon.Maui</RootNamespace>
+    <ApplicationId>cz.demizon.app</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Demizon.Contracts\Demizon.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <MauiXaml Update="App.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="AppShell.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\LoginPage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\EventsPage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\EventDetailPage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\DancesPage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\DanceDetailPage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Resources\Styles\Colors.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Resources\Styles\Styles.xaml" Generator="MSBuild:Compile" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Refit" Version="8.0.0" />
+    <PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />
+    <PackageReference Include="Plugin.Firebase.CloudMessaging" Version="3.1.1" />
+  </ItemGroup>
+  <!-- Android: google-services.json needs to be placed in Platforms/Android/ -->
+</Project>
