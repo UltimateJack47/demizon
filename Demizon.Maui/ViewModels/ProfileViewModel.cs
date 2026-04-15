@@ -8,7 +8,7 @@ using Plugin.Firebase.CloudMessaging;
 
 namespace Demizon.Maui.ViewModels;
 
-public partial class ProfileViewModel(IApiClient apiClient, TokenStorage tokenStorage) : ObservableObject
+public partial class ProfileViewModel(IApiClient apiClient, TokenStorage tokenStorage, INavigationService navigation) : ObservableObject
 {
     [ObservableProperty]
     private string _login = string.Empty;
@@ -171,7 +171,7 @@ public partial class ProfileViewModel(IApiClient apiClient, TokenStorage tokenSt
     private async Task LogoutAsync()
     {
         tokenStorage.Clear();
-        await Shell.Current.GoToAsync("//login");
+        await navigation.GoToAsync(AppRoutes.Login);
     }
 
     private static Dictionary<string, JsonElement>? ParseJwtClaims(string jwt)

@@ -8,10 +8,17 @@ using Demizon.Maui.Services;
 namespace Demizon.Maui.ViewModels;
 
 [QueryProperty(nameof(EventId), "eventId")]
-public partial class EventDetailViewModel(IApiClient apiClient) : ObservableObject
+[QueryProperty(nameof(RehearsalDateString), "rehearsalDate")]
+public partial class EventDetailViewModel(IApiClient apiClient, INavigationService navigation) : ObservableObject
 {
     [ObservableProperty]
     private int _eventId;
+
+    // Set when editing a rehearsal (no EventId). Format: "yyyy-MM-dd"
+    [ObservableProperty]
+    private string? _rehearsalDateString;
+
+    private bool IsRehearsal => EventId == 0 && !string.IsNullOrEmpty(RehearsalDateString);
 
     [ObservableProperty]
     private EventDto? _event;
@@ -36,19 +43,45 @@ public partial class EventDetailViewModel(IApiClient apiClient) : ObservableObje
         IsBusy = true;
         try
         {
-            Event = await apiClient.GetEventAsync(EventId);
-            if (Event?.MyAttendance is { } att)
+            if (IsRehearsal)
             {
-                Attends = att.Attends;
-                Comment = att.Comment;
-                ActivityRole = att.ActivityRole;
+                var date = DateTime.Parse(RehearsalDateString!);
+                Event = new EventDto(0, "Zkouška", date, date.AddHours(2), null, false, "Weekly", IsRehearsal: true);
+                try
+                {
+                    var att = await apiClient.GetRehearsalAttendanceAsync(date);
+                    Attends = att.Attends;
+                    Comment = att.Comment;
+                    ActivityRole = null;
+                }
+                catch
+                {
+                    // No existing attendance record — default to not attending
+                    Attends = false;
+                    Comment = null;
+                    ActivityRole = null;
+                }
             }
             else
             {
-                Attends = false;
-                Comment = null;
-                ActivityRole = null;
+                Event = await apiClient.GetEventAsync(EventId);
+                if (Event?.MyAttendance is { } att)
+                {
+                    Attends = att.Attends;
+                    Comment = att.Comment;
+                    ActivityRole = att.ActivityRole;
+                }
+                else
+                {
+                    Attends = false;
+                    Comment = null;
+                    ActivityRole = null;
+                }
             }
+        }
+        catch (Exception)
+        {
+            // Silently ignore load errors — page will show empty state
         }
         finally { IsBusy = false; }
     }
@@ -66,9 +99,17 @@ public partial class EventDetailViewModel(IApiClient apiClient) : ObservableObje
         try
         {
             var request = new UpsertAttendanceRequest(Attends, Comment, ActivityRole);
-            await apiClient.UpsertAttendanceAsync(EventId, request);
+            if (IsRehearsal)
+            {
+                var date = DateTime.Parse(RehearsalDateString!);
+                await apiClient.UpsertRehearsalAttendanceAsync(date, request);
+            }
+            else
+            {
+                await apiClient.UpsertAttendanceAsync(EventId, request);
+            }
             WeakReferenceMessenger.Default.Send(new EventsChangedMessage());
-            await Shell.Current.GoToAsync("..");
+            await navigation.GoBackAsync();
         }
         finally { IsBusy = false; }
     }

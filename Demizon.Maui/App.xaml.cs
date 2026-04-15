@@ -1,6 +1,3 @@
-using System.Text;
-using System.Text.Json;
-using Demizon.Contracts.Auth;
 using Demizon.Maui.Services;
 
 namespace Demizon.Maui;
@@ -19,6 +16,9 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
+        // Force light theme to match MVC app appearance
+        UserAppTheme = AppTheme.Light;
+
         var window = new Window(_shell);
 
         window.Created += (_, _) =>
@@ -37,7 +37,7 @@ public partial class App : Application
 
             if (_tokenStorage.IsTokenValid())
             {
-                await Shell.Current.GoToAsync("//events");
+                await Shell.Current.GoToAsync(AppRoutes.MainTabs);
                 return;
             }
 
@@ -45,12 +45,12 @@ public partial class App : Application
             if (refreshToken is null) return;
 
             var login = await _tokenStorage.GetLoginAsync();
-            var result = await RefreshTokenDirectAsync(refreshToken);
+            var result = await TokenRefreshHelper.RefreshAsync(refreshToken);
 
             if (result is not null)
             {
                 await _tokenStorage.SaveAsync(result, login ?? string.Empty);
-                await Shell.Current.GoToAsync("//events");
+                await Shell.Current.GoToAsync(AppRoutes.MainTabs);
             }
             else
             {
@@ -61,23 +61,5 @@ public partial class App : Application
         {
             _tokenStorage.Clear();
         }
-    }
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
-    private static async Task<TokenResponse?> RefreshTokenDirectAsync(string refreshToken)
-    {
-        using var client = new HttpClient { BaseAddress = new Uri(ApiConfig.BaseUrl) };
-        var payload = JsonSerializer.Serialize(new RefreshRequest(refreshToken), JsonOptions);
-        var content = new StringContent(payload, Encoding.UTF8, "application/json");
-
-        var response = await client.PostAsync("/api/auth/refresh", content);
-        if (!response.IsSuccessStatusCode) return null;
-
-        var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<TokenResponse>(json, JsonOptions);
     }
 }

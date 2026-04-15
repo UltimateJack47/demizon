@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 
 namespace Demizon.Maui.ViewModels;
 
-public partial class DancesViewModel(IApiClient apiClient) : ObservableObject
+public partial class DancesViewModel(IApiClient apiClient, INavigationService navigation) : ObservableObject
 {
     private List<DanceDto> _allDances = [];
 
@@ -37,7 +37,7 @@ public partial class DancesViewModel(IApiClient apiClient) : ObservableObject
     [RelayCommand]
     private async Task NavigateToDetailAsync(DanceDto dance)
     {
-        await Shell.Current.GoToAsync($"//dances/detail?danceId={dance.Id}");
+        await navigation.GoToAsync($"{AppRoutes.DanceDetail}?danceId={dance.Id}");
     }
 
     private void ApplyFilter()

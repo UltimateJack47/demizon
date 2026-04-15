@@ -10,10 +10,12 @@ namespace Demizon.Maui.ViewModels;
 public partial class EventsViewModel : ObservableObject, IRecipient<EventsChangedMessage>
 {
     private readonly IApiClient _apiClient;
+    private readonly INavigationService _navigation;
 
-    public EventsViewModel(IApiClient apiClient)
+    public EventsViewModel(IApiClient apiClient, INavigationService navigation)
     {
         _apiClient = apiClient;
+        _navigation = navigation;
         WeakReferenceMessenger.Default.Register(this);
     }
 
@@ -57,13 +59,13 @@ public partial class EventsViewModel : ObservableObject, IRecipient<EventsChange
     [RelayCommand]
     private async Task NavigateToDetail(EventDto eventDto)
     {
-        await Shell.Current.GoToAsync($"//events/detail?eventId={eventDto.Id}");
+        await _navigation.GoToAsync($"{AppRoutes.EventDetail}?eventId={eventDto.Id}");
     }
 
     [RelayCommand]
     private async Task NavigateToCreate()
     {
-        await Shell.Current.GoToAsync("//events/create");
+        await _navigation.GoToAsync(AppRoutes.EventCreate);
     }
 
     public void Receive(EventsChangedMessage message)

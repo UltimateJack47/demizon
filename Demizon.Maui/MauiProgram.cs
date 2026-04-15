@@ -1,6 +1,8 @@
 using Demizon.Maui.Pages;
+using Demizon.Maui.Pages.Attendance;
 using Demizon.Maui.Services;
 using Demizon.Maui.ViewModels;
+using Demizon.Maui.ViewModels.Attendance;
 using Microsoft.Extensions.Logging;
 using Refit;
 
@@ -22,8 +24,9 @@ public static class MauiProgram
 
         var services = builder.Services;
 
-        // Storage + auth handler
+        // Storage, auth handler, navigation
         services.AddSingleton<TokenStorage>();
+        services.AddSingleton<INavigationService, ShellNavigationService>();
         services.AddTransient<AuthHandler>();
 
         // Refit HTTP klient s auth handler
@@ -33,6 +36,9 @@ public static class MauiProgram
 
         // ViewModels
         services.AddTransient<LoginViewModel>();
+        services.AddTransient<AttendanceViewModel>();
+        services.AddTransient<AttendanceStatsViewModel>();
+        services.AddTransient<AllMembersAttendanceViewModel>();
         services.AddTransient<EventsViewModel>();
         services.AddTransient<EventDetailViewModel>();
         services.AddTransient<DancesViewModel>();
@@ -42,6 +48,9 @@ public static class MauiProgram
 
         // Pages
         services.AddTransient<LoginPage>();
+        services.AddTransient<AttendancePage>();
+        services.AddTransient<AttendanceStatsPage>();
+        services.AddTransient<AllMembersAttendancePage>();
         services.AddTransient<EventsPage>();
         services.AddTransient<EventDetailPage>();
         services.AddTransient<DancesPage>();

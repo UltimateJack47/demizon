@@ -6,7 +6,7 @@ using Demizon.Maui.Services;
 
 namespace Demizon.Maui.ViewModels;
 
-public partial class CreateEventViewModel(IApiClient apiClient) : ObservableObject
+public partial class CreateEventViewModel(IApiClient apiClient, INavigationService navigation) : ObservableObject
 {
     [ObservableProperty]
     private string _name = string.Empty;
@@ -91,7 +91,7 @@ public partial class CreateEventViewModel(IApiClient apiClient) : ObservableObje
             await apiClient.CreateEventAsync(request);
 
             WeakReferenceMessenger.Default.Send(new EventsChangedMessage());
-            await Shell.Current.GoToAsync("..");
+            await navigation.GoBackAsync();
         }
         catch (Exception)
         {
