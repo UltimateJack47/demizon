@@ -149,7 +149,7 @@
 
     <!-- ===== Border (card style) ===== -->
     <Style x:Key="CardBorder" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackground}, Dark={StaticResource CardBackgroundDark}}" />
         <Setter Property="Stroke" Value="{StaticResource Gray200}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="RoundRectangle 12" />
@@ -163,7 +163,7 @@
 
     <!-- ===== Frame (legacy card) ===== -->
     <Style TargetType="Frame">
-        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBackground}, Dark={StaticResource CardBackgroundDark}}" />
         <Setter Property="BorderColor" Value="{StaticResource Gray200}" />
         <Setter Property="CornerRadius" Value="12" />
         <Setter Property="Padding" Value="16" />
@@ -195,7 +195,7 @@
 
     <!-- ===== SearchBar ===== -->
     <Style TargetType="SearchBar">
-        <Setter Property="BackgroundColor" Value="{StaticResource WarmBeige}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource WarmBeige}, Dark={StaticResource WarmBeigeDark}}" />
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
         <Setter Property="PlaceholderColor" Value="{StaticResource Gray400}" />
         <Setter Property="CancelButtonColor" Value="{StaticResource Primary}" />

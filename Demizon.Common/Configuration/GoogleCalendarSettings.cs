@@ -4,14 +4,23 @@ namespace Demizon.Common.Configuration;
 
 public class GoogleCalendarSettings
 {
-    [Required]
-    public string ClientId { get; set; } = null!;
+    /// <summary>
+    /// OAuth Client ID z Google Cloud Console. Pokud není nastaveno, integrace s Google Calendar je zakázána.
+    /// </summary>
+    public string? ClientId { get; set; }
 
-    [Required]
-    public string ClientSecret { get; set; } = null!;
+    /// <summary>
+    /// OAuth Client Secret z Google Cloud Console. Pokud není nastaveno, integrace s Google Calendar je zakázána.
+    /// </summary>
+    public string? ClientSecret { get; set; }
 
     [Required]
     public string RedirectUri { get; set; } = null!;
+
+    /// <summary>
+    /// Vrátí true pokud jsou OAuth credentials nakonfigurované a integrace může fungovat.
+    /// </summary>
+    public bool IsConfigured => !string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(ClientSecret);
 
     /// <summary>
     /// ID Google Calendar, do kterého se zapisují události. Výchozí "primary" = hlavní kalendář uživatele.

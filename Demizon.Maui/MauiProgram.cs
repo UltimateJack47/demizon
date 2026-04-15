@@ -18,13 +18,7 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        // Android emulátor → 10.0.2.2 mapuje na localhost hosta
-        const string baseUrl =
-#if ANDROID
-            "http://10.0.2.2:5000";
-#else
-            "http://localhost:5000";
-#endif
+        const string baseUrl = ApiConfig.BaseUrl;
 
         var services = builder.Services;
 

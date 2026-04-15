@@ -30,7 +30,7 @@
             <Border StrokeShape="RoundRectangle 45"
                     Stroke="{StaticResource TextOnPrimary}"
                     StrokeThickness="3"
-                    BackgroundColor="{StaticResource CardBackground}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource CardBackground}, Dark={StaticResource CardBackgroundDark}}"
                     WidthRequest="90"
                     HeightRequest="90"
                     HorizontalOptions="Center">
@@ -61,7 +61,7 @@
                 VerticalOptions="Start"
                 StrokeShape="RoundRectangle 12"
                 Stroke="Transparent"
-                BackgroundColor="{StaticResource CardBackground}"
+                BackgroundColor="{AppThemeBinding Light={StaticResource CardBackground}, Dark={StaticResource CardBackgroundDark}}"
                 Shadow="{Shadow Brush=Black, Offset='0,4', Radius=16, Opacity=0.12}">
 
             <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">

@@ -57,13 +57,13 @@ public partial class EventsViewModel : ObservableObject, IRecipient<EventsChange
     [RelayCommand]
     private async Task NavigateToDetail(EventDto eventDto)
     {
-        await Shell.Current.GoToAsync($"events/detail?eventId={eventDto.Id}");
+        await Shell.Current.GoToAsync($"//events/detail?eventId={eventDto.Id}");
     }
 
     [RelayCommand]
     private async Task NavigateToCreate()
     {
-        await Shell.Current.GoToAsync("events/create");
+        await Shell.Current.GoToAsync("//events/create");
     }
 
     public void Receive(EventsChangedMessage message)

@@ -11,9 +11,13 @@
     
     <!-- Backgrounds -->
     <Color x:Key="PageBackground">#FEFBF5</Color>
+    <Color x:Key="PageBackgroundDark">#1A1008</Color>
     <Color x:Key="CardBackground">#FFFFFF</Color>
+    <Color x:Key="CardBackgroundDark">#2C1E12</Color>
     <Color x:Key="DrawerBackground">#FAF3E8</Color>
+    <Color x:Key="DrawerBackgroundDark">#1F1208</Color>
     <Color x:Key="WarmBeige">#F5EEE0</Color>
+    <Color x:Key="WarmBeigeDark">#3A2A18</Color>
     
     <!-- Text -->
     <Color x:Key="TextPrimary">#4A3420</Color>

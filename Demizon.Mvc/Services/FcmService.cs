@@ -48,7 +48,12 @@ public class FcmService(ILogger<FcmService> logger)
             {
                 Token = deviceToken,
                 Notification = new FirebaseAdmin.Messaging.Notification { Title = title, Body = body },
-                Data = data
+                Data = data,
+                Android = new AndroidConfig
+                {
+                    // Must match the channel created in MainActivity.EnsureNotificationChannel()
+                    Notification = new AndroidNotification { ChannelId = "demizon_channel" }
+                }
             };
 
             await FirebaseMessaging.DefaultInstance.SendAsync(message);

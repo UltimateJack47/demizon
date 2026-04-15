@@ -7,6 +7,7 @@
         <RootNamespace>Demizon.Mvc</RootNamespace>
         <LangVersion>default</LangVersion>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <UserSecretsId>107a1f1d-2b6e-43e5-bab9-1c84faff249c</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>

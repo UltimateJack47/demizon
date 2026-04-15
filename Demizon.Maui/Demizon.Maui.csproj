@@ -5,7 +5,7 @@
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
     <RootNamespace>Demizon.Maui</RootNamespace>
-    <ApplicationId>cz.demizon.app</ApplicationId>
+    <ApplicationId>com.demizon.administrace</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <Nullable>enable</Nullable>
@@ -13,6 +13,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Demizon.Contracts\Demizon.Contracts.csproj" />
+  </ItemGroup>
+  <!-- FirebaseConfig.cs is gitignored; the .template.cs is a reference only, not compiled -->
+  <ItemGroup>
+    <Compile Remove="Platforms\Android\FirebaseConfig.template.cs" />
   </ItemGroup>
   <ItemGroup>
     <MauiXaml Update="App.xaml" Generator="MSBuild:Compile" />
@@ -36,4 +40,9 @@
     <PackageReference Include="Plugin.Firebase.CloudMessaging" Version="3.1.1" />
   </ItemGroup>
   <!-- Android: google-services.json needs to be placed in Platforms/Android/ -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <AndroidResource Include="Platforms\Android\Resources\xml\network_security_config.xml"
+                     Link="Resources\xml\network_security_config.xml" />
+    <GoogleServicesJson Include="Platforms\Android\google-services.json" />
+  </ItemGroup>
 </Project>

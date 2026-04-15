@@ -37,7 +37,7 @@ public partial class DancesViewModel(IApiClient apiClient) : ObservableObject
     [RelayCommand]
     private async Task NavigateToDetailAsync(DanceDto dance)
     {
-        await Shell.Current.GoToAsync($"dances/detail?danceId={dance.Id}");
+        await Shell.Current.GoToAsync($"//dances/detail?danceId={dance.Id}");
     }
 
     private void ApplyFilter()

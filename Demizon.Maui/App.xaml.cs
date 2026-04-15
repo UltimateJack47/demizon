@@ -70,13 +70,7 @@ public partial class App : Application
 
     private static async Task<TokenResponse?> RefreshTokenDirectAsync(string refreshToken)
     {
-#if ANDROID
-        const string baseUrl = "http://10.0.2.2:5000";
-#else
-        const string baseUrl = "http://localhost:5000";
-#endif
-
-        using var client = new HttpClient { BaseAddress = new Uri(baseUrl) };
+        using var client = new HttpClient { BaseAddress = new Uri(ApiConfig.BaseUrl) };
         var payload = JsonSerializer.Serialize(new RefreshRequest(refreshToken), JsonOptions);
         var content = new StringContent(payload, Encoding.UTF8, "application/json");
 

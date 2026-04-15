@@ -41,4 +41,7 @@ public interface IApiClient
     
     [Delete("/api/notifications/device")]
     Task UnregisterDeviceAsync([Body] RegisterDeviceRequest request);
+
+    [Post("/api/notifications/test")]
+    Task SendTestNotificationAsync();
 }

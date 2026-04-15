@@ -102,6 +102,28 @@
                             </DataTrigger>
                         </Label.Triggers>
                     </Label>
+
+                    <!-- Error from toggle -->
+                    <Label Text="{Binding NotificationError}"
+                           FontSize="12"
+                           TextColor="{StaticResource ErrorColor}"
+                           IsVisible="{Binding NotificationError, Converter={StaticResource StringToBoolConverter}}" />
+
+                    <!-- Test button (dev) -->
+                    <Button Text="🔔 Test notifikace"
+                            Command="{Binding SendTestNotificationCommand}"
+                            IsEnabled="{Binding NotificationsEnabled}"
+                            FontSize="12"
+                            HeightRequest="36"
+                            CornerRadius="8"
+                            BackgroundColor="#A8845E"
+                            TextColor="White"
+                            HorizontalOptions="Start"
+                            Padding="12,0" />
+                    <Label Text="{Binding TestNotificationMessage}"
+                           FontSize="12"
+                           TextColor="{StaticResource TextSecondary}"
+                           IsVisible="{Binding TestNotificationMessage, Converter={StaticResource StringToBoolConverter}}" />
                 </VerticalStackLayout>
             </Border>
 

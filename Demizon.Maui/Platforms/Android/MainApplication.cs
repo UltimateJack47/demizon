@@ -1,13 +1,31 @@
 using Android.App;
 using Android.Runtime;
 
+[assembly: Android.App.UsesPermission(Android.Manifest.Permission.Internet)]
+[assembly: Android.App.UsesPermission(Android.Manifest.Permission.AccessNetworkState)]
+[assembly: Android.App.UsesPermission("android.permission.POST_NOTIFICATIONS")]
+
 namespace Demizon.Maui.Platforms.Android;
 
 // google-services.json musí být umístěn v Platforms/Android/ před buildem
-[Application]
+[Application(Label = "Demizon", UsesCleartextTraffic = true)]
 public class MainApplication : MauiApplication
 {
     public MainApplication(IntPtr handle, JniHandleOwnership ownership) : base(handle, ownership) { }
+
+    public override void OnCreate()
+    {
+        base.OnCreate();
+        // GoogleServicesJson MSBuild target nefunguje pro net10.0-android — inicializujeme Firebase explicitně
+        var options = new Firebase.FirebaseOptions.Builder()
+            .SetApplicationId(FirebaseConfig.ApplicationId)
+            .SetApiKey(FirebaseConfig.ApiKey)
+            .SetProjectId(FirebaseConfig.ProjectId)
+            .SetStorageBucket(FirebaseConfig.StorageBucket)
+            .SetGcmSenderId(FirebaseConfig.GcmSenderId)
+            .Build();
+        Firebase.FirebaseApp.InitializeApp(this, options);
+    }
 
     protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
 }

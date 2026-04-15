@@ -96,6 +96,7 @@ if (app.Environment.IsDevelopment())
         new { method = "GET",  path = "/api/dances/{id}",          description = "Detail tance" },
         new { method = "POST", path = "/api/notifications/device", description = "Registrace FCM device tokenu" },
         new { method = "DELETE", path = "/api/notifications/device", description = "Odregistrování FCM device tokenu" },
+        new { method = "POST", path = "/api/notifications/test",   description = "Odešle testovací FCM notifikaci na vlastní zařízení" },
         new { method = "GET",  path = "/health",                   description = "Health check stav databáze" },
     }).ExcludeFromDescription();
 }
@@ -176,8 +177,11 @@ app.MapGet("/google/connect", (HttpContext ctx, IOptions<GoogleCalendarSettings>
     });
 
     var s = opts.Value;
+    if (!s.IsConfigured)
+        return Results.Problem("Google Calendar integration is not configured on this server.", statusCode: 501);
+
     var authUrl = $"https://accounts.google.com/o/oauth2/v2/auth" +
-                  $"?client_id={Uri.EscapeDataString(s.ClientId)}" +
+                  $"?client_id={Uri.EscapeDataString(s.ClientId!)}" +
                   $"&redirect_uri={Uri.EscapeDataString(s.RedirectUri)}" +
                   $"&response_type=code" +
                   $"&scope={Uri.EscapeDataString("https://www.googleapis.com/auth/calendar")}" +
@@ -199,6 +203,9 @@ app.MapGet("/google/callback", async (
     string? state,
     string? error) =>
 {
+    if (!opts.Value.IsConfigured)
+        return Results.Problem("Google Calendar integration is not configured on this server.", statusCode: 501);
+
     if (!string.IsNullOrEmpty(error))
     {
         logger.LogWarning("Google OAuth zamítnut uživatelem: {Error}", error);
