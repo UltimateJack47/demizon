@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Demizon.Maui.ViewModels.Attendance"
+             xmlns:dto="clr-namespace:Demizon.Contracts.Events;assembly=Demizon.Contracts"
+             x:Class="Demizon.Maui.Pages.Attendance.AttendancePage"
+             x:DataType="vm:AttendanceViewModel"
+             Title="Docházka">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Header: Month navigation + stats button -->
+        <Border Grid.Row="0"
+                BackgroundColor="{AppThemeBinding Light={StaticResource CardBackground}, Dark={StaticResource CardBackgroundDark}}"
+                StrokeThickness="0"
+                Padding="16,12"
+                Shadow="{Shadow Brush=Black, Offset='0,2', Radius=4, Opacity=0.06}">
+            <VerticalStackLayout Spacing="12">
+                <!-- Month navigator -->
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Button Grid.Column="0"
+                            Text="◀"
+                            Style="{StaticResource TextButton}"
+                            FontSize="18"
+                            Command="{Binding PreviousMonthCommand}" />
+                    <Label Grid.Column="1"
+                           Text="{Binding MonthLabel}"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           HorizontalTextAlignment="Center"
+                           VerticalOptions="Center"
+                           TextTransform="None" />
+                    <Button Grid.Column="2"
+                            Text="▶"
+                            Style="{StaticResource TextButton}"
+                            FontSize="18"
+                            Command="{Binding NextMonthCommand}" />
+                </Grid>
+
+                <!-- Summary row -->
+                <Grid ColumnDefinitions="*,Auto,Auto" IsVisible="{Binding HasEvents}">
+                    <HorizontalStackLayout Grid.Column="0" Spacing="16">
+                        <HorizontalStackLayout Spacing="4">
+                            <Label Text="✓" TextColor="{StaticResource AttendanceGreen}" FontAttributes="Bold" FontSize="14" VerticalOptions="Center" />
+                            <Label FontSize="14" VerticalOptions="Center">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding AttendedCount}" FontAttributes="Bold" />
+                                        <Span Text=" / " />
+                                        <Span Text="{Binding TotalCount}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                        </HorizontalStackLayout>
+                    </HorizontalStackLayout>
+                    <Button Grid.Column="1"
+                            Text="👥 Přehled"
+                            Style="{StaticResource TextButton}"
+                            FontSize="13"
+                            Command="{Binding NavigateToOverviewCommand}" />
+                    <Button Grid.Column="2"
+                            Text="📊 Statistiky"
+                            Style="{StaticResource TextButton}"
+                            FontSize="13"
+                            Command="{Binding NavigateToStatsCommand}" />
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Main content -->
+        <RefreshView Grid.Row="1"
+                     Command="{Binding RefreshCommand}"
+                     IsRefreshing="{Binding IsRefreshing}">
+            <Grid>
+                <!-- Event list -->
+                <CollectionView ItemsSource="{Binding Events}"
+                                IsVisible="{Binding HasEvents}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="dto:EventDto">
+                            <Border Style="{StaticResource CardBorder}" Margin="16,6">
+                                 <Border.Triggers>
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsCancelled}" Value="True">
+                                        <Setter Property="Opacity" Value="0.45" />
+                                    </DataTrigger>
+                                    <!-- Events (non-rehearsals) get a gold accent border -->
+                                    <DataTrigger TargetType="Border" Binding="{Binding IsRehearsal}" Value="False">
+                                        <Setter Property="Stroke" Value="#C9A227" />
+                                        <Setter Property="StrokeThickness" Value="2" />
+                                    </DataTrigger>
+                                </Border.Triggers>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, Path=NavigateToEventCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <!-- Date column -->
+                                    <Border Grid.Column="0"
+                                            BackgroundColor="{StaticResource WarmBeige}"
+                                            StrokeShape="RoundRectangle 8"
+                                            StrokeThickness="0"
+                                            Padding="10,6"
+                                            VerticalOptions="Center">
+                                        <VerticalStackLayout HorizontalOptions="Center">
+                                            <Label Text="{Binding DateFrom, StringFormat='{0:dd}'}"
+                                                   FontSize="20"
+                                                   FontAttributes="Bold"
+                                                   HorizontalTextAlignment="Center"
+                                                   TextColor="{StaticResource Primary}" />
+                                            <Label Text="{Binding DateFrom, StringFormat='{0:MMM}'}"
+                                                   FontSize="11"
+                                                   HorizontalTextAlignment="Center"
+                                                   TextColor="{StaticResource TextSecondary}" />
+                                        </VerticalStackLayout>
+                                    </Border>
+
+                                    <!-- Event info -->
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding Name}"
+                                               FontAttributes="Bold"
+                                               FontSize="16"
+                                               LineBreakMode="TailTruncation" />
+                                        <!-- Event badge (visible only for non-rehearsal events) -->
+                                        <Border BackgroundColor="#C9A227"
+                                                StrokeShape="RoundRectangle 4"
+                                                Stroke="Transparent"
+                                                Padding="6,2"
+                                                HorizontalOptions="Start"
+                                                IsVisible="{Binding IsRehearsal, Converter={StaticResource InvertedBoolConverter}}">
+                                            <Label Text="⭐ Akce"
+                                                   TextColor="White"
+                                                   FontSize="10"
+                                                   FontAttributes="Bold" />
+                                        </Border>
+                                        <HorizontalStackLayout Spacing="4"
+                                                               IsVisible="{Binding Place, Converter={StaticResource StringToBoolConverter}}">
+                                            <Label Text="📍" FontSize="11" VerticalOptions="Center" />
+                                            <Label Text="{Binding Place}"
+                                                   Style="{StaticResource CaptionLabel}"
+                                                   VerticalOptions="Center"
+                                                   LineBreakMode="TailTruncation" />
+                                        </HorizontalStackLayout>
+                                        <!-- Show cancelled badge -->
+                                        <Border BackgroundColor="{StaticResource AttendanceRed}"
+                                                StrokeShape="RoundRectangle 4"
+                                                Stroke="Transparent"
+                                                Padding="6,2"
+                                                HorizontalOptions="Start"
+                                                IsVisible="{Binding IsCancelled}">
+                                            <Label Text="Zrušeno"
+                                                   TextColor="White"
+                                                   FontSize="10"
+                                                   FontAttributes="Bold" />
+                                        </Border>
+                                    </VerticalStackLayout>
+
+                                    <!-- Attendance indicator -->
+                                    <BoxView Grid.Column="2"
+                                             WidthRequest="14" HeightRequest="14"
+                                             CornerRadius="7"
+                                             VerticalOptions="Center"
+                                             Color="{Binding MyAttendance, Converter={StaticResource AttendanceColorConverter}}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    <CollectionView.Header>
+                        <BoxView HeightRequest="8" Color="Transparent" />
+                    </CollectionView.Header>
+                    <CollectionView.Footer>
+                        <BoxView HeightRequest="20" Color="Transparent" />
+                    </CollectionView.Footer>
+                </CollectionView>
+
+                <!-- Empty state -->
+                <VerticalStackLayout IsVisible="{Binding IsEmpty}"
+                                     VerticalOptions="Center"
+                                     HorizontalOptions="Center"
+                                     Spacing="12">
+                    <Label Text="📋" FontSize="48" HorizontalOptions="Center" />
+                    <Label Text="V tomto měsíci nejsou žádné akce"
+                           Style="{StaticResource SubtitleLabel}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- Error message -->
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="{StaticResource ErrorColor}"
+                       FontSize="14"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Start"
+                       Margin="16,20"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+            </Grid>
+        </RefreshView>
+    </Grid>
+</ContentPage>

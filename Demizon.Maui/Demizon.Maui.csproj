@@ -14,6 +14,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Demizon.Contracts\Demizon.Contracts.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <MauiImage Include="Resources\Images\*" />
+  </ItemGroup>
   <!-- FirebaseConfig.cs is gitignored; the .template.cs is a reference only, not compiled -->
   <ItemGroup>
     <Compile Remove="Platforms\Android\FirebaseConfig.template.cs" />
@@ -22,6 +25,9 @@
     <MauiXaml Update="App.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="AppShell.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\LoginPage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\Attendance\AttendancePage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\Attendance\AttendanceStatsPage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\Attendance\AllMembersAttendancePage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\EventsPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\EventDetailPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\DancesPage.xaml" Generator="MSBuild:Compile" />

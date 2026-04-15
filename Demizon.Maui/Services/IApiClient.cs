@@ -17,6 +17,9 @@ public interface IApiClient
     
     [Get("/api/events/upcoming")]
     Task<List<EventDto>> GetUpcomingEventsAsync();
+
+    [Get("/api/events/month")]
+    Task<List<EventDto>> GetEventsByMonthAsync([Query] int year, [Query] int month);
     
     [Get("/api/events/{id}")]
     Task<EventDto> GetEventAsync(int id);
@@ -29,6 +32,18 @@ public interface IApiClient
     
     [Put("/api/attendances/{eventId}")]
     Task<AttendanceDto> UpsertAttendanceAsync(int eventId, [Body] UpsertAttendanceRequest request);
+
+    [Get("/api/attendances/rehearsal")]
+    Task<AttendanceDto> GetRehearsalAttendanceAsync([Query] DateTime date);
+
+    [Put("/api/attendances/rehearsal")]
+    Task<AttendanceDto> UpsertRehearsalAttendanceAsync([Query] DateTime date, [Body] UpsertAttendanceRequest request);
+
+    [Get("/api/attendances/stats")]
+    Task<List<MemberAttendanceStatDto>> GetAttendanceStatsAsync([Query] DateTime from, [Query] DateTime to);
+
+    [Get("/api/attendances/table")]
+    Task<MonthlyAttendanceTableDto> GetMonthlyAttendanceTableAsync([Query] int year, [Query] int month);
     
     [Get("/api/dances")]
     Task<List<DanceDto>> GetDancesAsync();

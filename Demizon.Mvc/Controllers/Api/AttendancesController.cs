@@ -21,7 +21,8 @@ public class AttendancesController(
     IAttendanceService attendanceService,
     IEventService eventService,
     IMemberService memberService,
-    IGoogleCalendarService googleCalendarService) : ControllerBase
+    IGoogleCalendarService googleCalendarService,
+    IAttendanceReportService reportService) : ControllerBase
 {
     [HttpGet("me")]
     public async Task<ActionResult<List<AttendanceDto>>> GetMyAttendances()
@@ -96,5 +97,106 @@ public class AttendancesController(
         }
 
         return Ok(attendance.ToDto());
+    }
+
+    [HttpGet("stats")]
+    public async Task<ActionResult<List<MemberAttendanceStatDto>>> GetStats(
+        [FromQuery] DateTime from, [FromQuery] DateTime to)
+    {
+        var stats = await reportService.GetMemberStatsAsync(from, to);
+        return Ok(stats.Select(s => new MemberAttendanceStatDto(
+            s.MemberId, s.FullName,
+            s.TotalRehearsals, s.AttendedRehearsals, s.RehearsalRate,
+            s.TotalActions, s.AttendedActions, s.ActionRate)).ToList());
+    }
+
+    [HttpPut("rehearsal")]
+    public async Task<ActionResult<AttendanceDto>> UpsertRehearsal(
+        [FromQuery] DateTime date, [FromBody] UpsertAttendanceRequest request)
+    {
+        var memberId = User.GetMemberId();
+        var day = date.Date;
+
+        var existing = await attendanceService.GetAll()
+            .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == null && a.Date == day);
+
+        var attendance = existing ?? new Dal.Entities.Attendance
+        {
+            MemberId = memberId,
+            EventId = null,
+            Date = day,
+        };
+
+        attendance.Attends = request.Attends;
+        attendance.Comment = request.Comment;
+
+        await attendanceService.CreateOrUpdateAsync(attendance);
+        return Ok(attendance.ToDto());
+    }
+
+    [HttpGet("rehearsal")]
+    public async Task<ActionResult<AttendanceDto>> GetRehearsal([FromQuery] DateTime date)
+    {
+        var memberId = User.GetMemberId();
+        var day = date.Date;
+
+        var att = await attendanceService.GetAll()
+            .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == null && a.Date == day);
+
+        if (att is null) return NotFound();
+        return Ok(att.ToDto());
+    }
+
+    [HttpGet("table")]
+    public async Task<ActionResult<MonthlyAttendanceTableDto>> GetMonthlyTable(
+        [FromQuery] int year, [FromQuery] int month)
+    {
+        if (month < 1 || month > 12 || year < 2000 || year > 2100)
+            return BadRequest("Neplatný rok nebo měsíc.");
+
+        var from = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var to = from.AddMonths(1);
+
+        var events = await eventService.GetAll()
+            .Where(e => e.DateFrom >= from && e.DateFrom < to)
+            .OrderBy(e => e.DateFrom)
+            .ToListAsync();
+
+        var eventDates = events.Select(e => e.DateFrom.Date).ToHashSet();
+
+        var fridayColumns = Enumerable
+            .Range(0, (to - from).Days)
+            .Select(i => from.AddDays(i))
+            .Where(d => d.DayOfWeek == DayOfWeek.Friday && !eventDates.Contains(d.Date))
+            .Select(d => new MonthlyColumnDto(null, $"Zkouška {d:d.M.}", d, false, false));
+
+        var eventColumns = events
+            .Select(e => new MonthlyColumnDto(e.Id, e.Name, e.DateFrom,
+                e.Recurrence != RecurrenceType.Weekly, e.IsCancelled));
+
+        var columns = fridayColumns.Concat(eventColumns).OrderBy(c => c.Date).ToList();
+
+        var members = await memberService.GetAll()
+            .Where(m => m.IsAttendanceVisible)
+            .OrderBy(m => m.Surname).ThenBy(m => m.Name)
+            .ToListAsync();
+
+        var memberIds = members.Select(m => m.Id).ToList();
+        var attendances = await attendanceService.GetMembersAttendancesAsync(memberIds, from, to.AddTicks(-1));
+
+        var memberRows = members.Select(m =>
+        {
+            var memberAtts = attendances.Where(a => a.MemberId == m.Id).ToList();
+            var cells = columns.Select(col =>
+            {
+                Dal.Entities.Attendance? att = col.EventId.HasValue
+                    ? memberAtts.FirstOrDefault(a => a.EventId == col.EventId)
+                    : memberAtts.FirstOrDefault(a => a.EventId == null && a.Date.Date == col.Date.Date);
+                return new MemberCellDto(col.Date, col.EventId, att?.Attends);
+            }).ToList();
+            return new MemberMonthlyRowDto(m.Id, $"{m.Name} {m.Surname}", cells);
+        }).ToList();
+
+        return Ok(new MonthlyAttendanceTableDto(columns, memberRows));
     }
 }

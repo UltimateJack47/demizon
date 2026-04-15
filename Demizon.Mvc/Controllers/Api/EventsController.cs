@@ -1,4 +1,5 @@
 using Demizon.Contracts.Events;
+using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
 using Demizon.Mvc.Extensions;
 using Demizon.Mvc.Mapping;
@@ -12,7 +13,7 @@ namespace Demizon.Mvc.Controllers.Api;
 [ApiController]
 [Route("api/events")]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-public class EventsController(IEventService eventService) : ControllerBase
+public class EventsController(IEventService eventService, IAttendanceService attendanceService) : ControllerBase
 {
     [HttpGet("upcoming")]
     public async Task<ActionResult<List<EventDto>>> GetUpcoming()
@@ -33,6 +34,56 @@ public class EventsController(IEventService eventService) : ControllerBase
         }).ToList();
 
         return Ok(result);
+    }
+
+    [HttpGet("month")]
+    public async Task<ActionResult<List<EventDto>>> GetByMonth([FromQuery] int year, [FromQuery] int month)
+    {
+        var memberId = User.GetMemberId();
+        var from = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var to = from.AddMonths(1);
+
+        // Load events for the month
+        var events = await eventService.GetAll()
+            .Where(e => e.DateFrom >= from && e.DateFrom < to)
+            .Include(e => e.Attendances)
+            .OrderBy(e => e.DateFrom)
+            .ToListAsync();
+
+        var eventDates = events.Select(e => e.DateFrom.Date).ToHashSet();
+
+        // Fridays in the month that have no event = rehearsals (zkoušky)
+        var rehearsalFridays = Enumerable
+            .Range(0, (to - from).Days)
+            .Select(d => from.AddDays(d))
+            .Where(d => d.DayOfWeek == DayOfWeek.Friday && !eventDates.Contains(d.Date))
+            .ToList();
+
+        // Load rehearsal attendances (EventId == null, Date matches a Friday)
+        var rehearsalAttendances = rehearsalFridays.Count > 0
+            ? await attendanceService.GetAll()
+                .Where(a => a.MemberId == memberId && a.EventId == null && rehearsalFridays.Contains(a.Date))
+                .ToListAsync()
+            : [];
+
+        var result = new List<EventDto>();
+
+        // Add events
+        result.AddRange(events.Select(e =>
+        {
+            var myAttendance = e.Attendances.FirstOrDefault(a => a.MemberId == memberId);
+            return e.ToDto(myAttendance?.ToDto());
+        }));
+
+        // Add rehearsal rows
+        result.AddRange(rehearsalFridays.Select(friday =>
+        {
+            var myAttendance = rehearsalAttendances.FirstOrDefault(a => a.Date == friday);
+            return new EventDto(0, "Zkouška", friday, friday.AddHours(2),
+                null, false, "none", myAttendance?.ToDto(), IsRehearsal: true);
+        }));
+
+        return Ok(result.OrderBy(e => e.DateFrom).ToList());
     }
 
     [HttpGet("{id:int}")]

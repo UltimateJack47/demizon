@@ -13,6 +13,8 @@
             <converters:StringToBoolConverter x:Key="StringToBoolConverter" />
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:AttendanceColorConverter x:Key="AttendanceColorConverter" />
+            <converters:AttendanceRateColorConverter x:Key="AttendanceRateColorConverter" />
+            <converters:RateToProgressConverter x:Key="RateToProgressConverter" />
             <converters:DateFormatConverter x:Key="DateFormatConverter" />
         </ResourceDictionary>
     </Application.Resources>

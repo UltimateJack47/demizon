@@ -2,6 +2,7 @@
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:pages="clr-namespace:Demizon.Maui.Pages"
+       xmlns:attendance="clr-namespace:Demizon.Maui.Pages.Attendance"
        x:Class="Demizon.Maui.AppShell"
        FlyoutBehavior="Disabled"
        Shell.BackgroundColor="#9A7450"
@@ -20,13 +21,20 @@
 
     <!-- Post-auth tabs -->
     <TabBar Route="main">
+        <ShellContent Title="Docházka"
+                      Icon="tab_attendance.svg"
+                      Route="attendance"
+                      ContentTemplate="{DataTemplate attendance:AttendancePage}" />
         <ShellContent Title="Akce"
+                      Icon="tab_events.svg"
                       Route="events"
                       ContentTemplate="{DataTemplate pages:EventsPage}" />
         <ShellContent Title="Tance"
+                      Icon="tab_dances.svg"
                       Route="dances"
                       ContentTemplate="{DataTemplate pages:DancesPage}" />
         <ShellContent Title="Profil"
+                      Icon="tab_profile.svg"
                       Route="profile"
                       ContentTemplate="{DataTemplate pages:ProfilePage}" />
     </TabBar>

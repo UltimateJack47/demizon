@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Demizon.Maui.ViewModels.Attendance"
+             x:Class="Demizon.Maui.Pages.Attendance.AllMembersAttendancePage"
+             x:DataType="vm:AllMembersAttendanceViewModel"
+             Title="Přehled docházky">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Header: month navigation -->
+        <Border Grid.Row="0"
+                BackgroundColor="{StaticResource CardBackground}"
+                StrokeThickness="0"
+                Padding="16,12"
+                Shadow="{Shadow Brush=Black, Offset='0,2', Radius=4, Opacity=0.06}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Button Grid.Column="0"
+                        Text="◀"
+                        Style="{StaticResource TextButton}"
+                        FontSize="18"
+                        Command="{Binding PreviousMonthCommand}" />
+                <Label Grid.Column="1"
+                       Text="{Binding MonthLabel}"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       HorizontalTextAlignment="Center"
+                       VerticalOptions="Center" />
+                <Button Grid.Column="2"
+                        Text="▶"
+                        Style="{StaticResource TextButton}"
+                        FontSize="18"
+                        Command="{Binding NextMonthCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Loading -->
+        <ActivityIndicator Grid.Row="1"
+                           IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+
+        <!-- Error -->
+        <Label Grid.Row="1"
+               Text="{Binding ErrorMessage}"
+               TextColor="{StaticResource ErrorColor}"
+               FontSize="14"
+               HorizontalOptions="Center"
+               VerticalOptions="Center"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+        <!-- Empty state -->
+        <VerticalStackLayout Grid.Row="1"
+                             IsVisible="{Binding IsEmpty}"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center"
+                             Spacing="12">
+            <Label Text="📋" FontSize="48" HorizontalOptions="Center" />
+            <Label Text="V tomto měsíci nejsou žádná data"
+                   Style="{StaticResource SubtitleLabel}"
+                   HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <!-- Attendance table built in code-behind -->
+        <ScrollView x:Name="TableScrollView"
+                    Grid.Row="1"
+                    Orientation="Both"
+                    IsVisible="{Binding HasData}">
+            <Grid x:Name="TableGrid" />
+        </ScrollView>
+
+    </Grid>
+</ContentPage>

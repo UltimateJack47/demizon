@@ -4,4 +4,5 @@ namespace Demizon.Contracts.Events;
 public sealed record EventDto(
     int Id, string Name, DateTime DateFrom, DateTime DateTo,
     string? Place, bool IsCancelled, string Recurrence,
-    AttendanceDto? MyAttendance = null);
+    AttendanceDto? MyAttendance = null,
+    bool IsRehearsal = false);

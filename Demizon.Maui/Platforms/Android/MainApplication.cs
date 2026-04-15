@@ -16,15 +16,18 @@ public class MainApplication : MauiApplication
     public override void OnCreate()
     {
         base.OnCreate();
-        // GoogleServicesJson MSBuild target nefunguje pro net10.0-android — inicializujeme Firebase explicitně
-        var options = new Firebase.FirebaseOptions.Builder()
-            .SetApplicationId(FirebaseConfig.ApplicationId)
-            .SetApiKey(FirebaseConfig.ApiKey)
-            .SetProjectId(FirebaseConfig.ProjectId)
-            .SetStorageBucket(FirebaseConfig.StorageBucket)
-            .SetGcmSenderId(FirebaseConfig.GcmSenderId)
-            .Build();
-        Firebase.FirebaseApp.InitializeApp(this, options);
+        // Initialize Firebase manually only if not already auto-initialized by google-services.json MSBuild plugin
+        if (!Firebase.FirebaseApp.GetApps(this).Any())
+        {
+            var options = new Firebase.FirebaseOptions.Builder()
+                .SetApplicationId(FirebaseConfig.ApplicationId)
+                .SetApiKey(FirebaseConfig.ApiKey)
+                .SetProjectId(FirebaseConfig.ProjectId)
+                .SetStorageBucket(FirebaseConfig.StorageBucket)
+                .SetGcmSenderId(FirebaseConfig.GcmSenderId)
+                .Build();
+            Firebase.FirebaseApp.InitializeApp(this, options);
+        }
     }
 
     protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();

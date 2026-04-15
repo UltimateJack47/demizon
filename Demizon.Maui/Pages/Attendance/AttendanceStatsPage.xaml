@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Demizon.Maui.ViewModels.Attendance"
+             xmlns:dto="clr-namespace:Demizon.Contracts.Attendances;assembly=Demizon.Contracts"
+             x:Class="Demizon.Maui.Pages.Attendance.AttendanceStatsPage"
+             x:DataType="vm:AttendanceStatsViewModel"
+             Title="Statistiky docházky">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <!-- Date range picker -->
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Období"
+                           FontAttributes="Bold"
+                           FontSize="16" />
+                    <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="8">
+                        <DatePicker Grid.Column="0"
+                                    Date="{Binding DateFrom}"
+                                    MaximumDate="{Binding DateTo}"
+                                    Format="dd.MM.yyyy" />
+                        <Label Grid.Column="1"
+                               Text="–"
+                               VerticalOptions="Center"
+                               FontSize="18" />
+                        <DatePicker Grid.Column="2"
+                                    Date="{Binding DateTo}"
+                                    MinimumDate="{Binding DateFrom}"
+                                    MaximumDate="{Binding MaxDate}"
+                                    Format="dd.MM.yyyy" />
+                    </Grid>
+                    <Button Text="Zobrazit"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding LoadCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Summary cards -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12"
+                  IsVisible="{Binding HasStats}">
+                <Border Grid.Column="0" Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                        <Label Text="🎵" FontSize="24" HorizontalOptions="Center" />
+                        <Label Text="{Binding TotalRehearsals}"
+                               FontSize="28"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"
+                               TextColor="{StaticResource Primary}" />
+                        <Label Text="Zkoušek"
+                               Style="{StaticResource CaptionLabel}"
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                        <Label Text="🎭" FontSize="24" HorizontalOptions="Center" />
+                        <Label Text="{Binding TotalActions}"
+                               FontSize="28"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"
+                               TextColor="{StaticResource Primary}" />
+                        <Label Text="Akcí"
+                               Style="{StaticResource CaptionLabel}"
+                               HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- Loading indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+
+            <!-- Error -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource ErrorColor}"
+                   FontSize="14"
+                   HorizontalOptions="Center"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <!-- Empty state -->
+            <VerticalStackLayout IsVisible="{Binding IsEmpty}"
+                                 HorizontalOptions="Center"
+                                 Spacing="8">
+                <Label Text="Žádná data pro zvolené období."
+                       Style="{StaticResource SubtitleLabel}"
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+
+            <!-- Stats table -->
+            <VerticalStackLayout Spacing="8"
+                                 IsVisible="{Binding HasStats}">
+                <Label Text="Přehled členů"
+                       FontAttributes="Bold"
+                       FontSize="18" />
+
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Stats}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="dto:MemberAttendanceStatDto">
+                            <Border Style="{StaticResource CardBorder}" Margin="0,4">
+                                <VerticalStackLayout Spacing="8">
+                                    <!-- Member name -->
+                                    <Label Text="{Binding FullName}"
+                                           FontAttributes="Bold"
+                                           FontSize="16" />
+
+                                    <!-- Rehearsals -->
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                        <Label Grid.Column="0"
+                                               Text="Zkoušky"
+                                               Style="{StaticResource CaptionLabel}"
+                                               VerticalOptions="Center"
+                                               WidthRequest="60" />
+                                        <ProgressBar Grid.Column="1"
+                                                     Progress="{Binding RehearsalRate, Converter={StaticResource RateToProgressConverter}}"
+                                                     ProgressColor="{Binding RehearsalRate, Converter={StaticResource AttendanceRateColorConverter}}"
+                                                     VerticalOptions="Center" />
+                                        <Label Grid.Column="2" VerticalOptions="Center" FontSize="13">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding AttendedRehearsals}" FontAttributes="Bold" />
+                                                    <Span Text="/" />
+                                                    <Span Text="{Binding TotalRehearsals}" />
+                                                    <Span Text=" (" />
+                                                    <Span Text="{Binding RehearsalRate, StringFormat='{0:0}%'}" FontAttributes="Bold" />
+                                                    <Span Text=")" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                    </Grid>
+
+                                    <!-- Actions -->
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                        <Label Grid.Column="0"
+                                               Text="Akce"
+                                               Style="{StaticResource CaptionLabel}"
+                                               VerticalOptions="Center"
+                                               WidthRequest="60" />
+                                        <ProgressBar Grid.Column="1"
+                                                     Progress="{Binding ActionRate, Converter={StaticResource RateToProgressConverter}}"
+                                                     ProgressColor="{Binding ActionRate, Converter={StaticResource AttendanceRateColorConverter}}"
+                                                     VerticalOptions="Center" />
+                                        <Label Grid.Column="2" VerticalOptions="Center" FontSize="13">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding AttendedActions}" FontAttributes="Bold" />
+                                                    <Span Text="/" />
+                                                    <Span Text="{Binding TotalActions}" />
+                                                    <Span Text=" (" />
+                                                    <Span Text="{Binding ActionRate, StringFormat='{0:0}%'}" FontAttributes="Bold" />
+                                                    <Span Text=")" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+
+            <BoxView HeightRequest="20" Color="Transparent" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

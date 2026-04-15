@@ -27,10 +27,13 @@
     <!-- Semantic -->
     <Color x:Key="AttendanceGreen">#27AE60</Color>
     <Color x:Key="AttendanceRed">#E74C3C</Color>
+    <Color x:Key="AttendanceYellow">#F39C12</Color>
     <Color x:Key="AttendanceGray">#BDC3C7</Color>
     <Color x:Key="CancelledOverlay">#80000000</Color>
     <Color x:Key="ErrorColor">#E74C3C</Color>
     <Color x:Key="SuccessColor">#27AE60</Color>
+    <Color x:Key="WarningColor">#F39C12</Color>
+    <Color x:Key="InfoColor">#3498DB</Color>
     
     <!-- Standard -->
     <Color x:Key="White">#FFFFFF</Color>

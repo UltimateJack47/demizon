@@ -8,7 +8,8 @@ public static class ContractMappingExtensions
 {
     public static EventDto ToDto(this Dal.Entities.Event e, AttendanceDto? myAttendance = null) =>
         new(e.Id, e.Name, e.DateFrom, e.DateTo, e.Place, e.IsCancelled,
-            e.Recurrence.ToString(), myAttendance);
+            e.Recurrence.ToString(), myAttendance,
+            IsRehearsal: e.Recurrence == Dal.Entities.RecurrenceType.Weekly);
 
     public static AttendanceDto ToDto(this Dal.Entities.Attendance a) =>
         new(a.Id, a.Attends, a.Comment, a.ActivityRole?.ToString(), a.LastUpdated);

@@ -34,6 +34,28 @@ public class EventsController(IEventService eventService) : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("month")]
+    public async Task<ActionResult<List<EventDto>>> GetByMonth([FromQuery] int year, [FromQuery] int month)
+    {
+        var memberId = User.GetMemberId();
+        var from = new DateTime(year, month, 1);
+        var to = from.AddMonths(1);
+
+        var events = await eventService.GetAll()
+            .Where(e => e.DateFrom >= from && e.DateFrom < to)
+            .Include(e => e.Attendances)
+            .OrderBy(e => e.DateFrom)
+            .ToListAsync();
+
+        var result = events.Select(e =>
+        {
+            var myAttendance = e.Attendances.FirstOrDefault(a => a.MemberId == memberId);
+            return e.ToDto(myAttendance?.ToDto());
+        }).ToList();
+
+        return Ok(result);
+    }
+
     [HttpGet("{id:int}")]
     public async Task<ActionResult<EventDto>> GetOne(int id)
     {
