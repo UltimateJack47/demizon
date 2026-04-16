@@ -120,10 +120,10 @@
                     </Button>
                 </Grid>
 
-                <!-- Role picker — visible only when attending -->
+                <!-- Role picker — visible only when attending events (not rehearsals) -->
                 <Border Style="{StaticResource CardBorder}"
                         Padding="12"
-                        IsVisible="{Binding IsAttending}">
+                        IsVisible="{Binding ShowRolePicker}">
                     <Picker Title="Vyberte roli"
                             ItemsSource="{Binding RoleOptions}"
                             SelectedItem="{Binding ActivityRole}" />

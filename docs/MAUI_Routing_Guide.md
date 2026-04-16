@@ -10,7 +10,7 @@
 
 ### Proč nesmí registrovaná routa obsahovat `/`
 
-MAUI Shell při navigaci parsuje cestu po segmentech oddělenýchych `/`. První segment porovnává s vizuálním stromem Shellu (taby, flyout items). Pokud se shoduje s existujícím tab-route, Shell se pokusí o **hierarchickou navigaci na shell element** — ta selže s chybou:
+MAUI Shell při navigaci parsuje cestu po segmentech oddělených `/`. První segment porovnává s vizuálním stromem Shellu (taby, flyout items). Pokud se shoduje s existujícím tab-route, Shell se pokusí o **hierarchickou navigaci na shell element** — ta selže s chybou:
 
 ```
 Relative routing to shell elements is currently not supported.

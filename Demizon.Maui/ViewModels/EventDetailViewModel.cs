@@ -38,6 +38,12 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     [ObservableProperty]
     private bool _isBusy;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowAttendees))]
+    private EventAttendeesDto? _attendees;
+
+    public bool ShowAttendees => !IsRehearsal && Attendees?.TotalCount > 0;
+
     // Display labels for the Picker (Czech). Conversion to/from API values (English) happens at load/save.
     public List<string> RoleOptions { get; } = ["Tanečník", "Muzikant"];
 
@@ -65,6 +71,7 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
             {
                 var date = DateTime.Parse(RehearsalDateString!);
                 Event = new EventDto(0, "Zkouška", date, date.AddHours(2), null, false, "Weekly", IsRehearsal: true);
+                Attendees = null;
                 try
                 {
                     var att = await apiClient.GetRehearsalAttendanceAsync(date);
@@ -95,6 +102,10 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
                     Comment = null;
                     ActivityRole = null;
                 }
+
+                // Load attendees list
+                try { Attendees = await apiClient.GetEventAttendeesAsync(EventId); }
+                catch { Attendees = null; }
             }
         }
         catch (Exception)

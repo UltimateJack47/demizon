@@ -134,6 +134,139 @@ public class AttendancesController(
         return Ok(attendance.ToDto());
     }
 
+    /// <summary>
+    /// Admin: gets a specific member's attendance for an event.
+    /// </summary>
+    [HttpGet("{eventId:int}/member/{memberId:int}")]
+    [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<ActionResult<AttendanceDto>> GetMemberAttendance(int eventId, int memberId)
+    {
+        var att = await attendanceService.GetAll()
+            .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == eventId);
+
+        if (att is null)
+        {
+            try { await eventService.GetOneAsync(eventId); }
+            catch (EntityNotFoundException) { return NotFound(); }
+            return Ok(new AttendanceDto(0, "no", null, null, DateTime.MinValue));
+        }
+
+        return Ok(att.ToDto());
+    }
+
+    /// <summary>
+    /// Admin: upserts a specific member's attendance for an event.
+    /// </summary>
+    [HttpPut("{eventId:int}/member/{memberId:int}")]
+    [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<ActionResult<AttendanceDto>> UpsertMemberAttendance(int eventId, int memberId, [FromBody] UpsertAttendanceRequest request)
+    {
+        Dal.Entities.Event ev;
+        try { ev = await eventService.GetOneAsync(eventId); }
+        catch (EntityNotFoundException) { return NotFound(); }
+
+        AttendanceActivityRole? activityRole = request.ActivityRole?.ToLowerInvariant() switch
+        {
+            "dancer" => AttendanceActivityRole.Dancer,
+            "musician" => AttendanceActivityRole.Musician,
+            _ => null
+        };
+
+        var existing = await attendanceService.GetAll()
+            .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == eventId);
+
+        var attendance = existing ?? new Dal.Entities.Attendance
+        {
+            MemberId = memberId,
+            EventId = eventId,
+            Date = ev.DateFrom,
+        };
+
+        attendance.Status = ParseStatus(request.Status);
+        attendance.Comment = request.Comment;
+        attendance.ActivityRole = activityRole;
+
+        await attendanceService.CreateOrUpdateAsync(attendance);
+
+        // Google Calendar sync for the target member
+        try
+        {
+            var member = await memberService.GetOneAsync(memberId);
+            if (!string.IsNullOrEmpty(member.GoogleRefreshToken) && !string.IsNullOrEmpty(member.GoogleCalendarId))
+            {
+                if (attendance.Status == AttendanceStatus.Yes)
+                {
+                    if (string.IsNullOrEmpty(attendance.GoogleEventId))
+                    {
+                        var googleEventId = await googleCalendarService.CreateEventAsync(
+                            member.GoogleRefreshToken, member.GoogleCalendarId, ev.DateFrom, ev.Name);
+                        if (googleEventId is not null)
+                        {
+                            attendance.GoogleEventId = googleEventId;
+                            await attendanceService.CreateOrUpdateAsync(attendance);
+                        }
+                    }
+                }
+                else if (!string.IsNullOrEmpty(attendance.GoogleEventId))
+                {
+                    await googleCalendarService.DeleteEventAsync(
+                        member.GoogleRefreshToken, member.GoogleCalendarId, attendance.GoogleEventId);
+                    attendance.GoogleEventId = null;
+                    await attendanceService.CreateOrUpdateAsync(attendance);
+                }
+            }
+        }
+        catch
+        {
+            // Google Calendar sync failure must not block saving attendance
+        }
+
+        return Ok(attendance.ToDto());
+    }
+
+    /// <summary>
+    /// Admin: gets a specific member's rehearsal attendance for a date.
+    /// </summary>
+    [HttpGet("rehearsal/member/{memberId:int}")]
+    [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<ActionResult<AttendanceDto>> GetMemberRehearsal(int memberId, [FromQuery] DateTime date)
+    {
+        var day = date.Date;
+        var att = await attendanceService.GetAll()
+            .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == null && a.Date == day);
+
+        if (att is null)
+            return Ok(new AttendanceDto(0, "no", null, null, DateTime.MinValue));
+
+        return Ok(att.ToDto());
+    }
+
+    /// <summary>
+    /// Admin: upserts a specific member's rehearsal attendance for a date.
+    /// </summary>
+    [HttpPut("rehearsal/member/{memberId:int}")]
+    [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<ActionResult<AttendanceDto>> UpsertMemberRehearsal(int memberId, [FromQuery] DateTime date, [FromBody] UpsertAttendanceRequest request)
+    {
+        var day = date.Date;
+
+        var existing = await attendanceService.GetAll()
+            .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == null && a.Date == day);
+
+        var attendance = existing ?? new Dal.Entities.Attendance
+        {
+            MemberId = memberId,
+            EventId = null,
+            Date = day,
+        };
+
+        attendance.Status = ParseStatus(request.Status);
+        attendance.Comment = request.Comment;
+
+        await attendanceService.CreateOrUpdateAsync(attendance);
+        return Ok(attendance.ToDto());
+    }
+
     [HttpGet("rehearsal")]
     public async Task<ActionResult<AttendanceDto>> GetRehearsal([FromQuery] DateTime date)
     {

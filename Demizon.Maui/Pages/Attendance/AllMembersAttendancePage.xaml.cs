@@ -272,12 +272,19 @@ public partial class AllMembersAttendancePage : ContentPage
                         catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít detail akce.", "OK"); }
                     };
                 }
-                else
+                else if (_vm!.IsAdmin)
                 {
                     tap.Tapped += async (_, _) =>
                     {
                         try { await _vm.NavigateToMemberAttendanceAsync(eventId, capturedMemberId, capturedName); }
                         catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít docházku člena.", "OK"); }
+                    };
+                }
+                else
+                {
+                    tap.Tapped += async (_, _) =>
+                    {
+                        await DisplayAlert("Info", "Editace docházky jiných členů je dostupná pouze pro administrátory.", "OK");
                     };
                 }
             }
@@ -292,11 +299,19 @@ public partial class AllMembersAttendancePage : ContentPage
                         catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít detail zkoušky.", "OK"); }
                     };
                 }
+                else if (_vm!.IsAdmin)
+                {
+                    tap.Tapped += async (_, _) =>
+                    {
+                        try { await _vm.NavigateToMemberRehearsalAsync(capturedDate, capturedMemberId, capturedName); }
+                        catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít docházku člena.", "OK"); }
+                    };
+                }
                 else
                 {
                     tap.Tapped += async (_, _) =>
                     {
-                        await DisplayAlert("Info", $"Editace zkoušek jiných členů zatím není k dispozici.", "OK");
+                        await DisplayAlert("Info", "Editace docházky jiných členů je dostupná pouze pro administrátory.", "OK");
                     };
                 }
             }

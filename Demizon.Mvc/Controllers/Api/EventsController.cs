@@ -1,6 +1,7 @@
 using Demizon.Contracts.Events;
 using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
+using Demizon.Dal.Entities;
 using Demizon.Mvc.Extensions;
 using Demizon.Mvc.Mapping;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -134,5 +135,27 @@ public class EventsController(IEventService eventService, IAttendanceService att
             return StatusCode(500, new { error = "Failed to create event." });
 
         return CreatedAtAction(nameof(GetOne), new { id = ev.Id }, ev.ToDto());
+    }
+
+    [HttpGet("{id:int}/attendees")]
+    public async Task<ActionResult<EventAttendeesDto>> GetAttendees(int id)
+    {
+        var attendees = await attendanceService.GetAll()
+            .Where(a => a.EventId == id && a.Status == AttendanceStatus.Yes)
+            .Include(a => a.Member)
+            .ToListAsync();
+
+        var dtos = attendees
+            .Select(a => new EventAttendeeDto(
+                a.MemberId,
+                $"{a.Member.Name} {a.Member.Surname}",
+                a.ActivityRole?.ToString().ToLowerInvariant()))
+            .OrderBy(a => a.FullName)
+            .ToList();
+
+        var dancerCount = dtos.Count(a => a.ActivityRole == "dancer");
+        var musicianCount = dtos.Count(a => a.ActivityRole == "musician");
+
+        return Ok(new EventAttendeesDto(dtos, dancerCount, musicianCount, dtos.Count));
     }
 }

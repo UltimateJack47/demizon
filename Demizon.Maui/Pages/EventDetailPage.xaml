@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:Demizon.Maui.ViewModels"
+             xmlns:events="clr-namespace:Demizon.Contracts.Events;assembly=Demizon.Contracts"
              x:Class="Demizon.Maui.Pages.EventDetailPage"
              x:DataType="vm:EventDetailViewModel"
              Title="{Binding Event.Name}">
@@ -40,6 +41,63 @@
                                FontAttributes="Bold"
                                FontSize="13" />
                     </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Attendees section — "Kdo přijde" -->
+            <Border Style="{StaticResource CardBorder}"
+                    IsVisible="{Binding ShowAttendees}"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+
+                    <Label Text="Kdo přijde"
+                           FontAttributes="Bold"
+                           FontSize="18" />
+
+                    <!-- Summary counts -->
+                    <HorizontalStackLayout Spacing="16">
+                        <HorizontalStackLayout Spacing="4">
+                            <Label Text="👥" FontSize="14" VerticalOptions="Center" />
+                            <Label Text="{Binding Attendees.TotalCount, StringFormat='Celkem: {0}'}"
+                                   FontSize="13"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="4">
+                            <Label Text="💃" FontSize="14" VerticalOptions="Center" />
+                            <Label Text="{Binding Attendees.DancerCount, StringFormat='Tanečníci: {0}'}"
+                                   FontSize="13"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="4">
+                            <Label Text="🎵" FontSize="14" VerticalOptions="Center" />
+                            <Label Text="{Binding Attendees.MusicianCount, StringFormat='Muzikanti: {0}'}"
+                                   FontSize="13"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </HorizontalStackLayout>
+
+                    <!-- Attendee list -->
+                    <StackLayout BindableLayout.ItemsSource="{Binding Attendees.Attendees}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="events:EventAttendeeDto">
+                                <HorizontalStackLayout Spacing="8" Padding="0,4">
+                                    <Label Text="✓"
+                                           TextColor="{StaticResource AttendanceGreen}"
+                                           FontAttributes="Bold"
+                                           FontSize="14"
+                                           VerticalOptions="Center" />
+                                    <Label Text="{Binding FullName}"
+                                           FontSize="14"
+                                           VerticalOptions="Center" />
+                                    <Label Text="{Binding ActivityRole}"
+                                           TextColor="{StaticResource TextSecondary}"
+                                           FontSize="12"
+                                           VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </StackLayout>
+
                 </VerticalStackLayout>
             </Border>
 

@@ -19,6 +19,7 @@ public partial class AllMembersAttendanceViewModel : ObservableObject
 
     // Cached on first load so we can distinguish "my" row without repeated SecureStorage calls
     private int? _currentMemberId;
+    private bool _isAdmin;
 
     public AllMembersAttendanceViewModel(IApiClient apiClient, INavigationService navigation, TokenStorage tokenStorage)
     {
@@ -32,6 +33,9 @@ public partial class AllMembersAttendanceViewModel : ObservableObject
 
     /// <summary>Whether the given member ID belongs to the currently logged-in user.</summary>
     public bool IsCurrentUser(int memberId) => _currentMemberId.HasValue && _currentMemberId.Value == memberId;
+
+    /// <summary>Whether the current user has Admin role.</summary>
+    public bool IsAdmin => _isAdmin;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MonthLabel))]
@@ -66,9 +70,13 @@ public partial class AllMembersAttendanceViewModel : ObservableObject
 
         try
         {
-            // Cache the current user's memberId on first successful load
+            // Cache the current user's memberId and role on first successful load
             if (_currentMemberId is null)
+            {
                 _currentMemberId = await _tokenStorage.GetMemberIdAsync();
+                var role = await _tokenStorage.GetRoleAsync();
+                _isAdmin = string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+            }
 
             Table = await _apiClient.GetMonthlyAttendanceTableAsync(CurrentYear, CurrentMonth);
         }
@@ -131,6 +139,20 @@ public partial class AllMembersAttendanceViewModel : ObservableObject
             var encodedName = Uri.EscapeDataString(memberName);
             await _navigation.GoToAsync(
                 $"{AppRoutes.MemberAttdDetail}?eventId={eventId}&memberId={memberId}&memberName={encodedName}");
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "Nepodařilo se otevřít docházku člena.";
+        }
+    }
+
+    public async Task NavigateToMemberRehearsalAsync(DateTime date, int memberId, string memberName)
+    {
+        try
+        {
+            var encodedName = Uri.EscapeDataString(memberName);
+            await _navigation.GoToAsync(
+                $"{AppRoutes.MemberAttdDetail}?rehearsalDate={date:yyyy-MM-dd}&memberId={memberId}&memberName={encodedName}");
         }
         catch (Exception)
         {

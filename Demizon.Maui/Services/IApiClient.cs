@@ -45,6 +45,12 @@ public interface IApiClient
     [Put("/api/attendances/{eventId}/member/{memberId}")]
     Task<AttendanceDto> UpsertMemberAttendanceAsync(int eventId, int memberId, [Body] UpsertAttendanceRequest request);
 
+    [Get("/api/attendances/rehearsal/member/{memberId}")]
+    Task<AttendanceDto> GetMemberRehearsalAttendanceAsync(int memberId, [Query] DateTime date);
+
+    [Put("/api/attendances/rehearsal/member/{memberId}")]
+    Task<AttendanceDto> UpsertMemberRehearsalAttendanceAsync(int memberId, [Query] DateTime date, [Body] UpsertAttendanceRequest request);
+
     [Get("/api/attendances/stats")]
     Task<List<MemberAttendanceStatDto>> GetAttendanceStatsAsync([Query] DateTime from, [Query] DateTime to);
 
@@ -56,6 +62,9 @@ public interface IApiClient
     
     [Get("/api/dances/{id}")]
     Task<DanceDto> GetDanceAsync(int id);
+
+    [Get("/api/events/{id}/attendees")]
+    Task<EventAttendeesDto> GetEventAttendeesAsync(int id);
     
     [Post("/api/notifications/device")]
     Task RegisterDeviceAsync([Body] RegisterDeviceRequest request);
