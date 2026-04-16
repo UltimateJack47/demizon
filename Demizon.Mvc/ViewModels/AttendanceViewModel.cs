@@ -6,7 +6,7 @@ public class AttendanceViewModel
 {
     public int Id { get; set; }
 
-    public bool Attends { get; set; } = false;
+    public AttendanceStatus Status { get; set; } = AttendanceStatus.No;
 
     public string? Comment { get; set; }
 
@@ -32,7 +32,7 @@ public static class AttendanceMappingExtensions
     public static AttendanceViewModel ToViewModel(this Attendance entity) => new()
     {
         Id = entity.Id,
-        Attends = entity.Attends,
+        Status = entity.Status,
         Comment = entity.Comment,
         ActivityRole = entity.ActivityRole,
         Date = entity.Date,
@@ -46,7 +46,7 @@ public static class AttendanceMappingExtensions
     public static Attendance ToEntity(this AttendanceViewModel vm) => new()
     {
         Id = vm.Id,
-        Attends = vm.Attends,
+        Status = vm.Status,
         Comment = vm.Comment,
         ActivityRole = vm.ActivityRole,
         Date = vm.Date,

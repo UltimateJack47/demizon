@@ -50,46 +50,67 @@
                    Margin="0,8,0,0" />
 
             <!-- Toggle buttons -->
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                <!-- Přijdu button: green filled when Attends=true, outlined when false -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <!-- Přijdu button: filled green when Status="yes" -->
                 <Button x:Name="BtnAttend"
                         Grid.Column="0"
                         Text="✓ Přijdu"
-                        Command="{Binding SetAttendsCommand}"
-                        CommandParameter="{x:Boolean True}"
+                        Command="{Binding SetStatusCommand}"
+                        CommandParameter="yes"
                         BackgroundColor="Transparent"
                         TextColor="{StaticResource AttendanceGreen}"
                         BorderColor="{StaticResource AttendanceGreen}"
                         BorderWidth="2"
                         CornerRadius="12"
-                        FontSize="16"
+                        FontSize="14"
                         FontAttributes="Bold"
                         HeightRequest="52">
                     <Button.Triggers>
-                        <DataTrigger TargetType="Button" Binding="{Binding Attends}" Value="True">
+                        <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="yes">
                             <Setter Property="BackgroundColor" Value="{StaticResource AttendanceGreen}" />
                             <Setter Property="TextColor" Value="White" />
                         </DataTrigger>
                     </Button.Triggers>
                 </Button>
-                <!-- Nepřijdu button: red filled when Attends=false, outlined when true -->
-                <Button x:Name="BtnDecline"
+                <!-- Nevím button: filled yellow when Status="maybe" -->
+                <Button x:Name="BtnMaybe"
                         Grid.Column="1"
-                        Text="✗ Nepřijdu"
-                        Command="{Binding SetAttendsCommand}"
-                        CommandParameter="{x:Boolean False}"
-                        BackgroundColor="{StaticResource AttendanceRed}"
-                        TextColor="White"
-                        BorderColor="{StaticResource AttendanceRed}"
+                        Text="? Nevím"
+                        Command="{Binding SetStatusCommand}"
+                        CommandParameter="maybe"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource AttendanceYellow}"
+                        BorderColor="{StaticResource AttendanceYellow}"
                         BorderWidth="2"
                         CornerRadius="12"
-                        FontSize="16"
+                        FontSize="14"
                         FontAttributes="Bold"
                         HeightRequest="52">
                     <Button.Triggers>
-                        <DataTrigger TargetType="Button" Binding="{Binding Attends}" Value="True">
-                            <Setter Property="BackgroundColor" Value="Transparent" />
-                            <Setter Property="TextColor" Value="{StaticResource AttendanceRed}" />
+                        <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="maybe">
+                            <Setter Property="BackgroundColor" Value="{StaticResource AttendanceYellow}" />
+                            <Setter Property="TextColor" Value="White" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+                <!-- Nepřijdu button: filled red when Status="no" -->
+                <Button x:Name="BtnDecline"
+                        Grid.Column="2"
+                        Text="✗ Nepřijdu"
+                        Command="{Binding SetStatusCommand}"
+                        CommandParameter="no"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource AttendanceRed}"
+                        BorderColor="{StaticResource AttendanceRed}"
+                        BorderWidth="2"
+                        CornerRadius="12"
+                        FontSize="14"
+                        FontAttributes="Bold"
+                        HeightRequest="52">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="no">
+                            <Setter Property="BackgroundColor" Value="{StaticResource AttendanceRed}" />
+                            <Setter Property="TextColor" Value="White" />
                         </DataTrigger>
                     </Button.Triggers>
                 </Button>
@@ -97,7 +118,7 @@
 
             <!-- Role picker - visible only when attending -->
             <Border Style="{StaticResource CardBorder}"
-                    IsVisible="{Binding Attends}"
+                    IsVisible="{Binding IsAttending}"
                     Padding="12">
                 <Picker Title="Vyberte roli"
                         ItemsSource="{Binding RoleOptions}"

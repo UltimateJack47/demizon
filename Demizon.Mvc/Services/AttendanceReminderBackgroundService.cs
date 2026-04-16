@@ -1,4 +1,5 @@
 using Demizon.Dal;
+using Demizon.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Mvc.Services;
@@ -45,13 +46,15 @@ public class AttendanceReminderBackgroundService(
 
         foreach (var ev in upcomingEvents)
         {
-            var attendedMemberIds = await db.Attendances
-                .Where(a => a.EventId == ev.Id)
+            // Members with a definitive Yes or No do not need reminders.
+            // Members with Maybe or no record at all still need to decide → notify them.
+            var decidedMemberIds = await db.Attendances
+                .Where(a => a.EventId == ev.Id && a.Status != AttendanceStatus.Maybe)
                 .Select(a => a.MemberId)
                 .ToListAsync(ct);
 
             var membersWithoutAttendance = await db.Members
-                .Where(m => !attendedMemberIds.Contains(m.Id))
+                .Where(m => !decidedMemberIds.Contains(m.Id))
                 .Select(m => new { m.Id })
                 .ToListAsync(ct);
 

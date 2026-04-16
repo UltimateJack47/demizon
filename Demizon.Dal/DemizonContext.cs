@@ -125,7 +125,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
                 .WithMany(y => y.Attendances)
                 .HasForeignKey(x => x.EventId);
             b.Property(s => s.Date).IsRequired();
-            b.Property(s => s.Attends).HasDefaultValue(false).IsRequired();
+            b.Property(s => s.Status).HasDefaultValue(AttendanceStatus.No).HasConversion<int>().IsRequired();
             b.Property(s => s.ActivityRole).HasConversion<string>();
             b.Property(s => s.MemberId).IsRequired();
             b.Property(s => s.GoogleEventId).HasMaxLength(256);

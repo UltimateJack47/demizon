@@ -16,7 +16,7 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        // Force light theme to match MVC app appearance
+        // Force light theme — styles are designed for light only; full dark mode is a future task
         UserAppTheme = AppTheme.Light;
 
         var window = new Window(_shell);

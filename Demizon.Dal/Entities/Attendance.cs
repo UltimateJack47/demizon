@@ -1,10 +1,17 @@
 ﻿namespace Demizon.Dal.Entities;
 
+public enum AttendanceStatus
+{
+    No = 0,
+    Yes = 1,
+    Maybe = 2
+}
+
 public class Attendance
 {
     public int Id { get; set; }
 
-    public bool Attends { get; set; } = false;
+    public AttendanceStatus Status { get; set; } = AttendanceStatus.No;
 
     public string? Comment { get; set; }
 

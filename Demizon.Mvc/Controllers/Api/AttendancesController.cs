@@ -64,17 +64,17 @@ public class AttendancesController(
             Date = ev.DateFrom,
         };
 
-        attendance.Attends = request.Attends;
+        attendance.Status = ParseStatus(request.Status);
         attendance.Comment = request.Comment;
         attendance.ActivityRole = activityRole;
 
         await attendanceService.CreateOrUpdateAsync(attendance);
 
-        // Google Calendar sync
+        // Google Calendar sync — only create for Yes, delete for No/Maybe
         var member = await memberService.GetOneAsync(memberId);
         if (!string.IsNullOrEmpty(member.GoogleRefreshToken) && !string.IsNullOrEmpty(member.GoogleCalendarId))
         {
-            if (request.Attends)
+            if (attendance.Status == AttendanceStatus.Yes)
             {
                 if (string.IsNullOrEmpty(attendance.GoogleEventId))
                 {
@@ -127,7 +127,7 @@ public class AttendancesController(
             Date = day,
         };
 
-        attendance.Attends = request.Attends;
+        attendance.Status = ParseStatus(request.Status);
         attendance.Comment = request.Comment;
 
         await attendanceService.CreateOrUpdateAsync(attendance);
@@ -192,11 +192,18 @@ public class AttendancesController(
                 Dal.Entities.Attendance? att = col.EventId.HasValue
                     ? memberAtts.FirstOrDefault(a => a.EventId == col.EventId)
                     : memberAtts.FirstOrDefault(a => a.EventId == null && a.Date.Date == col.Date.Date);
-                return new MemberCellDto(col.Date, col.EventId, att?.Attends);
+                return new MemberCellDto(col.Date, col.EventId, att?.Status.ToString().ToLowerInvariant());
             }).ToList();
             return new MemberMonthlyRowDto(m.Id, $"{m.Name} {m.Surname}", cells);
         }).ToList();
 
         return Ok(new MonthlyAttendanceTableDto(columns, memberRows));
     }
+
+    private static AttendanceStatus ParseStatus(string? status) => status?.ToLowerInvariant() switch
+    {
+        "yes" => AttendanceStatus.Yes,
+        "maybe" => AttendanceStatus.Maybe,
+        _ => AttendanceStatus.No
+    };
 }

@@ -6,4 +6,4 @@ namespace Demizon.Contracts.Attendances;
 public sealed record MemberCellDto(
     DateTime Date,
     int? EventId,
-    bool? Attends);
+    string? Status);

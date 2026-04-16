@@ -1,2 +1,2 @@
 namespace Demizon.Contracts.Attendances;
-public sealed record UpsertAttendanceRequest(bool Attends, string? Comment, string? ActivityRole);
+public sealed record UpsertAttendanceRequest(string Status, string? Comment, string? ActivityRole);

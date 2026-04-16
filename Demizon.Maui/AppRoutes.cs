@@ -11,10 +11,14 @@ public static class AppRoutes
     public const string Login = "//login";
     public const string MainTabs = "//main/attendance";
 
-    // ── Detail / push stránky (VŽDY relativní) ────────────────
-    public const string EventDetail = "events/detail";
-    public const string EventCreate = "events/create";
-    public const string DanceDetail = "dances/detail";
+    // ── Detail / push stránky (VŽDY relativní, VŽDY ploché názvy bez /) ─
+    // DŮLEŽITÉ: Route NESMÍ obsahovat "/" — MAUI Shell by první segment
+    // interpretoval jako tab-route a navigace by selhala s chybou
+    // "Relative routing to shell elements is currently not supported."
+    public const string EventDetail = "event-detail";
+    public const string EventCreate = "event-create";
+    public const string DanceDetail = "dance-detail";
     public const string AttdStats = "attd-stats";
     public const string AttdOverview = "attd-overview";
+    public const string MemberAttdDetail = "member-attd-detail";
 }

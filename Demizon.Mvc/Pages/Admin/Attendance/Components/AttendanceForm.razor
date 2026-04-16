@@ -22,9 +22,13 @@
     <DialogContent>
         <MudGrid Spacing="2">
             <MudItem xs="12">
-                <MudCheckBox @bind-Value="Model.Attends" Label="Zúčastním se" Color="Color.Primary"/>
+                <MudRadioGroup T="AttendanceStatus" @bind-Value="Model.Status">
+                    <MudRadio Value="AttendanceStatus.Yes" Color="Color.Success">Zúčastním se</MudRadio>
+                    <MudRadio Value="AttendanceStatus.Maybe" Color="Color.Warning">Nevím</MudRadio>
+                    <MudRadio Value="AttendanceStatus.No" Color="Color.Error">Nezúčastním se</MudRadio>
+                </MudRadioGroup>
             </MudItem>
-            @if (Model.Member.IsDancer && Model.Member.IsMusician)
+            @if (Model.Member.IsDancer && Model.Member.IsMusician && Model.Status == AttendanceStatus.Yes)
             {
                 <MudItem xs="12">
                     <MudSelect T="AttendanceActivityRole?" @bind-Value="Model.ActivityRole"

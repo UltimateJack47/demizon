@@ -87,7 +87,7 @@ public partial class AllMembersAttendancePage : ContentPage
             {
                 var cell = member.Cells.Count > c ? member.Cells[c] : null;
                 var col = columns[c];
-                AddAttendanceCell(cell, col, row, c + 1);
+                AddAttendanceCell(cell, col, row, c + 1, member.MemberId, member.FullName);
             }
         }
     }
@@ -158,12 +158,16 @@ public partial class AllMembersAttendancePage : ContentPage
 
         border.Content = stack;
 
-        // Tap to navigate to event detail
+        // Tap header → navigate to own event detail (header is not member-specific)
         if (col.EventId.HasValue)
         {
             var eventId = col.EventId.Value;
             var tap = new TapGestureRecognizer();
-            tap.Tapped += async (_, _) => await _vm!.NavigateToEventCommand.ExecuteAsync(eventId);
+            tap.Tapped += async (_, _) =>
+            {
+                try { await _vm!.NavigateToEventCommand.ExecuteAsync(eventId); }
+                catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít detail akce.", "OK"); }
+            };
             border.GestureRecognizers.Add(tap);
         }
 
@@ -196,7 +200,7 @@ public partial class AllMembersAttendancePage : ContentPage
         TableGrid.Children.Add(border);
     }
 
-    private void AddAttendanceCell(MemberCellDto? cell, MonthlyColumnDto col, int row, int gridCol)
+    private void AddAttendanceCell(MemberCellDto? cell, MonthlyColumnDto col, int row, int gridCol, int memberId, string memberFullName)
     {
         var bg = row % 2 == 0 ? Color.FromArgb("#F5EEE0") : Colors.White;
         if (col.IsCancelled) bg = Color.FromArgb("#F0E8E0");
@@ -217,12 +221,17 @@ public partial class AllMembersAttendancePage : ContentPage
             symbol = "–";
             textColor = Color.FromArgb("#AAAAAA");
         }
-        else if (cell?.Attends == true)
+        else if (cell?.Status == "yes")
         {
             symbol = "✓";
             textColor = Color.FromArgb("#27AE60");
         }
-        else if (cell?.Attends == false)
+        else if (cell?.Status == "maybe")
+        {
+            symbol = "?";
+            textColor = Color.FromArgb("#F39C12");
+        }
+        else if (cell?.Status == "no")
         {
             symbol = "✗";
             textColor = Color.FromArgb("#E74C3C");
@@ -243,12 +252,55 @@ public partial class AllMembersAttendancePage : ContentPage
             VerticalTextAlignment = TextAlignment.Center
         };
 
-        // Tap to edit: navigate to event detail if eventId available
-        if (col.EventId.HasValue && !col.IsCancelled)
+        // Tap to edit — events and rehearsals, own row vs other member
+        if (!col.IsCancelled)
         {
-            var eventId = col.EventId.Value;
+            var capturedMemberId = memberId;
+            var capturedName = memberFullName;
+            var capturedDate = col.Date;
             var tap = new TapGestureRecognizer();
-            tap.Tapped += async (_, _) => await _vm!.NavigateToEventCommand.ExecuteAsync(eventId);
+
+            if (col.EventId.HasValue)
+            {
+                // Event cell
+                var eventId = col.EventId.Value;
+                if (_vm!.IsCurrentUser(capturedMemberId))
+                {
+                    tap.Tapped += async (_, _) =>
+                    {
+                        try { await _vm.NavigateToEventCommand.ExecuteAsync(eventId); }
+                        catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít detail akce.", "OK"); }
+                    };
+                }
+                else
+                {
+                    tap.Tapped += async (_, _) =>
+                    {
+                        try { await _vm.NavigateToMemberAttendanceAsync(eventId, capturedMemberId, capturedName); }
+                        catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít docházku člena.", "OK"); }
+                    };
+                }
+            }
+            else
+            {
+                // Rehearsal cell (EventId is null)
+                if (_vm!.IsCurrentUser(capturedMemberId))
+                {
+                    tap.Tapped += async (_, _) =>
+                    {
+                        try { await _vm.NavigateToRehearsalAsync(capturedDate); }
+                        catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít detail zkoušky.", "OK"); }
+                    };
+                }
+                else
+                {
+                    tap.Tapped += async (_, _) =>
+                    {
+                        await DisplayAlert("Info", $"Editace zkoušek jiných členů zatím není k dispozici.", "OK");
+                    };
+                }
+            }
+
             border.GestureRecognizers.Add(tap);
         }
 

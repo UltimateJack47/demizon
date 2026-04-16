@@ -24,7 +24,10 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     private EventDto? _event;
 
     [ObservableProperty]
-    private bool _attends;
+    [NotifyPropertyChangedFor(nameof(IsAttending))]
+    private string _status = "no";
+
+    public bool IsAttending => Status == "yes";
 
     [ObservableProperty]
     private string? _comment;
@@ -35,7 +38,22 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     [ObservableProperty]
     private bool _isBusy;
 
+    // Display labels for the Picker (Czech). Conversion to/from API values (English) happens at load/save.
     public List<string> RoleOptions { get; } = ["Tanečník", "Muzikant"];
+
+    private static string? ApiRoleToDisplay(string? apiRole) => apiRole switch
+    {
+        "dancer" => "Tanečník",
+        "musician" => "Muzikant",
+        _ => null
+    };
+
+    private static string? DisplayRoleToApi(string? displayRole) => displayRole switch
+    {
+        "Tanečník" => "dancer",
+        "Muzikant" => "musician",
+        _ => null
+    };
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -50,14 +68,14 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
                 try
                 {
                     var att = await apiClient.GetRehearsalAttendanceAsync(date);
-                    Attends = att.Attends;
+                    Status = att.Status;
                     Comment = att.Comment;
-                    ActivityRole = null;
+                    ActivityRole = ApiRoleToDisplay(att.ActivityRole);
                 }
                 catch
                 {
                     // No existing attendance record — default to not attending
-                    Attends = false;
+                    Status = "no";
                     Comment = null;
                     ActivityRole = null;
                 }
@@ -67,13 +85,13 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
                 Event = await apiClient.GetEventAsync(EventId);
                 if (Event?.MyAttendance is { } att)
                 {
-                    Attends = att.Attends;
+                    Status = att.Status;
                     Comment = att.Comment;
-                    ActivityRole = att.ActivityRole;
+                    ActivityRole = ApiRoleToDisplay(att.ActivityRole);
                 }
                 else
                 {
-                    Attends = false;
+                    Status = "no";
                     Comment = null;
                     ActivityRole = null;
                 }
@@ -87,9 +105,9 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     }
 
     [RelayCommand]
-    private void SetAttends(bool value)
+    private void SetStatus(string value)
     {
-        Attends = value;
+        Status = value;
     }
 
     [RelayCommand]
@@ -98,7 +116,7 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
         IsBusy = true;
         try
         {
-            var request = new UpsertAttendanceRequest(Attends, Comment, ActivityRole);
+            var request = new UpsertAttendanceRequest(Status, Comment, DisplayRoleToApi(ActivityRole));
             if (IsRehearsal)
             {
                 var date = DateTime.Parse(RehearsalDateString!);

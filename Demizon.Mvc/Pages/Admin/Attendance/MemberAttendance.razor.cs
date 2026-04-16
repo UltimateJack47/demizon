@@ -124,7 +124,7 @@ public partial class MemberAttendance : ComponentBase
             if (userAttendance is not null)
             {
                 attendance.Id = userAttendance.Id;
-                attendance.Attends = userAttendance.Attends;
+                attendance.Status = userAttendance.Status;
                 attendance.Comment = userAttendance.Comment;
                 attendance.GoogleEventId = userAttendance.GoogleEventId;
             }
@@ -158,13 +158,18 @@ public partial class MemberAttendance : ComponentBase
         if (userAttendance is null)
             return date.Event is not null ? "mud-theme-warning" : "mud-theme-info";
 
-        return userAttendance.Attends ? "mud-theme-success" : "mud-theme-error";
+        return userAttendance.Status switch
+        {
+            AttendanceStatus.Yes => "mud-theme-success",
+            AttendanceStatus.Maybe => "mud-theme-warning",
+            _ => "mud-theme-error"
+        };
     }
 
     private int CountAttending(IEnumerable<MemberViewModel> members, DateTime date) =>
         members.SelectMany(x => x.Attendances)
             .Where(y => y.Date == date)
-            .Count(y => y.Attends);
+            .Count(y => y.Status == AttendanceStatus.Yes);
 
     // Počítá ženy označené jako tanečnice, které jsou přítomné.
     // Pokud je členka zároveň muzikantka, počítá se jako tanečnice jen pokud má ActivityRole = Dancer.
@@ -173,7 +178,7 @@ public partial class MemberAttendance : ComponentBase
             .Concat(FilteredExternals.Where(x => x.Gender == Gender.Female))
             .Where(m => m.IsDancer)
             .Count(m => m.Attendances.Any(a =>
-                a.Date == date && a.Attends &&
+                a.Date == date && a.Status == AttendanceStatus.Yes &&
                 (!m.IsMusician || a.ActivityRole == AttendanceActivityRole.Dancer)));
 
     // Totéž pro muže tanečníky.
@@ -182,7 +187,7 @@ public partial class MemberAttendance : ComponentBase
             .Concat(FilteredExternals.Where(x => x.Gender == Gender.Male))
             .Where(m => m.IsDancer)
             .Count(m => m.Attendances.Any(a =>
-                a.Date == date && a.Attends &&
+                a.Date == date && a.Status == AttendanceStatus.Yes &&
                 (!m.IsMusician || a.ActivityRole == AttendanceActivityRole.Dancer)));
 
     // Počítá všechny přítomné muzikanty (obě pohlaví).
@@ -193,7 +198,7 @@ public partial class MemberAttendance : ComponentBase
             .Where(x => GenderFilter == null || x.Gender == GenderFilter)
             .Where(x => ShowAttendanceHidden || x.IsAttendanceVisible)
             .Count(m => m.Attendances.Any(a =>
-                a.Date == date && a.Attends &&
+                a.Date == date && a.Status == AttendanceStatus.Yes &&
                 (!m.IsDancer || a.ActivityRole != AttendanceActivityRole.Dancer)));
 
     private async Task PreviousMonth()
@@ -254,7 +259,7 @@ public partial class MemberAttendance : ComponentBase
             : null;
 
         bool isSelf = model.MemberId == LoggedUser.Id;
-        bool attendsAfterSave = false;
+        AttendanceStatus statusAfterSave = AttendanceStatus.No;
 
         try
         {
@@ -264,13 +269,13 @@ public partial class MemberAttendance : ComponentBase
                 if (model.Id != 0)
                     await AttendanceService.DeleteAsync(model.Id);
                 Snackbar.Add("Docházka resetována.", Severity.Info);
-                attendsAfterSave = false;
+                statusAfterSave = AttendanceStatus.No;
             }
             else
             {
                 await AttendanceService.CreateOrUpdateAsync(attendanceResult.ToEntity());
                 Snackbar.Add("Docházka uložena.", Severity.Success);
-                attendsAfterSave = attendanceResult.Attends;
+                statusAfterSave = attendanceResult.Status;
                 model.Id = attendanceResult.Id;
             }
             if (refreshUserData) await LoadData();
@@ -287,7 +292,7 @@ public partial class MemberAttendance : ComponentBase
         {
             try
             {
-                await SyncGoogleCalendarAsync(model, attendsAfterSave, previousGoogleEventId);
+                await SyncGoogleCalendarAsync(model, statusAfterSave, previousGoogleEventId);
             }
             catch
             {
@@ -296,14 +301,14 @@ public partial class MemberAttendance : ComponentBase
         }
     }
 
-    private async Task SyncGoogleCalendarAsync(AttendanceViewModel model, bool attends, string? previousGoogleEventId)
+    private async Task SyncGoogleCalendarAsync(AttendanceViewModel model, AttendanceStatus status, string? previousGoogleEventId)
     {
         // Načteme čerstvá data člena pro aktuální Google tokeny
         var member = await MemberService.GetOneAsync(LoggedUser.Id);
         if (string.IsNullOrEmpty(member.GoogleRefreshToken) || string.IsNullOrEmpty(member.GoogleCalendarId))
             return;
 
-        if (attends)
+        if (status == AttendanceStatus.Yes)
         {
             // Pokud událost v kalendáři již existuje, neopakuj vytvoření (ochrana proti duplikátům)
             if (!string.IsNullOrEmpty(model.GoogleEventId))

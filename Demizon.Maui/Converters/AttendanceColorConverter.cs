@@ -9,8 +9,9 @@ public class AttendanceColorConverter : IValueConverter
     {
         string resourceKey = value switch
         {
-            AttendanceDto { Attends: true } => "AttendanceGreen",
-            AttendanceDto { Attends: false } => "AttendanceRed",
+            AttendanceDto { Status: "yes" } => "AttendanceGreen",
+            AttendanceDto { Status: "maybe" } => "AttendanceYellow",
+            AttendanceDto { Status: "no" } => "AttendanceRed",
             _ => "AttendanceGray"
         };
 

@@ -28,6 +28,7 @@
     <MauiXaml Update="Pages\Attendance\AttendancePage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\Attendance\AttendanceStatsPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\Attendance\AllMembersAttendancePage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\Attendance\MemberAttendanceDetailPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\EventsPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\EventDetailPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\DancesPage.xaml" Generator="MSBuild:Compile" />

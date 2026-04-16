@@ -86,8 +86,8 @@
                                 }
                                 @if (day is not null)
                                 {
-                                    <MudIcon Icon="@(day.Attends ? Icons.Material.Filled.Check : Icons.Material.Filled.Close)"
-                                             Color="@(day.Attends ? Color.Success : Color.Error)"
+                                    <MudIcon Icon="@(day.Status == AttendanceStatus.Yes ? Icons.Material.Filled.Check : day.Status == AttendanceStatus.Maybe ? Icons.Material.Filled.Help : Icons.Material.Filled.Close)"
+                                             Color="@(day.Status == AttendanceStatus.Yes ? Color.Success : day.Status == AttendanceStatus.Maybe ? Color.Warning : Color.Error)"
                                              Size="Size.Small"/>
                                 }
                             </td>
@@ -133,8 +133,8 @@
                                 }
                                 @if (day is not null)
                                 {
-                                    <MudIcon Icon="@(day.Attends ? Icons.Material.Filled.Check : Icons.Material.Filled.Close)"
-                                             Color="@(day.Attends ? Color.Success : Color.Error)"
+                                    <MudIcon Icon="@(day.Status == AttendanceStatus.Yes ? Icons.Material.Filled.Check : day.Status == AttendanceStatus.Maybe ? Icons.Material.Filled.Help : Icons.Material.Filled.Close)"
+                                             Color="@(day.Status == AttendanceStatus.Yes ? Color.Success : day.Status == AttendanceStatus.Maybe ? Color.Warning : Color.Error)"
                                              Size="Size.Small"/>
                                 }
                             </td>
@@ -188,8 +188,8 @@
                                 }
                                 @if (extDay is not null)
                                 {
-                                    <MudIcon Icon="@(extDay.Attends ? Icons.Material.Filled.Check : Icons.Material.Filled.Close)"
-                                             Color="@(extDay.Attends ? Color.Success : Color.Error)"
+                                    <MudIcon Icon="@(extDay.Status == AttendanceStatus.Yes ? Icons.Material.Filled.Check : extDay.Status == AttendanceStatus.Maybe ? Icons.Material.Filled.Help : Icons.Material.Filled.Close)"
+                                             Color="@(extDay.Status == AttendanceStatus.Yes ? Color.Success : extDay.Status == AttendanceStatus.Maybe ? Color.Warning : Color.Error)"
                                              Size="Size.Small"/>
                                 }
                             </td>

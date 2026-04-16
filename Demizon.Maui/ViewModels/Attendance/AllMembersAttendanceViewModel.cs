@@ -15,15 +15,23 @@ public partial class AllMembersAttendanceViewModel : ObservableObject
 
     private readonly IApiClient _apiClient;
     private readonly INavigationService _navigation;
+    private readonly TokenStorage _tokenStorage;
 
-    public AllMembersAttendanceViewModel(IApiClient apiClient, INavigationService navigation)
+    // Cached on first load so we can distinguish "my" row without repeated SecureStorage calls
+    private int? _currentMemberId;
+
+    public AllMembersAttendanceViewModel(IApiClient apiClient, INavigationService navigation, TokenStorage tokenStorage)
     {
         _apiClient = apiClient;
         _navigation = navigation;
+        _tokenStorage = tokenStorage;
         var today = DateTime.Today;
         _currentYear = today.Year;
         _currentMonth = today.Month;
     }
+
+    /// <summary>Whether the given member ID belongs to the currently logged-in user.</summary>
+    public bool IsCurrentUser(int memberId) => _currentMemberId.HasValue && _currentMemberId.Value == memberId;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MonthLabel))]
@@ -58,6 +66,10 @@ public partial class AllMembersAttendanceViewModel : ObservableObject
 
         try
         {
+            // Cache the current user's memberId on first successful load
+            if (_currentMemberId is null)
+                _currentMemberId = await _tokenStorage.GetMemberIdAsync();
+
             Table = await _apiClient.GetMonthlyAttendanceTableAsync(CurrentYear, CurrentMonth);
         }
         catch (Exception)
@@ -89,6 +101,40 @@ public partial class AllMembersAttendanceViewModel : ObservableObject
     [RelayCommand]
     private async Task NavigateToEvent(int eventId)
     {
-        await _navigation.GoToAsync($"{AppRoutes.EventDetail}?eventId={eventId}");
+        try
+        {
+            await _navigation.GoToAsync($"{AppRoutes.EventDetail}?eventId={eventId}");
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "Nepodařilo se otevřít detail akce.";
+        }
+    }
+
+    public async Task NavigateToRehearsalAsync(DateTime date)
+    {
+        try
+        {
+            await _navigation.GoToAsync(
+                $"{AppRoutes.EventDetail}?rehearsalDate={date:yyyy-MM-dd}");
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "Nepodařilo se otevřít detail zkoušky.";
+        }
+    }
+
+    public async Task NavigateToMemberAttendanceAsync(int eventId, int memberId, string memberName)
+    {
+        try
+        {
+            var encodedName = Uri.EscapeDataString(memberName);
+            await _navigation.GoToAsync(
+                $"{AppRoutes.MemberAttdDetail}?eventId={eventId}&memberId={memberId}&memberName={encodedName}");
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "Nepodařilo se otevřít docházku člena.";
+        }
     }
 }

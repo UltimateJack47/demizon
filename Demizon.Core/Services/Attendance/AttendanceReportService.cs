@@ -1,4 +1,5 @@
 using Demizon.Dal;
+using Demizon.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Core.Services.Attendance;
@@ -21,7 +22,7 @@ public class AttendanceReportService(DemizonContext db) : IAttendanceReportServi
 
         var records = await db.Attendances
             .Where(a => a.Date >= dateFrom && a.Date <= dateTo && a.Member.IsAttendanceVisible)
-            .Select(a => new { a.MemberId, a.Member.Name, a.Member.Surname, a.Attends, a.EventId })
+            .Select(a => new { a.MemberId, a.Member.Name, a.Member.Surname, a.Status, a.EventId })
             .ToListAsync();
 
         return records
@@ -29,8 +30,8 @@ public class AttendanceReportService(DemizonContext db) : IAttendanceReportServi
             .Select(g =>
             {
                 var first = g.First();
-                var attendedRehearsals = g.Count(x => x.Attends && x.EventId == null);
-                var attendedActions = g.Count(x => x.Attends && x.EventId != null);
+                var attendedRehearsals = g.Count(x => x.Status == AttendanceStatus.Yes && x.EventId == null);
+                var attendedActions = g.Count(x => x.Status == AttendanceStatus.Yes && x.EventId != null);
                 return new MemberAttendanceStat(
                     g.Key,
                     $"{first.Name} {first.Surname}",

@@ -12,7 +12,7 @@ public static class ContractMappingExtensions
             IsRehearsal: e.Recurrence == Dal.Entities.RecurrenceType.Weekly);
 
     public static AttendanceDto ToDto(this Dal.Entities.Attendance a) =>
-        new(a.Id, a.Attends, a.Comment, a.ActivityRole?.ToString(), a.LastUpdated);
+        new(a.Id, a.Status.ToString().ToLowerInvariant(), a.Comment, a.ActivityRole?.ToString(), a.LastUpdated);
 
     public static DanceDto ToDto(this Dal.Entities.Dance d) =>
         new(d.Id, d.Name, d.Region, d.Description, d.Lyrics,

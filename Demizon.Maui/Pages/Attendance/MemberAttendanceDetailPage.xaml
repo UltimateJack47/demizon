@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Demizon.Maui.ViewModels.Attendance"
+             x:Class="Demizon.Maui.Pages.Attendance.MemberAttendanceDetailPage"
+             x:DataType="vm:MemberAttendanceDetailViewModel"
+             Title="Docházka člena"
+             BackgroundColor="{StaticResource PageBackground}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <!-- Loading indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               Color="{StaticResource Primary}"
+                               HorizontalOptions="Center"
+                               Margin="0,24,0,0" />
+
+            <!-- Error message -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource ErrorColor}"
+                   FontSize="14"
+                   HorizontalTextAlignment="Center"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+
+            <!-- Content — shown once data is loaded -->
+            <VerticalStackLayout Spacing="16"
+                                 IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}">
+
+                <!-- Member + Event info card -->
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="8">
+
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="👤" FontSize="16" VerticalOptions="Center" />
+                            <Label Text="{Binding MemberName}"
+                                   Style="{StaticResource TitleLabel}"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="📅" FontSize="16" VerticalOptions="Center" />
+                            <Label Text="{Binding Event.Name}"
+                                   Style="{StaticResource SubtitleLabel}"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+
+                        <Label Text="{Binding Event.DateFrom, Converter={StaticResource DateFormatConverter}}"
+                               TextColor="{StaticResource TextSecondary}"
+                               FontSize="13" />
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Attendance section heading -->
+                <Label Text="Docházka"
+                       FontAttributes="Bold"
+                       FontSize="18"
+                       Margin="0,4,0,0" />
+
+                <!-- Přijde / Nevím / Nepřijde toggle -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Button Grid.Column="0"
+                            Text="✓ Přijde"
+                            Command="{Binding SetStatusCommand}"
+                            CommandParameter="yes"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource AttendanceGreen}"
+                            BorderColor="{StaticResource AttendanceGreen}"
+                            BorderWidth="2"
+                            CornerRadius="12"
+                            FontSize="14"
+                            FontAttributes="Bold"
+                            HeightRequest="52">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="yes">
+                                <Setter Property="BackgroundColor" Value="{StaticResource AttendanceGreen}" />
+                                <Setter Property="TextColor" Value="White" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                    <Button Grid.Column="1"
+                            Text="? Nevím"
+                            Command="{Binding SetStatusCommand}"
+                            CommandParameter="maybe"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource AttendanceYellow}"
+                            BorderColor="{StaticResource AttendanceYellow}"
+                            BorderWidth="2"
+                            CornerRadius="12"
+                            FontSize="14"
+                            FontAttributes="Bold"
+                            HeightRequest="52">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="maybe">
+                                <Setter Property="BackgroundColor" Value="{StaticResource AttendanceYellow}" />
+                                <Setter Property="TextColor" Value="White" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                    <Button Grid.Column="2"
+                            Text="✗ Nepřijde"
+                            Command="{Binding SetStatusCommand}"
+                            CommandParameter="no"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource AttendanceRed}"
+                            BorderColor="{StaticResource AttendanceRed}"
+                            BorderWidth="2"
+                            CornerRadius="12"
+                            FontSize="14"
+                            FontAttributes="Bold"
+                            HeightRequest="52">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding Status}" Value="no">
+                                <Setter Property="BackgroundColor" Value="{StaticResource AttendanceRed}" />
+                                <Setter Property="TextColor" Value="White" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+                </Grid>
+
+                <!-- Role picker — visible only when attending -->
+                <Border Style="{StaticResource CardBorder}"
+                        Padding="12"
+                        IsVisible="{Binding IsAttending}">
+                    <Picker Title="Vyberte roli"
+                            ItemsSource="{Binding RoleOptions}"
+                            SelectedItem="{Binding ActivityRole}" />
+                </Border>
+
+                <!-- Comment -->
+                <Border Style="{StaticResource CardBorder}" Padding="12">
+                    <Editor Placeholder="Poznámka..."
+                            Text="{Binding Comment}"
+                            HeightRequest="100"
+                            AutoSize="TextChanges" />
+                </Border>
+
+                <!-- Save -->
+                <Button Text="Uložit docházku"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding SaveCommand}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                        Margin="0,8,0,20" />
+
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

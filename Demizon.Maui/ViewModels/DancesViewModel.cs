@@ -37,7 +37,14 @@ public partial class DancesViewModel(IApiClient apiClient, INavigationService na
     [RelayCommand]
     private async Task NavigateToDetailAsync(DanceDto dance)
     {
-        await navigation.GoToAsync($"{AppRoutes.DanceDetail}?danceId={dance.Id}");
+        try
+        {
+            await navigation.GoToAsync($"{AppRoutes.DanceDetail}?danceId={dance.Id}");
+        }
+        catch (Exception)
+        {
+            // Navigation failures are non-critical; user can retry by tapping again
+        }
     }
 
     private void ApplyFilter()

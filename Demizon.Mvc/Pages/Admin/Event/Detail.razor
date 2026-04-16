@@ -138,8 +138,8 @@ else
 
         <!-- ─── Přehled docházky ─── -->
         @{
-            var attending = _attendances.Where(a => a.Attends).ToList();
-            var notAttending = _attendances.Where(a => !a.Attends).ToList();
+            var attending = _attendances.Where(a => a.Status == AttendanceStatus.Yes).ToList();
+            var notAttending = _attendances.Where(a => a.Status == AttendanceStatus.No).ToList();
         }
         @if (_attendances.Count > 0)
         {

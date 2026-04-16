@@ -33,7 +33,7 @@ public class AuthController(
         var token = tokenService.GenerateToken(member);
         var refreshToken = await refreshTokenService.CreateAsync(member.Id, jwtOptions.Value.RefreshTokenExpirationDays);
 
-        return Ok(new TokenResponse(token, refreshToken, tokenService.ExpirationMinutes * 60, member.Role.ToString(), member.GoogleConnectedAt != null));
+        return Ok(new TokenResponse(token, refreshToken, tokenService.ExpirationMinutes * 60, member.Role.ToString(), member.GoogleConnectedAt != null, member.Id));
     }
 
     [HttpPost("refresh")]
@@ -54,7 +54,7 @@ public class AuthController(
             var token = tokenService.GenerateToken(member);
             var newRefreshToken = await refreshTokenService.CreateAsync(member.Id, jwtOptions.Value.RefreshTokenExpirationDays);
 
-            return Ok(new TokenResponse(token, newRefreshToken, tokenService.ExpirationMinutes * 60, member.Role.ToString(), member.GoogleConnectedAt != null));
+            return Ok(new TokenResponse(token, newRefreshToken, tokenService.ExpirationMinutes * 60, member.Role.ToString(), member.GoogleConnectedAt != null, member.Id));
         }
         catch (EntityNotFoundException)
         {

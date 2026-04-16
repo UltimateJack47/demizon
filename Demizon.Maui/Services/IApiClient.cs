@@ -39,6 +39,12 @@ public interface IApiClient
     [Put("/api/attendances/rehearsal")]
     Task<AttendanceDto> UpsertRehearsalAttendanceAsync([Query] DateTime date, [Body] UpsertAttendanceRequest request);
 
+    [Get("/api/attendances/{eventId}/member/{memberId}")]
+    Task<AttendanceDto> GetMemberAttendanceAsync(int eventId, int memberId);
+
+    [Put("/api/attendances/{eventId}/member/{memberId}")]
+    Task<AttendanceDto> UpsertMemberAttendanceAsync(int eventId, int memberId, [Body] UpsertAttendanceRequest request);
+
     [Get("/api/attendances/stats")]
     Task<List<MemberAttendanceStatDto>> GetAttendanceStatsAsync([Query] DateTime from, [Query] DateTime to);
 

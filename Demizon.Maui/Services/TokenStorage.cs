@@ -9,6 +9,7 @@ public class TokenStorage
     private const string ExpiresAtKey = "expires_at";
     private const string RoleKey = "role";
     private const string LoginKey = "login";
+    private const string MemberIdKey = "member_id";
 
     // In-memory cache to avoid blocking async calls from UI thread
     private DateTime? _cachedExpiresAt;
@@ -26,6 +27,12 @@ public class TokenStorage
     public async Task<string?> GetRoleAsync()
         => await SecureStorage.Default.GetAsync(RoleKey);
 
+    public async Task<int?> GetMemberIdAsync()
+    {
+        var raw = await SecureStorage.Default.GetAsync(MemberIdKey);
+        return raw is not null && int.TryParse(raw, out var id) ? id : null;
+    }
+
     public bool IsTokenValid()
     {
         return _hasAccessToken
@@ -42,6 +49,8 @@ public class TokenStorage
         await SecureStorage.Default.SetAsync(ExpiresAtKey, expiresAt.ToString("O"));
         await SecureStorage.Default.SetAsync(RoleKey, response.Role);
         await SecureStorage.Default.SetAsync(LoginKey, login);
+        if (response.MemberId != 0)
+            await SecureStorage.Default.SetAsync(MemberIdKey, response.MemberId.ToString());
 
         _cachedExpiresAt = expiresAt;
         _hasAccessToken = true;
@@ -69,6 +78,7 @@ public class TokenStorage
         SecureStorage.Default.Remove(ExpiresAtKey);
         SecureStorage.Default.Remove(RoleKey);
         SecureStorage.Default.Remove(LoginKey);
+        SecureStorage.Default.Remove(MemberIdKey);
 
         _cachedExpiresAt = null;
         _hasAccessToken = false;

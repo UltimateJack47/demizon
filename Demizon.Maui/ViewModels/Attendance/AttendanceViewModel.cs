@@ -57,7 +57,7 @@ public partial class AttendanceViewModel : ObservableObject
     public string MonthLabel => new DateTime(CurrentYear, CurrentMonth, 1).ToString("MMMM yyyy", CsCulture);
     public bool HasEvents => Events.Count > 0;
     public bool IsEmpty => !IsBusy && Events.Count == 0;
-    public int AttendedCount => Events.Count(e => e.MyAttendance is { Attends: true });
+    public int AttendedCount => Events.Count(e => e.MyAttendance?.Status == "yes");
     public int TotalCount => Events.Count(e => !e.IsCancelled);
 
     [RelayCommand]
