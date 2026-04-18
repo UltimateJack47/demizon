@@ -1,6 +1,4 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-# Vytvořit /data adresář JAKO ROOT, před USER switch — s write oprávněním pro všechny
-RUN mkdir -p /data && chmod 777 /data
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
@@ -25,6 +23,10 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Demizon.Mvc.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+# Vytvořit /data adresář JAKO ROOT (je nutné přepnout na root, pak zpět na $APP_UID)
+USER root
+RUN mkdir -p /data && chmod 777 /data
+USER $APP_UID
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Demizon.Mvc.dll"]
