@@ -24,5 +24,4 @@ RUN dotnet publish "Demizon.Mvc.csproj" -c $BUILD_CONFIGURATION -o /app/publish 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-RUN mkdir -p /data
 ENTRYPOINT ["dotnet", "Demizon.Mvc.dll"]

@@ -22,6 +22,33 @@ using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Railway volume mount: počkat až bude /data dostupné a writable
+if (builder.Environment.IsProduction())
+{
+    var dataDir = "/data";
+    var maxWait = 60;
+    for (int i = 0; i < maxWait; i++)
+    {
+        try
+        {
+            if (!Directory.Exists(dataDir))
+                Directory.CreateDirectory(dataDir);
+            var probe = Path.Combine(dataDir, ".probe");
+            File.WriteAllText(probe, "ok");
+            File.Delete(probe);
+            Console.WriteLine($"/data is writable after {i}s");
+            break;
+        }
+        catch
+        {
+            if (i == maxWait - 1)
+                Console.WriteLine($"WARNING: /data not writable after {maxWait}s");
+            else
+                Thread.Sleep(1000);
+        }
+    }
+}
+
 builder.Services.AddLocalization();
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
