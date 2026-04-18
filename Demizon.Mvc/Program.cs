@@ -20,12 +20,6 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
 
-// Railway volume mount timing: počkat na dostupnost mountu
-if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
-{
-    Thread.Sleep(15000);
-}
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddLocalization();
