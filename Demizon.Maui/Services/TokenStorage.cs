@@ -10,6 +10,7 @@ public class TokenStorage
     private const string RoleKey = "role";
     private const string LoginKey = "login";
     private const string MemberIdKey = "member_id";
+    private const string GCalConnectedKey = "gcal_connected";
 
     // In-memory cache to avoid blocking async calls from UI thread
     private DateTime? _cachedExpiresAt;
@@ -33,6 +34,12 @@ public class TokenStorage
         return raw is not null && int.TryParse(raw, out var id) ? id : null;
     }
 
+    public async Task<bool> GetIsGoogleCalendarConnectedAsync()
+    {
+        var raw = await SecureStorage.Default.GetAsync(GCalConnectedKey);
+        return string.Equals(raw, "true", StringComparison.OrdinalIgnoreCase);
+    }
+
     public bool IsTokenValid()
     {
         return _hasAccessToken
@@ -51,6 +58,7 @@ public class TokenStorage
         await SecureStorage.Default.SetAsync(LoginKey, login);
         if (response.MemberId != 0)
             await SecureStorage.Default.SetAsync(MemberIdKey, response.MemberId.ToString());
+        await SecureStorage.Default.SetAsync(GCalConnectedKey, response.IsGoogleCalendarConnected ? "true" : "false");
 
         _cachedExpiresAt = expiresAt;
         _hasAccessToken = true;
@@ -79,6 +87,7 @@ public class TokenStorage
         SecureStorage.Default.Remove(RoleKey);
         SecureStorage.Default.Remove(LoginKey);
         SecureStorage.Default.Remove(MemberIdKey);
+        SecureStorage.Default.Remove(GCalConnectedKey);
 
         _cachedExpiresAt = null;
         _hasAccessToken = false;

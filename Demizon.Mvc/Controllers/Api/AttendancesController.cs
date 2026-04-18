@@ -130,6 +130,31 @@ public class AttendancesController(
         attendance.Status = ParseStatus(request.Status);
         attendance.Comment = request.Comment;
 
+        // Google Calendar sync pro zkoušky
+        var member = await memberService.GetOneAsync(memberId);
+        if (!string.IsNullOrEmpty(member.GoogleRefreshToken) && !string.IsNullOrEmpty(member.GoogleCalendarId))
+        {
+            if (attendance.Status == AttendanceStatus.Yes)
+            {
+                if (string.IsNullOrEmpty(attendance.GoogleEventId))
+                {
+                    var title = $"Zkouška Demizon – {day:d. M. yyyy}";
+                    var googleEventId = await googleCalendarService.CreateEventAsync(
+                        member.GoogleRefreshToken, member.GoogleCalendarId, day, title);
+                    if (googleEventId is not null)
+                    {
+                        attendance.GoogleEventId = googleEventId;
+                    }
+                }
+            }
+            else if (!string.IsNullOrEmpty(attendance.GoogleEventId))
+            {
+                await googleCalendarService.DeleteEventAsync(
+                    member.GoogleRefreshToken, member.GoogleCalendarId, attendance.GoogleEventId);
+                attendance.GoogleEventId = null;
+            }
+        }
+
         await attendanceService.CreateOrUpdateAsync(attendance);
         return Ok(attendance.ToDto());
     }

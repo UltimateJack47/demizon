@@ -1,5 +1,3 @@
-using System.Text;
-using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Demizon.Contracts.Notifications;
@@ -56,13 +54,7 @@ public partial class ProfileViewModel(IApiClient apiClient, TokenStorage tokenSt
         var token = await tokenStorage.GetAccessTokenAsync();
         if (!string.IsNullOrEmpty(token))
         {
-            try
-            {
-                var claims = ParseJwtClaims(token);
-                var gcalClaim = GetClaim(claims, "gcal_connected");
-                IsGoogleCalendarConnected = string.Equals(gcalClaim, "true", StringComparison.OrdinalIgnoreCase);
-            }
-            catch { }
+            IsGoogleCalendarConnected = await tokenStorage.GetIsGoogleCalendarConnectedAsync();
         }
     }
 
@@ -174,28 +166,4 @@ public partial class ProfileViewModel(IApiClient apiClient, TokenStorage tokenSt
         await navigation.GoToAsync(AppRoutes.Login);
     }
 
-    private static Dictionary<string, JsonElement>? ParseJwtClaims(string jwt)
-    {
-        var parts = jwt.Split('.');
-        if (parts.Length < 2) return null;
-
-        var payload = parts[1];
-        // Base64url → standard base64
-        payload = payload.Replace('-', '+').Replace('_', '/');
-        switch (payload.Length % 4)
-        {
-            case 2: payload += "=="; break;
-            case 3: payload += "="; break;
-        }
-
-        var bytes = Convert.FromBase64String(payload);
-        var json = Encoding.UTF8.GetString(bytes);
-        return JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
-    }
-
-    private static string? GetClaim(Dictionary<string, JsonElement>? claims, string key)
-    {
-        if (claims is null || !claims.TryGetValue(key, out var value)) return null;
-        return value.ToString();
-    }
 }
