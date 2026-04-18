@@ -1,6 +1,7 @@
 ﻿using Demizon.Dal.Interceptors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Demizon.Dal.Extensions;
 
@@ -11,6 +12,7 @@ public static class DatabaseServiceConfigurationExtension
     {
         builder ??= new DbContextOptionsBuilder();
 
+        // SQLite only
         builder
             .UseLazyLoadingProxies()
 #if DEBUG
@@ -39,14 +41,37 @@ public static class DatabaseServiceConfigurationExtension
     }
 
     /// <summary>
-    /// Aktivuje WAL mode pro souběžný přístup více procesů (Mvc + Api) ke stejnému SQLite souboru.
-    /// Nastavení je persistentní (uloží se do DB souboru) — stačí volat jednou při startu.
-    /// busy_timeout je nakonfigurován v connection stringu přes BusyTimeout=5000 v BuildOptions.
+    /// Aktivuje WAL mode pro SQLite s retry logikou (čeká na volume mount).
+    /// Railway volumes se mountují během startu — retry zajistí, že se DB otevře.
     /// </summary>
     public static void EnableWalMode(this IServiceProvider services)
     {
-        using var scope = services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<DemizonContext>();
-        db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+        var logger = services.GetService<ILoggerFactory>()?.CreateLogger("DatabaseServiceConfiguration");
+        int maxRetries = 5;
+        int delayMs = 2000; // 2 sekundy mezi pokusy
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                using var scope = services.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<DemizonContext>();
+                db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+                logger?.LogInformation("WAL mode enabled successfully on attempt {Attempt}", attempt);
+                return; // Success!
+            }
+            catch (Exception ex) when (attempt < maxRetries)
+            {
+                logger?.LogWarning(ex, "WAL mode attempt {Attempt}/{MaxRetries} failed. Retrying in {DelayMs}ms...",
+                    attempt, maxRetries, delayMs);
+                Thread.Sleep(delayMs);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "WAL mode failed after {MaxRetries} attempts. Continuing anyway.", maxRetries);
+                // Pokud ani po retry neuspěje, aplikace běží dál — WAL mode se aktivuje automaticky později
+                break;
+            }
+        }
     }
 }

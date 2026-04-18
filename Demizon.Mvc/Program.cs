@@ -28,6 +28,18 @@ builder.Configuration
     .AddJsonFile("appsettings.Local.json", true, true)
     .AddJsonFile("appsettings.json", true, true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
+
+// Railway PostgreSQL: automaticky parsuj DATABASE_URL environment variable
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (!string.IsNullOrEmpty(databaseUrl) && builder.Environment.IsProduction())
+{
+    // Parse DATABASE_URL: postgres://user:password@host:port/database
+    var databaseUri = new Uri(databaseUrl);
+    var userInfo = databaseUri.UserInfo.Split(':');
+    var connectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};";
+    builder.Configuration["ConnectionStrings:Default"] = connectionString;
+}
+
 var defaultConnectionString = builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
 
