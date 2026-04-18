@@ -27,6 +27,6 @@ RUN mkdir -p /data && chmod 777 /data
 WORKDIR /app
 COPY --from=publish /app/publish .
 COPY Demizon.Mvc/docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 USER $APP_UID
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
