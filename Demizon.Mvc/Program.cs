@@ -23,7 +23,7 @@ using MudBlazor.Services;
 // Railway volume mount timing: počkat na dostupnost mountu
 if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
 {
-    Thread.Sleep(5000);
+    Thread.Sleep(15000);
 }
 
 var builder = WebApplication.CreateBuilder(args);
