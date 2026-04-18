@@ -47,8 +47,8 @@ public static class DatabaseServiceConfigurationExtension
     public static void EnableWalMode(this IServiceProvider services)
     {
         var logger = services.GetService<ILoggerFactory>()?.CreateLogger("DatabaseServiceConfiguration");
-        int maxRetries = 5;
-        int delayMs = 2000; // 2 sekundy mezi pokusy
+        int maxRetries = 15;
+        int delayMs = 3000; // 3 sekundy mezi pokusy (Railway volume mount timing)
 
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {
