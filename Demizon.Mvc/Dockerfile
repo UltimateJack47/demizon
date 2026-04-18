@@ -23,6 +23,8 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Demizon.Mvc.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+# Nejdřív vytvořit /data jako root
+RUN mkdir -p /data && chown $APP_UID:$APP_UID /data && chmod 755 /data
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Demizon.Mvc.dll"]
