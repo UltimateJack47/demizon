@@ -1,6 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-# Vytvořit /data DirectX JAKO ROOT, antes USER change
-RUN mkdir -p /data && chmod 755 /data
+# Vytvořit /data adresář JAKO ROOT, před USER switch — s write oprávněním pro všechny
+RUN mkdir -p /data && chmod 777 /data
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
