@@ -1,4 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+# Vytvořit /data DirectX JAKO ROOT, antes USER change
+RUN mkdir -p /data && chmod 755 /data
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
@@ -23,8 +25,6 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Demizon.Mvc.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
-# Nejdřív vytvořit /data jako root
-RUN mkdir -p /data && chown $APP_UID:$APP_UID /data && chmod 755 /data
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Demizon.Mvc.dll"]
