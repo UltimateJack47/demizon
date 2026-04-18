@@ -10,6 +10,31 @@ public class FcmService(ILogger<FcmService> logger)
 
     public static void Initialize(IConfiguration configuration, ILogger logger)
     {
+        if (FirebaseApp.DefaultInstance is not null)
+            return;
+
+        // 1) Zkus env proměnnou FIREBASE_CREDENTIAL_JSON (Railway)
+        var credentialJson = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIAL_JSON");
+        if (!string.IsNullOrWhiteSpace(credentialJson))
+        {
+            try
+            {
+#pragma warning disable CS0618
+                FirebaseApp.Create(new AppOptions
+                {
+                    Credential = GoogleCredential.FromJson(credentialJson)
+                });
+#pragma warning restore CS0618
+                logger.LogInformation("Firebase initialized from FIREBASE_CREDENTIAL_JSON env variable.");
+                return;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to initialize Firebase from FIREBASE_CREDENTIAL_JSON.");
+            }
+        }
+
+        // 2) Fallback: soubor z konfigurace
         var credentialFile = configuration["Firebase:CredentialFile"];
         if (string.IsNullOrWhiteSpace(credentialFile))
         {
@@ -23,14 +48,11 @@ public class FcmService(ILogger<FcmService> logger)
             return;
         }
 
-        if (FirebaseApp.DefaultInstance is null)
-        {
-            using var stream = File.OpenRead(credentialFile);
-#pragma warning disable CS0618 // FirebaseAdmin SDK zatím nepřešlo na CredentialFactory
-            FirebaseApp.Create(new AppOptions { Credential = GoogleCredential.FromStream(stream) });
+        using var stream = File.OpenRead(credentialFile);
+#pragma warning disable CS0618
+        FirebaseApp.Create(new AppOptions { Credential = GoogleCredential.FromStream(stream) });
 #pragma warning restore CS0618
-            logger.LogInformation("Firebase initialized from {Path}.", credentialFile);
-        }
+        logger.LogInformation("Firebase initialized from {Path}.", credentialFile);
     }
 
     public async Task<bool> SendAsync(string deviceToken, string title, string body,

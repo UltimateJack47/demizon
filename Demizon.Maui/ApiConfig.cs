@@ -6,9 +6,5 @@ namespace Demizon.Maui;
 /// </summary>
 internal static class ApiConfig
 {
-#if ANDROID
-    public const string BaseUrl = "http://192.168.1.100:5272";
-#else
-    public const string BaseUrl = "http://localhost:5272";
-#endif
+    public const string BaseUrl = "https://demizon-production.up.railway.app";
 }
