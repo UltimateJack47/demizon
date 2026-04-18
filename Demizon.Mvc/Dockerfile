@@ -26,7 +26,6 @@ USER root
 RUN mkdir -p /data && chmod 777 /data
 WORKDIR /app
 COPY --from=publish /app/publish .
-COPY Demizon.Mvc/docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
+RUN printf '#!/bin/sh\necho "Waiting for /data..."\ni=0\nwhile [ $i -lt 60 ]; do\n  if touch /data/.probe 2>/dev/null; then rm -f /data/.probe; echo "/data ready after ${i}s"; break; fi\n  sleep 1\n  i=$((i+1))\ndone\nexec dotnet Demizon.Mvc.dll\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 USER $APP_UID
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
