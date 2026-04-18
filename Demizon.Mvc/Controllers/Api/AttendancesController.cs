@@ -68,9 +68,7 @@ public class AttendancesController(
         attendance.Comment = request.Comment;
         attendance.ActivityRole = activityRole;
 
-        await attendanceService.CreateOrUpdateAsync(attendance);
-
-        // Google Calendar sync — only create for Yes, delete for No/Maybe
+        // Google Calendar sync — pouze PŘED uložením do DB
         var member = await memberService.GetOneAsync(memberId);
         if (!string.IsNullOrEmpty(member.GoogleRefreshToken) && !string.IsNullOrEmpty(member.GoogleCalendarId))
         {
@@ -83,18 +81,20 @@ public class AttendancesController(
                     if (googleEventId is not null)
                     {
                         attendance.GoogleEventId = googleEventId;
-                        await attendanceService.CreateOrUpdateAsync(attendance);
                     }
                 }
             }
             else if (!string.IsNullOrEmpty(attendance.GoogleEventId))
             {
+                // SMAŽ DŘÍV, než uložiš do DB
                 await googleCalendarService.DeleteEventAsync(
                     member.GoogleRefreshToken, member.GoogleCalendarId, attendance.GoogleEventId);
                 attendance.GoogleEventId = null;
-                await attendanceService.CreateOrUpdateAsync(attendance);
             }
         }
+
+        // TEPRVE POTOM ulož do DB (s GoogleEventId buď vyplněným nebo null)
+        await attendanceService.CreateOrUpdateAsync(attendance);
 
         return Ok(attendance.ToDto());
     }
@@ -185,8 +185,6 @@ public class AttendancesController(
         attendance.Status = ParseStatus(request.Status);
         attendance.Comment = request.Comment;
         attendance.ActivityRole = activityRole;
-
-        await attendanceService.CreateOrUpdateAsync(attendance);
 
         // Google Calendar sync for the target member
         try
