@@ -126,6 +126,10 @@
                     <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
                         Zapni si notifikace, abys byl/a informován/a o blížících se akcích a nezapomněl/a vyplnit docházku.
                     </MudText>
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3" NoIcon="false">
+                        Webové notifikace (v prohlížeči) a mobilní notifikace (v aplikaci) fungují nezávisle.
+                        Zde nastavuješ pouze notifikace pro tento prohlížeč. Mobilní notifikace se spravují v aplikaci.
+                    </MudAlert>
 
                     @if (!_pushSupported)
                     {

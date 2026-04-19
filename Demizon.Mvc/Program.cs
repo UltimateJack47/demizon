@@ -91,13 +91,12 @@ builder.Services.AddOptions<GoogleCalendarSettings>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 builder.Services.AddNotifications();
-builder.Services.AddHostedService<NotificationHostedService>();
+builder.Services.AddHostedService<UnifiedNotificationService>();
 
 builder.Services.AddDatabase(defaultConnectionString);
 
 builder.Services.AddControllers();
 builder.Services.AddSingleton<FcmService>();
-builder.Services.AddHostedService<AttendanceReminderBackgroundService>();
 
 // Health check – ověří dostupnost DB
 builder.Services.AddHealthChecks()
