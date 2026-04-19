@@ -25,9 +25,12 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsAttending))]
+    [NotifyPropertyChangedFor(nameof(HasStatus))]
     private string _status = "no";
 
     public bool IsAttending => Status == "yes";
+
+    public bool HasStatus => !string.IsNullOrEmpty(Status);
 
     [ObservableProperty]
     private string? _comment;
@@ -127,15 +130,31 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
         IsBusy = true;
         try
         {
-            var request = new UpsertAttendanceRequest(Status, Comment, DisplayRoleToApi(ActivityRole));
-            if (IsRehearsal)
+            if (string.IsNullOrEmpty(Status))
             {
-                var date = DateTime.Parse(RehearsalDateString!);
-                await apiClient.UpsertRehearsalAttendanceAsync(date, request);
+                // Reset: delete attendance record
+                if (IsRehearsal)
+                {
+                    var date = DateTime.Parse(RehearsalDateString!);
+                    await apiClient.DeleteMyRehearsalAttendanceAsync(date);
+                }
+                else
+                {
+                    await apiClient.DeleteMyAttendanceAsync(EventId);
+                }
             }
             else
             {
-                await apiClient.UpsertAttendanceAsync(EventId, request);
+                var request = new UpsertAttendanceRequest(Status, Comment, DisplayRoleToApi(ActivityRole));
+                if (IsRehearsal)
+                {
+                    var date = DateTime.Parse(RehearsalDateString!);
+                    await apiClient.UpsertRehearsalAttendanceAsync(date, request);
+                }
+                else
+                {
+                    await apiClient.UpsertAttendanceAsync(EventId, request);
+                }
             }
             WeakReferenceMessenger.Default.Send(new EventsChangedMessage());
             await navigation.GoBackAsync();

@@ -55,26 +55,26 @@
                            FontSize="18" />
 
                     <!-- Summary counts -->
-                    <HorizontalStackLayout Spacing="16">
-                        <HorizontalStackLayout Spacing="4">
+                    <FlexLayout Wrap="Wrap" AlignItems="Center" JustifyContent="Start">
+                        <HorizontalStackLayout Spacing="4" Margin="0,0,16,4">
                             <Label Text="👥" FontSize="14" VerticalOptions="Center" />
                             <Label Text="{Binding Attendees.TotalCount, StringFormat='Celkem: {0}'}"
                                    FontSize="13"
                                    VerticalOptions="Center" />
                         </HorizontalStackLayout>
-                        <HorizontalStackLayout Spacing="4">
+                        <HorizontalStackLayout Spacing="4" Margin="0,0,16,4">
                             <Label Text="💃" FontSize="14" VerticalOptions="Center" />
                             <Label Text="{Binding Attendees.DancerCount, StringFormat='Tanečníci: {0}'}"
                                    FontSize="13"
                                    VerticalOptions="Center" />
                         </HorizontalStackLayout>
-                        <HorizontalStackLayout Spacing="4">
+                        <HorizontalStackLayout Spacing="4" Margin="0,0,0,4">
                             <Label Text="🎵" FontSize="14" VerticalOptions="Center" />
                             <Label Text="{Binding Attendees.MusicianCount, StringFormat='Muzikanti: {0}'}"
                                    FontSize="13"
                                    VerticalOptions="Center" />
                         </HorizontalStackLayout>
-                    </HorizontalStackLayout>
+                    </FlexLayout>
 
                     <!-- Attendee list -->
                     <StackLayout BindableLayout.ItemsSource="{Binding Attendees.Attendees}">
@@ -108,7 +108,7 @@
                    Margin="0,8,0,0" />
 
             <!-- Toggle buttons -->
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
                 <!-- Přijdu button: filled green when Status="yes" -->
                 <Button x:Name="BtnAttend"
                         Grid.Column="0"
@@ -172,6 +172,20 @@
                         </DataTrigger>
                     </Button.Triggers>
                 </Button>
+                <!-- Reset button -->
+                <Button Grid.Column="3"
+                        Text="↺"
+                        Command="{Binding SetStatusCommand}"
+                        CommandParameter=""
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource TextSecondary}"
+                        BorderColor="{StaticResource TextSecondary}"
+                        BorderWidth="2"
+                        CornerRadius="12"
+                        FontSize="18"
+                        FontAttributes="Bold"
+                        HeightRequest="52"
+                        ToolTipProperties.Text="Reset" />
             </Grid>
 
             <!-- Role picker - visible only when attending -->

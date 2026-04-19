@@ -303,6 +303,69 @@ public class AttendancesController(
         return Ok(att.ToDto());
     }
 
+    [HttpDelete("{eventId:int}")]
+    public async Task<IActionResult> DeleteEventAttendance(int eventId)
+    {
+        var memberId = User.GetMemberId();
+
+        var att = await attendanceService.GetAll()
+            .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == eventId);
+
+        if (att is null) return NoContent();
+
+        // Clean up Google Calendar event before deleting
+        try
+        {
+            var member = await memberService.GetOneAsync(memberId);
+            if (!string.IsNullOrEmpty(member.GoogleRefreshToken) &&
+                !string.IsNullOrEmpty(member.GoogleCalendarId) &&
+                !string.IsNullOrEmpty(att.GoogleEventId))
+            {
+                await googleCalendarService.DeleteEventAsync(
+                    member.GoogleRefreshToken, member.GoogleCalendarId, att.GoogleEventId);
+            }
+        }
+        catch
+        {
+            // Google Calendar sync failure must not block deletion
+        }
+
+        await attendanceService.DeleteAsync(att.Id);
+        return NoContent();
+    }
+
+    [HttpDelete("rehearsal")]
+    public async Task<IActionResult> DeleteRehearsalAttendance([FromQuery] DateTime date)
+    {
+        var memberId = User.GetMemberId();
+        var day = date.Date;
+
+        var att = await attendanceService.GetAll()
+            .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == null && a.Date == day);
+
+        if (att is null) return NoContent();
+
+        // Clean up Google Calendar event before deleting
+        try
+        {
+            var member = await memberService.GetOneAsync(memberId);
+            if (!string.IsNullOrEmpty(member.GoogleRefreshToken) &&
+                !string.IsNullOrEmpty(member.GoogleCalendarId) &&
+                !string.IsNullOrEmpty(att.GoogleEventId))
+            {
+                await googleCalendarService.DeleteEventAsync(
+                    member.GoogleRefreshToken, member.GoogleCalendarId, att.GoogleEventId);
+            }
+        }
+        catch
+        {
+            // Google Calendar sync failure must not block deletion
+        }
+
+        await attendanceService.DeleteAsync(att.Id);
+        return NoContent();
+    }
+
     [HttpGet("table")]
     public async Task<ActionResult<MonthlyAttendanceTableDto>> GetMonthlyTable(
         [FromQuery] int year, [FromQuery] int month)

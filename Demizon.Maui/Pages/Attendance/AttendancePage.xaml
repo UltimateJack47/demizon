@@ -8,6 +8,10 @@
              Title="Docházka">
 
     <Grid RowDefinitions="Auto,*">
+        <Grid.GestureRecognizers>
+            <SwipeGestureRecognizer Direction="Left" Command="{Binding NextMonthCommand}" />
+            <SwipeGestureRecognizer Direction="Right" Command="{Binding PreviousMonthCommand}" />
+        </Grid.GestureRecognizers>
 
         <!-- Header: Month navigation + stats button -->
         <Border Grid.Row="0"

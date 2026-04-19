@@ -57,6 +57,12 @@ public interface IApiClient
     [Get("/api/attendances/table")]
     Task<MonthlyAttendanceTableDto> GetMonthlyAttendanceTableAsync([Query] int year, [Query] int month);
     
+    [Delete("/api/attendances/{eventId}")]
+    Task DeleteMyAttendanceAsync(int eventId);
+
+    [Delete("/api/attendances/rehearsal")]
+    Task DeleteMyRehearsalAttendanceAsync([Query] DateTime date);
+
     [Get("/api/dances")]
     Task<List<DanceDto>> GetDancesAsync();
     

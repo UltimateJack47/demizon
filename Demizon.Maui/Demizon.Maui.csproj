@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <MauiImage Include="Resources\Images\*" />
+    <MauiIcon Include="Resources\AppIcon\appicon.jpg" />
   </ItemGroup>
   <!-- FirebaseConfig.cs is gitignored; the .template.cs is a reference only, not compiled -->
   <ItemGroup>
