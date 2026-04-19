@@ -87,9 +87,11 @@ public sealed class UnifiedNotificationService(
         FcmService fcm, DateTime now, CancellationToken ct)
     {
         // Find events created more than 1 hour ago that haven't been notified yet
+        // Skip events with DateTime.MinValue CreatedAt (legacy events from before this feature)
         var cutoff = now.AddHours(-1);
         var events = await db.Events
-            .Where(e => !e.IsCancelled && e.DateFrom > now && e.CreatedAt <= cutoff)
+            .Where(e => !e.IsCancelled && e.DateFrom > now
+                        && e.CreatedAt != DateTime.MinValue && e.CreatedAt <= cutoff)
             .ToListAsync(ct);
 
         foreach (var ev in events)
@@ -286,7 +288,14 @@ public sealed class UnifiedNotificationService(
         var allDeviceTokens = await db.DeviceTokens.ToListAsync(ct);
         foreach (var dt in allDeviceTokens)
         {
-            await fcm.SendAsync(dt.Token, title, body, data);
+            try
+            {
+                await fcm.SendAsync(dt.Token, title, body, data);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "FCM send failed for token {Token}.", dt.Token);
+            }
         }
     }
 
@@ -312,7 +321,14 @@ public sealed class UnifiedNotificationService(
 
         foreach (var dt in deviceTokens)
         {
-            await fcm.SendAsync(dt.Token, title, body, data);
+            try
+            {
+                await fcm.SendAsync(dt.Token, title, body, data);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "FCM send failed for member {MemberId}, token {Token}.", memberId, dt.Token);
+            }
         }
     }
 

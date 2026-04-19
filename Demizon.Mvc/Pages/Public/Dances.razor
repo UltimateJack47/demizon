@@ -65,7 +65,7 @@ else
                             <div class="demi-gallery-grid" style="gap: 6px;">
                                 @foreach (var photo in publicPhotos.Take(4))
                                 {
-                                    <MudImage Src="@photo.Path"
+                                    <MudImage Src="@(photo.HasDbData ? $"/api/files/{photo.Id}/image?size=thumb" : photo.Path)"
                                               Alt="@dance.Name"
                                               ObjectFit="ObjectFit.Cover"
                                               Style="border-radius: 4px; height: 80px; width: 100%;" />

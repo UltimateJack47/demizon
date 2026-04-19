@@ -13,12 +13,15 @@ namespace Demizon.Mvc.Controllers.Api;
 public class FilesController(IFileService fileService) : ControllerBase
 {
     [HttpGet("{id:int}/image")]
-    [ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any)]
+    [ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Client)]
     public async Task<IActionResult> GetImage(int id, [FromQuery] string size = "full")
     {
         try
         {
             var file = await fileService.GetOneAsync(id);
+
+            if (!file.IsPublic)
+                return NotFound();
 
             byte[]? data = size == "thumb" ? file.ThumbnailData ?? file.Data : file.Data;
             if (data == null || data.Length == 0)

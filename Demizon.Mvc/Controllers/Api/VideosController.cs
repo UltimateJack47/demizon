@@ -72,6 +72,12 @@ public class VideosController(IVideoLinkService videoLinkService) : ControllerBa
         {
             var entity = await videoLinkService.GetOneAsync(id);
 
+            if (string.IsNullOrWhiteSpace(request.Name))
+                return BadRequest(new { error = "Název videa je povinný." });
+
+            if (string.IsNullOrWhiteSpace(request.Url))
+                return BadRequest(new { error = "URL videa je povinná." });
+
             entity.Name = request.Name;
             entity.Url = request.Url;
             entity.Year = request.Year;
