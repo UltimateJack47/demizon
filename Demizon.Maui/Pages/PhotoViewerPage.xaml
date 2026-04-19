@@ -8,35 +8,37 @@
              Shell.NavBarIsVisible="True"
              BackgroundColor="Black">
 
-    <CarouselView ItemsSource="{Binding Photos}"
-                  Position="{Binding CurrentIndex}"
-                  Loop="False"
-                  IndicatorView="indicatorView">
-        <CarouselView.ItemTemplate>
-            <DataTemplate x:DataType="vm:GalleryPhotoItem">
-                <Grid>
-                    <Image Source="{Binding FullUrl}"
-                           Aspect="AspectFit"
-                           VerticalOptions="Center"
-                           HorizontalOptions="Center" />
-                    <Label Text="{Binding DanceName}"
-                           IsVisible="{Binding DanceName, Converter={StaticResource StringToBoolConverter}}"
-                           TextColor="White"
-                           FontSize="14"
-                           Padding="12,8"
-                           BackgroundColor="#80000000"
-                           VerticalOptions="End"
-                           HorizontalOptions="Center"
-                           Margin="0,0,0,60" />
-                </Grid>
-            </DataTemplate>
-        </CarouselView.ItemTemplate>
-    </CarouselView>
+    <Grid>
+        <CarouselView ItemsSource="{Binding Photos}"
+                      Position="{Binding CurrentIndex}"
+                      Loop="False"
+                      IndicatorView="indicatorView">
+            <CarouselView.ItemTemplate>
+                <DataTemplate x:DataType="vm:GalleryPhotoItem">
+                    <Grid>
+                        <Image Source="{Binding FullUrl}"
+                               Aspect="AspectFit"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Center" />
+                        <Label Text="{Binding DanceName}"
+                               IsVisible="{Binding DanceName, Converter={StaticResource StringToBoolConverter}}"
+                               TextColor="White"
+                               FontSize="14"
+                               Padding="12,8"
+                               BackgroundColor="#80000000"
+                               VerticalOptions="End"
+                               HorizontalOptions="Center"
+                               Margin="0,0,0,60" />
+                    </Grid>
+                </DataTemplate>
+            </CarouselView.ItemTemplate>
+        </CarouselView>
 
-    <IndicatorView x:Name="indicatorView"
-                   IndicatorColor="#66FFFFFF"
-                   SelectedIndicatorColor="White"
-                   HorizontalOptions="Center"
-                   VerticalOptions="End"
-                   Margin="0,0,0,20" />
+        <IndicatorView x:Name="indicatorView"
+                       IndicatorColor="#66FFFFFF"
+                       SelectedIndicatorColor="White"
+                       HorizontalOptions="Center"
+                       VerticalOptions="End"
+                       Margin="0,0,0,20" />
+    </Grid>
 </ContentPage>
