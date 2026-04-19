@@ -19,4 +19,6 @@ public class File
     public string ContentType { get; set; } = null!;
 
     public long FileSize { get; set; }
+
+    public bool IsPublic { get; set; } = false;
 }

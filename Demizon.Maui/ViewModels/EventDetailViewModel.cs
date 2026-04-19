@@ -9,7 +9,7 @@ namespace Demizon.Maui.ViewModels;
 
 [QueryProperty(nameof(EventId), "eventId")]
 [QueryProperty(nameof(RehearsalDateString), "rehearsalDate")]
-public partial class EventDetailViewModel(IApiClient apiClient, INavigationService navigation) : ObservableObject
+public partial class EventDetailViewModel(IApiClient apiClient, INavigationService navigation, TokenStorage tokenStorage) : ObservableObject
 {
     [ObservableProperty]
     private int _eventId;
@@ -21,6 +21,7 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     private bool IsRehearsal => EventId == 0 && !string.IsNullOrEmpty(RehearsalDateString);
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CancelButtonText))]
     private EventDto? _event;
 
     [ObservableProperty]
@@ -47,6 +48,12 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
 
     public bool ShowAttendees => !IsRehearsal && Attendees?.TotalCount > 0;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CancelButtonText))]
+    private bool _isAdmin;
+
+    public string CancelButtonText => Event?.IsCancelled == true ? "↩️ Obnovit akci" : "⛔ Zrušit akci";
+
     // Display labels for the Picker (Czech). Conversion to/from API values (English) happens at load/save.
     public List<string> RoleOptions { get; } = ["Tanečník", "Muzikant"];
 
@@ -70,6 +77,9 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
         IsBusy = true;
         try
         {
+            var role = await tokenStorage.GetRoleAsync();
+            IsAdmin = string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) && !IsRehearsal;
+
             if (IsRehearsal)
             {
                 var date = DateTime.Parse(RehearsalDateString!);
@@ -159,6 +169,45 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
             WeakReferenceMessenger.Default.Send(new EventsChangedMessage());
             await navigation.GoBackAsync();
         }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task EditEventAsync()
+    {
+        await navigation.GoToAsync(AppRoutes.EditEvent,
+            new Dictionary<string, object> { ["eventId"] = EventId });
+    }
+
+    [RelayCommand]
+    private async Task ToggleCancelAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            await apiClient.ToggleEventCancelledAsync(EventId);
+            WeakReferenceMessenger.Default.Send(new EventsChangedMessage());
+            await LoadAsync();
+        }
+        catch (Exception) { /* ignore */ }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task DeleteEventAsync()
+    {
+        var confirm = await Application.Current!.MainPage!
+            .DisplayAlert("Smazat akci", "Opravdu chcete smazat tuto akci?", "Smazat", "Zrušit");
+        if (!confirm) return;
+
+        IsBusy = true;
+        try
+        {
+            await apiClient.DeleteEventAsync(EventId);
+            WeakReferenceMessenger.Default.Send(new EventsChangedMessage());
+            await navigation.GoBackAsync();
+        }
+        catch (Exception) { /* ignore */ }
         finally { IsBusy = false; }
     }
 }

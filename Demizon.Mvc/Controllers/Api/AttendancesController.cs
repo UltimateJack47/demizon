@@ -411,7 +411,7 @@ public class AttendancesController(
                 Dal.Entities.Attendance? att = col.EventId.HasValue
                     ? memberAtts.FirstOrDefault(a => a.EventId == col.EventId)
                     : memberAtts.FirstOrDefault(a => a.EventId == null && a.Date.Date == col.Date.Date);
-                return new MemberCellDto(col.Date, col.EventId, att?.Status.ToString().ToLowerInvariant());
+                return new MemberCellDto(col.Date, col.EventId, att?.Status.ToString().ToLowerInvariant(), att?.Comment);
             }).ToList();
             return new MemberMonthlyRowDto(m.Id, $"{m.Name} {m.Surname}", cells);
         }).ToList();

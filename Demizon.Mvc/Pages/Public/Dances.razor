@@ -36,6 +36,42 @@ else
                         {
                             <MudText Typo="Typo.body2" Class="mt-2">@dance.Description</MudText>
                         }
+
+                        @{
+                            var publicVideos = dance.Videos.Where(v => v.IsVisible && !v.IsInternal).ToList();
+                            var publicPhotos = dance.Files.Where(f => f.IsPublic).ToList();
+                        }
+
+                        @if (publicVideos.Any())
+                        {
+                            <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">
+                                <MudIcon Icon="@Icons.Material.Filled.OndemandVideo" Size="Size.Small" Class="mr-1" />
+                                @Localizer[nameof(DemizonLocales.Videos)]
+                            </MudText>
+                            @foreach (var video in publicVideos)
+                            {
+                                <MudLink Href="@video.Url" Target="_blank" Typo="Typo.body2" Class="d-block">
+                                    ▶ @video.Name (@video.Year)
+                                </MudLink>
+                            }
+                        }
+
+                        @if (publicPhotos.Any())
+                        {
+                            <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">
+                                <MudIcon Icon="@Icons.Material.Filled.PhotoLibrary" Size="Size.Small" Class="mr-1" />
+                                @Localizer[nameof(DemizonLocales.Photos)]
+                            </MudText>
+                            <div class="demi-gallery-grid" style="gap: 6px;">
+                                @foreach (var photo in publicPhotos.Take(4))
+                                {
+                                    <MudImage Src="@photo.Path"
+                                              Alt="@dance.Name"
+                                              ObjectFit="ObjectFit.Cover"
+                                              Style="border-radius: 4px; height: 80px; width: 100%;" />
+                                }
+                            </div>
+                        }
                     </MudCardContent>
                 </MudCard>
             </MudItem>
@@ -52,7 +88,12 @@ else
     protected override async Task OnInitializedAsync()
     {
         PageService.SetTitle(Localizer[nameof(DemizonLocales.Dances)]);
-        var dances = await DanceService.GetAll().Where(x => x.IsVisible).OrderBy(x => x.Name).ToListAsync();
+        var dances = await DanceService.GetAll()
+            .Where(x => x.IsVisible)
+            .Include(x => x.Videos)
+            .Include(x => x.Files)
+            .OrderBy(x => x.Name)
+            .ToListAsync();
         VisibleDances = dances.Select(x => x.ToViewModel()).ToList();
     }
 

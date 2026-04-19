@@ -252,6 +252,34 @@ public partial class AllMembersAttendancePage : ContentPage
             VerticalTextAlignment = TextAlignment.Center
         };
 
+        bool hasComment = !string.IsNullOrWhiteSpace(cell?.Comment);
+        if (hasComment)
+        {
+            var stack = new Grid
+            {
+                VerticalOptions = LayoutOptions.Fill,
+                HorizontalOptions = LayoutOptions.Fill
+            };
+            stack.Add(new Label
+            {
+                Text = symbol,
+                FontSize = 16,
+                FontAttributes = FontAttributes.Bold,
+                TextColor = textColor,
+                HorizontalTextAlignment = TextAlignment.Center,
+                VerticalTextAlignment = TextAlignment.Center
+            });
+            stack.Add(new Label
+            {
+                Text = "📝",
+                FontSize = 8,
+                HorizontalTextAlignment = TextAlignment.End,
+                VerticalTextAlignment = TextAlignment.Start,
+                Margin = new Thickness(0, 2, 2, 0)
+            });
+            border.Content = stack;
+        }
+
         // Tap to edit — events and rehearsals, own row vs other member
         if (!col.IsCancelled)
         {
@@ -282,9 +310,13 @@ public partial class AllMembersAttendancePage : ContentPage
                 }
                 else
                 {
+                    var commentText = cell?.Comment;
                     tap.Tapped += async (_, _) =>
                     {
-                        await DisplayAlert("Info", "Editace docházky jiných členů je dostupná pouze pro administrátory.", "OK");
+                        if (!string.IsNullOrWhiteSpace(commentText))
+                            await DisplayAlert($"Poznámka – {capturedName}", commentText, "OK");
+                        else
+                            await DisplayAlert("Info", "Editace docházky jiných členů je dostupná pouze pro administrátory.", "OK");
                     };
                 }
             }
@@ -309,9 +341,13 @@ public partial class AllMembersAttendancePage : ContentPage
                 }
                 else
                 {
+                    var commentText = cell?.Comment;
                     tap.Tapped += async (_, _) =>
                     {
-                        await DisplayAlert("Info", "Editace docházky jiných členů je dostupná pouze pro administrátory.", "OK");
+                        if (!string.IsNullOrWhiteSpace(commentText))
+                            await DisplayAlert($"Poznámka – {capturedName}", commentText, "OK");
+                        else
+                            await DisplayAlert("Info", "Editace docházky jiných členů je dostupná pouze pro administrátory.", "OK");
                     };
                 }
             }

@@ -1,2 +1,2 @@
 namespace Demizon.Contracts.Dances;
-public sealed record VideoLinkDto(int Id, string Name, string Url, int Year);
+public sealed record VideoLinkDto(int Id, string Name, string Url, int Year, bool IsVisible = true, bool IsInternal = false);

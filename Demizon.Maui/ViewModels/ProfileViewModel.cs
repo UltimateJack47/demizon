@@ -160,6 +160,12 @@ public partial class ProfileViewModel(IApiClient apiClient, TokenStorage tokenSt
     }
 
     [RelayCommand]
+    private async Task EditProfileAsync()
+    {
+        await navigation.GoToAsync(AppRoutes.EditProfile);
+    }
+
+    [RelayCommand]
     private async Task LogoutAsync()
     {
         tokenStorage.Clear();

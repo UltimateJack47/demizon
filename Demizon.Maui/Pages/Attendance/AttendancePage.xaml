@@ -159,11 +159,15 @@
                                     </VerticalStackLayout>
 
                                     <!-- Attendance indicator -->
-                                    <BoxView Grid.Column="2"
-                                             WidthRequest="14" HeightRequest="14"
-                                             CornerRadius="7"
-                                             VerticalOptions="Center"
-                                             Color="{Binding MyAttendance, Converter={StaticResource AttendanceColorConverter}}" />
+                                    <VerticalStackLayout Grid.Column="2" VerticalOptions="Center" Spacing="2">
+                                        <BoxView WidthRequest="14" HeightRequest="14"
+                                                 CornerRadius="7"
+                                                 HorizontalOptions="Center"
+                                                 Color="{Binding MyAttendance, Converter={StaticResource AttendanceColorConverter}}" />
+                                        <Label Text="📝" FontSize="9"
+                                               HorizontalOptions="Center"
+                                               IsVisible="{Binding MyAttendance.Comment, Converter={StaticResource StringToBoolConverter}}" />
+                                    </VerticalStackLayout>
                                 </Grid>
                             </Border>
                         </DataTemplate>

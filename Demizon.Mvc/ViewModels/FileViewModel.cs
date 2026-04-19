@@ -21,6 +21,8 @@ public class FileViewModel
     public int? DanceId { get; set; }
 
     public DanceViewModel? Dance { get; set; }
+
+    public bool IsPublic { get; set; }
 }
 
 public static class FileMappingExtensions
@@ -34,6 +36,7 @@ public static class FileMappingExtensions
         FileSize = entity.FileSize,
         MemberId = entity.MemberId,
         DanceId = entity.DanceId,
+        IsPublic = entity.IsPublic,
     };
 
     public static File ToEntity(this FileViewModel vm) => new()
@@ -45,5 +48,6 @@ public static class FileMappingExtensions
         FileSize = vm.FileSize,
         MemberId = vm.MemberId,
         DanceId = vm.DanceId,
+        IsPublic = vm.IsPublic,
     };
 }

@@ -158,4 +158,84 @@ public class EventsController(IEventService eventService, IAttendanceService att
 
         return Ok(new EventAttendeesDto(dtos, dancerCount, musicianCount, dtos.Count));
     }
+
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateEventRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { error = "Název akce je povinný." });
+
+        if (request.DateFrom >= request.DateTo)
+            return BadRequest(new { error = "Datum začátku musí být před datem konce." });
+
+        try
+        {
+            var ev = await eventService.GetOneAsync(id);
+
+            var recurrence = request.Recurrence?.ToLowerInvariant() switch
+            {
+                "weekly" => RecurrenceType.Weekly,
+                "monthly" => RecurrenceType.Monthly,
+                _ => RecurrenceType.None
+            };
+
+            ev.Name = request.Name;
+            ev.DateFrom = request.DateFrom;
+            ev.DateTo = request.DateTo;
+            ev.Place = request.Place;
+            ev.NotifyBeforeDays = request.NotifyBeforeDays;
+            ev.Recurrence = recurrence;
+            ev.IsPublic = request.IsPublic;
+            ev.IsCancelled = request.IsCancelled;
+
+            await eventService.UpdateAsync(id, ev);
+            return Ok(ev.ToDto());
+        }
+        catch (Common.Exceptions.EntityNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var success = await eventService.DeleteAsync(id);
+        return success ? NoContent() : NotFound();
+    }
+
+    [HttpPatch("{id:int}/cancel")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ToggleCancelled(int id)
+    {
+        try
+        {
+            var ev = await eventService.GetOneAsync(id);
+            await eventService.SetCancelledAsync(id, !ev.IsCancelled);
+            return Ok();
+        }
+        catch (Common.Exceptions.EntityNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpPatch("{id:int}/public")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> TogglePublic(int id)
+    {
+        try
+        {
+            var ev = await eventService.GetOneAsync(id);
+            ev.IsPublic = !ev.IsPublic;
+            await eventService.UpdateAsync(id, ev);
+            return Ok();
+        }
+        catch (Common.Exceptions.EntityNotFoundException)
+        {
+            return NotFound();
+        }
+    }
 }

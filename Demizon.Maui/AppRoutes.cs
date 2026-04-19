@@ -21,4 +21,6 @@ public static class AppRoutes
     public const string AttdStats = "attd-stats";
     public const string AttdOverview = "attd-overview";
     public const string MemberAttdDetail = "member-attd-detail";
+    public const string EditProfile = "edit-profile";
+    public const string EditEvent = "edit-event";
 }

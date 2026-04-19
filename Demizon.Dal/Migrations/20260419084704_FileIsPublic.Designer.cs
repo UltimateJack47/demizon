@@ -3,6 +3,7 @@ using System;
 using Demizon.Dal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Demizon.Dal.Migrations
 {
     [DbContext(typeof(DemizonContext))]
-    partial class DemizonContextModelSnapshot : ModelSnapshot
+    [Migration("20260419084704_FileIsPublic")]
+    partial class FileIsPublic
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -169,9 +172,6 @@ namespace Demizon.Dal.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateFrom")
                         .HasColumnType("TEXT");
@@ -418,39 +418,6 @@ namespace Demizon.Dal.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
-            modelBuilder.Entity("Demizon.Dal.Entities.SentNotification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("EventId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("MemberId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("NotificationType")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("RehearsalDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EventId");
-
-                    b.HasIndex("MemberId", "EventId", "NotificationType");
-
-                    b.HasIndex("MemberId", "RehearsalDate", "NotificationType");
-
-                    b.ToTable("SentNotifications");
-                });
-
             modelBuilder.Entity("Demizon.Dal.Entities.Setting", b =>
                 {
                     b.Property<int>("Id")
@@ -580,23 +547,6 @@ namespace Demizon.Dal.Migrations
                         .HasForeignKey("MemberId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Member");
-                });
-
-            modelBuilder.Entity("Demizon.Dal.Entities.SentNotification", b =>
-                {
-                    b.HasOne("Demizon.Dal.Entities.Event", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("Demizon.Dal.Entities.Member", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Event");
 
                     b.Navigation("Member");
                 });

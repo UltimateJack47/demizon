@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Demizon.Maui.ViewModels"
+             x:Class="Demizon.Maui.Pages.EditProfilePage"
+             x:DataType="vm:EditProfileViewModel"
+             Title="Upravit profil">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <!-- Name -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Jméno" Style="{StaticResource CaptionLabel}" />
+                <Border Style="{StaticResource CardBorder}" Padding="8,4">
+                    <Entry Placeholder="Jméno"
+                           Text="{Binding Name}" />
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Surname -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Příjmení" Style="{StaticResource CaptionLabel}" />
+                <Border Style="{StaticResource CardBorder}" Padding="8,4">
+                    <Entry Placeholder="Příjmení"
+                           Text="{Binding Surname}" />
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Email -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="E-mail (volitelné)" Style="{StaticResource CaptionLabel}" />
+                <Border Style="{StaticResource CardBorder}" Padding="8,4">
+                    <Entry Placeholder="email@example.com"
+                           Text="{Binding Email}"
+                           Keyboard="Email" />
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Error message -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource ErrorColor}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}"
+                   FontSize="14" />
+
+            <!-- Save button -->
+            <Button Text="Uložit"
+                    Style="{StaticResource PrimaryButton}"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                    Margin="0,8,0,20" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

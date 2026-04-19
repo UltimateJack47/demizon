@@ -31,7 +31,8 @@ public static class DanceMappingExtensions
         Region = entity.Region,
         Description = entity.Description,
         Lyrics = entity.Lyrics,
-        // Videos a Files caller nastavuje zvlášť
+        Videos = entity.Videos?.Select(v => v.ToViewModel()).ToList() ?? [],
+        Files = entity.Files?.Select(f => f.ToViewModel()).ToList() ?? [],
     };
 
     public static Dance ToEntity(this DanceViewModel vm) => new()

@@ -2,6 +2,7 @@ using Demizon.Contracts.Auth;
 using Demizon.Contracts.Events;
 using Demizon.Contracts.Attendances;
 using Demizon.Contracts.Dances;
+using Demizon.Contracts.Members;
 using Demizon.Contracts.Notifications;
 using Refit;
 
@@ -80,4 +81,40 @@ public interface IApiClient
 
     [Post("/api/notifications/test")]
     Task SendTestNotificationAsync();
+
+    // Members
+    [Get("/api/members/me")]
+    Task<MemberProfileDto> GetMyProfileAsync();
+
+    [Put("/api/members/me")]
+    Task UpdateMyProfileAsync([Body] UpdateProfileRequest request);
+
+    // Event management (admin)
+    [Put("/api/events/{id}")]
+    Task UpdateEventAsync(int id, [Body] UpdateEventRequest request);
+
+    [Delete("/api/events/{id}")]
+    Task DeleteEventAsync(int id);
+
+    [Patch("/api/events/{id}/cancel")]
+    Task ToggleEventCancelledAsync(int id);
+
+    [Patch("/api/events/{id}/public")]
+    Task ToggleEventPublicAsync(int id);
+
+    // Videos
+    [Get("/api/videos")]
+    Task<List<VideoLinkDto>> GetVideosAsync();
+
+    [Get("/api/videos/{id}")]
+    Task<VideoLinkDto> GetVideoAsync(int id);
+
+    [Post("/api/videos")]
+    Task<VideoLinkDto> CreateVideoAsync([Body] CreateVideoLinkRequest request);
+
+    [Put("/api/videos/{id}")]
+    Task UpdateVideoAsync(int id, [Body] CreateVideoLinkRequest request);
+
+    [Delete("/api/videos/{id}")]
+    Task DeleteVideoAsync(int id);
 }

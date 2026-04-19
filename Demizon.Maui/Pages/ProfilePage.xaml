@@ -133,6 +133,14 @@
                    TextColor="#8D6E63"
                    HorizontalOptions="Center" />
 
+            <!-- Edit profile button -->
+            <Button Text="Upravit profil"
+                    Command="{Binding EditProfileCommand}"
+                    BackgroundColor="#A8845E"
+                    TextColor="White"
+                    CornerRadius="12"
+                    FontAttributes="Bold" />
+
             <!-- Logout button -->
             <Button Text="Odhlásit se"
                     Command="{Binding LogoutCommand}"

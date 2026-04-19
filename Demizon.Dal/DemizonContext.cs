@@ -18,6 +18,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<DeviceToken> DeviceTokens { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+    public DbSet<SentNotification> SentNotifications { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,6 +75,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.HasKey(x => x.Id);
             b.HasIndex(x => x.DanceId);
             b.Property(s => s.Path).IsRequired();
+            b.Property(s => s.IsPublic).HasDefaultValue(false).IsRequired();
         });
 
         modelBuilder.Entity<VideoLink>(b =>
@@ -160,6 +162,23 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(x => x.EntityId).HasMaxLength(50).IsRequired();
             b.Property(x => x.Action).HasMaxLength(20).IsRequired();
             b.Property(x => x.UserId).HasMaxLength(100).IsRequired();
+        });
+
+        modelBuilder.Entity<SentNotification>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.NotificationType).HasConversion<string>().IsRequired();
+            b.Property(x => x.SentAt).IsRequired();
+            b.HasIndex(x => new { x.MemberId, x.EventId, x.NotificationType });
+            b.HasIndex(x => new { x.MemberId, x.RehearsalDate, x.NotificationType });
+            b.HasOne(x => x.Member)
+                .WithMany()
+                .HasForeignKey(x => x.MemberId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.Event)
+                .WithMany()
+                .HasForeignKey(x => x.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

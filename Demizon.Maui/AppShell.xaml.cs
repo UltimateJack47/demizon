@@ -12,5 +12,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(AppRoutes.EventCreate, typeof(Pages.CreateEventPage));
         Routing.RegisterRoute(AppRoutes.DanceDetail, typeof(Pages.DanceDetailPage));
         Routing.RegisterRoute(AppRoutes.MemberAttdDetail, typeof(Pages.Attendance.MemberAttendanceDetailPage));
+        Routing.RegisterRoute(AppRoutes.EditProfile, typeof(Pages.EditProfilePage));
+        Routing.RegisterRoute(AppRoutes.EditEvent, typeof(Pages.EditEventPage));
     }
 }

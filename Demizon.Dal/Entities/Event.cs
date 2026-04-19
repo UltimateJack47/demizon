@@ -27,6 +27,8 @@ public class Event
 
     public DateTime? RecurrenceEndDate { get; set; }
 
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     public virtual List<Attendance> Attendances { get; set; } = [];
 }
 

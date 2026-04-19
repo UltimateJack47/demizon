@@ -35,6 +35,8 @@
     <MauiXaml Update="Pages\DanceDetailPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\ProfilePage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\CreateEventPage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\EditProfilePage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\EditEventPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Resources\Styles\Colors.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Resources\Styles\Styles.xaml" Generator="MSBuild:Compile" />
   </ItemGroup>

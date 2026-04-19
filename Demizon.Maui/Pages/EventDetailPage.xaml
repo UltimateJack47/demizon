@@ -210,7 +210,45 @@
                     Style="{StaticResource PrimaryButton}"
                     Command="{Binding SaveAttendanceCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
-                    Margin="0,8,0,20" />
+                    Margin="0,8,0,0" />
+
+            <!-- Admin section -->
+            <Border Style="{StaticResource CardBorder}"
+                    IsVisible="{Binding IsAdmin}"
+                    Padding="16"
+                    Margin="0,8,0,0">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Správa akce"
+                           FontAttributes="Bold"
+                           FontSize="18"
+                           TextColor="#3E2723" />
+
+                    <Button Text="✏️ Upravit akci"
+                            Command="{Binding EditEventCommand}"
+                            BackgroundColor="#A8845E"
+                            TextColor="White"
+                            CornerRadius="12"
+                            FontAttributes="Bold" />
+
+                    <Button Text="{Binding CancelButtonText}"
+                            Command="{Binding ToggleCancelCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource AttendanceYellow}"
+                            BorderColor="{StaticResource AttendanceYellow}"
+                            BorderWidth="1"
+                            CornerRadius="12"
+                            FontAttributes="Bold" />
+
+                    <Button Text="🗑️ Smazat akci"
+                            Command="{Binding DeleteEventCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="#C0392B"
+                            BorderColor="#C0392B"
+                            BorderWidth="1"
+                            CornerRadius="12"
+                            FontAttributes="Bold" />
+                </VerticalStackLayout>
+            </Border>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
