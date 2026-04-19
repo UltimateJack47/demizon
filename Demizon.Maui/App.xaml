@@ -16,6 +16,7 @@
             <converters:AttendanceRateColorConverter x:Key="AttendanceRateColorConverter" />
             <converters:RateToProgressConverter x:Key="RateToProgressConverter" />
             <converters:DateFormatConverter x:Key="DateFormatConverter" />
+            <converters:IntToBoolConverter x:Key="IntToBoolConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

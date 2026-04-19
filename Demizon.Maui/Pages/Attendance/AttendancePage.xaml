@@ -100,6 +100,10 @@
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, Path=NavigateToEventCommand}"
                                         CommandParameter="{Binding .}" />
+                                    <SwipeGestureRecognizer Direction="Left" Threshold="30"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, Path=NextMonthCommand}" />
+                                    <SwipeGestureRecognizer Direction="Right" Threshold="30"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, Path=PreviousMonthCommand}" />
                                 </Border.GestureRecognizers>
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                                     <!-- Date column -->
@@ -170,7 +174,7 @@
                                                  Color="{Binding MyAttendance, Converter={StaticResource AttendanceColorConverter}}" />
                                         <Label Text="📝" FontSize="9"
                                                HorizontalOptions="Center"
-                                               IsVisible="{Binding MyAttendance.Comment, Converter={StaticResource StringToBoolConverter}}" />
+                                               IsVisible="{Binding MyAttendance.Comment, Converter={StaticResource StringToBoolConverter}, FallbackValue=False}" />
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>

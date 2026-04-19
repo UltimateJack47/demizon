@@ -18,6 +18,46 @@ public partial class AllMembersAttendancePage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
         _vm = viewModel;
+
+        // Add swipe-to-change-month via PanGestureRecognizer on the header border.
+        // The ScrollView area uses Orientation=Both so we only detect clear horizontal
+        // swipes (dx dominates and exceeds threshold) to avoid conflicts with table scrolling.
+        var pan = new PanGestureRecognizer();
+        double startX = 0;
+        double startY = 0;
+        bool active = false;
+
+        pan.PanUpdated += (_, e) =>
+        {
+            switch (e.StatusType)
+            {
+                case GestureStatus.Started:
+                    startX = e.TotalX;
+                    startY = e.TotalY;
+                    active = true;
+                    break;
+
+                case GestureStatus.Running when active:
+                    double dx = e.TotalX - startX;
+                    double dy = e.TotalY - startY;
+                    if (Math.Abs(dx) > 70 && Math.Abs(dx) > Math.Abs(dy) * 2.5)
+                    {
+                        active = false;
+                        if (dx < 0)
+                            _vm?.NextMonthCommand.Execute(null);
+                        else
+                            _vm?.PreviousMonthCommand.Execute(null);
+                    }
+                    break;
+
+                case GestureStatus.Completed:
+                case GestureStatus.Canceled:
+                    active = false;
+                    break;
+            }
+        };
+
+        TableScrollView.GestureRecognizers.Add(pan);
     }
 
     protected override void OnAppearing()

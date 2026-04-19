@@ -12,7 +12,9 @@
       "Bash(grep -E \"^-.*\\\\.cs$\")",
       "Bash(xargs cat:*)",
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(dotnet list *)",
+      "WebSearch"
     ]
   },
   "outputStyle": "Explanatory"

@@ -57,7 +57,7 @@
                                     </HorizontalStackLayout>
                                     <Label FontSize="12"
                                            TextColor="{StaticResource TextSecondary}"
-                                           IsVisible="{Binding Videos.Count}">
+                                           IsVisible="{Binding Videos.Count, Converter={StaticResource IntToBoolConverter}}">
                                         <Label.Text>
                                             <MultiBinding StringFormat="🎥 {0} videí">
                                                 <Binding Path="Videos.Count" />
