@@ -37,9 +37,6 @@ public partial class EditEventViewModel(IApiClient apiClient, INavigationService
     private string? _place;
 
     [ObservableProperty]
-    private int _notifyBeforeDaysIndex;
-
-    [ObservableProperty]
     private int _recurrenceIndex;
 
     [ObservableProperty]
@@ -54,15 +51,6 @@ public partial class EditEventViewModel(IApiClient apiClient, INavigationService
     [ObservableProperty]
     private string? _errorMessage;
 
-    public List<string> NotifyOptions { get; } =
-    [
-        "Bez notifikace",
-        "1 den",
-        "2 dny",
-        "3 dny",
-        "7 dní"
-    ];
-
     public List<string> RecurrenceOptions { get; } =
     [
         "Jednorázová",
@@ -70,7 +58,6 @@ public partial class EditEventViewModel(IApiClient apiClient, INavigationService
         "Měsíčně"
     ];
 
-    private static readonly int?[] NotifyDaysMap = [null, 1, 2, 3, 7];
     private static readonly string[] RecurrenceMap = ["None", "Weekly", "Monthly"];
 
     [RelayCommand]
@@ -88,15 +75,6 @@ public partial class EditEventViewModel(IApiClient apiClient, INavigationService
             Place = ev.Place;
             IsPublic = ev.IsPublic;
             IsCancelled = ev.IsCancelled;
-
-            NotifyBeforeDaysIndex = ev.NotifyBeforeDays switch
-            {
-                1 => 1,
-                2 => 2,
-                3 => 3,
-                7 => 4,
-                _ => 0
-            };
 
             RecurrenceIndex = ev.Recurrence?.ToLowerInvariant() switch
             {
@@ -143,7 +121,6 @@ public partial class EditEventViewModel(IApiClient apiClient, INavigationService
                 dateFrom,
                 dateTo,
                 string.IsNullOrWhiteSpace(Place) ? null : Place.Trim(),
-                NotifyDaysMap[NotifyBeforeDaysIndex],
                 RecurrenceMap[RecurrenceIndex],
                 IsPublic,
                 IsCancelled);

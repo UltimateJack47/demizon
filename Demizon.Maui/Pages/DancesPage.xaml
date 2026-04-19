@@ -26,48 +26,58 @@
         <RefreshView Grid.Row="2"
                      Command="{Binding LoadCommand}"
                      IsRefreshing="{Binding IsBusy}">
-            <CollectionView ItemsSource="{Binding FilteredDances}">
-                <CollectionView.EmptyView>
-                    <Label Text="Žádné tance k zobrazení"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center"
-                           Style="{StaticResource SubtitleLabel}"
-                           Margin="0,40" />
-                </CollectionView.EmptyView>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="dto:DanceDto">
-                        <Border Style="{StaticResource CardBorder}"
-                                Margin="16,6">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DancesViewModel}}, Path=NavigateToDetailCommand}"
-                                                      CommandParameter="{Binding .}" />
-                            </Border.GestureRecognizers>
-                            <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding Name}"
-                                       FontAttributes="Bold"
-                                       FontSize="17"
-                                       TextColor="{StaticResource TextPrimary}" />
-                                <HorizontalStackLayout Spacing="4"
-                                                       IsVisible="{Binding Region, Converter={StaticResource StringToBoolConverter}}">
-                                    <Label Text="📍"
-                                           FontSize="13" />
-                                    <Label Text="{Binding Region}"
-                                           Style="{StaticResource CaptionLabel}" />
-                                </HorizontalStackLayout>
-                                <Label FontSize="12"
-                                       TextColor="{StaticResource TextSecondary}"
-                                       IsVisible="{Binding Videos.Count}">
-                                    <Label.Text>
-                                        <MultiBinding StringFormat="🎥 {0} videí">
-                                            <Binding Path="Videos.Count" />
-                                        </MultiBinding>
-                                    </Label.Text>
-                                </Label>
-                            </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+            <Grid>
+                <CollectionView ItemsSource="{Binding FilteredDances}">
+                    <CollectionView.EmptyView>
+                        <Label Text="Žádné tance k zobrazení"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               Style="{StaticResource SubtitleLabel}"
+                               Margin="0,40" />
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="dto:DanceDto">
+                            <Border Style="{StaticResource CardBorder}"
+                                    Margin="16,6">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DancesViewModel}}, Path=NavigateToDetailCommand}"
+                                                          CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding Name}"
+                                           FontAttributes="Bold"
+                                           FontSize="17"
+                                           TextColor="{StaticResource TextPrimary}" />
+                                    <HorizontalStackLayout Spacing="4"
+                                                           IsVisible="{Binding Region, Converter={StaticResource StringToBoolConverter}}">
+                                        <Label Text="📍"
+                                               FontSize="13" />
+                                        <Label Text="{Binding Region}"
+                                               Style="{StaticResource CaptionLabel}" />
+                                    </HorizontalStackLayout>
+                                    <Label FontSize="12"
+                                           TextColor="{StaticResource TextSecondary}"
+                                           IsVisible="{Binding Videos.Count}">
+                                        <Label.Text>
+                                            <MultiBinding StringFormat="🎥 {0} videí">
+                                                <Binding Path="Videos.Count" />
+                                            </MultiBinding>
+                                        </Label.Text>
+                                    </Label>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="{StaticResource ErrorColor}"
+                       FontSize="14"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       Margin="16,40"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
+            </Grid>
         </RefreshView>
     </Grid>
 </ContentPage>

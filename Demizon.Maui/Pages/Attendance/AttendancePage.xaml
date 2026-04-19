@@ -76,6 +76,10 @@
                      Command="{Binding RefreshCommand}"
                      IsRefreshing="{Binding IsRefreshing}">
             <Grid>
+                <Grid.GestureRecognizers>
+                    <SwipeGestureRecognizer Direction="Left" Command="{Binding NextMonthCommand}" />
+                    <SwipeGestureRecognizer Direction="Right" Command="{Binding PreviousMonthCommand}" />
+                </Grid.GestureRecognizers>
                 <!-- Event list -->
                 <CollectionView ItemsSource="{Binding Events}"
                                 IsVisible="{Binding HasEvents}">

@@ -5,7 +5,6 @@ public sealed record UpdateEventRequest(
     DateTime DateFrom,
     DateTime DateTo,
     string? Place,
-    int? NotifyBeforeDays,
     string Recurrence,
     bool IsPublic,
     bool IsCancelled);

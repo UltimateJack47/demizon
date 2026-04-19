@@ -28,12 +28,6 @@
                     <MudItem xs="12" sm="6">
                         <MudCheckBox @bind-Value="EventModel.IsPublic" Label="Veřejné" Color="Color.Primary"/>
                     </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="EventModel.NotifyBeforeDays" T="int?"
-                                         Label="Push notifikace (dní předem)" Min="0" Max="30" Clearable="true"
-                                         Variant="Variant.Outlined" Margin="Margin.Dense"
-                                         HelperText="Prázdné = nevysílat"/>
-                    </MudItem>
                 </MudGrid>
             </MudItem>
         </MudGrid>

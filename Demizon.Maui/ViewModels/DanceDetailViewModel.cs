@@ -20,11 +20,16 @@ public partial class DanceDetailViewModel(IApiClient apiClient) : ObservableObje
     [ObservableProperty]
     private bool _isLyricsExpanded;
 
+    [ObservableProperty]
+    private string? _errorMessage;
+
     [RelayCommand]
     public async Task LoadAsync()
     {
         IsBusy = true;
+        ErrorMessage = null;
         try { Dance = await apiClient.GetDanceAsync(DanceId); }
+        catch (Exception) { ErrorMessage = "Nepodařilo se načíst tanec."; }
         finally { IsBusy = false; }
     }
 

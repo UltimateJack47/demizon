@@ -126,7 +126,6 @@ public class EventsController(IEventService eventService, IAttendanceService att
             DateFrom = request.DateFrom,
             DateTo = request.DateTo,
             Place = request.Place,
-            NotifyBeforeDays = request.NotifyBeforeDays,
             Recurrence = recurrence,
         };
 
@@ -184,7 +183,6 @@ public class EventsController(IEventService eventService, IAttendanceService att
             ev.DateFrom = request.DateFrom;
             ev.DateTo = request.DateTo;
             ev.Place = request.Place;
-            ev.NotifyBeforeDays = request.NotifyBeforeDays;
             ev.Recurrence = recurrence;
             ev.IsPublic = request.IsPublic;
             ev.IsCancelled = request.IsCancelled;

@@ -33,9 +33,6 @@ public partial class CreateEventViewModel(IApiClient apiClient, INavigationServi
     private string? _place;
 
     [ObservableProperty]
-    private int _notifyBeforeDaysIndex;
-
-    [ObservableProperty]
     private int _recurrenceIndex;
 
     [ObservableProperty]
@@ -44,15 +41,6 @@ public partial class CreateEventViewModel(IApiClient apiClient, INavigationServi
     [ObservableProperty]
     private string? _errorMessage;
 
-    public List<string> NotifyOptions { get; } =
-    [
-        "Bez notifikace",
-        "1 den",
-        "2 dny",
-        "3 dny",
-        "7 dní"
-    ];
-
     public List<string> RecurrenceOptions { get; } =
     [
         "Jednorázová",
@@ -60,7 +48,6 @@ public partial class CreateEventViewModel(IApiClient apiClient, INavigationServi
         "Měsíčně"
     ];
 
-    private static readonly int?[] NotifyDaysMap = [null, 1, 2, 3, 7];
     private static readonly string[] RecurrenceMap = ["None", "Weekly", "Monthly"];
 
     [RelayCommand]
@@ -91,7 +78,6 @@ public partial class CreateEventViewModel(IApiClient apiClient, INavigationServi
                 dateFrom,
                 dateTo,
                 string.IsNullOrWhiteSpace(Place) ? null : Place.Trim(),
-                NotifyDaysMap[NotifyBeforeDaysIndex],
                 RecurrenceMap[RecurrenceIndex]);
 
             await apiClient.CreateEventAsync(request);

@@ -19,6 +19,9 @@ public partial class DancesViewModel(IApiClient apiClient, INavigationService na
     [ObservableProperty]
     private string? _searchText;
 
+    [ObservableProperty]
+    private string? _errorMessage;
+
     partial void OnSearchTextChanged(string? value) => ApplyFilter();
 
     [RelayCommand]
@@ -26,10 +29,15 @@ public partial class DancesViewModel(IApiClient apiClient, INavigationService na
     {
         if (IsBusy) return;
         IsBusy = true;
+        ErrorMessage = null;
         try
         {
             _allDances = await apiClient.GetDancesAsync();
             ApplyFilter();
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "Nepodařilo se načíst tance.";
         }
         finally { IsBusy = false; }
     }

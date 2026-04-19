@@ -126,9 +126,7 @@ else
                         <MudListItem T="string" Icon="@Icons.Material.Filled.NotificationsActive" IconColor="Color.Default">
                             <MudStack Spacing="0">
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">Push notifikace</MudText>
-                                <MudText Typo="Typo.body2">
-                                    @(Model.NotifyBeforeDays.HasValue ? $"{Model.NotifyBeforeDays} dní předem" : "Nevysílat")
-                                </MudText>
+                                <MudText Typo="Typo.body2">Automatické (1h po zadání, 60/30/14 dní předem)</MudText>
                             </MudStack>
                         </MudListItem>
                     </MudList>

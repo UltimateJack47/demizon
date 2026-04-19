@@ -5,5 +5,4 @@ public sealed record CreateEventRequest(
     DateTime DateFrom,
     DateTime DateTo,
     string? Place,
-    int? NotifyBeforeDays,
     string Recurrence);
