@@ -1,0 +1,188 @@
+@page "/Admin/Photos"
+@using Demizon.Core.Services.File
+@using Demizon.Core.Services.FileUpload
+@using Demizon.Mvc.ViewModels
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+@inject IFileService FileService
+@inject IFileUploadService FileUploadService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminMainLayout
+
+<MudText Typo="Typo.h5" Class="mb-4"><b>Správa fotografií</b></MudText>
+
+<MudStack Row="true" Class="mb-4" AlignItems="AlignItems.Center">
+    <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles" Accept="image/*">
+        <CustomContent Context="upload">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                       OnClick="@upload.OpenFilePickerAsync"
+                       Disabled="@_uploading">
+                @if (_uploading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                    <text>Nahrávám...</text>
+                }
+                else
+                {
+                    <text>Nahrát fotky</text>
+                }
+            </MudButton>
+        </CustomContent>
+    </MudFileUpload>
+    <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="RefreshTable" title="Obnovit"/>
+</MudStack>
+
+<MudTable T="FileViewModel" Items="Photos" Hover="true" Striped="true" FixedHeader="true" Dense="true">
+    <HeaderContent>
+        <MudTh Style="width: 80px">Náhled</MudTh>
+        <MudTh><b>ID</b></MudTh>
+        <MudTh><b>Typ</b></MudTh>
+        <MudTh><b>Velikost</b></MudTh>
+        <MudTh><b>Veřejné</b></MudTh>
+        <MudTh Style="width: 80px"></MudTh>
+    </HeaderContent>
+    <RowTemplate Context="photo">
+        <MudTd>
+            @if (photo.HasDbData)
+            {
+                <img src="/api/files/@photo.Id/image?size=thumb" alt="thumb" style="width:60px; height:60px; object-fit:cover; border-radius:4px;"/>
+            }
+            else
+            {
+                <img src="@photo.Path" alt="thumb" style="width:60px; height:60px; object-fit:cover; border-radius:4px;"/>
+            }
+        </MudTd>
+        <MudTd>@photo.Id</MudTd>
+        <MudTd>@photo.ContentType</MudTd>
+        <MudTd>@FormatSize(photo.FileSize)</MudTd>
+        <MudTd>
+            <MudSwitch T="bool" Value="@photo.IsPublic" ValueChanged="@(val => TogglePublic(photo, val))"
+                       Color="Color.Success"/>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                           Color="Color.Error" OnClick="() => DeletePhoto(photo.Id)"/>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private List<FileViewModel> Photos { get; set; } = [];
+    private bool _uploading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageService.SetTitle("Fotografie");
+        await RefreshTable();
+    }
+
+    private async Task RefreshTable()
+    {
+        Photos = await FileService.GetAll()
+            .Where(x => x.ContentType.StartsWith("image/"))
+            .OrderByDescending(x => x.Id)
+            .Select(x => new FileViewModel
+            {
+                Id = x.Id,
+                Path = x.Path,
+                ContentType = x.ContentType,
+                FileSize = x.FileSize,
+                IsPublic = x.IsPublic,
+                HasDbData = x.Data != null,
+            })
+            .ToListAsync();
+        StateHasChanged();
+    }
+
+    private async Task UploadFiles(IReadOnlyList<IBrowserFile> files)
+    {
+        _uploading = true;
+        StateHasChanged();
+
+        try
+        {
+            foreach (var file in files)
+            {
+                await using var stream = file.OpenReadStream(25 * 1024 * 1024);
+                var result = await FileUploadService.UploadImageToDbAsync(new FileUploadRequest
+                {
+                    Stream = stream,
+                    FileExtension = System.IO.Path.GetExtension(file.Name),
+                    FileName = System.IO.Path.GetFileNameWithoutExtension(file.Name),
+                    FileSize = file.Size,
+                    ContentType = file.ContentType
+                });
+
+                if (result.IsSuccessful)
+                {
+                    var entity = new Dal.Entities.File
+                    {
+                        Path = result.RelativePath,
+                        FileExtension = result.FileExtension,
+                        ContentType = result.ContentType,
+                        FileSize = result.FileSize,
+                        Data = result.Data,
+                        ThumbnailData = result.ThumbnailData,
+                        IsPublic = true
+                    };
+                    await FileService.CreateAsync(entity);
+                }
+            }
+
+            Snackbar.Add($"Nahráno {files.Count} foto.", Severity.Success);
+            await RefreshTable();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Nahrávání se nezdařilo.", Severity.Error);
+        }
+        finally
+        {
+            _uploading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TogglePublic(FileViewModel photo, bool value)
+    {
+        try
+        {
+            var entity = await FileService.GetOneAsync(photo.Id);
+            entity.IsPublic = value;
+            await FileService.UpdateAsync(photo.Id, entity);
+            photo.IsPublic = value;
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Nepodařilo se změnit viditelnost.", Severity.Error);
+        }
+    }
+
+    private async Task DeletePhoto(int id)
+    {
+        var confirm = await DialogService.ShowMessageBoxAsync("Smazat fotografii?", "", "Ano", "Zrušit", null,
+            new DialogOptions { Position = DialogPosition.Center, CloseButton = false });
+        if (confirm is true)
+        {
+            await FileService.DeleteAsync(id);
+            await RefreshTable();
+            Snackbar.Add("Fotografie smazána.", Severity.Success);
+        }
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        return bytes switch
+        {
+            < 1024 => $"{bytes} B",
+            < 1024 * 1024 => $"{bytes / 1024.0:F1} KB",
+            _ => $"{bytes / (1024.0 * 1024.0):F1} MB"
+        };
+    }
+}

@@ -187,28 +187,30 @@
 
             if (File is not null)
             {
-                //TODO upload the files to the server
-                /*var stream = File.OpenReadStream(25 * 1024 * 1024);
-                var array = new byte[stream.Length];
-                await stream.ReadAsync(array, 0, (int)stream.Length);
-                var photoString = "data:image/jpg;base64,"+Convert.ToBase64String(array);
-                var file = new File
-                {
-                    MemberId = Model.Id,
-                    Path = photoString,
-                    ContentType = File.ContentType,
-                    FileSize = File.Size,
-                    FileExtension = File.Name
-                };
-                dbModel.Photos.Add(file);*/
-                /*var result = await FileUploadService.UploadImageAsync(new FileUploadRequest
+                await using var stream = File.OpenReadStream(25 * 1024 * 1024);
+                var result = await FileUploadService.UploadImageToDbAsync(new FileUploadRequest
                 {
                     Stream = stream,
                     FileExtension = Path.GetExtension(File.Name),
                     FileName = Path.GetFileNameWithoutExtension(File.Name),
                     FileSize = File.Size,
                     ContentType = File.ContentType
-                } );*/
+                });
+
+                if (result.IsSuccessful)
+                {
+                    var photo = new Dal.Entities.File
+                    {
+                        MemberId = Model.Id,
+                        Path = result.RelativePath,
+                        ContentType = result.ContentType,
+                        FileSize = result.FileSize,
+                        FileExtension = result.FileExtension,
+                        Data = result.Data,
+                        ThumbnailData = result.ThumbnailData,
+                    };
+                    dbModel.Photos.Add(photo);
+                }
             }
 
             if (IsUpdate)

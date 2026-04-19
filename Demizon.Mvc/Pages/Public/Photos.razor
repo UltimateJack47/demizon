@@ -22,7 +22,7 @@ else
         {
             var index = i;
             <div class="demi-gallery-item" @onclick="() => OpenLightbox(index)">
-                <img src="@GalleryItems[index].Path" alt="Foto @(index + 1)" loading="lazy"/>
+                <img src="@GetThumbnailUrl(GalleryItems[index])" alt="Foto @(index + 1)" loading="lazy"/>
                 <div class="demi-gallery-overlay">
                     <MudIcon Icon="@Icons.Material.Filled.ZoomIn" Style="color: white; font-size: 2rem;"/>
                 </div>
@@ -31,84 +31,58 @@ else
     </div>
 }
 
-<!-- ─── Lightbox overlay ─── -->
-@if (LightboxOpen)
-{
-    <div class="demi-lightbox" @onclick="CloseLightbox" @onkeydown="OnKeyDown" tabindex="0" @ref="_lightboxRef">
-        <button class="demi-lightbox-close" @onclick:stopPropagation="true" @onclick="CloseLightbox">
-            <MudIcon Icon="@Icons.Material.Filled.Close" Style="color:white; font-size: 2rem;"/>
-        </button>
-
-        @if (GalleryItems.Count > 1)
-        {
-            <button class="demi-lightbox-prev" @onclick:stopPropagation="true" @onclick="PrevPhoto"
-                    disabled="@(LightboxIndex == 0)">
-                <MudIcon Icon="@Icons.Material.Filled.ChevronLeft" Style="color:white; font-size: 3rem;"/>
-            </button>
-        }
-
-        <div class="demi-lightbox-content" @onclick:stopPropagation="true">
-            <img src="@GalleryItems[LightboxIndex].Path" alt="Foto @(LightboxIndex + 1)"/>
-            <div class="demi-lightbox-counter">@(LightboxIndex + 1) / @GalleryItems.Count</div>
-        </div>
-
-        @if (GalleryItems.Count > 1)
-        {
-            <button class="demi-lightbox-next" @onclick:stopPropagation="true" @onclick="NextPhoto"
-                    disabled="@(LightboxIndex == GalleryItems.Count - 1)">
-                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Style="color:white; font-size: 3rem;"/>
-            </button>
-        }
-    </div>
-}
-
 @code {
     [Inject] private IFileService FileService { get; set; } = null!;
+    [Inject] private IJSRuntime Js { get; set; } = null!;
 
     private List<FileViewModel> GalleryItems { get; set; } = [];
-
-    private bool LightboxOpen { get; set; } = false;
-    private int LightboxIndex { get; set; } = 0;
-    private ElementReference _lightboxRef;
+    private bool _initialized;
 
     protected override async Task OnInitializedAsync()
     {
         PageService.SetTitle(Localizer[nameof(DemizonLocales.Photos)]);
-        // Načteme soubory bez přiřazení k členovi nebo tanci = obecná galerie
-        var files = await FileService.GetAll()
-            .Where(x => x.MemberId == null && x.DanceId == null)
+        GalleryItems = await FileService.GetAll()
+            .Where(x => x.IsPublic)
             .Where(x => x.ContentType.StartsWith("image/"))
+            .OrderByDescending(x => x.Id)
+            .Select(x => new FileViewModel
+            {
+                Id = x.Id,
+                Path = x.Path,
+                ContentType = x.ContentType,
+                FileSize = x.FileSize,
+                IsPublic = x.IsPublic,
+                HasDbData = x.Data != null,
+            })
             .ToListAsync();
-        GalleryItems = files.Select(x => x.ToViewModel()).ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (GalleryItems.Count > 0 && !_initialized)
+        {
+            _initialized = true;
+            var items = GalleryItems.Select((g, i) => new
+            {
+                href = GetFullUrl(g),
+                alt = $"Foto {i + 1}"
+            }).ToArray();
+            await Js.InvokeVoidAsync("demizonGallery.init", (object)items);
+        }
     }
 
     private async Task OpenLightbox(int index)
     {
-        LightboxIndex = index;
-        LightboxOpen = true;
-        await Task.Delay(50); // Necháme Blazor vyrenderovat element
-        await _lightboxRef.FocusAsync();
+        await Js.InvokeVoidAsync("demizonGallery.open", index);
     }
 
-    private void CloseLightbox() => LightboxOpen = false;
-
-    private void PrevPhoto()
+    private static string GetThumbnailUrl(FileViewModel file)
     {
-        if (LightboxIndex > 0) LightboxIndex--;
+        return file.HasDbData ? $"/api/files/{file.Id}/image?size=thumb" : file.Path;
     }
 
-    private void NextPhoto()
+    private static string GetFullUrl(FileViewModel file)
     {
-        if (LightboxIndex < GalleryItems.Count - 1) LightboxIndex++;
-    }
-
-    private void OnKeyDown(KeyboardEventArgs e)
-    {
-        switch (e.Key)
-        {
-            case "Escape": CloseLightbox(); break;
-            case "ArrowLeft": PrevPhoto(); break;
-            case "ArrowRight": NextPhoto(); break;
-        }
+        return file.HasDbData ? $"/api/files/{file.Id}/image?size=full" : file.Path;
     }
 }

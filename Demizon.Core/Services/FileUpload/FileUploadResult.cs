@@ -13,4 +13,8 @@ public class FileUploadResult
     public long FileSize { get; set; }
 
     public string ContentType { get; set; } = null!;
+
+    public byte[]? Data { get; set; }
+
+    public byte[]? ThumbnailData { get; set; }
 }

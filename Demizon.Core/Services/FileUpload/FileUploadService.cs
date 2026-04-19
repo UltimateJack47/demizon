@@ -6,6 +6,10 @@ namespace Demizon.Core.Services.FileUpload;
 
 public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) : IFileUploadService
 {
+    private const int MaxImageWidth = 1200;
+    private const int ThumbnailWidth = 200;
+    private const int JpegQuality = 80;
+
     private UploadSettings UploadSettings { get; } = uploadSettings.Value;
 
     public async Task<FileUploadResult> UploadImageAsync(FileUploadRequest fileRequest,
@@ -27,12 +31,6 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
             await fileRequest.Stream.CopyToAsync(stream);
         }
 
-
-        /*if (createResizedImages)
-        {
-            ResizeAndCreate(fileUri, fileName);
-        }*/
-
         return new FileUploadResult
         {
             FileExtension = fileRequest.FileExtension,
@@ -44,6 +42,50 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
         };
     }
 
+    public async Task<FileUploadResult> UploadImageToDbAsync(FileUploadRequest fileRequest)
+    {
+        using var ms = new MemoryStream();
+        await fileRequest.Stream.CopyToAsync(ms);
+        var originalBytes = ms.ToArray();
+
+        // Optimize full image: max 1200px width, JPEG quality 80%
+        byte[] fullData = OptimizeImage(originalBytes, MaxImageWidth, JpegQuality);
+
+        // Create thumbnail: max 200px width
+        byte[] thumbData = OptimizeImage(originalBytes, ThumbnailWidth, JpegQuality);
+
+        return new FileUploadResult
+        {
+            FileExtension = ".jpg",
+            FileName = Guid.NewGuid().ToString(),
+            RelativePath = "db-stored",
+            ContentType = "image/jpeg",
+            FileSize = fullData.Length,
+            Data = fullData,
+            ThumbnailData = thumbData,
+            IsSuccessful = true
+        };
+    }
+
+    private static byte[] OptimizeImage(byte[] imageBytes, int maxWidth, int quality)
+    {
+        using var image = new MagickImage(imageBytes);
+
+        if (image.Width > maxWidth)
+        {
+            var ratio = (double)maxWidth / image.Width;
+            var newHeight = (uint)(image.Height * ratio);
+            image.Resize((uint)maxWidth, newHeight);
+        }
+
+        image.Format = MagickFormat.Jpeg;
+        image.Quality = (uint)quality;
+        image.Strip();
+
+        using var output = new MemoryStream();
+        image.Write(output);
+        return output.ToArray();
+    }
 
     private void ResizeAndCreate(Uri fileUri, string fileName)
     {

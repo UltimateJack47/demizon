@@ -23,6 +23,8 @@ public class FileViewModel
     public DanceViewModel? Dance { get; set; }
 
     public bool IsPublic { get; set; }
+
+    public bool HasDbData { get; set; }
 }
 
 public static class FileMappingExtensions
@@ -37,6 +39,7 @@ public static class FileMappingExtensions
         MemberId = entity.MemberId,
         DanceId = entity.DanceId,
         IsPublic = entity.IsPublic,
+        HasDbData = entity.Data != null,
     };
 
     public static File ToEntity(this FileViewModel vm) => new()

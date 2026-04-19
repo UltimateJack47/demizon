@@ -21,4 +21,8 @@ public class File
     public long FileSize { get; set; }
 
     public bool IsPublic { get; set; } = false;
+
+    public byte[]? Data { get; set; }
+
+    public byte[]? ThumbnailData { get; set; }
 }
