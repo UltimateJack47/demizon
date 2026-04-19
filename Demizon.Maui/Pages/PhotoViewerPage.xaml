@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Demizon.Maui.ViewModels"
+             x:Class="Demizon.Maui.Pages.PhotoViewerPage"
+             x:DataType="vm:PhotoViewerViewModel"
+             Title="Fotografie"
+             Shell.NavBarIsVisible="True"
+             BackgroundColor="Black">
+
+    <CarouselView ItemsSource="{Binding Photos}"
+                  Position="{Binding CurrentIndex}"
+                  Loop="False"
+                  IndicatorView="indicatorView">
+        <CarouselView.ItemTemplate>
+            <DataTemplate x:DataType="vm:GalleryPhotoItem">
+                <Grid>
+                    <Image Source="{Binding FullUrl}"
+                           Aspect="AspectFit"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center" />
+                    <Label Text="{Binding DanceName}"
+                           IsVisible="{Binding DanceName, Converter={StaticResource StringToBoolConverter}}"
+                           TextColor="White"
+                           FontSize="14"
+                           Padding="12,8"
+                           BackgroundColor="#80000000"
+                           VerticalOptions="End"
+                           HorizontalOptions="Center"
+                           Margin="0,0,0,60" />
+                </Grid>
+            </DataTemplate>
+        </CarouselView.ItemTemplate>
+    </CarouselView>
+
+    <IndicatorView x:Name="indicatorView"
+                   IndicatorColor="#66FFFFFF"
+                   SelectedIndicatorColor="White"
+                   HorizontalOptions="Center"
+                   VerticalOptions="End"
+                   Margin="0,0,0,20" />
+</ContentPage>

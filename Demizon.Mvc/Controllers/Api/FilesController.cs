@@ -1,8 +1,10 @@
+using Demizon.Contracts.Gallery;
 using Demizon.Core.Services.File;
 using Demizon.Core.Services.FileUpload;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Mvc.Controllers.Api;
 
@@ -28,6 +30,19 @@ public class FilesController(IFileService fileService) : ControllerBase
         {
             return NotFound();
         }
+    }
+
+    [HttpGet("gallery")]
+    public async Task<ActionResult<List<GalleryPhotoDto>>> GetGalleryPhotos()
+    {
+        var photos = await fileService.GetAll()
+            .Where(f => f.IsPublic && f.Data != null)
+            .Include(f => f.Dance)
+            .OrderByDescending(f => f.Id)
+            .Select(f => new GalleryPhotoDto(f.Id, f.Dance != null ? f.Dance.Name : null))
+            .ToListAsync();
+
+        return Ok(photos);
     }
 }
 

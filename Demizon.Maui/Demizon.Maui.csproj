@@ -37,6 +37,8 @@
     <MauiXaml Update="Pages\CreateEventPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\EditProfilePage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\EditEventPage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\GalleryPage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\PhotoViewerPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Resources\Styles\Colors.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Resources\Styles\Styles.xaml" Generator="MSBuild:Compile" />
   </ItemGroup>

@@ -117,4 +117,8 @@ public interface IApiClient
 
     [Delete("/api/videos/{id}")]
     Task DeleteVideoAsync(int id);
+
+    // Gallery
+    [Get("/api/files/gallery")]
+    Task<List<Demizon.Contracts.Gallery.GalleryPhotoDto>> GetGalleryPhotosAsync();
 }
