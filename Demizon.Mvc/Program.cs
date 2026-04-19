@@ -183,6 +183,12 @@ var localizationOptions = new RequestLocalizationOptions()
     .SetDefaultCulture(supportedCultures[0])
     .AddSupportedCultures(supportedCultures)
     .AddSupportedUICultures(supportedCultures);
+// Cookie provider first (manual user choice), then Accept-Language header (auto-detect browser locale)
+localizationOptions.RequestCultureProviders = new List<IRequestCultureProvider>
+{
+    new CookieRequestCultureProvider(),
+    new AcceptLanguageHeaderRequestCultureProvider()
+};
 app.UseRequestLocalization(localizationOptions);
 
 app.Services.EnableWalMode();

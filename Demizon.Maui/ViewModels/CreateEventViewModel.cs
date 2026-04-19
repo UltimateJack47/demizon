@@ -20,6 +20,12 @@ public partial class CreateEventViewModel(IApiClient apiClient, INavigationServi
     [ObservableProperty]
     private DateTime _dateToDate = DateTime.Today;
 
+    partial void OnDateFromDateChanged(DateTime value)
+    {
+        if (DateToDate < value)
+            DateToDate = value;
+    }
+
     [ObservableProperty]
     private TimeSpan _dateToTime = new(20, 0, 0);
 

@@ -8,9 +8,6 @@
              Title="Nová akce">
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="16">
-
-            <Label Text="Nová akce" Style="{StaticResource TitleLabel}" />
-
             <!-- Name -->
             <VerticalStackLayout Spacing="4">
                 <Label Text="Název akce" Style="{StaticResource CaptionLabel}" />
@@ -44,7 +41,7 @@
                         <DatePicker Grid.Column="0"
                                     Date="{Binding DateToDate}"
                                     Format="dd.MM.yyyy"
-                                    MinimumDate="{x:Static sys:DateTime.Today}" />
+                                    MinimumDate="{Binding DateFromDate}" />
                         <TimePicker Grid.Column="1"
                                     Time="{Binding DateToTime}"
                                     Format="HH:mm" />

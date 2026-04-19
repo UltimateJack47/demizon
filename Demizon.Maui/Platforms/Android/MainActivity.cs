@@ -31,12 +31,6 @@ public class MainActivity : MauiAppCompatActivity
         FirebaseCloudMessagingImplementation.OnNewIntent(Intent);
         EnsureNotificationChannel();
 
-        // Match status bar color with Shell.BackgroundColor (navigation bar)
-        if (Build.VERSION.SdkInt >= BuildVersionCodes.Lollipop && Window is not null)
-        {
-            Window.SetStatusBarColor(global::Android.Graphics.Color.ParseColor("#9A7450"));
-        }
-
         // Show FCM notifications that arrive while the app is in the foreground
         CrossFirebaseCloudMessaging.Current.NotificationReceived += (_, e) =>
             ShowLocalNotification(e.Notification.Title ?? "Demizon", e.Notification.Body ?? string.Empty);
