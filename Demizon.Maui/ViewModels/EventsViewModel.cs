@@ -29,6 +29,9 @@ public partial class EventsViewModel : ObservableObject, IRecipient<EventsChange
     private bool _isBusy;
 
     [ObservableProperty]
+    private bool _isRefreshing;
+
+    [ObservableProperty]
     private string? _errorMessage;
 
     public bool HasEvents => Events.Count > 0;
@@ -37,7 +40,11 @@ public partial class EventsViewModel : ObservableObject, IRecipient<EventsChange
     [RelayCommand]
     public async Task LoadAsync()
     {
-        if (IsBusy) return;
+        if (IsBusy)
+        {
+            IsRefreshing = false;
+            return;
+        }
         IsBusy = true;
         ErrorMessage = null;
 
@@ -53,6 +60,7 @@ public partial class EventsViewModel : ObservableObject, IRecipient<EventsChange
         finally
         {
             IsBusy = false;
+            IsRefreshing = false;
         }
     }
 

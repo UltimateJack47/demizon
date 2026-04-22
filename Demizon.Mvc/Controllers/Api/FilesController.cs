@@ -20,7 +20,8 @@ public class FilesController(IFileService fileService) : ControllerBase
         {
             var file = await fileService.GetOneAsync(id);
 
-            if (!file.IsPublic)
+            // Non-public photos are only visible to authenticated users
+            if (!file.IsPublic && !User.Identity?.IsAuthenticated == true)
                 return NotFound();
 
             byte[]? data = size == "thumb" ? file.ThumbnailData ?? file.Data : file.Data;

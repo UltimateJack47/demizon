@@ -70,6 +70,9 @@ public interface IApiClient
     [Get("/api/dances/{id}")]
     Task<DanceDto> GetDanceAsync(int id);
 
+    [Get("/api/dances/{id}/photos")]
+    Task<List<Demizon.Contracts.Gallery.GalleryPhotoDto>> GetDancePhotosAsync(int id);
+
     [Get("/api/events/{id}/attendees")]
     Task<EventAttendeesDto> GetEventAttendeesAsync(int id);
     
@@ -88,6 +91,9 @@ public interface IApiClient
 
     [Put("/api/members/me")]
     Task UpdateMyProfileAsync([Body] UpdateProfileRequest request);
+
+    [Put("/api/members/me/password")]
+    Task ChangePasswordAsync([Body] ChangePasswordRequest request);
 
     // Event management (admin)
     [Put("/api/events/{id}")]

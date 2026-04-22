@@ -141,6 +141,16 @@
                     CornerRadius="12"
                     FontAttributes="Bold" />
 
+            <!-- Change password button -->
+            <Button Text="🔒 Změnit heslo"
+                    Command="{Binding ChangePasswordCommand}"
+                    BackgroundColor="Transparent"
+                    TextColor="#A8845E"
+                    BorderColor="#A8845E"
+                    BorderWidth="1"
+                    CornerRadius="12"
+                    FontAttributes="Bold" />
+
             <!-- Logout button -->
             <Button Text="Odhlásit se"
                     Command="{Binding LogoutCommand}"

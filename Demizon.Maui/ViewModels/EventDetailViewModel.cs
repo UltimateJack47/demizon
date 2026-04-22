@@ -21,7 +21,6 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     private bool IsRehearsal => EventId == 0 && !string.IsNullOrEmpty(RehearsalDateString);
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CancelButtonText))]
     private EventDto? _event;
 
     [ObservableProperty]
@@ -49,10 +48,7 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     public bool ShowAttendees => !IsRehearsal && Attendees?.TotalCount > 0;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CancelButtonText))]
     private bool _isAdmin;
-
-    public string CancelButtonText => Event?.IsCancelled == true ? "↩️ Obnovit akci" : "⛔ Zrušit akci";
 
     // Display labels for the Picker (Czech). Conversion to/from API values (English) happens at load/save.
     public List<string> RoleOptions { get; } = ["Tanečník", "Muzikant"];
@@ -177,20 +173,6 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     {
         await navigation.GoToAsync(AppRoutes.EditEvent,
             new Dictionary<string, object> { ["eventId"] = EventId });
-    }
-
-    [RelayCommand]
-    private async Task ToggleCancelAsync()
-    {
-        IsBusy = true;
-        try
-        {
-            await apiClient.ToggleEventCancelledAsync(EventId);
-            WeakReferenceMessenger.Default.Send(new EventsChangedMessage());
-            await LoadAsync();
-        }
-        catch (Exception) { /* ignore */ }
-        finally { IsBusy = false; }
     }
 
     [RelayCommand]

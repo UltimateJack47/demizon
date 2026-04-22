@@ -47,6 +47,7 @@ public static class MauiProgram
         services.AddTransient<CreateEventViewModel>();
         services.AddTransient<MemberAttendanceDetailViewModel>();
         services.AddTransient<EditProfileViewModel>();
+        services.AddTransient<ChangePasswordViewModel>();
         services.AddTransient<EditEventViewModel>();
         services.AddTransient<GalleryViewModel>();
         services.AddTransient<PhotoViewerViewModel>();
@@ -64,6 +65,7 @@ public static class MauiProgram
         services.AddTransient<CreateEventPage>();
         services.AddTransient<MemberAttendanceDetailPage>();
         services.AddTransient<EditProfilePage>();
+        services.AddTransient<ChangePasswordPage>();
         services.AddTransient<EditEventPage>();
         services.AddTransient<GalleryPage>();
         services.AddTransient<PhotoViewerPage>();

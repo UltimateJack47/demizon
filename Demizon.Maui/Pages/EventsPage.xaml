@@ -9,10 +9,11 @@
 
     <Grid>
         <!-- Main content -->
-        <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsBusy}">
+        <RefreshView Command="{Binding LoadCommand}" IsRefreshing="{Binding IsRefreshing}">
             <Grid>
                 <!-- Event list -->
                 <CollectionView ItemsSource="{Binding Events}"
+                                ItemSizingStrategy="MeasureFirstItem"
                                 IsVisible="{Binding HasEvents}">
                     <CollectionView.Header>
                         <VerticalStackLayout Padding="20,20,20,8">

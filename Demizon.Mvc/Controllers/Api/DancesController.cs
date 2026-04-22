@@ -1,5 +1,7 @@
 using Demizon.Contracts.Dances;
+using Demizon.Contracts.Gallery;
 using Demizon.Core.Services.Dance;
+using Demizon.Core.Services.File;
 using Demizon.Mvc.Mapping;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +13,7 @@ namespace Demizon.Mvc.Controllers.Api;
 [ApiController]
 [Route("api/dances")]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-public class DancesController(IDanceService danceService) : ControllerBase
+public class DancesController(IDanceService danceService, IFileService fileService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<DanceDto>>> GetAll()
@@ -38,5 +40,17 @@ public class DancesController(IDanceService danceService) : ControllerBase
         {
             return NotFound();
         }
+    }
+
+    [HttpGet("{id:int}/photos")]
+    public async Task<ActionResult<List<GalleryPhotoDto>>> GetDancePhotos(int id)
+    {
+        var photos = await fileService.GetAll()
+            .Where(f => f.DanceId == id && f.Data != null)
+            .OrderByDescending(f => f.Id)
+            .Select(f => new GalleryPhotoDto(f.Id, null))
+            .ToListAsync();
+
+        return Ok(photos);
     }
 }

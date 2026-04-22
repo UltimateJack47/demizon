@@ -58,16 +58,6 @@
                 </Border>
             </VerticalStackLayout>
 
-            <!-- Recurrence -->
-            <VerticalStackLayout Spacing="4">
-                <Label Text="Opakování" Style="{StaticResource CaptionLabel}" />
-                <Border Style="{StaticResource CardBorder}" Padding="8,4">
-                    <Picker Title="Vyberte..."
-                            ItemsSource="{Binding RecurrenceOptions}"
-                            SelectedIndex="{Binding RecurrenceIndex}" />
-                </Border>
-            </VerticalStackLayout>
-
             <!-- Error message -->
             <Label Text="{Binding ErrorMessage}"
                    TextColor="{StaticResource ErrorColor}"

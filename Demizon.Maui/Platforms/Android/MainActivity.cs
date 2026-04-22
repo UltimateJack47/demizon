@@ -10,7 +10,7 @@ using Plugin.Firebase.Core.Platforms.Android;
 namespace Demizon.Maui.Platforms.Android;
 
 [Activity(
-    Theme = "@style/Maui.SplashTheme",
+    Theme = "@style/Maui.MainTheme",
     MainLauncher = true,
     LaunchMode = LaunchMode.SingleTop,
     ConfigurationChanges =

@@ -16,9 +16,4 @@ public partial class DancesPage : ContentPage
         if (BindingContext is DancesViewModel vm)
             vm.LoadCommand.Execute(null);
     }
-
-    private async void OnGalleryTapped(object? sender, EventArgs e)
-    {
-        await Shell.Current.GoToAsync(AppRoutes.Gallery, true);
-    }
 }

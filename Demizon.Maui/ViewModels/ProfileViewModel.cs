@@ -166,6 +166,12 @@ public partial class ProfileViewModel(IApiClient apiClient, TokenStorage tokenSt
     }
 
     [RelayCommand]
+    private async Task ChangePasswordAsync()
+    {
+        await navigation.GoToAsync(AppRoutes.ChangePassword);
+    }
+
+    [RelayCommand]
     private async Task LogoutAsync()
     {
         tokenStorage.Clear();

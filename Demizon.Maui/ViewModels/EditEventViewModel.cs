@@ -37,9 +37,6 @@ public partial class EditEventViewModel(IApiClient apiClient, INavigationService
     private string? _place;
 
     [ObservableProperty]
-    private int _recurrenceIndex;
-
-    [ObservableProperty]
     private bool _isPublic;
 
     [ObservableProperty]
@@ -50,15 +47,6 @@ public partial class EditEventViewModel(IApiClient apiClient, INavigationService
 
     [ObservableProperty]
     private string? _errorMessage;
-
-    public List<string> RecurrenceOptions { get; } =
-    [
-        "Jednorázová",
-        "Týdně",
-        "Měsíčně"
-    ];
-
-    private static readonly string[] RecurrenceMap = ["None", "Weekly", "Monthly"];
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -75,13 +63,6 @@ public partial class EditEventViewModel(IApiClient apiClient, INavigationService
             Place = ev.Place;
             IsPublic = ev.IsPublic;
             IsCancelled = ev.IsCancelled;
-
-            RecurrenceIndex = ev.Recurrence?.ToLowerInvariant() switch
-            {
-                "weekly" => 1,
-                "monthly" => 2,
-                _ => 0
-            };
         }
         catch (Exception)
         {
@@ -121,7 +102,7 @@ public partial class EditEventViewModel(IApiClient apiClient, INavigationService
                 dateFrom,
                 dateTo,
                 string.IsNullOrWhiteSpace(Place) ? null : Place.Trim(),
-                RecurrenceMap[RecurrenceIndex],
+                "None",
                 IsPublic,
                 IsCancelled);
 

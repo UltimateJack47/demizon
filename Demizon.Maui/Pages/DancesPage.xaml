@@ -8,26 +8,18 @@
              Title="Tance"
              BackgroundColor="{StaticResource PageBackground}">
 
-    <Grid RowDefinitions="Auto,Auto,*">
-        <Button Grid.Row="0"
-                Text="📷 Fotogalerie"
-                BackgroundColor="Transparent"
-                TextColor="{StaticResource Primary}"
-                FontAttributes="Bold"
-                HorizontalOptions="End"
-                Margin="16,8,16,0"
-                Clicked="OnGalleryTapped" />
-
-        <SearchBar Grid.Row="1"
+    <Grid RowDefinitions="Auto,*">
+        <SearchBar Grid.Row="0"
                    Placeholder="Hledat tance..."
                    Text="{Binding SearchText}"
                    Margin="16,8" />
 
-        <RefreshView Grid.Row="2"
+        <RefreshView Grid.Row="1"
                      Command="{Binding LoadCommand}"
                      IsRefreshing="{Binding IsBusy}">
             <Grid>
-                <CollectionView ItemsSource="{Binding FilteredDances}">
+                <CollectionView ItemsSource="{Binding FilteredDances}"
+                                    ItemSizingStrategy="MeasureFirstItem">
                     <CollectionView.EmptyView>
                         <Label Text="Žádné tance k zobrazení"
                                HorizontalOptions="Center"

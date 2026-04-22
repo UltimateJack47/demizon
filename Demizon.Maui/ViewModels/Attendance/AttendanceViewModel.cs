@@ -156,6 +156,13 @@ public partial class AttendanceViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task ShowNote(string? comment)
+    {
+        if (!string.IsNullOrWhiteSpace(comment))
+            await Shell.Current.DisplayAlert("Poznámka", comment, "OK");
+    }
+
+    [RelayCommand]
     private async Task NavigateToStats()
     {
         try

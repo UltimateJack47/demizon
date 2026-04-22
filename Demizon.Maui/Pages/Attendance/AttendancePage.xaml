@@ -8,10 +8,6 @@
              Title="Docházka">
 
     <Grid RowDefinitions="Auto,*">
-        <Grid.GestureRecognizers>
-            <SwipeGestureRecognizer Direction="Left" Command="{Binding NextMonthCommand}" />
-            <SwipeGestureRecognizer Direction="Right" Command="{Binding PreviousMonthCommand}" />
-        </Grid.GestureRecognizers>
 
         <!-- Header: Month navigation + stats button -->
         <Border Grid.Row="0"
@@ -72,16 +68,13 @@
         </Border>
 
         <!-- Main content -->
-        <RefreshView Grid.Row="1"
+        <RefreshView x:Name="MainRefreshView" Grid.Row="1"
                      Command="{Binding RefreshCommand}"
                      IsRefreshing="{Binding IsRefreshing}">
             <Grid>
-                <Grid.GestureRecognizers>
-                    <SwipeGestureRecognizer Direction="Left" Command="{Binding NextMonthCommand}" />
-                    <SwipeGestureRecognizer Direction="Right" Command="{Binding PreviousMonthCommand}" />
-                </Grid.GestureRecognizers>
                 <!-- Event list -->
                 <CollectionView ItemsSource="{Binding Events}"
+                                ItemSizingStrategy="MeasureFirstItem"
                                 IsVisible="{Binding HasEvents}">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="dto:EventDto">
@@ -100,10 +93,6 @@
                                     <TapGestureRecognizer
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, Path=NavigateToEventCommand}"
                                         CommandParameter="{Binding .}" />
-                                    <SwipeGestureRecognizer Direction="Left" Threshold="30"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, Path=NextMonthCommand}" />
-                                    <SwipeGestureRecognizer Direction="Right" Threshold="30"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, Path=PreviousMonthCommand}" />
                                 </Border.GestureRecognizers>
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                                     <!-- Date column -->
@@ -174,7 +163,13 @@
                                                  Color="{Binding MyAttendance, Converter={StaticResource AttendanceColorConverter}}" />
                                         <Label Text="📝" FontSize="9"
                                                HorizontalOptions="Center"
-                                               IsVisible="{Binding MyAttendance.Comment, Converter={StaticResource StringToBoolConverter}, FallbackValue=False}" />
+                                               IsVisible="{Binding MyAttendance.Comment, Converter={StaticResource StringToBoolConverter}, FallbackValue=False}">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, Path=ShowNoteCommand}"
+                                                    CommandParameter="{Binding MyAttendance.Comment}" />
+                                            </Label.GestureRecognizers>
+                                        </Label>
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>

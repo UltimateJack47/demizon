@@ -6,11 +6,7 @@
              x:DataType="vm:AllMembersAttendanceViewModel"
              Title="Přehled docházky">
 
-    <Grid RowDefinitions="Auto,*">
-        <Grid.GestureRecognizers>
-            <SwipeGestureRecognizer Direction="Left" Command="{Binding NextMonthCommand}" />
-            <SwipeGestureRecognizer Direction="Right" Command="{Binding PreviousMonthCommand}" />
-        </Grid.GestureRecognizers>
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,*">
 
         <!-- Header: month navigation -->
         <Border Grid.Row="0"
@@ -43,12 +39,7 @@
                            IsRunning="{Binding IsBusy}"
                            IsVisible="{Binding IsBusy}"
                            HorizontalOptions="Center"
-                           VerticalOptions="Center">
-            <ActivityIndicator.GestureRecognizers>
-                <SwipeGestureRecognizer Direction="Left" Command="{Binding NextMonthCommand}" />
-                <SwipeGestureRecognizer Direction="Right" Command="{Binding PreviousMonthCommand}" />
-            </ActivityIndicator.GestureRecognizers>
-        </ActivityIndicator>
+                           VerticalOptions="Center" />
 
         <!-- Error -->
         <Label Grid.Row="1"
@@ -57,12 +48,7 @@
                FontSize="14"
                HorizontalOptions="Center"
                VerticalOptions="Center"
-               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}">
-            <Label.GestureRecognizers>
-                <SwipeGestureRecognizer Direction="Left" Command="{Binding NextMonthCommand}" />
-                <SwipeGestureRecognizer Direction="Right" Command="{Binding PreviousMonthCommand}" />
-            </Label.GestureRecognizers>
-        </Label>
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBoolConverter}}" />
 
         <!-- Empty state -->
         <VerticalStackLayout Grid.Row="1"
@@ -70,10 +56,6 @@
                              VerticalOptions="Center"
                              HorizontalOptions="Center"
                              Spacing="12">
-            <VerticalStackLayout.GestureRecognizers>
-                <SwipeGestureRecognizer Direction="Left" Command="{Binding NextMonthCommand}" />
-                <SwipeGestureRecognizer Direction="Right" Command="{Binding PreviousMonthCommand}" />
-            </VerticalStackLayout.GestureRecognizers>
             <Label Text="📋" FontSize="48" HorizontalOptions="Center" />
             <Label Text="V tomto měsíci nejsou žádná data"
                    Style="{StaticResource SubtitleLabel}"

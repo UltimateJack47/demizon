@@ -22,6 +22,7 @@ public static class AppRoutes
     public const string AttdOverview = "attd-overview";
     public const string MemberAttdDetail = "member-attd-detail";
     public const string EditProfile = "edit-profile";
+    public const string ChangePassword = "change-password";
     public const string EditEvent = "edit-event";
     public const string Gallery = "gallery";
     public const string PhotoViewer = "photo-viewer";

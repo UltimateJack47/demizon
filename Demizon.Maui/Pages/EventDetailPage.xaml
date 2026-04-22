@@ -230,15 +230,6 @@
                             CornerRadius="12"
                             FontAttributes="Bold" />
 
-                    <Button Text="{Binding CancelButtonText}"
-                            Command="{Binding ToggleCancelCommand}"
-                            BackgroundColor="Transparent"
-                            TextColor="{StaticResource AttendanceYellow}"
-                            BorderColor="{StaticResource AttendanceYellow}"
-                            BorderWidth="1"
-                            CornerRadius="12"
-                            FontAttributes="Bold" />
-
                     <Button Text="🗑️ Smazat akci"
                             Command="{Binding DeleteEventCommand}"
                             BackgroundColor="Transparent"

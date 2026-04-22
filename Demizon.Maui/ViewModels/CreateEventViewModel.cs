@@ -33,22 +33,10 @@ public partial class CreateEventViewModel(IApiClient apiClient, INavigationServi
     private string? _place;
 
     [ObservableProperty]
-    private int _recurrenceIndex;
-
-    [ObservableProperty]
     private bool _isBusy;
 
     [ObservableProperty]
     private string? _errorMessage;
-
-    public List<string> RecurrenceOptions { get; } =
-    [
-        "Jednorázová",
-        "Týdně",
-        "Měsíčně"
-    ];
-
-    private static readonly string[] RecurrenceMap = ["None", "Weekly", "Monthly"];
 
     [RelayCommand]
     public async Task CreateAsync()
@@ -78,7 +66,7 @@ public partial class CreateEventViewModel(IApiClient apiClient, INavigationServi
                 dateFrom,
                 dateTo,
                 string.IsNullOrWhiteSpace(Place) ? null : Place.Trim(),
-                RecurrenceMap[RecurrenceIndex]);
+                "None");
 
             await apiClient.CreateEventAsync(request);
 
