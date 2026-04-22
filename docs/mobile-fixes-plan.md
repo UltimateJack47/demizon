@@ -1,8 +1,8 @@
 # Plán oprav a vylepšení – mobilní aplikace + MVC
 
 > Vytvořeno: 2026-04-23  
-> Aktualizováno: 2026-04-23 (iterace 2 – opravy po testování)  
-> Stav: ✅ Obě iterace dokončeny
+> Aktualizováno: 2026-04-23 (iterace 3 – oprava crash, NavBar, swipe, status bar)  
+> Stav: ✅ Tři iterace dokončeny – čeká se na testování
 
 ---
 
@@ -14,10 +14,10 @@
 | 2 | Fotogalerie u jednotlivých tanců | MAUI + API + MVC | Vysoká | ✅ Hotovo (MAUI + MVC správa) |
 | 3 | Odstranit pole Opakování (MAUI + MVC) | MAUI + API | Nízká | ✅ Hotovo |
 | 4 | Odstranit duplicitní tlačítko Zrušit akci | MAUI | Nízká | ✅ Hotovo |
-| 5 | Odstranit "Demižón" lištu (Shell NavBar) | MAUI/Android | Nízká | ✅ Opraveno |
-| 6 | Opravit swipe gesta na docházce | MAUI | Střední | ✅ Opraveno (gesture na ContentGrid) |
-| 7 | Dlouhý stisk pro zobrazení poznámky | MAUI | Střední | ✅ Opraveno (CommunityToolkit.Maui TouchBehavior) |
-| 8 | Swipe na přehledu docházky (tabulka) | MAUI | Nízká | ✅ Opraveno (odstraněn pan ze ScrollView) |
+| 5 | Odstranit "Demižón" lištu (Shell NavBar) | MAUI/Android | Nízká | ✅ Iter3: globální + programatické skrytí NavBar, světlý status bar |
+| 6 | Opravit swipe gesta na docházce | MAUI | Střední | ✅ Iter3: SwipeGestureRecognizer místo PanGestureRecognizer |
+| 7 | Dlouhý stisk pro zobrazení poznámky | MAUI | Střední | ✅ Iter3: opravený binding (x:Reference místo RelativeSource) |
+| 8 | Swipe na přehledu docházky (tabulka) | MAUI | Nízká | ✅ Iter3: SwipeGestureRecognizer na RootGrid |
 | 9 | Zlepšit plynulost animací (back navigace) | MAUI | Nízká | ✅ Opraveno (vypnuta back animace) |
 | 10 | Refresh indikátor se zasekne na stránce Akce | MAUI | Nízká | ✅ Hotovo |
 
@@ -456,3 +456,52 @@ public async Task LoadAsync()
 4. **#8v2** – Swipe overview (přesun gesture na správný element)
 5. **#7v2** – Long press (přidání CommunityToolkit.Maui + TouchBehavior)
 6. **#2v2** – MVC správa fotek (největší scope – nové UI komponenty)
+
+---
+
+## Iterace 3 – Oprava crash a dalších problémů (2026-04-23)
+
+### Crash po přihlášení
+
+**Příčina (z maui-log.txt):**
+```
+FATAL EXCEPTION: Cannot apply relative binding to CommunityToolkit.Maui.Behaviors.TouchBehavior
+because it is not a superclass of Element.
+```
+
+**Problém:** `TouchBehavior` je `Behavior`, nikoliv vizuální `Element`. Binding `{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, ...}` nefunguje u Behaviors, protože `RelativeSource AncestorType` prochází jen vizuální strom (Visual Tree).
+
+**Oprava:** Nahrazeno za `{Binding Source={x:Reference ThisPage}, Path=BindingContext.ShowNoteCommand}` — přidáno `x:Name="ThisPage"` na ContentPage a použit `x:Reference` místo `RelativeSource`.
+
+### NavBar stále viditelný
+
+**Problém:** `Shell.NavBarIsVisible="False"` na jednotlivých `ShellContent` nefungovalo pro pushed (detail) stránky.
+
+**Oprava:**
+1. Přidáno `Shell.NavBarIsVisible="False"` globálně na `<Shell>` element
+2. Přidán `Navigated` event handler v `AppShell.xaml.cs` – při každé navigaci programaticky nastaví `SetNavBarIsVisible(CurrentPage, false)` pro pushed stránky
+
+### Status bar barva
+
+**Problém:** Tmavý status bar (#7A5A38) vypadal špatně po odstranění NavBar.
+
+**Oprava:** Změna na světlý status bar (#FAF3E8 = barva pozadí stránky) s `windowLightStatusBar=true` (tmavé ikony na světlém pozadí).
+
+### Swipe gesta nefungují (#6, #8)
+
+**Problém:** `PanGestureRecognizer` nefunguje uvnitř `RefreshView` ani `ScrollView` – tyto kontejnery konzumují všechna pan gesta.
+
+**Oprava:** Kompletní nahrazení `PanGestureRecognizer` za `SwipeGestureRecognizer` (dedikovaný left/right), který koexistuje s vertikálním pull-to-refresh i scrollováním. Implementováno na obou stránkách:
+- `AttendancePage` – SwipeGestureRecognizer na ContentGrid
+- `AllMembersAttendancePage` – SwipeGestureRecognizer na RootGrid
+
+### Změněné soubory (iterace 3)
+
+| Soubor | Změna |
+|--------|-------|
+| `AttendancePage.xaml` | `x:Name="ThisPage"`, binding oprava TouchBehavior |
+| `AttendancePage.xaml.cs` | SwipeGestureRecognizer místo PanGestureRecognizer |
+| `AllMembersAttendancePage.xaml.cs` | SwipeGestureRecognizer místo PanGestureRecognizer |
+| `AppShell.xaml` | Globální `Shell.NavBarIsVisible="False"` |
+| `AppShell.xaml.cs` | `Navigated` handler pro programatické skrytí NavBar |
+| `styles.xml` | Světlý status bar (#FAF3E8, dark icons) |
