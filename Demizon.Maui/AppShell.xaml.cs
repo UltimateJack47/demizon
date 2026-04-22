@@ -17,5 +17,13 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(AppRoutes.EditEvent, typeof(Pages.EditEventPage));
         Routing.RegisterRoute(AppRoutes.Gallery, typeof(Pages.GalleryPage));
         Routing.RegisterRoute(AppRoutes.PhotoViewer, typeof(Pages.PhotoViewerPage));
+
+        Navigated += OnNavigated;
+    }
+
+    private void OnNavigated(object? sender, ShellNavigatedEventArgs e)
+    {
+        if (CurrentPage is not null)
+            SetNavBarIsVisible(CurrentPage, false);
     }
 }

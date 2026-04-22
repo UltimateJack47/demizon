@@ -5,6 +5,7 @@
        xmlns:attendance="clr-namespace:Demizon.Maui.Pages.Attendance"
        x:Class="Demizon.Maui.AppShell"
        FlyoutBehavior="Disabled"
+       Shell.NavBarIsVisible="False"
        Shell.BackgroundColor="#9A7450"
        Shell.ForegroundColor="White"
        Shell.TitleColor="White"

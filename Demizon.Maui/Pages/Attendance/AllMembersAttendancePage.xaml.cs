@@ -19,43 +19,14 @@ public partial class AllMembersAttendancePage : ContentPage
         BindingContext = viewModel;
         _vm = viewModel;
 
-        // Add swipe-to-change-month via PanGestureRecognizer on the root grid and scroll view.
-        var pan = new PanGestureRecognizer();
-        double startX = 0;
-        double startY = 0;
-        bool active = false;
+        var swipeLeft = new SwipeGestureRecognizer { Direction = SwipeDirection.Left };
+        swipeLeft.Swiped += (_, _) => _vm?.NextMonthCommand.Execute(null);
 
-        pan.PanUpdated += (_, e) =>
-        {
-            switch (e.StatusType)
-            {
-                case GestureStatus.Started:
-                    startX = e.TotalX;
-                    startY = e.TotalY;
-                    active = true;
-                    break;
+        var swipeRight = new SwipeGestureRecognizer { Direction = SwipeDirection.Right };
+        swipeRight.Swiped += (_, _) => _vm?.PreviousMonthCommand.Execute(null);
 
-                case GestureStatus.Running when active:
-                    double dx = e.TotalX - startX;
-                    double dy = e.TotalY - startY;
-                    if (Math.Abs(dx) > 50 && Math.Abs(dx) > Math.Abs(dy) * 2)
-                    {
-                        active = false;
-                        if (dx < 0)
-                            _vm?.NextMonthCommand.Execute(null);
-                        else
-                            _vm?.PreviousMonthCommand.Execute(null);
-                    }
-                    break;
-
-                case GestureStatus.Completed:
-                case GestureStatus.Canceled:
-                    active = false;
-                    break;
-            }
-        };
-
-        RootGrid.GestureRecognizers.Add(pan);
+        RootGrid.GestureRecognizers.Add(swipeLeft);
+        RootGrid.GestureRecognizers.Add(swipeRight);
     }
 
     protected override void OnAppearing()
