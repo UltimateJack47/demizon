@@ -1,4 +1,6 @@
 @page "/Dances/Detail/{Id:int}"
+@using Demizon.Core.Services.File
+@using Demizon.Core.Services.FileUpload
 @using Demizon.Core.Services.Dance
 @using Demizon.Core.Services.VideoLink
 @using Demizon.Mvc.Pages.Admin.Dance.Components
@@ -6,6 +8,8 @@
 @using Demizon.Mvc.ViewModels
 @using Microsoft.EntityFrameworkCore
 
+@inject IFileService FileService
+@inject IFileUploadService FileUploadService
 @inject IDanceService DanceService
 @inject IVideoLinkService VideoLinkService
 @inject IDialogService DialogService
@@ -165,6 +169,67 @@ else
             </MudCard>
         </MudItem>
 
+        <!-- ─── Fotografie ─── -->
+        <MudItem xs="12">
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.PhotoLibrary" Color="Color.Primary"/>
+                            <MudText Typo="Typo.h6">Fotografie</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
+                                @Model.Files.Count
+                            </MudChip>
+                        </MudStack>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <AuthorizeView Roles="Admin">
+                            <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadDancePhotos" Accept="image/*">
+                                <CustomContent Context="upload">
+                                    <MudTooltip Text="Nahrát fotky k tanci">
+                                        <MudIconButton Icon="@Icons.Material.Filled.CloudUpload" Color="Color.Primary"
+                                                       OnClick="@upload.OpenFilePickerAsync"
+                                                       Disabled="@_uploadingPhotos"/>
+                                    </MudTooltip>
+                                </CustomContent>
+                            </MudFileUpload>
+                        </AuthorizeView>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (Model.Files.Count == 0)
+                    {
+                        <MudText Color="Color.Secondary" Typo="Typo.body2">Žádné fotografie k zobrazení.</MudText>
+                    }
+                    else
+                    {
+                        <MudGrid Spacing="2">
+                            @foreach (var photo in Model.Files)
+                            {
+                                <MudItem xs="6" sm="4" md="3" lg="2">
+                                    <MudPaper Outlined="true" Class="pa-1" Style="position: relative;">
+                                        <img src="/api/files/@photo.Id/image?size=thumb" alt="photo"
+                                             style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:4px; display:block;"/>
+                                        <AuthorizeView Roles="Admin">
+                                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mt-1">
+                                                <MudTooltip Text="@(photo.IsPublic ? "Veřejné – viditelné na webu" : "Soukromé – pouze v admin")">
+                                                    <MudSwitch T="bool" Value="@photo.IsPublic"
+                                                               ValueChanged="@(val => TogglePhotoPublic(photo, val))"
+                                                               Color="Color.Success" Size="Size.Small"/>
+                                                </MudTooltip>
+                                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                                                               Color="Color.Error" OnClick="() => DeleteDancePhoto(photo.Id)"/>
+                                            </MudStack>
+                                        </AuthorizeView>
+                                    </MudPaper>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
     </MudGrid>
 }
 
@@ -182,10 +247,12 @@ else
     {
         var dance = await DanceService.GetAll()
             .Include(x => x.Videos)
+            .Include(x => x.Files)
             .FirstOrDefaultAsync(x => x.Id == Id);
         if (dance is null) return;
         Model = dance.ToViewModel();
         Model.Videos = dance.Videos.OrderByDescending(x => x.Year).Select(x => x.ToViewModel()).ToList();
+        Model.Files = dance.Files.Where(f => f.Data != null).OrderByDescending(f => f.Id).Select(f => f.ToViewModel()).ToList();
         PageService.SetTitle(Model.Name);
     }
 
@@ -265,4 +332,87 @@ else
     }
 
     private void GoBack() => NavigationManager.NavigateTo(NavigationManager.BaseUri + "Admin/Dances");
+
+    // ─── Photo management ───
+
+    private bool _uploadingPhotos;
+
+    private async Task UploadDancePhotos(IReadOnlyList<IBrowserFile> files)
+    {
+        _uploadingPhotos = true;
+        StateHasChanged();
+
+        try
+        {
+            foreach (var file in files)
+            {
+                await using var stream = file.OpenReadStream(25 * 1024 * 1024);
+                var result = await FileUploadService.UploadImageToDbAsync(new FileUploadRequest
+                {
+                    Stream = stream,
+                    FileExtension = System.IO.Path.GetExtension(file.Name),
+                    FileName = System.IO.Path.GetFileNameWithoutExtension(file.Name),
+                    FileSize = file.Size,
+                    ContentType = file.ContentType
+                });
+
+                if (result.IsSuccessful)
+                {
+                    var entity = new Dal.Entities.File
+                    {
+                        Path = result.RelativePath,
+                        FileExtension = result.FileExtension,
+                        ContentType = result.ContentType,
+                        FileSize = result.FileSize,
+                        Data = result.Data,
+                        ThumbnailData = result.ThumbnailData,
+                        IsPublic = false,
+                        DanceId = Id
+                    };
+                    await FileService.CreateAsync(entity);
+                }
+            }
+
+            Snackbar.Add($"Nahráno {files.Count} foto k tanci.", Severity.Success);
+            await LoadDance();
+        }
+        catch
+        {
+            Snackbar.Add("Nahrávání se nezdařilo.", Severity.Error);
+        }
+        finally
+        {
+            _uploadingPhotos = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TogglePhotoPublic(FileViewModel photo, bool value)
+    {
+        try
+        {
+            var entity = await FileService.GetOneAsync(photo.Id);
+            entity.IsPublic = value;
+            await FileService.UpdateAsync(photo.Id, entity);
+            photo.IsPublic = value;
+            StateHasChanged();
+        }
+        catch
+        {
+            Snackbar.Add("Nepodařilo se změnit viditelnost fotky.", Severity.Error);
+        }
+    }
+
+    private async Task DeleteDancePhoto(int id)
+    {
+        var confirm = await DialogService.ShowMessageBoxAsync("Smazat fotografii?",
+            "Fotografie bude trvale smazána.", "Ano", "Zrušit", null,
+            new DialogOptions { Position = DialogPosition.Center, CloseButton = false });
+        if (confirm is true)
+        {
+            await FileService.DeleteAsync(id);
+            await LoadDance();
+            Snackbar.Add("Fotografie smazána.", Severity.Success);
+        }
+    }
 }

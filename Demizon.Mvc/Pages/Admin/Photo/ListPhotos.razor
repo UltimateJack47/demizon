@@ -1,4 +1,5 @@
 @page "/Admin/Photos"
+@using Demizon.Core.Services.Dance
 @using Demizon.Core.Services.File
 @using Demizon.Core.Services.FileUpload
 @using Demizon.Mvc.ViewModels
@@ -8,6 +9,7 @@
 
 @inject IFileService FileService
 @inject IFileUploadService FileUploadService
+@inject IDanceService DanceService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @attribute [Authorize(Roles = "Admin")]
@@ -43,6 +45,7 @@
         <MudTh><b>ID</b></MudTh>
         <MudTh><b>Typ</b></MudTh>
         <MudTh><b>Velikost</b></MudTh>
+        <MudTh><b>Tanec</b></MudTh>
         <MudTh><b>Veřejné</b></MudTh>
         <MudTh Style="width: 80px"></MudTh>
     </HeaderContent>
@@ -61,6 +64,16 @@
         <MudTd>@photo.ContentType</MudTd>
         <MudTd>@FormatSize(photo.FileSize)</MudTd>
         <MudTd>
+            <MudSelect T="int?" Value="@photo.DanceId" ValueChanged="@(val => AssignDance(photo, val))"
+                       Placeholder="–" Dense="true" Margin="Margin.Dense" Variant="Variant.Text">
+                <MudSelectItem T="int?" Value="@((int?)null)">–</MudSelectItem>
+                @foreach (var d in _dances)
+                {
+                    <MudSelectItem T="int?" Value="@((int?)d.Id)">@d.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudTd>
+        <MudTd>
             <MudSwitch T="bool" Value="@photo.IsPublic" ValueChanged="@(val => TogglePublic(photo, val))"
                        Color="Color.Success"/>
         </MudTd>
@@ -73,11 +86,17 @@
 
 @code {
     private List<FileViewModel> Photos { get; set; } = [];
+    private List<DanceViewModel> _dances = [];
     private bool _uploading;
 
     protected override async Task OnInitializedAsync()
     {
         PageService.SetTitle("Fotografie");
+        _dances = await DanceService.GetAll()
+            .Where(d => d.IsVisible)
+            .OrderBy(d => d.Name)
+            .Select(d => new DanceViewModel { Id = d.Id, Name = d.Name })
+            .ToListAsync();
         await RefreshTable();
     }
 
@@ -93,6 +112,7 @@
                 ContentType = x.ContentType,
                 FileSize = x.FileSize,
                 IsPublic = x.IsPublic,
+                DanceId = x.DanceId,
                 HasDbData = x.Data != null,
             })
             .ToListAsync();
@@ -173,6 +193,23 @@
             await FileService.DeleteAsync(id);
             await RefreshTable();
             Snackbar.Add("Fotografie smazána.", Severity.Success);
+        }
+    }
+
+    private async Task AssignDance(FileViewModel photo, int? danceId)
+    {
+        try
+        {
+            var entity = await FileService.GetOneAsync(photo.Id);
+            entity.DanceId = danceId;
+            await FileService.UpdateAsync(photo.Id, entity);
+            photo.DanceId = danceId;
+            Snackbar.Add(danceId.HasValue ? "Fotka přiřazena k tanci." : "Fotka odpojena od tance.", Severity.Success);
+            StateHasChanged();
+        }
+        catch
+        {
+            Snackbar.Add("Nepodařilo se přiřadit fotku.", Severity.Error);
         }
     }
 

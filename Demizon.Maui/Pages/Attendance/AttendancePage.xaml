@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:Demizon.Maui.ViewModels.Attendance"
              xmlns:dto="clr-namespace:Demizon.Contracts.Events;assembly=Demizon.Contracts"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="Demizon.Maui.Pages.Attendance.AttendancePage"
              x:DataType="vm:AttendanceViewModel"
              Title="Docházka">
@@ -71,7 +72,7 @@
         <RefreshView x:Name="MainRefreshView" Grid.Row="1"
                      Command="{Binding RefreshCommand}"
                      IsRefreshing="{Binding IsRefreshing}">
-            <Grid>
+            <Grid x:Name="ContentGrid">
                 <!-- Event list -->
                 <CollectionView ItemsSource="{Binding Events}"
                                 ItemSizingStrategy="MeasureFirstItem"
@@ -94,6 +95,11 @@
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, Path=NavigateToEventCommand}"
                                         CommandParameter="{Binding .}" />
                                 </Border.GestureRecognizers>
+                                <Border.Behaviors>
+                                    <toolkit:TouchBehavior
+                                        LongPressCommand="{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, Path=ShowNoteCommand}"
+                                        LongPressCommandParameter="{Binding MyAttendance.Comment}" />
+                                </Border.Behaviors>
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                                     <!-- Date column -->
                                     <Border Grid.Column="0"
@@ -163,13 +169,7 @@
                                                  Color="{Binding MyAttendance, Converter={StaticResource AttendanceColorConverter}}" />
                                         <Label Text="📝" FontSize="9"
                                                HorizontalOptions="Center"
-                                               IsVisible="{Binding MyAttendance.Comment, Converter={StaticResource StringToBoolConverter}, FallbackValue=False}">
-                                            <Label.GestureRecognizers>
-                                                <TapGestureRecognizer
-                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AttendanceViewModel}}, Path=ShowNoteCommand}"
-                                                    CommandParameter="{Binding MyAttendance.Comment}" />
-                                            </Label.GestureRecognizers>
-                                        </Label>
+                                               IsVisible="{Binding MyAttendance.Comment, Converter={StaticResource StringToBoolConverter}, FallbackValue=False}" />
                                     </VerticalStackLayout>
                                 </Grid>
                             </Border>

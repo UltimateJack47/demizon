@@ -1,3 +1,4 @@
+using CommunityToolkit.Maui;
 using Demizon.Maui.Pages;
 using Demizon.Maui.Pages.Attendance;
 using Demizon.Maui.Services;
@@ -14,7 +15,8 @@ public static class MauiProgram
     {
         var builder = MauiApp.CreateBuilder();
         builder
-            .UseMauiApp<App>();
+            .UseMauiApp<App>()
+            .UseMauiCommunityToolkit();
 
 #if DEBUG
         builder.Logging.AddDebug();

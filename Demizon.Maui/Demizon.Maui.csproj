@@ -37,6 +37,7 @@
     <MauiXaml Update="Pages\ProfilePage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\CreateEventPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\EditProfilePage.xaml" Generator="MSBuild:Compile" />
+    <MauiXaml Update="Pages\ChangePasswordPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\EditEventPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\GalleryPage.xaml" Generator="MSBuild:Compile" />
     <MauiXaml Update="Pages\PhotoViewerPage.xaml" Generator="MSBuild:Compile" />
@@ -46,6 +47,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="13.0.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Refit" Version="8.0.0" />
     <PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />

@@ -14,7 +14,13 @@
       "Bash(find:*)",
       "Bash(grep:*)",
       "Bash(dotnet list *)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(unzip -l /c/Projects/demizon/Demizon.Maui/bin/Debug/net10.0-android/android-arm64/com.demizon.administrace.apk)",
+      "Bash(unzip *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 *)",
+      "Bash(dotnet msbuild *)",
+      "Bash(dotnet clean *)"
     ]
   },
   "outputStyle": "Explanatory"

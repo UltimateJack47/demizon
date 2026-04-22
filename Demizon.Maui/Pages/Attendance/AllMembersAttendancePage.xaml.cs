@@ -56,7 +56,6 @@ public partial class AllMembersAttendancePage : ContentPage
         };
 
         RootGrid.GestureRecognizers.Add(pan);
-        TableScrollView.GestureRecognizers.Add(pan);
     }
 
     protected override void OnAppearing()

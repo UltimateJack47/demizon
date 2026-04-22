@@ -9,5 +9,5 @@ public class ShellNavigationService : INavigationService
         => Shell.Current.GoToAsync(route, parameters);
 
     public Task GoBackAsync()
-        => Shell.Current.GoToAsync("..", true);
+        => Shell.Current.GoToAsync("..", false);
 }

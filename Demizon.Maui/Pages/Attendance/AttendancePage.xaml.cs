@@ -47,7 +47,7 @@ public partial class AttendancePage : ContentPage
             }
         };
 
-        MainRefreshView.GestureRecognizers.Add(pan);
+        ContentGrid.GestureRecognizers.Add(pan);
     }
 
     protected override void OnAppearing()

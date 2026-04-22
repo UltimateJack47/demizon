@@ -1,7 +1,8 @@
 # Plán oprav a vylepšení – mobilní aplikace + MVC
 
 > Vytvořeno: 2026-04-23  
-> Stav: ✅ Implementace dokončena
+> Aktualizováno: 2026-04-23 (iterace 2 – opravy po testování)  
+> Stav: ✅ Obě iterace dokončeny
 
 ---
 
@@ -9,16 +10,16 @@
 
 | # | Úkol | Oblast | Složitost | Stav |
 |---|------|--------|-----------|------|
-| 1 | Změna hesla v profilu (MAUI) | MAUI + API | Střední | ✅ Implementováno |
-| 2 | Fotogalerie u jednotlivých tanců | MAUI + API + MVC | Vysoká | ✅ Implementováno |
-| 3 | Odstranit pole Opakování (MAUI + MVC) | MAUI + API | Nízká | ✅ Implementováno |
-| 4 | Odstranit duplicitní tlačítko Zrušit akci | MAUI | Nízká | ✅ Implementováno |
-| 5 | Android status bar zatmavení | MAUI/Android | Nízká | ✅ Implementováno |
-| 6 | Opravit swipe gesta na docházce | MAUI | Střední | ✅ Implementováno |
-| 7 | Dlouhý stisk pro zobrazení poznámky | MAUI | Nízká | ✅ Implementováno (tap na 📝 ikonu) |
-| 8 | Swipe na přehledu docházky (tabulka) | MAUI | Nízká | ✅ Implementováno |
-| 9 | Zlepšit plynulost animací | MAUI | Střední | ✅ Implementováno (layout optimalizace) |
-| 10 | Refresh indikátor se zasekne na stránce Akce | MAUI | Nízká | ✅ Implementováno |
+| 1 | Změna hesla v profilu (MAUI) | MAUI + API | Střední | ✅ Hotovo |
+| 2 | Fotogalerie u jednotlivých tanců | MAUI + API + MVC | Vysoká | ✅ Hotovo (MAUI + MVC správa) |
+| 3 | Odstranit pole Opakování (MAUI + MVC) | MAUI + API | Nízká | ✅ Hotovo |
+| 4 | Odstranit duplicitní tlačítko Zrušit akci | MAUI | Nízká | ✅ Hotovo |
+| 5 | Odstranit "Demižón" lištu (Shell NavBar) | MAUI/Android | Nízká | ✅ Opraveno |
+| 6 | Opravit swipe gesta na docházce | MAUI | Střední | ✅ Opraveno (gesture na ContentGrid) |
+| 7 | Dlouhý stisk pro zobrazení poznámky | MAUI | Střední | ✅ Opraveno (CommunityToolkit.Maui TouchBehavior) |
+| 8 | Swipe na přehledu docházky (tabulka) | MAUI | Nízká | ✅ Opraveno (odstraněn pan ze ScrollView) |
+| 9 | Zlepšit plynulost animací (back navigace) | MAUI | Nízká | ✅ Opraveno (vypnuta back animace) |
+| 10 | Refresh indikátor se zasekne na stránce Akce | MAUI | Nízká | ✅ Hotovo |
 
 ---
 
@@ -369,3 +370,89 @@ public async Task LoadAsync()
 - Tap na fotku otevře existující `PhotoViewerPage`
 - Odstraněno globální tlačítko "📷 Fotogalerie" z `DancesPage` (nedávalo smysl dle požadavku)
 - Refit definice `GetDancePhotosAsync` přidána do `IApiClient`
+
+---
+
+## Iterace 2 – Opravy po testování (2026-04-23)
+
+### #2v2 – MVC správa fotek u tanců
+
+**Problém:** MAUI stránka hotová, ale v MVC admin neexistuje způsob jak přiřadit fotky k tancům.
+
+**Současný stav MVC:**
+- `Pages/Admin/Photo/ListPhotos.razor` – upload, toggle veřejnost, smazání. **Chybí** přiřazení k tanci.
+- `Pages/Admin/Dance/Detail.razor` – zobrazuje info, videa, texty. **Chybí** sekce fotek.
+- `POST /api/gallery/upload` nepřijímá `danceId` parametr.
+- DB entita `File.DanceId` (FK) existuje, ale není nikde v admin UI nastavitelná.
+
+**Návrh řešení:**
+1. Rozšířit `POST /api/gallery/upload` o volitelný `danceId` query parametr
+2. Přidat `PUT /api/gallery/{id}` endpoint pro úpravu fotky (změna DanceId, IsPublic)
+3. Přidat sekci "Fotografie" do `Dance/Detail.razor` (analog k sekci Videa)
+4. V `ListPhotos.razor` přidat sloupec "Tanec" s možností přiřazení
+
+### #5v2 – Odstranit "Demižón" lištu (Shell NavBar)
+
+**Problém:** Předchozí fix (styles.xml s barvou status baru) problém nevyřešil. Uživatel chce odstranit celý tmavý pás "Demižón" pod Android status barem.
+
+**Analýza:** Tmavý pás je **Shell Navigation Bar** definovaný v:
+- `AppShell.xaml`: `Shell.BackgroundColor="#9A7450"` (řádky 8-10)
+- `Styles.xaml`: Style pro Shell s `Accent` barvou
+- `AndroidManifest.xml`: `android:label="Demižón"` (zobrazuje se jako titulek)
+
+**Návrh řešení:**
+- Přidat `Shell.NavBarIsVisible="False"` na `<Shell>` element v `AppShell.xaml`
+- Tím zmizí celý tmavý pás "Demižón" globálně
+- Stránky typu detail (kde je back button) budou potřebovat vlastní navigaci zpět, ale to řeší Android systémové gesto / hardware back button
+- Revertovat styles.xml pokud už není potřeba
+
+### #6v2 – Swipe gesta na docházce (oprava)
+
+**Problém:** PanGestureRecognizer je připojen na `MainRefreshView` (RefreshView). RefreshView zachytává a konzumuje pan gesta pro pull-to-refresh, takže custom PanGestureRecognizer se nikdy nespustí.
+
+**Návrh řešení:**
+- Přesunout PanGestureRecognizer z RefreshView na **Grid uvnitř RefreshView** (`ContentGrid`)
+- Přidat `x:Name="ContentGrid"` na vnitřní Grid v AttendancePage.xaml
+- V code-behind připojit pan na `ContentGrid` místo `MainRefreshView`
+
+### #7v2 – Dlouhý stisk pro poznámku (oprava)
+
+**Problém:** TapGestureRecognizer na 📝 ikoně koliduje s TapGestureRecognizer na kartě (Border), takže tap na ikonu vždy otevře detail místo poznámky.
+
+**Analýza:** CommunityToolkit.Maui není v projektu (jen CommunityToolkit.Mvvm). Toolkit nabízí `TouchBehavior` s `LongPressCommand`.
+
+**Návrh řešení:**
+1. Přidat NuGet `CommunityToolkit.Maui` do `Demizon.Maui.csproj`
+2. Zaregistrovat `.UseMauiCommunityToolkit()` v `MauiProgram.cs`
+3. Nahradit TapGestureRecognizer na 📝 za `TouchBehavior` s `LongPressCommand`
+4. Uživatel podrží prst ~500ms na kartě → zobrazí se poznámka v DisplayAlert
+5. Krátký tap stále otevře detail (bez konfliktu)
+
+### #8v2 – Swipe na přehledu docházky (oprava)
+
+**Problém:** Stejný jako #6v2 – PanGestureRecognizer na ScrollView nefunguje, protože ScrollView konzumuje pan gesta pro scrolling.
+
+**Návrh řešení:**
+- Odebrat PanGestureRecognizer z `TableScrollView`
+- Ponechat pouze na `RootGrid` (to by mělo fungovat, protože Grid nekonzumuje gesta)
+- Alternativně: obalit obsah ScrollView do ContentView a připojit pan tam
+
+### #9v2 – Back navigace animace (oprava)
+
+**Problém:** Shell back navigace (`GoToAsync("..", true)`) je sekaná na 120Hz Android displejích. Známý problém MAUI frameworku.
+
+**Analýza:** `ShellNavigationService.GoBackAsync()` volá `Shell.Current.GoToAsync("..", true)` – parametr `true` vynucuje animaci.
+
+**Návrh řešení:**
+- Změnit `animate: true` na `animate: false` v `ShellNavigationService.GoBackAsync()`
+- Navigace zpět bude okamžitá (bez animace), ale bez sekání
+- Standardní řešení pro MAUI na 120Hz Android zařízeních
+
+### Pořadí implementace iterace 2
+
+1. **#5v2** – Shell NavBar (1 řádek)
+2. **#9v2** – Back animace (1 řádek)
+3. **#6v2** – Swipe attendance (přesun gesture na správný element)
+4. **#8v2** – Swipe overview (přesun gesture na správný element)
+5. **#7v2** – Long press (přidání CommunityToolkit.Maui + TouchBehavior)
+6. **#2v2** – MVC správa fotek (největší scope – nové UI komponenty)
