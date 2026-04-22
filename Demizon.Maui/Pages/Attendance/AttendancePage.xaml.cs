@@ -11,6 +11,10 @@ public partial class AttendancePage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
         _vm = viewModel;
+
+#if ANDROID
+        HandlerChanged += OnHandlerChanged;
+#endif
     }
 
     protected override void OnAppearing()
@@ -20,8 +24,6 @@ public partial class AttendancePage : ContentPage
             vm.LoadCommand.Execute(null);
 
 #if ANDROID
-        SetupSwipeDetector();
-
         var activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity;
         var decor = activity?.Window?.DecorView;
         if (decor is not null)
@@ -33,26 +35,10 @@ public partial class AttendancePage : ContentPage
     }
 
 #if ANDROID
-    private bool _swipeSetup;
-
-    private void SetupSwipeDetector()
+    private void OnHandlerChanged(object? sender, EventArgs e)
     {
-        if (_swipeSetup) return;
-        _swipeSetup = true;
-
-        var refreshView = MainRefreshView;
-        if (refreshView.Handler?.PlatformView is Android.Views.View nativeView)
-        {
+        if (Handler?.PlatformView is Android.Views.View nativeView)
             AttachSwipeListener(nativeView);
-        }
-        else
-        {
-            refreshView.HandlerChanged += (_, _) =>
-            {
-                if (refreshView.Handler?.PlatformView is Android.Views.View nv)
-                    AttachSwipeListener(nv);
-            };
-        }
     }
 
     private void AttachSwipeListener(Android.Views.View nativeView)
@@ -63,16 +49,11 @@ public partial class AttendancePage : ContentPage
                 () => _vm?.NextMonthCommand.Execute(null),
                 () => _vm?.PreviousMonthCommand.Execute(null)));
 
-        nativeView.SetOnTouchListener(new SwipeTouchListener(detector));
-    }
-
-    private class SwipeTouchListener(Android.Views.GestureDetector detector) : Java.Lang.Object, Android.Views.View.IOnTouchListener
-    {
-        public bool OnTouch(Android.Views.View? v, Android.Views.MotionEvent? e)
+        nativeView.Touch += (_, args) =>
         {
-            detector.OnTouchEvent(e);
-            return false; // Don't consume — let RefreshView still handle vertical
-        }
+            detector.OnTouchEvent(args.Event);
+            args.Handled = false; // Don't consume
+        };
     }
 
     private class SwipeListener(Action onSwipeLeft, Action onSwipeRight)
@@ -80,6 +61,8 @@ public partial class AttendancePage : ContentPage
     {
         private const int SwipeThreshold = 80;
         private const int SwipeVelocityThreshold = 100;
+
+        public override bool OnDown(Android.Views.MotionEvent? e) => true;
 
         public override bool OnFling(Android.Views.MotionEvent? e1, Android.Views.MotionEvent? e2, float velocityX, float velocityY)
         {

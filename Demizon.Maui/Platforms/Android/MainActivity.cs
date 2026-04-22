@@ -27,6 +27,10 @@ public class MainActivity : MauiAppCompatActivity
     protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+
+        // Ensure page content doesn't render behind the status bar
+        AndroidX.Core.View.WindowCompat.SetDecorFitsSystemWindows(Window!, true);
+
         CrossFirebase.Initialize(this);
         FirebaseCloudMessagingImplementation.OnNewIntent(Intent);
         EnsureNotificationChannel();

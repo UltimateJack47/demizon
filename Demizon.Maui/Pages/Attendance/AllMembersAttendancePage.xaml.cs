@@ -18,6 +18,10 @@ public partial class AllMembersAttendancePage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
         _vm = viewModel;
+
+#if ANDROID
+        HandlerChanged += OnHandlerChanged;
+#endif
     }
 
     protected override void OnAppearing()
@@ -26,33 +30,13 @@ public partial class AllMembersAttendancePage : ContentPage
         if (_vm is not null)
             _vm.PropertyChanged += OnViewModelPropertyChanged;
         _vm?.LoadCommand.Execute(null);
-
-#if ANDROID
-        SetupSwipeDetector();
-#endif
     }
 
 #if ANDROID
-    private bool _swipeSetup;
-
-    private void SetupSwipeDetector()
+    private void OnHandlerChanged(object? sender, EventArgs e)
     {
-        if (_swipeSetup) return;
-        _swipeSetup = true;
-
-        var scrollView = TableScrollView;
-        if (scrollView.Handler?.PlatformView is Android.Views.View nativeView)
-        {
+        if (Handler?.PlatformView is Android.Views.View nativeView)
             AttachSwipeListener(nativeView);
-        }
-        else
-        {
-            scrollView.HandlerChanged += (_, _) =>
-            {
-                if (scrollView.Handler?.PlatformView is Android.Views.View nv)
-                    AttachSwipeListener(nv);
-            };
-        }
     }
 
     private void AttachSwipeListener(Android.Views.View nativeView)
@@ -63,16 +47,11 @@ public partial class AllMembersAttendancePage : ContentPage
                 () => _vm?.NextMonthCommand.Execute(null),
                 () => _vm?.PreviousMonthCommand.Execute(null)));
 
-        nativeView.SetOnTouchListener(new SwipeTouchListener(detector));
-    }
-
-    private class SwipeTouchListener(Android.Views.GestureDetector detector) : Java.Lang.Object, Android.Views.View.IOnTouchListener
-    {
-        public bool OnTouch(Android.Views.View? v, Android.Views.MotionEvent? e)
+        nativeView.Touch += (_, args) =>
         {
-            detector.OnTouchEvent(e);
-            return false; // Don't consume — let ScrollView still handle scrolling
-        }
+            detector.OnTouchEvent(args.Event);
+            args.Handled = false;
+        };
     }
 
     private class SwipeListener(Action onSwipeLeft, Action onSwipeRight)
@@ -80,6 +59,8 @@ public partial class AllMembersAttendancePage : ContentPage
     {
         private const int SwipeThreshold = 80;
         private const int SwipeVelocityThreshold = 100;
+
+        public override bool OnDown(Android.Views.MotionEvent? e) => true;
 
         public override bool OnFling(Android.Views.MotionEvent? e1, Android.Views.MotionEvent? e2, float velocityX, float velocityY)
         {

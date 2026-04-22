@@ -91,14 +91,10 @@
                                         <Setter Property="StrokeThickness" Value="2" />
                                     </DataTrigger>
                                 </Border.Triggers>
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer
-                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.NavigateToEventCommand}"
-                                        CommandParameter="{Binding .}" />
-                                </Border.GestureRecognizers>
                                 <Border.Behaviors>
                                     <toolkit:TouchBehavior
-                                        ShouldMakeChildrenInputTransparent="False"
+                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.NavigateToEventCommand}"
+                                        CommandParameter="{Binding .}"
                                         LongPressCommand="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ShowNoteCommand}"
                                         LongPressCommandParameter="{Binding MyAttendance.Comment}"
                                         LongPressDuration="500" />
