@@ -33,15 +33,15 @@ public class MainActivity : MauiAppCompatActivity
 
         // Show FCM notifications that arrive while the app is in the foreground
         CrossFirebaseCloudMessaging.Current.NotificationReceived += (_, e) =>
-            ShowLocalNotification(e.Notification.Title ?? "Demizon", e.Notification.Body ?? string.Empty);
+            ShowLocalNotification(e.Notification.Title ?? "Demižón", e.Notification.Body ?? string.Empty);
     }
 
     private void EnsureNotificationChannel()
     {
         if (Build.VERSION.SdkInt < BuildVersionCodes.O) return;
-        var channel = new NotificationChannel(ChannelId, "Demizon", NotificationImportance.Default)
+        var channel = new NotificationChannel(ChannelId, "Demižón", NotificationImportance.Default)
         {
-            Description = "Připomínky a oznámení Demizon"
+            Description = "Připomínky a oznámení Demižón"
         };
         ((NotificationManager)GetSystemService(NotificationService)!).CreateNotificationChannel(channel);
     }

@@ -8,7 +8,7 @@ using Android.Runtime;
 namespace Demizon.Maui.Platforms.Android;
 
 // google-services.json musí být umístěn v Platforms/Android/ před buildem
-[Application(Label = "Demizon", UsesCleartextTraffic = true)]
+[Application(Label = "Demižón", UsesCleartextTraffic = true, Icon = "@mipmap/appicon", RoundIcon = "@mipmap/appicon_round")]
 public class MainApplication : MauiApplication
 {
     public MainApplication(IntPtr handle, JniHandleOwnership ownership) : base(handle, ownership) { }
