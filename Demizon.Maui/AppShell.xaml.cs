@@ -38,22 +38,35 @@ public partial class AppShell : Shell
         var decor = activity?.Window?.DecorView;
         if (decor is null) return;
 
-        // Post immediately + with delay to catch toolbar even when recreated during navigation
+        // Schedule multiple attempts — MAUI recreates toolbar during layout
         decor.Post(() => FindAndHideToolbar(decor));
-        decor.PostDelayed(() => FindAndHideToolbar(decor), 100);
-        decor.PostDelayed(() => FindAndHideToolbar(decor), 300);
+        decor.PostDelayed(() => FindAndHideToolbar(decor), 50);
+        decor.PostDelayed(() => FindAndHideToolbar(decor), 150);
+        decor.PostDelayed(() => FindAndHideToolbar(decor), 400);
+        decor.PostDelayed(() => FindAndHideToolbar(decor), 800);
     }
 
-    private static void FindAndHideToolbar(Android.Views.View? view)
+    internal static void FindAndHideToolbar(Android.Views.View? view)
     {
         if (view is AndroidX.AppCompat.Widget.Toolbar toolbar)
         {
             toolbar.Visibility = Android.Views.ViewStates.Gone;
-            // Also collapse the toolbar so its parent layout doesn't reserve space
             if (toolbar.LayoutParameters is { } lp)
             {
                 lp.Height = 0;
                 toolbar.LayoutParameters = lp;
+            }
+            toolbar.Elevation = 0;
+            // Also collapse parent container (typically AppBarLayout)
+            if (toolbar.Parent is Android.Views.View parent)
+            {
+                parent.Visibility = Android.Views.ViewStates.Gone;
+                if (parent.LayoutParameters is { } plp)
+                {
+                    plp.Height = 0;
+                    parent.LayoutParameters = plp;
+                }
+                parent.Elevation = 0;
             }
             return;
         }

@@ -18,18 +18,6 @@ public partial class AllMembersAttendancePage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
         _vm = viewModel;
-
-        var swipeLeft = new SwipeGestureRecognizer { Direction = SwipeDirection.Left, Threshold = 40 };
-        swipeLeft.Swiped += (_, _) => _vm?.NextMonthCommand.Execute(null);
-
-        var swipeRight = new SwipeGestureRecognizer { Direction = SwipeDirection.Right, Threshold = 40 };
-        swipeRight.Swiped += (_, _) => _vm?.PreviousMonthCommand.Execute(null);
-
-        if (Content is View rootView)
-        {
-            rootView.GestureRecognizers.Add(swipeLeft);
-            rootView.GestureRecognizers.Add(swipeRight);
-        }
     }
 
     protected override void OnAppearing()
@@ -38,7 +26,80 @@ public partial class AllMembersAttendancePage : ContentPage
         if (_vm is not null)
             _vm.PropertyChanged += OnViewModelPropertyChanged;
         _vm?.LoadCommand.Execute(null);
+
+#if ANDROID
+        SetupSwipeDetector();
+#endif
     }
+
+#if ANDROID
+    private bool _swipeSetup;
+
+    private void SetupSwipeDetector()
+    {
+        if (_swipeSetup) return;
+        _swipeSetup = true;
+
+        var scrollView = TableScrollView;
+        if (scrollView.Handler?.PlatformView is Android.Views.View nativeView)
+        {
+            AttachSwipeListener(nativeView);
+        }
+        else
+        {
+            scrollView.HandlerChanged += (_, _) =>
+            {
+                if (scrollView.Handler?.PlatformView is Android.Views.View nv)
+                    AttachSwipeListener(nv);
+            };
+        }
+    }
+
+    private void AttachSwipeListener(Android.Views.View nativeView)
+    {
+        var detector = new Android.Views.GestureDetector(
+            nativeView.Context,
+            new SwipeListener(
+                () => _vm?.NextMonthCommand.Execute(null),
+                () => _vm?.PreviousMonthCommand.Execute(null)));
+
+        nativeView.SetOnTouchListener(new SwipeTouchListener(detector));
+    }
+
+    private class SwipeTouchListener(Android.Views.GestureDetector detector) : Java.Lang.Object, Android.Views.View.IOnTouchListener
+    {
+        public bool OnTouch(Android.Views.View? v, Android.Views.MotionEvent? e)
+        {
+            detector.OnTouchEvent(e);
+            return false; // Don't consume — let ScrollView still handle scrolling
+        }
+    }
+
+    private class SwipeListener(Action onSwipeLeft, Action onSwipeRight)
+        : Android.Views.GestureDetector.SimpleOnGestureListener
+    {
+        private const int SwipeThreshold = 80;
+        private const int SwipeVelocityThreshold = 100;
+
+        public override bool OnFling(Android.Views.MotionEvent? e1, Android.Views.MotionEvent? e2, float velocityX, float velocityY)
+        {
+            if (e1 is null || e2 is null) return false;
+
+            float dx = e2.GetX() - e1.GetX();
+            float dy = e2.GetY() - e1.GetY();
+
+            if (Math.Abs(dx) > Math.Abs(dy) && Math.Abs(dx) > SwipeThreshold && Math.Abs(velocityX) > SwipeVelocityThreshold)
+            {
+                if (dx < 0)
+                    MainThread.BeginInvokeOnMainThread(onSwipeLeft);
+                else
+                    MainThread.BeginInvokeOnMainThread(onSwipeRight);
+                return true;
+            }
+            return false;
+        }
+    }
+#endif
 
     protected override void OnDisappearing()
     {
