@@ -19,14 +19,17 @@ public partial class AllMembersAttendancePage : ContentPage
         BindingContext = viewModel;
         _vm = viewModel;
 
-        var swipeLeft = new SwipeGestureRecognizer { Direction = SwipeDirection.Left };
+        var swipeLeft = new SwipeGestureRecognizer { Direction = SwipeDirection.Left, Threshold = 40 };
         swipeLeft.Swiped += (_, _) => _vm?.NextMonthCommand.Execute(null);
 
-        var swipeRight = new SwipeGestureRecognizer { Direction = SwipeDirection.Right };
+        var swipeRight = new SwipeGestureRecognizer { Direction = SwipeDirection.Right, Threshold = 40 };
         swipeRight.Swiped += (_, _) => _vm?.PreviousMonthCommand.Execute(null);
 
-        RootGrid.GestureRecognizers.Add(swipeLeft);
-        RootGrid.GestureRecognizers.Add(swipeRight);
+        if (Content is View rootView)
+        {
+            rootView.GestureRecognizers.Add(swipeLeft);
+            rootView.GestureRecognizers.Add(swipeRight);
+        }
     }
 
     protected override void OnAppearing()

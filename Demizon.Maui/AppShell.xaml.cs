@@ -27,24 +27,40 @@ public partial class AppShell : Shell
             SetNavBarIsVisible(CurrentPage, false);
 
 #if ANDROID
-        // Force-hide the Android toolbar which Shell.NavBarIsVisible sometimes fails to remove
-        if (Handler?.PlatformView is Android.Views.View platformView)
-            platformView.Post(() => HideToolbarRecursive(platformView));
+        HideAndroidToolbar();
 #endif
     }
 
 #if ANDROID
-    private static void HideToolbarRecursive(Android.Views.View? view)
+    private void HideAndroidToolbar()
+    {
+        var activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity;
+        var decor = activity?.Window?.DecorView;
+        if (decor is null) return;
+
+        // Post immediately + with delay to catch toolbar even when recreated during navigation
+        decor.Post(() => FindAndHideToolbar(decor));
+        decor.PostDelayed(() => FindAndHideToolbar(decor), 100);
+        decor.PostDelayed(() => FindAndHideToolbar(decor), 300);
+    }
+
+    private static void FindAndHideToolbar(Android.Views.View? view)
     {
         if (view is AndroidX.AppCompat.Widget.Toolbar toolbar)
         {
             toolbar.Visibility = Android.Views.ViewStates.Gone;
+            // Also collapse the toolbar so its parent layout doesn't reserve space
+            if (toolbar.LayoutParameters is { } lp)
+            {
+                lp.Height = 0;
+                toolbar.LayoutParameters = lp;
+            }
             return;
         }
         if (view is Android.Views.ViewGroup vg)
         {
             for (int i = 0; i < vg.ChildCount; i++)
-                HideToolbarRecursive(vg.GetChildAt(i));
+                FindAndHideToolbar(vg.GetChildAt(i));
         }
     }
 #endif
