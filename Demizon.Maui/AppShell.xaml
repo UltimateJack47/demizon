@@ -5,7 +5,6 @@
        xmlns:attendance="clr-namespace:Demizon.Maui.Pages.Attendance"
        x:Class="Demizon.Maui.AppShell"
        FlyoutBehavior="Disabled"
-       Shell.NavBarIsVisible="False"
        Shell.BackgroundColor="#9A7450"
        Shell.ForegroundColor="White"
        Shell.TitleColor="White"
@@ -25,18 +24,22 @@
         <ShellContent Title="Docházka"
                       Icon="tab_attendance.svg"
                       Route="attendance"
+                      Shell.NavBarIsVisible="False"
                       ContentTemplate="{DataTemplate attendance:AttendancePage}" />
         <ShellContent Title="Akce"
                       Icon="tab_events.svg"
                       Route="events"
+                      Shell.NavBarIsVisible="False"
                       ContentTemplate="{DataTemplate pages:EventsPage}" />
         <ShellContent Title="Tance"
                       Icon="tab_dances.svg"
                       Route="dances"
+                      Shell.NavBarIsVisible="False"
                       ContentTemplate="{DataTemplate pages:DancesPage}" />
         <ShellContent Title="Profil"
                       Icon="tab_profile.svg"
                       Route="profile"
+                      Shell.NavBarIsVisible="False"
                       ContentTemplate="{DataTemplate pages:ProfilePage}" />
     </TabBar>
 </Shell>
