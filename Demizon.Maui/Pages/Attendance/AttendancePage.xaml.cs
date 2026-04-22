@@ -18,8 +18,8 @@ public partial class AttendancePage : ContentPage
         var swipeRight = new SwipeGestureRecognizer { Direction = SwipeDirection.Right };
         swipeRight.Swiped += (_, _) => _vm?.PreviousMonthCommand.Execute(null);
 
-        ContentGrid.GestureRecognizers.Add(swipeLeft);
-        ContentGrid.GestureRecognizers.Add(swipeRight);
+        RootGrid.GestureRecognizers.Add(swipeLeft);
+        RootGrid.GestureRecognizers.Add(swipeRight);
     }
 
     protected override void OnAppearing()

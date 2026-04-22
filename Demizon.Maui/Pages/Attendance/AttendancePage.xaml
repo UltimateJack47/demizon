@@ -9,7 +9,7 @@
              x:DataType="vm:AttendanceViewModel"
              Title="Docházka">
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,*">
 
         <!-- Header: Month navigation + stats button -->
         <Border Grid.Row="0"
@@ -98,6 +98,7 @@
                                 </Border.GestureRecognizers>
                                 <Border.Behaviors>
                                     <toolkit:TouchBehavior
+                                        ShouldMakeChildrenInputTransparent="False"
                                         LongPressCommand="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ShowNoteCommand}"
                                         LongPressCommandParameter="{Binding MyAttendance.Comment}" />
                                 </Border.Behaviors>

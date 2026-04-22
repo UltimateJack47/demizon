@@ -6,9 +6,9 @@
        x:Class="Demizon.Maui.AppShell"
        FlyoutBehavior="Disabled"
        Shell.NavBarIsVisible="False"
-       Shell.BackgroundColor="#9A7450"
-       Shell.ForegroundColor="White"
-       Shell.TitleColor="White"
+       Shell.BackgroundColor="Transparent"
+       Shell.ForegroundColor="Transparent"
+       Shell.TitleColor="Transparent"
        Shell.TabBarBackgroundColor="#FAF3E8"
        Shell.TabBarTitleColor="#A8845E"
        Shell.TabBarUnselectedColor="#8A6848"
@@ -17,7 +17,6 @@
     <!-- Pre-auth route (no navbar, no tab bar) -->
     <ShellContent Route="login"
                   ContentTemplate="{DataTemplate pages:LoginPage}"
-                  Shell.NavBarIsVisible="False"
                   Shell.TabBarIsVisible="False" />
 
     <!-- Post-auth tabs -->
@@ -25,22 +24,18 @@
         <ShellContent Title="Docházka"
                       Icon="tab_attendance.svg"
                       Route="attendance"
-                      Shell.NavBarIsVisible="False"
                       ContentTemplate="{DataTemplate attendance:AttendancePage}" />
         <ShellContent Title="Akce"
                       Icon="tab_events.svg"
                       Route="events"
-                      Shell.NavBarIsVisible="False"
                       ContentTemplate="{DataTemplate pages:EventsPage}" />
         <ShellContent Title="Tance"
                       Icon="tab_dances.svg"
                       Route="dances"
-                      Shell.NavBarIsVisible="False"
                       ContentTemplate="{DataTemplate pages:DancesPage}" />
         <ShellContent Title="Profil"
                       Icon="tab_profile.svg"
                       Route="profile"
-                      Shell.NavBarIsVisible="False"
                       ContentTemplate="{DataTemplate pages:ProfilePage}" />
     </TabBar>
 </Shell>
