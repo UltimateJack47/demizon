@@ -54,7 +54,7 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     private bool _isAdmin;
 
     public bool CanSendReminder =>
-        IsAdmin && !IsRehearsal && Event is { IsCancelled: false } ev && ev.DateFrom > DateTime.Now;
+        IsAdmin && Event is { IsCancelled: false } ev && ev.DateFrom.Date > DateTime.Today;
 
     // Display labels for the Picker (Czech). Conversion to/from API values (English) happens at load/save.
     public List<string> RoleOptions { get; } = ["Tanečník", "Muzikant"];
@@ -80,7 +80,7 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
         try
         {
             var role = await tokenStorage.GetRoleAsync();
-            IsAdmin = string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) && !IsRehearsal;
+            IsAdmin = string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
 
             if (IsRehearsal)
             {
@@ -188,14 +188,24 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
 
         var confirm = await Shell.Current.DisplayAlert(
             "Upozornit na docházku",
-            "Odeslat notifikaci všem členům, kteří nemají vyplněnou docházku na tuto akci?",
+            "Odeslat notifikaci všem členům, kteří nemají vyplněnou docházku?",
             "Odeslat", "Zrušit");
         if (!confirm) return;
 
         IsBusy = true;
         try
         {
-            var result = await apiClient.NotifyMissingAttendanceAsync(EventId);
+            NotifyMissingAttendanceResponse result;
+            if (IsRehearsal)
+            {
+                var date = DateTime.Parse(RehearsalDateString!).Date;
+                result = await apiClient.NotifyMissingRehearsalAttendanceAsync(date);
+            }
+            else
+            {
+                result = await apiClient.NotifyMissingAttendanceAsync(EventId);
+            }
+
             var parts = new List<string>();
             if (result.NotifiedCount > 0)
                 parts.Add($"Notifikace odeslána {result.NotifiedCount} členům.");
@@ -203,9 +213,11 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
                 parts.Add($"{result.SkippedWithAttendance} už docházku má vyplněnou.");
             if (result.SkippedWithoutNotifications > 0)
                 parts.Add($"{result.SkippedWithoutNotifications} nemá povolené notifikace.");
+
             var message = result.NotifiedCount == 0 && result.SkippedWithoutNotifications == 0
                 ? $"Všichni ({result.SkippedWithAttendance}) už docházku mají vyplněnou."
                 : string.Join(" ", parts);
+
             await Shell.Current.DisplayAlert("Hotovo", message, "OK");
         }
         catch (Exception ex)

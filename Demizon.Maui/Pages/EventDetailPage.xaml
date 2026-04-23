@@ -218,13 +218,14 @@
                     Padding="16"
                     Margin="0,8,0,0">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Správa akce"
+                    <Label Text="Správa"
                            FontAttributes="Bold"
                            FontSize="18"
                            TextColor="#3E2723" />
 
                     <Button Text="✏️ Upravit akci"
                             Command="{Binding EditEventCommand}"
+                            IsVisible="{Binding Event.IsRehearsal, Converter={StaticResource InvertedBoolConverter}}"
                             BackgroundColor="#A8845E"
                             TextColor="White"
                             CornerRadius="12"
@@ -241,6 +242,7 @@
 
                     <Button Text="🗑️ Smazat akci"
                             Command="{Binding DeleteEventCommand}"
+                            IsVisible="{Binding Event.IsRehearsal, Converter={StaticResource InvertedBoolConverter}}"
                             BackgroundColor="Transparent"
                             TextColor="#C0392B"
                             BorderColor="#C0392B"

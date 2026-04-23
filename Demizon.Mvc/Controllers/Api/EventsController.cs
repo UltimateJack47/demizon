@@ -260,4 +260,18 @@ public class EventsController(
             _ => StatusCode(500),
         };
     }
+
+    [HttpPost("rehearsals/notify-missing-attendance")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+    public async Task<ActionResult<NotifyMissingAttendanceResponse>> NotifyMissingRehearsalAttendance([FromQuery] DateTime date)
+    {
+        var result = await attendanceReminder.NotifyMissingRehearsalAttendanceAsync(date);
+        return result.Outcome switch
+        {
+            NotifyMissingAttendanceOutcome.NotFound => NotFound(),
+            NotifyMissingAttendanceOutcome.AlreadyPast => BadRequest(new { error = "Zkouška už proběhla." }),
+            NotifyMissingAttendanceOutcome.Ok => Ok(result.Response),
+            _ => StatusCode(500),
+        };
+    }
 }

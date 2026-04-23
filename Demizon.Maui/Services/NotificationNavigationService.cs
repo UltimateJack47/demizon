@@ -14,6 +14,10 @@ public class NotificationNavigationService
                 {
                     await Shell.Current.GoToAsync($"{AppRoutes.EventDetail}?eventId={eventId}");
                 }
+                else if (e.Notification.Data.TryGetValue("rehearsalDate", out var dateObj))
+                {
+                    await Shell.Current.GoToAsync($"{AppRoutes.EventDetail}?rehearsalDate={dateObj}");
+                }
             });
         };
     }

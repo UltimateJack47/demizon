@@ -73,6 +73,63 @@ public sealed class AttendanceReminderService(
     }
 
     /// <summary>
+    /// Admin-triggered reminder for members who don't yet have an attendance record for the rehearsal on the given date.
+    /// </summary>
+    public async Task<NotifyMissingAttendanceResult> NotifyMissingRehearsalAttendanceAsync(
+        DateTime date, CancellationToken ct = default)
+    {
+        date = date.Date;
+        if (date.DayOfWeek != DayOfWeek.Friday)
+            return NotifyMissingAttendanceResult.NotFound;
+
+        if (date <= DateTime.UtcNow.Date)
+            return NotifyMissingAttendanceResult.AlreadyPast;
+
+        var membersWithAttendance = await db.Attendances
+            .Where(a => a.EventId == null && a.Date == date)
+            .Select(a => a.MemberId)
+            .ToListAsync(ct);
+
+        var membersToNotify = await db.Members
+            .Where(m => !membersWithAttendance.Contains(m.Id))
+            .Select(m => m.Id)
+            .ToListAsync(ct);
+
+        if (membersToNotify.Count == 0)
+            return NotifyMissingAttendanceResult.Ok(
+                new NotifyMissingAttendanceResponse(0, membersWithAttendance.Count, 0));
+
+        var title = "Doplň si docházku na zkoušku";
+        var body = $"Zkouška v pátek {date:d.M.yyyy}";
+        var data = new Dictionary<string, string> { ["rehearsalDate"] = date.ToString("yyyy-MM-dd") };
+        var now = DateTime.UtcNow;
+        var actualNotifiedCount = 0;
+
+        foreach (var memberId in membersToNotify)
+        {
+            var reached = await SendToMemberAsync(memberId, title, body, data, ct);
+            if (reached) actualNotifiedCount++;
+
+            db.SentNotifications.Add(new SentNotification
+            {
+                RehearsalDate = date,
+                MemberId = memberId,
+                // We use a general reminder type or could add RehearsalManualReminder if needed.
+                // RehearsalReminder1Day is closest but this is manual. 
+                // Let's use EventManualReminder even for rehearsals to block other reminders.
+                NotificationType = NotificationType.EventManualReminder,
+                SentAt = now,
+            });
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        var skippedNoDevices = membersToNotify.Count - actualNotifiedCount;
+        return NotifyMissingAttendanceResult.Ok(
+            new NotifyMissingAttendanceResponse(actualNotifiedCount, membersWithAttendance.Count, skippedNoDevices));
+    }
+
+    /// <summary>
     /// Web Push + FCM fan-out to a single member.
     /// Returns <c>true</c> if the member had at least one notification channel (subscription or device token).
     /// </summary>

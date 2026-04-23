@@ -110,6 +110,9 @@ public interface IApiClient
 
     [Post("/api/events/{id}/notify-missing-attendance")]
     Task<NotifyMissingAttendanceResponse> NotifyMissingAttendanceAsync(int id);
+    
+    [Post("/api/events/rehearsals/notify-missing-attendance")]
+    Task<NotifyMissingAttendanceResponse> NotifyMissingRehearsalAttendanceAsync([Query] DateTime date);
 
     // Videos
     [Get("/api/videos")]
