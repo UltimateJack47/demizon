@@ -196,9 +196,16 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
         try
         {
             var result = await apiClient.NotifyMissingAttendanceAsync(EventId);
-            var message = result.NotifiedCount == 0
+            var parts = new List<string>();
+            if (result.NotifiedCount > 0)
+                parts.Add($"Notifikace odeslána {result.NotifiedCount} členům.");
+            if (result.SkippedWithAttendance > 0)
+                parts.Add($"{result.SkippedWithAttendance} už docházku má vyplněnou.");
+            if (result.SkippedWithoutNotifications > 0)
+                parts.Add($"{result.SkippedWithoutNotifications} nemá povolené notifikace.");
+            var message = result.NotifiedCount == 0 && result.SkippedWithoutNotifications == 0
                 ? $"Všichni ({result.SkippedWithAttendance}) už docházku mají vyplněnou."
-                : $"Notifikace odeslána {result.NotifiedCount} členům. {result.SkippedWithAttendance} už docházku má vyplněnou.";
+                : string.Join(" ", parts);
             await Shell.Current.DisplayAlert("Hotovo", message, "OK");
         }
         catch (Exception ex)

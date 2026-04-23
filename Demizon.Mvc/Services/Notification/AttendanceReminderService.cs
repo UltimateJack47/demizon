@@ -43,16 +43,18 @@ public sealed class AttendanceReminderService(
 
         if (membersToNotify.Count == 0)
             return NotifyMissingAttendanceResult.Ok(
-                new NotifyMissingAttendanceResponse(0, membersWithAttendance.Count));
+                new NotifyMissingAttendanceResponse(0, membersWithAttendance.Count, 0));
 
         var title = "Doplň si docházku";
         var body = $"{ev.Name} – {ev.DateFrom:d.M.yyyy}{(ev.Place != null ? $" ({ev.Place})" : "")}";
         var data = new Dictionary<string, string> { ["eventId"] = ev.Id.ToString() };
         var now = DateTime.UtcNow;
+        var actualNotifiedCount = 0;
 
         foreach (var memberId in membersToNotify)
         {
-            await SendToMemberAsync(memberId, title, body, data, ct);
+            var reached = await SendToMemberAsync(memberId, title, body, data, ct);
+            if (reached) actualNotifiedCount++;
 
             db.SentNotifications.Add(new SentNotification
             {
@@ -65,14 +67,16 @@ public sealed class AttendanceReminderService(
 
         await db.SaveChangesAsync(ct);
 
+        var skippedNoDevices = membersToNotify.Count - actualNotifiedCount;
         return NotifyMissingAttendanceResult.Ok(
-            new NotifyMissingAttendanceResponse(membersToNotify.Count, membersWithAttendance.Count));
+            new NotifyMissingAttendanceResponse(actualNotifiedCount, membersWithAttendance.Count, skippedNoDevices));
     }
 
     /// <summary>
     /// Web Push + FCM fan-out to a single member.
+    /// Returns <c>true</c> if the member had at least one notification channel (subscription or device token).
     /// </summary>
-    public async Task SendToMemberAsync(
+    public async Task<bool> SendToMemberAsync(
         int memberId, string title, string body,
         Dictionary<string, string>? data, CancellationToken ct = default)
     {
@@ -92,6 +96,8 @@ public sealed class AttendanceReminderService(
                 logger.LogError(ex, "FCM send failed for member {MemberId}, token {Token}.", memberId, dt.Token);
             }
         }
+
+        return memberSubs.Count > 0 || deviceTokens.Count > 0;
     }
 
     /// <summary>
