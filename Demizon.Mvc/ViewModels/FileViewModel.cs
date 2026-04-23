@@ -1,3 +1,4 @@
+using Demizon.Dal.Entities;
 using File = Demizon.Dal.Entities.File;
 
 namespace Demizon.Mvc.ViewModels;
@@ -25,6 +26,8 @@ public class FileViewModel
     public bool IsPublic { get; set; }
 
     public bool HasDbData { get; set; }
+
+    public FileKind Kind { get; set; } = FileKind.Image;
 }
 
 public static class FileMappingExtensions
@@ -40,6 +43,7 @@ public static class FileMappingExtensions
         DanceId = entity.DanceId,
         IsPublic = entity.IsPublic,
         HasDbData = entity.Data != null,
+        Kind = entity.Kind,
     };
 
     public static File ToEntity(this FileViewModel vm) => new()

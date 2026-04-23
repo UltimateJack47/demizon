@@ -76,6 +76,8 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.HasIndex(x => x.DanceId);
             b.Property(s => s.Path).IsRequired();
             b.Property(s => s.IsPublic).HasDefaultValue(false).IsRequired();
+            b.Property(s => s.Kind).HasConversion<int>().HasDefaultValue(FileKind.Image).IsRequired();
+            b.HasIndex(x => new { x.DanceId, x.Kind });
         });
 
         modelBuilder.Entity<VideoLink>(b =>

@@ -14,6 +14,8 @@ public class DanceViewModel
 
     public string? Description { get; set; }
 
+    public string? InternalDescription { get; set; }
+
     public string? Lyrics { get; set; }
 
     public List<VideoLinkViewModel> Videos { get; set; } = [];
@@ -30,6 +32,7 @@ public static class DanceMappingExtensions
         IsVisible = entity.IsVisible,
         Region = entity.Region,
         Description = entity.Description,
+        InternalDescription = entity.InternalDescription,
         Lyrics = entity.Lyrics,
         Videos = entity.Videos?.Select(v => v.ToViewModel()).ToList() ?? [],
         Files = entity.Files?.Select(f => f.ToViewModel()).ToList() ?? [],
@@ -42,6 +45,7 @@ public static class DanceMappingExtensions
         IsVisible = vm.IsVisible,
         Region = vm.Region,
         Description = vm.Description,
+        InternalDescription = vm.InternalDescription,
         Lyrics = vm.Lyrics,
     };
 }

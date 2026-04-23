@@ -16,7 +16,13 @@
                               Variant="Variant.Outlined" Margin="Margin.Dense"/>
             </MudItem>
             <MudItem xs="12">
-                <MudTextField @bind-Value="Model.Description" Label="Popis tance" Lines="3"
+                <MudTextField @bind-Value="Model.Description" Label="Veřejný popis" Lines="3"
+                              HelperText="Zobrazí se všem návštěvníkům webu"
+                              Variant="Variant.Outlined" Margin="Margin.Dense"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="Model.InternalDescription" Label="Interní popis" Lines="3"
+                              HelperText="Zobrazí se jen přihlášeným členům (web admin, mobilní app)"
                               Variant="Variant.Outlined" Margin="Margin.Dense"/>
             </MudItem>
             <MudItem xs="12">

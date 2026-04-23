@@ -1,5 +1,11 @@
 ﻿namespace Demizon.Dal.Entities;
 
+public enum FileKind
+{
+    Image = 0,
+    Document = 1
+}
+
 public class File
 {
     public int Id { get; set; }
@@ -25,4 +31,6 @@ public class File
     public byte[]? Data { get; set; }
 
     public byte[]? ThumbnailData { get; set; }
+
+    public FileKind Kind { get; set; } = FileKind.Image;
 }

@@ -1,7 +1,11 @@
-﻿@page "/Dances"
+@page "/Dances"
 @using Demizon.Core.Services.Dance
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.Pages.Public.Components
 @using Demizon.Mvc.ViewModels
 @using Microsoft.EntityFrameworkCore
+
+@inject IDialogService DialogService
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
@@ -39,7 +43,9 @@ else
 
                         @{
                             var publicVideos = dance.Videos.Where(v => v.IsVisible && !v.IsInternal).ToList();
-                            var publicPhotos = dance.Files.Where(f => f.IsPublic).ToList();
+                            var publicPhotos = dance.Files
+                                .Where(f => f.IsPublic && f.Kind == FileKind.Image)
+                                .ToList();
                         }
 
                         @if (publicVideos.Any())
@@ -63,12 +69,25 @@ else
                                 @Localizer[nameof(DemizonLocales.Photos)]
                             </MudText>
                             <div class="demi-gallery-grid" style="gap: 6px;">
-                                @foreach (var photo in publicPhotos.Take(4))
+                                @for (var i = 0; i < Math.Min(4, publicPhotos.Count); i++)
                                 {
-                                    <MudImage Src="@(photo.HasDbData ? $"/api/files/{photo.Id}/image?size=thumb" : photo.Path)"
-                                              Alt="@dance.Name"
-                                              ObjectFit="ObjectFit.Cover"
-                                              Style="border-radius: 4px; height: 80px; width: 100%;" />
+                                    var idx = i;
+                                    var photo = publicPhotos[idx];
+                                    <div role="button" tabindex="0" style="cursor: pointer; position: relative;"
+                                         @onclick="() => OpenGallery(dance, publicPhotos, idx)">
+                                        <MudImage Src="@(photo.HasDbData ? $"/api/files/{photo.Id}/image?size=thumb" : photo.Path)"
+                                                  Alt="@dance.Name"
+                                                  ObjectFit="ObjectFit.Cover"
+                                                  Style="border-radius: 4px; height: 80px; width: 100%; display: block;" />
+                                        @if (idx == 3 && publicPhotos.Count > 4)
+                                        {
+                                            <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.55);
+                                                        display: flex; align-items: center; justify-content: center;
+                                                        color: white; font-weight: 600; border-radius: 4px;">
+                                                +@(publicPhotos.Count - 4)
+                                            </div>
+                                        }
+                                    </div>
                                 }
                             </div>
                         }
@@ -95,6 +114,24 @@ else
             .OrderBy(x => x.Name)
             .ToListAsync();
         VisibleDances = dances.Select(x => x.ToViewModel()).ToList();
+    }
+
+    private async Task OpenGallery(DanceViewModel dance, List<FileViewModel> photos, int startIndex)
+    {
+        var parameters = new DialogParameters
+        {
+            { "PhotoIds", photos.Select(p => p.Id).ToList() },
+            { "StartIndex", startIndex },
+            { "DanceName", dance.Name }
+        };
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true,
+            CloseOnEscapeKey = true,
+            BackdropClick = true
+        };
+        await DialogService.ShowAsync<DanceGalleryDialog>(dance.Name, parameters, options);
     }
 
 }

@@ -19,8 +19,11 @@ public static class ContractMappingExtensions
         new(a.Id, a.Status.ToString().ToLowerInvariant(), a.Comment, a.ActivityRole?.ToString(), a.LastUpdated);
 
     public static DanceDto ToDto(this Dal.Entities.Dance d) =>
-        new(d.Id, d.Name, d.Region, d.Description, d.Lyrics,
+        new(d.Id, d.Name, d.Region, d.Description, d.InternalDescription, d.Lyrics,
             d.Videos.Where(v => v.IsVisible).Select(v => v.ToDto()).ToList());
+
+    public static DanceDocumentDto ToDocumentDto(this Dal.Entities.File f) =>
+        new(f.Id, System.IO.Path.GetFileName(f.Path), f.ContentType, f.FileSize);
 
     public static VideoLinkDto ToDto(this Dal.Entities.VideoLink v) =>
         new(v.Id, v.Name, v.Url, v.Year, v.IsVisible, v.IsInternal);

@@ -3,6 +3,7 @@
 @using Demizon.Core.Services.FileUpload
 @using Demizon.Core.Services.Dance
 @using Demizon.Core.Services.VideoLink
+@using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.Dance.Components
 @using Demizon.Mvc.Pages.Admin.VideoLink.Components
 @using Demizon.Mvc.ViewModels
@@ -82,10 +83,20 @@ else
                         @if (!string.IsNullOrWhiteSpace(Model.Description))
                         {
                             <MudDivider/>
-                            <MudListItem T="string" Icon="@Icons.Material.Filled.Description" IconColor="Color.Default">
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Public" IconColor="Color.Default">
                                 <MudStack Spacing="0">
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Popis</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Veřejný popis</MudText>
                                     <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@Model.Description</MudText>
+                                </MudStack>
+                            </MudListItem>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.InternalDescription))
+                        {
+                            <MudDivider/>
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Lock" IconColor="Color.Warning">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Interní popis</MudText>
+                                    <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@Model.InternalDescription</MudText>
                                 </MudStack>
                             </MudListItem>
                         }
@@ -103,130 +114,160 @@ else
             </MudCard>
         </MudItem>
 
-        <!-- ─── Videa ─── -->
+        <!-- ─── Taby: Videa / Fotky / Dokumenty ─── -->
         <MudItem xs="12" md="8">
             <MudCard Elevation="2" Style="height: 100%;">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                            <MudIcon Icon="@Icons.Material.Filled.VideoLibrary" Color="Color.Primary"/>
-                            <MudText Typo="Typo.h6">Videa</MudText>
-                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
-                                @Model.Videos.Count
-                            </MudChip>
+                <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+
+                    <!-- Videa -->
+                    <MudTabPanel Icon="@Icons.Material.Filled.VideoLibrary" Text="@($"Videa ({Model.Videos.Count})")">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                            <MudText Typo="Typo.subtitle1">Videa</MudText>
+                            <MudSpacer/>
+                            <AuthorizeView Roles="Admin">
+                                <MudTooltip Text="Propojit existující video">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Link" Color="Color.Secondary"
+                                                   OnClick="OpenLinkVideoDialog"/>
+                                </MudTooltip>
+                                <MudTooltip Text="Přidat nové video">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary"
+                                                   OnClick="OpenCreateVideoDialog"/>
+                                </MudTooltip>
+                            </AuthorizeView>
                         </MudStack>
-                    </CardHeaderContent>
-                    <CardHeaderActions>
-                        <AuthorizeView Roles="Admin">
-                            <MudTooltip Text="Propojit existující video">
-                                <MudIconButton Icon="@Icons.Material.Filled.Link" Color="Color.Secondary"
-                                               OnClick="OpenLinkVideoDialog"/>
-                            </MudTooltip>
-                            <MudTooltip Text="Přidat nové video">
-                                <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary"
-                                               OnClick="OpenCreateVideoDialog"/>
-                            </MudTooltip>
-                        </AuthorizeView>
-                    </CardHeaderActions>
-                </MudCardHeader>
-                <MudCardContent>
-                    @if (Model.Videos.Count == 0)
-                    {
-                        <MudText Color="Color.Secondary" Typo="Typo.body2">Žádná videa k zobrazení.</MudText>
-                    }
-                    else
-                    {
-                        <MudGrid Spacing="2">
-                            @foreach (var video in Model.Videos)
-                            {
-                                <MudItem xs="12" sm="6">
-                                    <MudPaper Outlined="true">
-                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="pa-2">
-                                            <MudChip T="string" Size="Size.Small" Color="Color.Primary">@video.Year</MudChip>
-                                            <MudLink Href="@($"/Videos/Detail/{video.Id}")" Typo="Typo.subtitle2">@video.Name</MudLink>
-                                            @if (video.IsInternal)
-                                            {
-                                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
-                                            }
-                                            <MudSpacer/>
+                        @if (Model.Videos.Count == 0)
+                        {
+                            <MudText Color="Color.Secondary" Typo="Typo.body2">Žádná videa k zobrazení.</MudText>
+                        }
+                        else
+                        {
+                            <MudGrid Spacing="2">
+                                @foreach (var video in Model.Videos)
+                                {
+                                    <MudItem xs="12" lg="6">
+                                        <MudPaper Outlined="true">
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="pa-2">
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Primary">@video.Year</MudChip>
+                                                <MudLink Href="@($"/Videos/Detail/{video.Id}")" Typo="Typo.subtitle2">@video.Name</MudLink>
+                                                @if (video.IsInternal)
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
+                                                }
+                                                <MudSpacer/>
+                                                <AuthorizeView Roles="Admin">
+                                                    <MudTooltip Text="Odpojit video od tance">
+                                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.LinkOff"
+                                                                       Color="Color.Warning"
+                                                                       OnClick="() => UnlinkVideo(video.Id)"/>
+                                                    </MudTooltip>
+                                                </AuthorizeView>
+                                            </MudStack>
+                                            <div class="demi-video-embed">
+                                                <iframe src="@video.Url" title="@video.Name" allowfullscreen loading="lazy"></iframe>
+                                            </div>
+                                        </MudPaper>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        }
+                    </MudTabPanel>
+
+                    <!-- Fotky -->
+                    <MudTabPanel Icon="@Icons.Material.Filled.PhotoLibrary" Text="@($"Fotky ({Photos.Count})")">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                            <MudText Typo="Typo.subtitle1">Fotografie</MudText>
+                            <MudSpacer/>
+                            <AuthorizeView Roles="Admin">
+                                <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadDancePhotos" Accept="image/*">
+                                    <CustomContent Context="upload">
+                                        <MudTooltip Text="Nahrát fotky k tanci">
+                                            <MudIconButton Icon="@Icons.Material.Filled.CloudUpload" Color="Color.Primary"
+                                                           OnClick="@upload.OpenFilePickerAsync"
+                                                           Disabled="@_uploadingPhotos"/>
+                                        </MudTooltip>
+                                    </CustomContent>
+                                </MudFileUpload>
+                            </AuthorizeView>
+                        </MudStack>
+                        @if (Photos.Count == 0)
+                        {
+                            <MudText Color="Color.Secondary" Typo="Typo.body2">Žádné fotografie k zobrazení.</MudText>
+                        }
+                        else
+                        {
+                            <MudGrid Spacing="2">
+                                @foreach (var photo in Photos)
+                                {
+                                    <MudItem xs="6" sm="4" md="4" lg="3">
+                                        <MudPaper Outlined="true" Class="pa-1" Style="position: relative;">
+                                            <img src="/api/files/@photo.Id/image?size=thumb" alt="photo"
+                                                 style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:4px; display:block;"/>
                                             <AuthorizeView Roles="Admin">
-                                                <MudTooltip Text="Odpojit video od tance">
-                                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.LinkOff"
-                                                                   Color="Color.Warning"
-                                                                   OnClick="() => UnlinkVideo(video.Id)"/>
-                                                </MudTooltip>
+                                                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mt-1">
+                                                    <MudTooltip Text="@(photo.IsPublic ? "Veřejné – viditelné na webu" : "Soukromé – pouze v admin")">
+                                                        <MudSwitch T="bool" Value="@photo.IsPublic"
+                                                                   ValueChanged="@((bool val) => TogglePhotoPublic(photo, val))"
+                                                                   Color="Color.Success" Size="Size.Small"/>
+                                                    </MudTooltip>
+                                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                                                                   Color="Color.Error" OnClick="() => DeleteDancePhoto(photo.Id)"/>
+                                                </MudStack>
+                                            </AuthorizeView>
+                                        </MudPaper>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        }
+                    </MudTabPanel>
+
+                    <!-- Dokumenty -->
+                    <MudTabPanel Icon="@Icons.Material.Filled.Description" Text="@($"Dokumenty ({Documents.Count})")">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                            <MudText Typo="Typo.subtitle1">Dokumenty</MudText>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Jen pro členy</MudChip>
+                            <MudSpacer/>
+                            <AuthorizeView Roles="Admin">
+                                <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadDanceDocuments"
+                                               Accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                                    <CustomContent Context="upload">
+                                        <MudTooltip Text="Nahrát dokument (PDF / DOCX)">
+                                            <MudIconButton Icon="@Icons.Material.Filled.UploadFile" Color="Color.Primary"
+                                                           OnClick="@upload.OpenFilePickerAsync"
+                                                           Disabled="@_uploadingDocuments"/>
+                                        </MudTooltip>
+                                    </CustomContent>
+                                </MudFileUpload>
+                            </AuthorizeView>
+                        </MudStack>
+                        @if (Documents.Count == 0)
+                        {
+                            <MudText Color="Color.Secondary" Typo="Typo.body2">Žádné dokumenty k zobrazení.</MudText>
+                        }
+                        else
+                        {
+                            <MudList T="string" Dense="true">
+                                @foreach (var doc in Documents)
+                                {
+                                    <MudListItem T="string" Icon="@DocumentIcon(doc.ContentType)" IconColor="Color.Primary">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                            <MudStack Spacing="0" Style="flex: 1; min-width: 0;">
+                                                <MudLink Href="@($"/api/files/{doc.Id}/document")" Target="_blank" Typo="Typo.body2">
+                                                    @System.IO.Path.GetFileName(doc.Path)
+                                                </MudLink>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">@FormatFileSize(doc.FileSize)</MudText>
+                                            </MudStack>
+                                            <AuthorizeView Roles="Admin">
+                                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                                                               Color="Color.Error" OnClick="() => DeleteDanceDocument(doc.Id)"/>
                                             </AuthorizeView>
                                         </MudStack>
-                                        <div class="demi-video-embed">
-                                            <iframe src="@video.Url" title="@video.Name" allowfullscreen loading="lazy"></iframe>
-                                        </div>
-                                    </MudPaper>
-                                </MudItem>
-                            }
-                        </MudGrid>
-                    }
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        }
+                    </MudTabPanel>
 
-        <!-- ─── Fotografie ─── -->
-        <MudItem xs="12">
-            <MudCard Elevation="2">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                            <MudIcon Icon="@Icons.Material.Filled.PhotoLibrary" Color="Color.Primary"/>
-                            <MudText Typo="Typo.h6">Fotografie</MudText>
-                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
-                                @Model.Files.Count
-                            </MudChip>
-                        </MudStack>
-                    </CardHeaderContent>
-                    <CardHeaderActions>
-                        <AuthorizeView Roles="Admin">
-                            <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadDancePhotos" Accept="image/*">
-                                <CustomContent Context="upload">
-                                    <MudTooltip Text="Nahrát fotky k tanci">
-                                        <MudIconButton Icon="@Icons.Material.Filled.CloudUpload" Color="Color.Primary"
-                                                       OnClick="@upload.OpenFilePickerAsync"
-                                                       Disabled="@_uploadingPhotos"/>
-                                    </MudTooltip>
-                                </CustomContent>
-                            </MudFileUpload>
-                        </AuthorizeView>
-                    </CardHeaderActions>
-                </MudCardHeader>
-                <MudCardContent>
-                    @if (Model.Files.Count == 0)
-                    {
-                        <MudText Color="Color.Secondary" Typo="Typo.body2">Žádné fotografie k zobrazení.</MudText>
-                    }
-                    else
-                    {
-                        <MudGrid Spacing="2">
-                            @foreach (var photo in Model.Files)
-                            {
-                                <MudItem xs="6" sm="4" md="3" lg="2">
-                                    <MudPaper Outlined="true" Class="pa-1" Style="position: relative;">
-                                        <img src="/api/files/@photo.Id/image?size=thumb" alt="photo"
-                                             style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:4px; display:block;"/>
-                                        <AuthorizeView Roles="Admin">
-                                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mt-1">
-                                                <MudTooltip Text="@(photo.IsPublic ? "Veřejné – viditelné na webu" : "Soukromé – pouze v admin")">
-                                                    <MudSwitch T="bool" Value="@photo.IsPublic"
-                                                               ValueChanged="@(val => TogglePhotoPublic(photo, val))"
-                                                               Color="Color.Success" Size="Size.Small"/>
-                                                </MudTooltip>
-                                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
-                                                               Color="Color.Error" OnClick="() => DeleteDancePhoto(photo.Id)"/>
-                                            </MudStack>
-                                        </AuthorizeView>
-                                    </MudPaper>
-                                </MudItem>
-                            }
-                        </MudGrid>
-                    }
-                </MudCardContent>
+                </MudTabs>
             </MudCard>
         </MudItem>
 
@@ -234,9 +275,13 @@ else
 }
 
 @code {
+
     [Parameter] public int Id { get; set; }
 
     private DanceViewModel Model { get; set; } = new();
+
+    private List<FileViewModel> Photos => Model.Files.Where(f => f.Kind == FileKind.Image).ToList();
+    private List<FileViewModel> Documents => Model.Files.Where(f => f.Kind == FileKind.Document).ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -252,7 +297,12 @@ else
         if (dance is null) return;
         Model = dance.ToViewModel();
         Model.Videos = dance.Videos.OrderByDescending(x => x.Year).Select(x => x.ToViewModel()).ToList();
-        Model.Files = dance.Files.Where(f => f.Data != null).OrderByDescending(f => f.Id).Select(f => f.ToViewModel()).ToList();
+        Model.Files = dance.Files
+            .Where(f => f.Data != null)
+            .OrderBy(f => f.Kind)
+            .ThenByDescending(f => f.Id)
+            .Select(f => f.ToViewModel())
+            .ToList();
         PageService.SetTitle(Model.Name);
     }
 
@@ -367,7 +417,8 @@ else
                         Data = result.Data,
                         ThumbnailData = result.ThumbnailData,
                         IsPublic = false,
-                        DanceId = Id
+                        DanceId = Id,
+                        Kind = FileKind.Image
                     };
                     await FileService.CreateAsync(entity);
                 }
@@ -414,5 +465,100 @@ else
             await LoadDance();
             Snackbar.Add("Fotografie smazána.", Severity.Success);
         }
+    }
+
+    // ─── Document management ───
+
+    private bool _uploadingDocuments;
+
+    private static readonly string[] AllowedDocExtensions = { ".pdf", ".doc", ".docx" };
+
+    private async Task UploadDanceDocuments(IReadOnlyList<IBrowserFile> files)
+    {
+        _uploadingDocuments = true;
+        StateHasChanged();
+
+        try
+        {
+            var uploaded = 0;
+            foreach (var file in files)
+            {
+                var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
+                if (!AllowedDocExtensions.Contains(ext))
+                {
+                    Snackbar.Add($"Soubor {file.Name} není podporovaný formát.", Severity.Warning);
+                    continue;
+                }
+
+                await using var stream = file.OpenReadStream(25 * 1024 * 1024);
+                var result = await FileUploadService.UploadDocumentToDbAsync(new FileUploadRequest
+                {
+                    Stream = stream,
+                    FileExtension = ext,
+                    FileName = file.Name,
+                    FileSize = file.Size,
+                    ContentType = file.ContentType
+                });
+
+                if (result.IsSuccessful)
+                {
+                    var entity = new Dal.Entities.File
+                    {
+                        Path = file.Name,
+                        FileExtension = result.FileExtension,
+                        ContentType = result.ContentType,
+                        FileSize = result.FileSize,
+                        Data = result.Data,
+                        ThumbnailData = null,
+                        IsPublic = false,
+                        DanceId = Id,
+                        Kind = FileKind.Document
+                    };
+                    await FileService.CreateAsync(entity);
+                    uploaded++;
+                }
+            }
+
+            if (uploaded > 0)
+                Snackbar.Add($"Nahráno {uploaded} dokumentů k tanci.", Severity.Success);
+            await LoadDance();
+        }
+        catch
+        {
+            Snackbar.Add("Nahrávání dokumentu se nezdařilo.", Severity.Error);
+        }
+        finally
+        {
+            _uploadingDocuments = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteDanceDocument(int id)
+    {
+        var confirm = await DialogService.ShowMessageBoxAsync("Smazat dokument?",
+            "Dokument bude trvale smazán.", "Ano", "Zrušit", null,
+            new DialogOptions { Position = DialogPosition.Center, CloseButton = false });
+        if (confirm is true)
+        {
+            await FileService.DeleteAsync(id);
+            await LoadDance();
+            Snackbar.Add("Dokument smazán.", Severity.Success);
+        }
+    }
+
+    private static string DocumentIcon(string contentType) => contentType switch
+    {
+        "application/pdf" => Icons.Material.Filled.PictureAsPdf,
+        "application/msword" => Icons.Material.Filled.Description,
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => Icons.Material.Filled.Description,
+        _ => Icons.Material.Filled.InsertDriveFile
+    };
+
+    private static string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:0.#} kB";
+        return $"{bytes / (1024.0 * 1024.0):0.##} MB";
     }
 }

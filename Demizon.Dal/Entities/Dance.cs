@@ -14,6 +14,8 @@ public class Dance
 
     public string? Description { get; set; }
 
+    public string? InternalDescription { get; set; }
+
     public virtual List<File> Files { get; set; } = [];
 
     public virtual List<VideoLink> Videos { get; set; } = [];

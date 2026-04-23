@@ -67,6 +67,25 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
         };
     }
 
+    public async Task<FileUploadResult> UploadDocumentToDbAsync(FileUploadRequest fileRequest)
+    {
+        using var ms = new MemoryStream();
+        await fileRequest.Stream.CopyToAsync(ms);
+        var bytes = ms.ToArray();
+
+        return new FileUploadResult
+        {
+            FileExtension = fileRequest.FileExtension,
+            FileName = fileRequest.FileName,
+            RelativePath = "db-stored",
+            ContentType = fileRequest.ContentType,
+            FileSize = bytes.Length,
+            Data = bytes,
+            ThumbnailData = null,
+            IsSuccessful = true
+        };
+    }
+
     private static byte[] OptimizeImage(byte[] imageBytes, int maxWidth, int quality)
     {
         using var image = new MagickImage(imageBytes);

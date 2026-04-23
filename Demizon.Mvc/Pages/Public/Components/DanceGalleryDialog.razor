@@ -1,0 +1,62 @@
+@using MudBlazor
+
+<MudDialog DefaultFocus="DefaultFocus.Element" Class="demi-gallery-dialog">
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.PhotoLibrary" Color="Color.Primary"/>
+            <MudText Typo="Typo.h6">@DanceName</MudText>
+            <MudSpacer/>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                @(_currentIndex + 1) / @PhotoIds.Count
+            </MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="Close"/>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        @if (PhotoIds.Count == 0)
+        {
+            <MudText Color="Color.Secondary">Žádné fotografie.</MudText>
+        }
+        else
+        {
+            <MudCarousel @ref="_carousel"
+                         TData="int"
+                         ItemsSource="PhotoIds"
+                         SelectedIndex="@_currentIndex"
+                         SelectedIndexChanged="OnIndexChanged"
+                         AutoCycle="false"
+                         ShowArrows="@(PhotoIds.Count > 1)"
+                         ShowBullets="@(PhotoIds.Count > 1 && PhotoIds.Count <= 15)"
+                         EnableSwipeGesture="true"
+                         Style="height: min(80vh, 720px); background: #000;">
+                <ItemTemplate>
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                        <img src="@($"/api/files/{context}/image?size=full")"
+                             alt="photo"
+                             style="max-width: 100%; max-height: 100%; object-fit: contain;"/>
+                    </div>
+                </ItemTemplate>
+            </MudCarousel>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public List<int> PhotoIds { get; set; } = [];
+    [Parameter] public int StartIndex { get; set; }
+    [Parameter] public string DanceName { get; set; } = "";
+
+    private MudCarousel<int>? _carousel;
+    private int _currentIndex;
+
+    protected override void OnInitialized()
+    {
+        _currentIndex = Math.Clamp(StartIndex, 0, Math.Max(0, PhotoIds.Count - 1));
+    }
+
+    private void OnIndexChanged(int index) => _currentIndex = index;
+
+    private void Close() => MudDialog.Close(DialogResult.Ok(true));
+}

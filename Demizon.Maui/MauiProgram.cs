@@ -36,6 +36,9 @@ public static class MauiProgram
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(baseUrl))
             .AddHttpMessageHandler<AuthHandler>();
 
+        // Services
+        services.AddTransient<IDocumentService, DocumentService>();
+
         // ViewModels
         services.AddSingleton<NotificationSyncService>();
         services.AddSingleton<NotificationNavigationService>();

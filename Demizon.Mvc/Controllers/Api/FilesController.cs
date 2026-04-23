@@ -1,6 +1,7 @@
 using Demizon.Contracts.Gallery;
 using Demizon.Core.Services.File;
 using Demizon.Core.Services.FileUpload;
+using Demizon.Dal.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,10 @@ public class FilesController(IFileService fileService) : ControllerBase
         try
         {
             var file = await fileService.GetOneAsync(id);
+
+            // Documents are served via dedicated endpoint
+            if (file.Kind != FileKind.Image)
+                return NotFound();
 
             // Non-public photos are only visible to authenticated users
             if (!file.IsPublic && !User.Identity?.IsAuthenticated == true)
@@ -40,13 +45,32 @@ public class FilesController(IFileService fileService) : ControllerBase
     public async Task<ActionResult<List<GalleryPhotoDto>>> GetGalleryPhotos()
     {
         var photos = await fileService.GetAll()
-            .Where(f => f.IsPublic && f.Data != null)
+            .Where(f => f.IsPublic && f.Kind == FileKind.Image && f.Data != null)
             .Include(f => f.Dance)
             .OrderByDescending(f => f.Id)
             .Select(f => new GalleryPhotoDto(f.Id, f.Dance != null ? f.Dance.Name : null))
             .ToListAsync();
 
         return Ok(photos);
+    }
+
+    [HttpGet("{id:int}/document")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public async Task<IActionResult> GetDocument(int id)
+    {
+        try
+        {
+            var file = await fileService.GetOneAsync(id);
+            if (file.Kind != FileKind.Document || file.Data is null || file.Data.Length == 0)
+                return NotFound();
+
+            var fileName = System.IO.Path.GetFileName(file.Path);
+            return File(file.Data, file.ContentType, fileName);
+        }
+        catch (Common.Exceptions.EntityNotFoundException)
+        {
+            return NotFound();
+        }
     }
 }
 

@@ -6,7 +6,7 @@ using Demizon.Maui.Services;
 namespace Demizon.Maui.ViewModels;
 
 [QueryProperty(nameof(DanceId), "danceId")]
-public partial class DanceDetailViewModel(IApiClient apiClient) : ObservableObject
+public partial class DanceDetailViewModel(IApiClient apiClient, IDocumentService documentService) : ObservableObject
 {
     [ObservableProperty]
     private int _danceId;
@@ -27,7 +27,12 @@ public partial class DanceDetailViewModel(IApiClient apiClient) : ObservableObje
     [NotifyPropertyChangedFor(nameof(HasPhotos))]
     private List<GalleryPhotoItem> _photos = [];
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDocuments))]
+    private List<DanceDocumentDto> _documents = [];
+
     public bool HasPhotos => Photos.Count > 0;
+    public bool HasDocuments => Documents.Count > 0;
 
     [RelayCommand]
     public async Task LoadAsync()
@@ -52,6 +57,16 @@ public partial class DanceDetailViewModel(IApiClient apiClient) : ObservableObje
             catch
             {
                 Photos = [];
+            }
+
+            try
+            {
+                var docs = await apiClient.GetDanceDocumentsAsync(DanceId);
+                Documents = docs;
+            }
+            catch
+            {
+                Documents = [];
             }
         }
         catch (Exception) { ErrorMessage = "Nepodařilo se načíst tanec."; }
@@ -87,5 +102,24 @@ public partial class DanceDetailViewModel(IApiClient apiClient) : ObservableObje
         var index = Photos.IndexOf(photo);
         await Shell.Current.GoToAsync(AppRoutes.PhotoViewer, true,
             new Dictionary<string, object> { ["Photos"] = Photos, ["Index"] = index });
+    }
+
+    [RelayCommand]
+    private async Task OpenDocumentAsync(DanceDocumentDto document)
+    {
+        if (document is null) return;
+        IsBusy = true;
+        try
+        {
+            var ok = await documentService.DownloadAndOpenAsync(document.Id, document.FileName, document.ContentType);
+            if (!ok)
+            {
+                await Shell.Current.DisplayAlert("Chyba", "Nepodařilo se otevřít dokument.", "OK");
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 }

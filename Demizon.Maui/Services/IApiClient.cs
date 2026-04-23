@@ -73,6 +73,12 @@ public interface IApiClient
     [Get("/api/dances/{id}/photos")]
     Task<List<Demizon.Contracts.Gallery.GalleryPhotoDto>> GetDancePhotosAsync(int id);
 
+    [Get("/api/dances/{id}/documents")]
+    Task<List<DanceDocumentDto>> GetDanceDocumentsAsync(int id);
+
+    [Get("/api/files/{id}/document")]
+    Task<HttpResponseMessage> DownloadDocumentAsync(int id);
+
     [Get("/api/events/{id}/attendees")]
     Task<EventAttendeesDto> GetEventAttendeesAsync(int id);
     
