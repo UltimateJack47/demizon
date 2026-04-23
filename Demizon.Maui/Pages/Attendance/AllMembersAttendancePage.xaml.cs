@@ -33,14 +33,57 @@ public partial class AllMembersAttendancePage : ContentPage
         var activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity;
         if (activity is not null)
         {
-            Demizon.Maui.Platforms.Android.MainActivity.CurrentSwipeInterceptor =
-                new Demizon.Maui.Platforms.Android.SwipeGestureInterceptor(
-                    activity,
-                    onSwipeLeft:  () => MainThread.BeginInvokeOnMainThread(() => _vm?.NextMonthCommand.Execute(null)),
-                    onSwipeRight: () => MainThread.BeginInvokeOnMainThread(() => _vm?.PreviousMonthCommand.Execute(null)));
+            var interceptor = new Demizon.Maui.Platforms.Android.SwipeGestureInterceptor(
+                activity,
+                onSwipeLeft:  () => MainThread.BeginInvokeOnMainThread(() => _vm?.NextMonthCommand.Execute(null)),
+                onSwipeRight: () => MainThread.BeginInvokeOnMainThread(() => _vm?.PreviousMonthCommand.Execute(null)));
+
+            // Touch inside the rendered data-cell area should scroll the inner
+            // ScrollView horizontally, not flip months. Exempt TableGrid's bounds
+            // minus the name column (tapping the name column is still a month swipe,
+            // as is tapping empty space below the last member row).
+            interceptor.ShouldIgnoreStart = IsInsideDataArea;
+            Demizon.Maui.Platforms.Android.MainActivity.CurrentSwipeInterceptor = interceptor;
         }
 #endif
     }
+
+#if ANDROID
+    /// <summary>
+    /// Returns true when a touch at the given screen coordinates should be left to
+    /// the inner ScrollView instead of flipping the month. The exclusion zone is
+    /// the rendered data-cell rectangle of <see cref="TableGrid"/>, minus the
+    /// "Člen" column width — i.e. only where the user can meaningfully see
+    /// horizontally-scrollable content.
+    /// </summary>
+    private bool IsInsideDataArea(float rawX, float rawY)
+    {
+        if (TableGrid.Handler?.PlatformView is not Android.Views.View tg) return false;
+        if (TableScrollView.Handler?.PlatformView is not Android.Views.View sv) return false;
+        if (tg.Width <= 0 || tg.Height <= 0) return false;
+
+        // If the whole table already fits inside the viewport there is nothing to
+        // scroll horizontally — don't steal swipes from the month-navigation gesture.
+        // This keeps "short months" behaving like the AttendancePage: swipe anywhere.
+        if (tg.Width <= sv.Width) return false;
+
+        var density = tg.Context?.Resources?.DisplayMetrics?.Density ?? 1f;
+        var nameColPx = (int)(NameColumnWidth * density);
+
+        var loc = new int[2];
+        tg.GetLocationOnScreen(loc);
+
+        // When the ScrollView is already scrolled horizontally, loc[0] goes negative.
+        // That naturally widens the exclusion zone to the full visible strip, so the
+        // user can scroll back without accidentally flipping the month mid-drag.
+        var left = loc[0] + nameColPx;
+        var top = loc[1];
+        var right = loc[0] + tg.Width;
+        var bottom = loc[1] + tg.Height;
+
+        return rawX >= left && rawX <= right && rawY >= top && rawY <= bottom;
+    }
+#endif
 
     protected override void OnDisappearing()
     {

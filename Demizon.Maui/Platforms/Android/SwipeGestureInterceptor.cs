@@ -28,6 +28,14 @@ internal sealed class SwipeGestureInterceptor
     private bool _tracking;
     private bool _committedHorizontal;
 
+    /// <summary>
+    /// Optional predicate. When it returns true for the ACTION_DOWN raw screen
+    /// coordinates, the interceptor ignores the whole gesture — touches flow
+    /// to the view tree unmodified. Used to exempt inner horizontally-scrollable
+    /// regions (e.g. the attendance data table) from stealing into month-swipe.
+    /// </summary>
+    public Func<float, float, bool>? ShouldIgnoreStart { get; set; }
+
     public SwipeGestureInterceptor(Context context, Action onSwipeLeft, Action onSwipeRight)
     {
         _onSwipeLeft = onSwipeLeft;
@@ -45,6 +53,15 @@ internal sealed class SwipeGestureInterceptor
         switch (ev.ActionMasked)
         {
             case MotionEventActions.Down:
+                if (ShouldIgnoreStart?.Invoke(ev.RawX, ev.RawY) == true)
+                {
+                    // Touch started inside an exempted region (e.g. a horizontally-
+                    // scrollable table) — stay out of the whole gesture stream so
+                    // the inner view can scroll without our interference.
+                    _tracking = false;
+                    _committedHorizontal = false;
+                    return false;
+                }
                 _startX = ev.GetX();
                 _startY = ev.GetY();
                 _tracking = true;
