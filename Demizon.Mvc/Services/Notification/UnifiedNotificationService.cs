@@ -124,6 +124,7 @@ public sealed class UnifiedNotificationService(
 
     /// <summary>
     /// Intelligent milestone-based event reminders (60d, 30d, 14d).
+    /// Sends per-member, only to those who haven't filled in attendance for the event.
     /// Skips milestones that already passed at event creation time.
     /// </summary>
     private async Task CheckEventMilestoneNotificationsAsync(
@@ -168,11 +169,39 @@ public sealed class UnifiedNotificationService(
                     }
                 }
 
-                // Check if already sent
-                var alreadySent = await db.SentNotifications
+                // Legacy compat: pre-change runs stored broadcast records (MemberId == null).
+                // If one exists for this event+milestone, consider it fully delivered under old rules
+                // so we don't re-notify every member per-individually after deploy.
+                var broadcastAlreadySent = await db.SentNotifications
                     .AnyAsync(n => n.EventId == ev.Id && n.NotificationType == notifType && n.MemberId == null, ct);
+                if (broadcastAlreadySent) continue;
 
-                if (alreadySent) continue;
+                // Members who already filled in attendance for this event – skip them at every milestone.
+                var membersWithAttendance = await db.Attendances
+                    .Where(a => a.EventId == ev.Id)
+                    .Select(a => a.MemberId)
+                    .ToListAsync(ct);
+
+                // Members already notified individually at this milestone (avoid double-send per hourly tick).
+                var membersAlreadyNotified = await db.SentNotifications
+                    .Where(n => n.EventId == ev.Id
+                                && n.NotificationType == notifType
+                                && n.MemberId != null)
+                    .Select(n => n.MemberId!.Value)
+                    .ToListAsync(ct);
+
+                var membersToNotify = await db.Members
+                    .Where(m => !membersWithAttendance.Contains(m.Id)
+                                && !membersAlreadyNotified.Contains(m.Id))
+                    .Select(m => m.Id)
+                    .ToListAsync(ct);
+
+                if (membersToNotify.Count == 0)
+                {
+                    logger.LogInformation("Milestone '{Type}' for '{Name}' – nobody to notify.",
+                        notifType, ev.Name);
+                    continue;
+                }
 
                 var daysText = milestoneDays switch
                 {
@@ -184,20 +213,25 @@ public sealed class UnifiedNotificationService(
 
                 var title = $"Připomínka akce za {daysText}";
                 var body = $"{ev.Name} – {ev.DateFrom:d.M.yyyy}{(ev.Place != null ? $" ({ev.Place})" : "")}";
+                var data = new Dictionary<string, string> { ["eventId"] = ev.Id.ToString() };
 
-                await SendToAllMembersAsync(db, subscriptionService, fcm, title, body,
-                    new Dictionary<string, string> { ["eventId"] = ev.Id.ToString() }, ct);
-
-                db.SentNotifications.Add(new SentNotification
+                foreach (var memberId in membersToNotify)
                 {
-                    EventId = ev.Id,
-                    NotificationType = notifType,
-                    SentAt = now,
-                    MemberId = null,
-                });
+                    await SendToMemberAsync(db, subscriptionService, fcm, memberId, title, body, data, ct);
+
+                    db.SentNotifications.Add(new SentNotification
+                    {
+                        EventId = ev.Id,
+                        NotificationType = notifType,
+                        SentAt = now,
+                        MemberId = memberId,
+                    });
+                }
+
                 await db.SaveChangesAsync(ct);
 
-                logger.LogInformation("Sent '{Type}' notification for '{Name}'.", notifType, ev.Name);
+                logger.LogInformation("Sent '{Type}' for '{Name}' to {Count} members without attendance.",
+                    notifType, ev.Name, membersToNotify.Count);
             }
         }
     }
