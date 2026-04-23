@@ -1,10 +1,7 @@
-using Demizon.Common.Configuration;
 using Demizon.Core.Services.Notification;
 using Demizon.Dal;
 using Demizon.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using WebPush;
 
 namespace Demizon.Mvc.Services.Notification;
 
@@ -12,16 +9,14 @@ namespace Demizon.Mvc.Services.Notification;
 /// Unified background service that handles all notification logic:
 /// - Rehearsal attendance reminders (5d, 3d, 1d before Friday)
 /// - Event reminders with intelligent milestone timing (1h after creation, 60d, 30d, 14d before event)
-/// Sends both Web Push and FCM notifications. Deduplication via SentNotification table.
+/// All sending is delegated to <see cref="AttendanceReminderService"/> so admin-triggered and
+/// scheduled pushes share the same fan-out + cleanup logic.
 /// </summary>
 public sealed class UnifiedNotificationService(
     IServiceScopeFactory scopeFactory,
-    IOptions<VapidSettings> vapidOptions,
     ILogger<UnifiedNotificationService> logger)
     : BackgroundService
 {
-    private readonly VapidSettings _vapid = vapidOptions.Value;
-
     // Event milestones in days before event
     private static readonly (int Days, NotificationType Type)[] EventMilestones =
     [
@@ -69,22 +64,20 @@ public sealed class UnifiedNotificationService(
 
         await using var scope = scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<DemizonContext>();
-        var subscriptionService = scope.ServiceProvider.GetRequiredService<IPushSubscriptionService>();
-        var fcm = scope.ServiceProvider.GetRequiredService<FcmService>();
+        var sender = scope.ServiceProvider.GetRequiredService<AttendanceReminderService>();
 
         var now = DateTime.UtcNow;
 
-        await CheckNewEventNotificationsAsync(db, subscriptionService, fcm, now, ct);
-        await CheckEventMilestoneNotificationsAsync(db, subscriptionService, fcm, now, ct);
-        await CheckRehearsalRemindersAsync(db, subscriptionService, fcm, now, ct);
+        await CheckNewEventNotificationsAsync(db, sender, now, ct);
+        await CheckEventMilestoneNotificationsAsync(db, sender, now, ct);
+        await CheckRehearsalRemindersAsync(db, sender, now, ct);
     }
 
     /// <summary>
     /// Send "new event" notification 1 hour after event creation.
     /// </summary>
     private async Task CheckNewEventNotificationsAsync(
-        DemizonContext db, IPushSubscriptionService subscriptionService,
-        FcmService fcm, DateTime now, CancellationToken ct)
+        DemizonContext db, AttendanceReminderService sender, DateTime now, CancellationToken ct)
     {
         // Find events created more than 1 hour ago that haven't been notified yet
         // Skip events with DateTime.MinValue CreatedAt (legacy events from before this feature)
@@ -105,7 +98,7 @@ public sealed class UnifiedNotificationService(
             var title = "Nová akce";
             var body = $"{ev.Name} – {ev.DateFrom:d.M.yyyy}{(ev.Place != null ? $" ({ev.Place})" : "")}";
 
-            await SendToAllMembersAsync(db, subscriptionService, fcm, title, body,
+            await sender.SendToAllMembersAsync(title, body,
                 new Dictionary<string, string> { ["eventId"] = ev.Id.ToString() }, ct);
 
             // Record as broadcast (MemberId = null)
@@ -124,12 +117,12 @@ public sealed class UnifiedNotificationService(
 
     /// <summary>
     /// Intelligent milestone-based event reminders (60d, 30d, 14d).
-    /// Sends per-member, only to those who haven't filled in attendance for the event.
+    /// Sends per-member, only to those who haven't filled in attendance for the event and
+    /// haven't already been covered by an admin-triggered manual reminder.
     /// Skips milestones that already passed at event creation time.
     /// </summary>
     private async Task CheckEventMilestoneNotificationsAsync(
-        DemizonContext db, IPushSubscriptionService subscriptionService,
-        FcmService fcm, DateTime now, CancellationToken ct)
+        DemizonContext db, AttendanceReminderService sender, DateTime now, CancellationToken ct)
     {
         var futureEvents = await db.Events
             .Where(e => !e.IsCancelled && e.DateFrom > now)
@@ -182,10 +175,12 @@ public sealed class UnifiedNotificationService(
                     .Select(a => a.MemberId)
                     .ToListAsync(ct);
 
-                // Members already notified individually at this milestone (avoid double-send per hourly tick).
+                // Members already covered by this milestone OR by an admin manual trigger.
+                // The latter prevents double-spamming right after an admin fires "Doplň si docházku".
                 var membersAlreadyNotified = await db.SentNotifications
                     .Where(n => n.EventId == ev.Id
-                                && n.NotificationType == notifType
+                                && (n.NotificationType == notifType
+                                    || n.NotificationType == NotificationType.EventManualReminder)
                                 && n.MemberId != null)
                     .Select(n => n.MemberId!.Value)
                     .ToListAsync(ct);
@@ -217,7 +212,7 @@ public sealed class UnifiedNotificationService(
 
                 foreach (var memberId in membersToNotify)
                 {
-                    await SendToMemberAsync(db, subscriptionService, fcm, memberId, title, body, data, ct);
+                    await sender.SendToMemberAsync(memberId, title, body, data, ct);
 
                     db.SentNotifications.Add(new SentNotification
                     {
@@ -241,8 +236,7 @@ public sealed class UnifiedNotificationService(
     /// Checks 5d, 3d, 1d before each Friday rehearsal.
     /// </summary>
     private async Task CheckRehearsalRemindersAsync(
-        DemizonContext db, IPushSubscriptionService subscriptionService,
-        FcmService fcm, DateTime now, CancellationToken ct)
+        DemizonContext db, AttendanceReminderService sender, DateTime now, CancellationToken ct)
     {
         // Find upcoming Fridays within the next 7 days
         var upcomingFridays = Enumerable.Range(0, 7)
@@ -291,7 +285,7 @@ public sealed class UnifiedNotificationService(
                     var title = "Nevyplněná docházka na zkoušku";
                     var body = $"Zkouška {friday:d.M.yyyy} – nezapomeň vyplnit docházku!";
 
-                    await SendToMemberAsync(db, subscriptionService, fcm, memberId, title, body, null, ct);
+                    await sender.SendToMemberAsync(memberId, title, body, null, ct);
 
                     db.SentNotifications.Add(new SentNotification
                     {
@@ -304,105 +298,6 @@ public sealed class UnifiedNotificationService(
 
                 await db.SaveChangesAsync(ct);
             }
-        }
-    }
-
-    /// <summary>
-    /// Send notification to all members via both Web Push and FCM.
-    /// </summary>
-    private async Task SendToAllMembersAsync(
-        DemizonContext db, IPushSubscriptionService subscriptionService,
-        FcmService fcm, string title, string body,
-        Dictionary<string, string>? data, CancellationToken ct)
-    {
-        // Web Push
-        await SendWebPushToAllAsync(subscriptionService, title, body, ct);
-
-        // FCM
-        var allDeviceTokens = await db.DeviceTokens.ToListAsync(ct);
-        foreach (var dt in allDeviceTokens)
-        {
-            try
-            {
-                await fcm.SendAsync(dt.Token, title, body, data);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "FCM send failed for token {Token}.", dt.Token);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Send notification to a specific member via both Web Push and FCM.
-    /// </summary>
-    private async Task SendToMemberAsync(
-        DemizonContext db, IPushSubscriptionService subscriptionService,
-        FcmService fcm, int memberId, string title, string body,
-        Dictionary<string, string>? data, CancellationToken ct)
-    {
-        // Web Push
-        var memberSubs = await subscriptionService.GetByMemberAsync(memberId);
-        foreach (var sub in memberSubs)
-        {
-            await SendWebPushAsync(subscriptionService, sub, title, body);
-        }
-
-        // FCM
-        var deviceTokens = await db.DeviceTokens
-            .Where(d => d.MemberId == memberId)
-            .ToListAsync(ct);
-
-        foreach (var dt in deviceTokens)
-        {
-            try
-            {
-                await fcm.SendAsync(dt.Token, title, body, data);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "FCM send failed for member {MemberId}, token {Token}.", memberId, dt.Token);
-            }
-        }
-    }
-
-    private async Task SendWebPushToAllAsync(
-        IPushSubscriptionService subscriptionService, string title, string body, CancellationToken ct)
-    {
-        var allSubscriptions = await subscriptionService.GetAllAsync();
-        foreach (var sub in allSubscriptions)
-        {
-            await SendWebPushAsync(subscriptionService, sub, title, body);
-        }
-    }
-
-    private async Task SendWebPushAsync(
-        IPushSubscriptionService subscriptionService,
-        Dal.Entities.PushSubscription sub, string title, string body)
-    {
-        try
-        {
-            var pushClient = new WebPushClient();
-            var payload = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                title,
-                body,
-                url = "/Admin/MemberAttendance/"
-            });
-
-            var subscription = new WebPush.PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
-            var vapidDetails = new VapidDetails(_vapid.Subject, _vapid.PublicKey, _vapid.PrivateKey);
-            await pushClient.SendNotificationAsync(subscription, payload, vapidDetails);
-        }
-        catch (WebPushException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Gone
-                                           || ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            logger.LogWarning("Subscription {Endpoint} expired, removing.", sub.Endpoint);
-            await subscriptionService.RemoveAsync(sub.MemberId, sub.Endpoint);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error sending web push to {Endpoint}.", sub.Endpoint);
         }
     }
 }

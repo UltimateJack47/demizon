@@ -2,12 +2,9 @@ using Demizon.Contracts.Events;
 using Demizon.Contracts.Notifications;
 using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
-using Demizon.Core.Services.Notification;
-using Demizon.Dal;
 using Demizon.Dal.Entities;
 using Demizon.Mvc.Extensions;
 using Demizon.Mvc.Mapping;
-using Demizon.Mvc.Services;
 using Demizon.Mvc.Services.Notification;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -22,11 +19,7 @@ namespace Demizon.Mvc.Controllers.Api;
 public class EventsController(
     IEventService eventService,
     IAttendanceService attendanceService,
-    DemizonContext db,
-    FcmService fcm,
-    WebPushSender webPush,
-    IPushSubscriptionService subscriptionService,
-    ILogger<EventsController> logger) : ControllerBase
+    AttendanceReminderService attendanceReminder) : ControllerBase
 {
     [HttpGet("upcoming")]
     public async Task<ActionResult<List<EventDto>>> GetUpcoming()
@@ -257,51 +250,14 @@ public class EventsController(
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     public async Task<ActionResult<NotifyMissingAttendanceResponse>> NotifyMissingAttendance(int id)
     {
-        Dal.Entities.Event ev;
-        try { ev = await eventService.GetOneAsync(id); }
-        catch (Common.Exceptions.EntityNotFoundException) { return NotFound(); }
-
-        if (ev.IsCancelled)
-            return BadRequest(new { error = "Akce je zrušená." });
-
-        if (ev.DateFrom <= DateTime.UtcNow)
-            return BadRequest(new { error = "Akce už proběhla." });
-
-        var membersWithAttendance = await db.Attendances
-            .Where(a => a.EventId == ev.Id)
-            .Select(a => a.MemberId)
-            .ToListAsync();
-
-        var membersToNotify = await db.Members
-            .Where(m => !membersWithAttendance.Contains(m.Id))
-            .Select(m => m.Id)
-            .ToListAsync();
-
-        if (membersToNotify.Count == 0)
-            return Ok(new NotifyMissingAttendanceResponse(0, membersWithAttendance.Count));
-
-        var title = "Doplň si docházku";
-        var body = $"{ev.Name} – {ev.DateFrom:d.M.yyyy}{(ev.Place != null ? $" ({ev.Place})" : "")}";
-        var data = new Dictionary<string, string> { ["eventId"] = ev.Id.ToString() };
-
-        foreach (var memberId in membersToNotify)
+        var result = await attendanceReminder.NotifyMissingAttendanceAsync(id);
+        return result.Outcome switch
         {
-            var memberSubs = await subscriptionService.GetByMemberAsync(memberId);
-            foreach (var sub in memberSubs)
-                await webPush.SendAsync(sub, title, body);
-
-            var deviceTokens = await db.DeviceTokens
-                .Where(d => d.MemberId == memberId)
-                .ToListAsync();
-
-            foreach (var dt in deviceTokens)
-                await fcm.SendAsync(dt.Token, title, body, data);
-        }
-
-        logger.LogInformation(
-            "Admin {AdminId} manually triggered attendance reminders for event {EventId} ({Name}) – notified {Count} members.",
-            User.GetMemberId(), ev.Id, ev.Name, membersToNotify.Count);
-
-        return Ok(new NotifyMissingAttendanceResponse(membersToNotify.Count, membersWithAttendance.Count));
+            NotifyMissingAttendanceOutcome.NotFound => NotFound(),
+            NotifyMissingAttendanceOutcome.Cancelled => BadRequest(new { error = "Akce je zrušená." }),
+            NotifyMissingAttendanceOutcome.AlreadyPast => BadRequest(new { error = "Akce už proběhla." }),
+            NotifyMissingAttendanceOutcome.Ok => Ok(result.Response),
+            _ => StatusCode(500),
+        };
     }
 }

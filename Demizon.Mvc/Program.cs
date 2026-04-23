@@ -98,6 +98,7 @@ builder.Services.AddDatabase(defaultConnectionString);
 builder.Services.AddControllers();
 builder.Services.AddSingleton<FcmService>();
 builder.Services.AddScoped<Demizon.Mvc.Services.Notification.WebPushSender>();
+builder.Services.AddScoped<Demizon.Mvc.Services.Notification.AttendanceReminderService>();
 
 // Health check – ověří dostupnost DB
 builder.Services.AddHealthChecks()

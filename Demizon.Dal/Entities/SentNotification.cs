@@ -42,6 +42,9 @@ public enum NotificationType
     /// <summary>Připomínka akce – 2 týdny předem.</summary>
     EventReminder14Days = 3,
 
+    /// <summary>Ruční admin trigger "doplň si docházku". Zabraňuje scheduleru znovu poslat milestone notifikaci stejnému členovi.</summary>
+    EventManualReminder = 4,
+
     /// <summary>Chybí docházka na zkoušku – 5 dní předem.</summary>
     RehearsalReminder5Days = 10,
 
