@@ -17,6 +17,7 @@
   <ItemGroup>
     <MauiIcon Include="Resources\AppIcon\appicon.svg" Color="#FFFFFF" />
     <MauiImage Include="Resources\Images\*" />
+    <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <!-- FirebaseConfig.cs is gitignored; the .template.cs is a reference only, not compiled -->
   <ItemGroup>

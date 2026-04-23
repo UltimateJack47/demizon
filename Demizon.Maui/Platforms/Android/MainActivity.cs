@@ -4,6 +4,8 @@ using Android.Content.PM;
 using Android.OS;
 using AndroidX.Core.App;
 using AndroidX.Core.View;
+using Demizon.Maui.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Plugin.Firebase.CloudMessaging;
 using Plugin.Firebase.CloudMessaging.Platforms.Android;
 using Plugin.Firebase.Core.Platforms.Android;
@@ -25,6 +27,7 @@ namespace Demizon.Maui.Platforms.Android;
 public class MainActivity : MauiAppCompatActivity
 {
     internal const string ChannelId = "demizon_channel";
+    private const string DeepLinkFlagExtra = "demizon_deep_link";
 
     /// <summary>
     /// Page-scoped horizontal-swipe handler. Pages set this in OnAppearing
@@ -53,6 +56,7 @@ public class MainActivity : MauiAppCompatActivity
         CrossFirebase.Initialize(this);
         FirebaseCloudMessagingImplementation.OnNewIntent(Intent);
         EnsureNotificationChannel();
+        DispatchLocalDeepLinkIfAny(Intent);
 
         // Show FCM notifications that arrive while the app is in the foreground
         CrossFirebaseCloudMessaging.Current.NotificationReceived += (sender, e) =>
@@ -76,6 +80,7 @@ public class MainActivity : MauiAppCompatActivity
     {
         var intent = new Intent(this, typeof(MainActivity));
         intent.AddFlags(ActivityFlags.ClearTop | ActivityFlags.SingleTop);
+        intent.PutExtra(DeepLinkFlagExtra, true);
 
         if (data != null)
         {
@@ -83,7 +88,12 @@ public class MainActivity : MauiAppCompatActivity
                 intent.PutExtra(key, data[key]);
         }
 
-        var pendingIntent = PendingIntent.GetActivity(this, 0, intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+        var requestCode = System.Environment.TickCount;
+        var pendingIntent = PendingIntent.GetActivity(
+            this,
+            requestCode,
+            intent,
+            PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
 
         var notification = new NotificationCompat.Builder(this, ChannelId)
             .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
@@ -101,6 +111,32 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnNewIntent(intent);
         FirebaseCloudMessagingImplementation.OnNewIntent(intent);
+        DispatchLocalDeepLinkIfAny(intent);
+    }
+
+    /// <summary>
+    /// Foreground-tap path: local notifications rendered by ShowLocalNotification
+    /// reach us here via Intent extras (they don't go through FCM NotificationTapped).
+    /// We flag them with <see cref="DeepLinkFlagExtra"/> so we ignore unrelated intents.
+    /// </summary>
+    private static void DispatchLocalDeepLinkIfAny(Intent? intent)
+    {
+        if (intent is null) return;
+        if (!intent.GetBooleanExtra(DeepLinkFlagExtra, false)) return;
+
+        var data = new Dictionary<string, string>();
+        var eventId = intent.GetStringExtra("eventId");
+        if (!string.IsNullOrEmpty(eventId)) data["eventId"] = eventId;
+        var rehearsalDate = intent.GetStringExtra("rehearsalDate");
+        if (!string.IsNullOrEmpty(rehearsalDate)) data["rehearsalDate"] = rehearsalDate;
+
+        if (data.Count == 0) return;
+
+        // Clear the flag so a subsequent config change / resume doesn't re-trigger navigation.
+        intent.RemoveExtra(DeepLinkFlagExtra);
+
+        var nav = IPlatformApplication.Current?.Services.GetService<NotificationNavigationService>();
+        nav?.Handle(data);
     }
 
     private void ApplySystemBarsInsets()

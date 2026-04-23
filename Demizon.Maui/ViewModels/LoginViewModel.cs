@@ -6,7 +6,11 @@ using Refit;
 
 namespace Demizon.Maui.ViewModels;
 
-public partial class LoginViewModel(IApiClient apiClient, TokenStorage tokenStorage, INavigationService navigation) : ObservableObject
+public partial class LoginViewModel(
+    IApiClient apiClient,
+    TokenStorage tokenStorage,
+    INavigationService navigation,
+    NotificationNavigationService notificationNavigationService) : ObservableObject
 {
     [ObservableProperty]
     private string _login = string.Empty;
@@ -32,6 +36,7 @@ public partial class LoginViewModel(IApiClient apiClient, TokenStorage tokenStor
             var response = await apiClient.LoginAsync(new TokenRequest(Login, Password));
             await tokenStorage.SaveAsync(response, Login);
             await navigation.GoToAsync(AppRoutes.MainTabs);
+            notificationNavigationService.MarkReadyAndFlush();
         }
         catch (ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {

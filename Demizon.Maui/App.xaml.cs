@@ -7,6 +7,7 @@ public partial class App : Application
     private readonly AppShell _shell;
     private readonly TokenStorage _tokenStorage;
     private readonly NotificationSyncService _notificationSyncService;
+    private readonly NotificationNavigationService _notificationNavigationService;
 
     public App(AppShell shell, TokenStorage tokenStorage, NotificationSyncService notificationSyncService, NotificationNavigationService notificationNavigationService)
     {
@@ -14,6 +15,7 @@ public partial class App : Application
         _shell = shell;
         _tokenStorage = tokenStorage;
         _notificationSyncService = notificationSyncService;
+        _notificationNavigationService = notificationNavigationService;
 
         notificationNavigationService.Initialize();
     }
@@ -42,6 +44,7 @@ public partial class App : Application
             if (_tokenStorage.IsTokenValid())
             {
                 await Shell.Current.GoToAsync(AppRoutes.MainTabs);
+                _notificationNavigationService.MarkReadyAndFlush();
                 _ = _notificationSyncService.SyncAsync();
                 return;
             }
@@ -56,6 +59,7 @@ public partial class App : Application
             {
                 await _tokenStorage.SaveAsync(result, login ?? string.Empty);
                 await Shell.Current.GoToAsync(AppRoutes.MainTabs);
+                _notificationNavigationService.MarkReadyAndFlush();
                 _ = _notificationSyncService.SyncAsync();
             }
             else

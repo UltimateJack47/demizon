@@ -34,8 +34,7 @@
                     WidthRequest="100"
                     HeightRequest="100"
                     HorizontalOptions="Center">
-                <Image x:Name="LogoImage"
-                       Source="demizon_logo.jpg"
+                <Image Source="demizon_logo.png"
                        WidthRequest="80"
                        HeightRequest="80"
                        Aspect="AspectFit"
