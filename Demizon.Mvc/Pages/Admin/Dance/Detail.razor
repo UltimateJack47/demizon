@@ -117,134 +117,140 @@ else
         <!-- ─── Taby: Videa / Fotky / Dokumenty ─── -->
         <MudItem xs="12" md="8">
             <MudCard Elevation="2" Style="height: 100%;">
-                <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+                <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true">
 
                     <!-- Videa -->
                     <MudTabPanel Icon="@Icons.Material.Filled.VideoLibrary" Text="@($"Videa ({Model.Videos.Count})")">
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
-                            <MudText Typo="Typo.subtitle1">Videa</MudText>
-                            <MudSpacer/>
+                        <div class="pa-4">
                             <AuthorizeView Roles="Admin">
-                                <MudTooltip Text="Propojit existující video">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Link" Color="Color.Secondary"
-                                                   OnClick="OpenLinkVideoDialog"/>
-                                </MudTooltip>
-                                <MudTooltip Text="Přidat nové video">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary"
-                                                   OnClick="OpenCreateVideoDialog"/>
-                                </MudTooltip>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="1" Class="mb-3">
+                                    <MudTooltip Text="Propojit existující video">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Link" Color="Color.Secondary"
+                                                       OnClick="OpenLinkVideoDialog"/>
+                                    </MudTooltip>
+                                    <MudTooltip Text="Přidat nové video">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary"
+                                                       OnClick="OpenCreateVideoDialog"/>
+                                    </MudTooltip>
+                                </MudStack>
                             </AuthorizeView>
-                        </MudStack>
-                        @if (Model.Videos.Count == 0)
-                        {
-                            <MudText Color="Color.Secondary" Typo="Typo.body2">Žádná videa k zobrazení.</MudText>
-                        }
-                        else
-                        {
-                            <MudGrid Spacing="2">
-                                @foreach (var video in Model.Videos)
-                                {
-                                    <MudItem xs="12" lg="6">
-                                        <MudPaper Outlined="true">
-                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="pa-2">
-                                                <MudChip T="string" Size="Size.Small" Color="Color.Primary">@video.Year</MudChip>
-                                                <MudLink Href="@($"/Videos/Detail/{video.Id}")" Typo="Typo.subtitle2">@video.Name</MudLink>
-                                                @if (video.IsInternal)
-                                                {
-                                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
-                                                }
-                                                <MudSpacer/>
-                                                <AuthorizeView Roles="Admin">
-                                                    <MudTooltip Text="Odpojit video od tance">
-                                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.LinkOff"
-                                                                       Color="Color.Warning"
-                                                                       OnClick="() => UnlinkVideo(video.Id)"/>
-                                                    </MudTooltip>
-                                                </AuthorizeView>
-                                            </MudStack>
-                                            <div class="demi-video-embed">
-                                                <iframe src="@video.Url" title="@video.Name" allowfullscreen loading="lazy"></iframe>
-                                            </div>
-                                        </MudPaper>
-                                    </MudItem>
-                                }
-                            </MudGrid>
-                        }
+                            @if (Model.Videos.Count == 0)
+                            {
+                                <MudText Color="Color.Secondary" Typo="Typo.body2" Align="Align.Center" Class="py-6">
+                                    Žádná videa k zobrazení.
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudGrid Spacing="2">
+                                    @foreach (var video in Model.Videos)
+                                    {
+                                        <MudItem xs="12" lg="6">
+                                            <MudPaper Outlined="true">
+                                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="pa-2">
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary">@video.Year</MudChip>
+                                                    <MudLink Href="@($"/Videos/Detail/{video.Id}")" Typo="Typo.subtitle2">@video.Name</MudLink>
+                                                    @if (video.IsInternal)
+                                                    {
+                                                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
+                                                    }
+                                                    <MudSpacer/>
+                                                    <AuthorizeView Roles="Admin">
+                                                        <MudTooltip Text="Odpojit video od tance">
+                                                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.LinkOff"
+                                                                           Color="Color.Warning"
+                                                                           OnClick="() => UnlinkVideo(video.Id)"/>
+                                                        </MudTooltip>
+                                                    </AuthorizeView>
+                                                </MudStack>
+                                                <div class="demi-video-embed">
+                                                    <iframe src="@video.Url" title="@video.Name" allowfullscreen loading="lazy"></iframe>
+                                                </div>
+                                            </MudPaper>
+                                        </MudItem>
+                                    }
+                                </MudGrid>
+                            }
+                        </div>
                     </MudTabPanel>
 
                     <!-- Fotky -->
                     <MudTabPanel Icon="@Icons.Material.Filled.PhotoLibrary" Text="@($"Fotky ({Photos.Count})")">
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
-                            <MudText Typo="Typo.subtitle1">Fotografie</MudText>
-                            <MudSpacer/>
+                        <div class="pa-4">
                             <AuthorizeView Roles="Admin">
-                                <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadDancePhotos" Accept="image/*">
-                                    <CustomContent Context="upload">
-                                        <MudTooltip Text="Nahrát fotky k tanci">
-                                            <MudIconButton Icon="@Icons.Material.Filled.CloudUpload" Color="Color.Primary"
-                                                           OnClick="@upload.OpenFilePickerAsync"
-                                                           Disabled="@_uploadingPhotos"/>
-                                        </MudTooltip>
-                                    </CustomContent>
-                                </MudFileUpload>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="1" Class="mb-3">
+                                    <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadDancePhotos" Accept="image/*">
+                                        <CustomContent Context="upload">
+                                            <MudTooltip Text="Nahrát fotky k tanci">
+                                                <MudIconButton Icon="@Icons.Material.Filled.CloudUpload" Color="Color.Primary"
+                                                               OnClick="@upload.OpenFilePickerAsync"
+                                                               Disabled="@_uploadingPhotos"/>
+                                            </MudTooltip>
+                                        </CustomContent>
+                                    </MudFileUpload>
+                                </MudStack>
                             </AuthorizeView>
-                        </MudStack>
-                        @if (Photos.Count == 0)
-                        {
-                            <MudText Color="Color.Secondary" Typo="Typo.body2">Žádné fotografie k zobrazení.</MudText>
-                        }
-                        else
-                        {
-                            <MudGrid Spacing="2">
-                                @foreach (var photo in Photos)
-                                {
-                                    <MudItem xs="6" sm="4" md="4" lg="3">
-                                        <MudPaper Outlined="true" Class="pa-1" Style="position: relative;">
-                                            <img src="/api/files/@photo.Id/image?size=thumb" alt="photo"
-                                                 style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:4px; display:block;"/>
-                                            <AuthorizeView Roles="Admin">
-                                                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mt-1">
-                                                    <MudTooltip Text="@(photo.IsPublic ? "Veřejné – viditelné na webu" : "Soukromé – pouze v admin")">
-                                                        <MudSwitch T="bool" Value="@photo.IsPublic"
-                                                                   ValueChanged="@((bool val) => TogglePhotoPublic(photo, val))"
-                                                                   Color="Color.Success" Size="Size.Small"/>
-                                                    </MudTooltip>
-                                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
-                                                                   Color="Color.Error" OnClick="() => DeleteDancePhoto(photo.Id)"/>
-                                                </MudStack>
-                                            </AuthorizeView>
-                                        </MudPaper>
-                                    </MudItem>
-                                }
-                            </MudGrid>
-                        }
+                            @if (Photos.Count == 0)
+                            {
+                                <MudText Color="Color.Secondary" Typo="Typo.body2" Align="Align.Center" Class="py-6">
+                                    Žádné fotografie k zobrazení.
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudGrid Spacing="2">
+                                    @foreach (var photo in Photos)
+                                    {
+                                        <MudItem xs="6" sm="4" md="4" lg="3">
+                                            <MudPaper Outlined="true" Class="pa-1" Style="position: relative;">
+                                                <img src="/api/files/@photo.Id/image?size=thumb" alt="photo"
+                                                     style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:4px; display:block;"/>
+                                                <AuthorizeView Roles="Admin">
+                                                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mt-1">
+                                                        <MudTooltip Text="@(photo.IsPublic ? "Veřejné – viditelné na webu" : "Soukromé – pouze v admin")">
+                                                            <MudSwitch T="bool" Value="@photo.IsPublic"
+                                                                       ValueChanged="@((bool val) => TogglePhotoPublic(photo, val))"
+                                                                       Color="Color.Success" Size="Size.Small"/>
+                                                        </MudTooltip>
+                                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                                                                       Color="Color.Error" OnClick="() => DeleteDancePhoto(photo.Id)"/>
+                                                    </MudStack>
+                                                </AuthorizeView>
+                                            </MudPaper>
+                                        </MudItem>
+                                    }
+                                </MudGrid>
+                            }
+                        </div>
                     </MudTabPanel>
 
                     <!-- Dokumenty -->
                     <MudTabPanel Icon="@Icons.Material.Filled.Description" Text="@($"Dokumenty ({Documents.Count})")">
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
-                            <MudText Typo="Typo.subtitle1">Dokumenty</MudText>
-                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Jen pro členy</MudChip>
-                            <MudSpacer/>
-                            <AuthorizeView Roles="Admin">
-                                <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadDanceDocuments"
-                                               Accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-                                    <CustomContent Context="upload">
-                                        <MudTooltip Text="Nahrát dokument (PDF / DOCX)">
-                                            <MudIconButton Icon="@Icons.Material.Filled.UploadFile" Color="Color.Primary"
-                                                           OnClick="@upload.OpenFilePickerAsync"
-                                                           Disabled="@_uploadingDocuments"/>
-                                        </MudTooltip>
-                                    </CustomContent>
-                                </MudFileUpload>
-                            </AuthorizeView>
-                        </MudStack>
-                        @if (Documents.Count == 0)
-                        {
-                            <MudText Color="Color.Secondary" Typo="Typo.body2">Žádné dokumenty k zobrazení.</MudText>
-                        }
-                        else
-                        {
+                        <div class="pa-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Jen pro členy</MudChip>
+                                <MudSpacer/>
+                                <AuthorizeView Roles="Admin">
+                                    <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadDanceDocuments"
+                                                   Accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                                        <CustomContent Context="upload">
+                                            <MudTooltip Text="Nahrát dokument (PDF / DOCX)">
+                                                <MudIconButton Icon="@Icons.Material.Filled.UploadFile" Color="Color.Primary"
+                                                               OnClick="@upload.OpenFilePickerAsync"
+                                                               Disabled="@_uploadingDocuments"/>
+                                            </MudTooltip>
+                                        </CustomContent>
+                                    </MudFileUpload>
+                                </AuthorizeView>
+                            </MudStack>
+                            @if (Documents.Count == 0)
+                            {
+                                <MudText Color="Color.Secondary" Typo="Typo.body2" Align="Align.Center" Class="py-6">
+                                    Žádné dokumenty k zobrazení.
+                                </MudText>
+                            }
+                            else
+                            {
                             <MudList T="string" Dense="true">
                                 @foreach (var doc in Documents)
                                 {
@@ -264,7 +270,8 @@ else
                                     </MudListItem>
                                 }
                             </MudList>
-                        }
+                            }
+                        </div>
                     </MudTabPanel>
 
                 </MudTabs>
