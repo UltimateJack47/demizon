@@ -18,32 +18,50 @@ public static class LongPressTracker
 }
 
 /// <summary>
-/// Detects long-press (≥500 ms hold) by timing ACTION_DOWN to ACTION_UP on the
-/// associated View's native Touch event. Critically it always returns
-/// <c>Handled = false</c> and never makes the View Clickable — so tap events
-/// still bubble up to parent containers (e.g. RecyclerView selection on
-/// CollectionView items).
+/// Handles BOTH tap and long-press on the associated View by attaching Android's
+/// native click/long-click listeners (<c>setOnClickListener</c> /
+/// <c>setOnLongClickListener</c>) to the PlatformView.
 ///
-/// Use this for views that DON'T already have a MAUI TapGestureRecognizer —
-/// for those, use CommunityToolkit.Maui.Behaviors.TouchBehavior, which has its
-/// own OnTouchListener chaining.
+/// Why both: as soon as we set <c>LongClickable = true</c> for long-press,
+/// Android's <c>View.onTouchEvent</c> starts consuming touch events for that
+/// view — which means parent containers (e.g. CollectionView's selection
+/// plumbing) no longer see the tap. To keep tap working we have to handle it
+/// on the same native view, via <c>Clickable = true</c> + <see cref="TapCommand"/>.
+///
+/// Long-press timing uses Android's built-in <c>CheckForLongPress</c> in
+/// <c>onTouchEvent</c>, so no custom timer is needed. After a long-press fires
+/// and we return <c>Handled = true</c>, Android suppresses the subsequent
+/// <c>performClick</c> on finger-release automatically.
 /// </summary>
 public sealed class LongPressBehavior : Behavior<View>
 {
-    private const int LongPressMs = 500;
-
     public static readonly BindableProperty CommandProperty =
         BindableProperty.Create(nameof(Command), typeof(ICommand), typeof(LongPressBehavior));
 
+    /// <summary>Fired on long-press (~500 ms hold).</summary>
     public ICommand? Command
     {
         get => (ICommand?)GetValue(CommandProperty);
         set => SetValue(CommandProperty, value);
     }
 
+    public static readonly BindableProperty TapCommandProperty =
+        BindableProperty.Create(nameof(TapCommand), typeof(ICommand), typeof(LongPressBehavior));
+
+    /// <summary>Fired on a normal tap (released within tap timeout).</summary>
+    public ICommand? TapCommand
+    {
+        get => (ICommand?)GetValue(TapCommandProperty);
+        set => SetValue(TapCommandProperty, value);
+    }
+
     public static readonly BindableProperty CommandParameterProperty =
         BindableProperty.Create(nameof(CommandParameter), typeof(object), typeof(LongPressBehavior));
 
+    /// <summary>Parameter passed to both <see cref="Command"/> and <see cref="TapCommand"/>.
+    /// When null, the associated View's BindingContext is used at gesture time —
+    /// which matters for CollectionView items where the BindingContext changes
+    /// as RecyclerView recycles the row.</summary>
     public object? CommandParameter
     {
         get => GetValue(CommandParameterProperty);
@@ -54,8 +72,8 @@ public sealed class LongPressBehavior : Behavior<View>
 
 #if ANDROID
     private global::Android.Views.View? _nativeView;
-    private EventHandler<global::Android.Views.View.TouchEventArgs>? _touchHandler;
-    private DateTime _pressStart;
+    private EventHandler<global::Android.Views.View.LongClickEventArgs>? _longClickHandler;
+    private EventHandler? _clickHandler;
 #endif
 
     protected override void OnAttachedTo(View bindable)
@@ -81,8 +99,16 @@ public sealed class LongPressBehavior : Behavior<View>
 #if ANDROID
         if (_associated?.Handler?.PlatformView is global::Android.Views.View view)
         {
-            _touchHandler = OnNativeTouch;
-            view.Touch += _touchHandler;
+            // Both flags must be true: LongClickable schedules CheckForLongPress on DOWN;
+            // Clickable lets ACTION_UP within tap-timeout fire performClick.
+            view.LongClickable = true;
+            view.Clickable = true;
+
+            _longClickHandler = OnNativeLongClick;
+            _clickHandler = OnNativeClick;
+            view.LongClick += _longClickHandler;
+            view.Click += _clickHandler;
+
             _nativeView = view;
         }
 #endif
@@ -91,46 +117,42 @@ public sealed class LongPressBehavior : Behavior<View>
     private void DetachNative()
     {
 #if ANDROID
-        if (_nativeView is not null && _touchHandler is not null)
-            _nativeView.Touch -= _touchHandler;
+        if (_nativeView is not null)
+        {
+            if (_longClickHandler is not null) _nativeView.LongClick -= _longClickHandler;
+            if (_clickHandler is not null) _nativeView.Click -= _clickHandler;
+        }
         _nativeView = null;
-        _touchHandler = null;
+        _longClickHandler = null;
+        _clickHandler = null;
 #endif
     }
 
 #if ANDROID
-    private void OnNativeTouch(object? sender, global::Android.Views.View.TouchEventArgs args)
+    private void OnNativeLongClick(object? sender, global::Android.Views.View.LongClickEventArgs args)
     {
-        // Never consume — we only observe, so RecyclerView selection etc. keep working.
-        args.Handled = false;
+        // Consume so the corresponding ACTION_UP on this view does NOT also fire performClick.
+        args.Handled = true;
+        Fire(Command);
+    }
 
-        var evt = args.Event;
-        if (evt is null) return;
-
-        switch (evt.ActionMasked)
-        {
-            case global::Android.Views.MotionEventActions.Down:
-                _pressStart = DateTime.UtcNow;
-                break;
-
-            case global::Android.Views.MotionEventActions.Up:
-                var duration = (DateTime.UtcNow - _pressStart).TotalMilliseconds;
-                if (duration >= LongPressMs)
-                {
-                    FireCommand();
-                }
-                break;
-        }
+    private void OnNativeClick(object? sender, EventArgs e)
+    {
+        // Defense in depth: Android already suppresses performClick after a consumed
+        // long-press via mHasPerformedLongPress. The tracker check covers the rare case
+        // where a click slips in from a different code path during the alert.
+        if (LongPressTracker.JustFired) return;
+        Fire(TapCommand);
     }
 #endif
 
-    private void FireCommand()
+    private void Fire(ICommand? cmd)
     {
+        if (cmd is null) return;
         var parameter = CommandParameter ?? _associated?.BindingContext;
-        var cmd = Command;
-        if (cmd is null || !cmd.CanExecute(parameter)) return;
+        if (!cmd.CanExecute(parameter)) return;
 
-        LongPressTracker.LastFiredUtc = DateTime.UtcNow;
+        if (cmd == Command) LongPressTracker.LastFiredUtc = DateTime.UtcNow;
         MainThread.BeginInvokeOnMainThread(() => cmd.Execute(parameter));
     }
 }

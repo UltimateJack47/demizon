@@ -143,8 +143,6 @@ public partial class AttendanceViewModel : ObservableObject
     [RelayCommand]
     private async Task NavigateToEvent(EventDto? eventDto)
     {
-        // TouchBehavior.CommandParameter in CommunityToolkit occasionally arrives as null here
-        // (type-mismatch path in AsyncRelayCommand<T> passes default). Guard explicitly.
         if (eventDto is null) return;
 
         try
@@ -168,9 +166,14 @@ public partial class AttendanceViewModel : ObservableObject
     [RelayCommand]
     private async Task ShowNote(EventDto? eventDto)
     {
-        // Called by LongPressBehavior with the card's BindingContext (the EventDto).
+        // Called by TouchBehavior.LongPressCommand with the card's BindingContext.
         var comment = eventDto?.MyAttendance?.Comment;
         if (string.IsNullOrWhiteSpace(comment)) return;
+
+        // Mark the long-press window so the CollectionView selection that fires
+        // on finger-release doesn't also navigate to the event detail.
+        Behaviors.LongPressTracker.LastFiredUtc = DateTime.UtcNow;
+
         try
         {
             await Shell.Current.DisplayAlert("Poznámka", comment, "OK");

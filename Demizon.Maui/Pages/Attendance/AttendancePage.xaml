@@ -80,8 +80,7 @@
                                 ItemsSource="{Binding Events}"
                                 ItemSizingStrategy="MeasureAllItems"
                                 IsVisible="{Binding HasEvents}"
-                                SelectionMode="Single"
-                                SelectionChanged="OnEventSelectionChanged">
+                                SelectionMode="None">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="dto:EventDto">
                             <Border Style="{StaticResource CardBorder}" Margin="16,6">
@@ -95,13 +94,15 @@
                                         <Setter Property="StrokeThickness" Value="2" />
                                     </DataTrigger>
                                 </Border.Triggers>
-                                <!-- Tap navigation is handled by CollectionView.SelectionChanged in code-behind.
-                                     Long-press is handled by a custom behavior that attaches a native
-                                     Android OnLongClickListener to the card. It reads the current
-                                     BindingContext of the Border at the time of the gesture — so it
-                                     works reliably even with RecyclerView view recycling. -->
+                                <!-- Both gestures are handled by LongPressBehavior via Android's
+                                     native click / long-click listeners on the card. CollectionView
+                                     selection is off (SelectionMode=None) — once we set
+                                     LongClickable=true the card consumes touches, so selection
+                                     wouldn't see them anyway; handling tap here keeps a single
+                                     consistent code path. -->
                                 <Border.Behaviors>
                                     <behaviors:LongPressBehavior
+                                        TapCommand="{Binding Source={x:Reference ThisPage}, Path=BindingContext.NavigateToEventCommand}"
                                         Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ShowNoteCommand}" />
                                 </Border.Behaviors>
 
