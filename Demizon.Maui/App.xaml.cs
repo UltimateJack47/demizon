@@ -8,12 +8,14 @@ public partial class App : Application
     private readonly TokenStorage _tokenStorage;
     private readonly NotificationSyncService _notificationSyncService;
 
-    public App(AppShell shell, TokenStorage tokenStorage, NotificationSyncService notificationSyncService)
+    public App(AppShell shell, TokenStorage tokenStorage, NotificationSyncService notificationSyncService, NotificationNavigationService notificationNavigationService)
     {
         InitializeComponent();
         _shell = shell;
         _tokenStorage = tokenStorage;
         _notificationSyncService = notificationSyncService;
+
+        notificationNavigationService.Initialize();
     }
 
     protected override Window CreateWindow(IActivationState? activationState)

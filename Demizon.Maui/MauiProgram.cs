@@ -38,6 +38,7 @@ public static class MauiProgram
 
         // ViewModels
         services.AddSingleton<NotificationSyncService>();
+        services.AddSingleton<NotificationNavigationService>();
         services.AddTransient<LoginViewModel>();
         services.AddTransient<AttendanceViewModel>();
         services.AddTransient<AttendanceStatsViewModel>();

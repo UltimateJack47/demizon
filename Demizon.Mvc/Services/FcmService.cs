@@ -74,7 +74,11 @@ public class FcmService(ILogger<FcmService> logger)
                 Android = new AndroidConfig
                 {
                     // Must match the channel created in MainActivity.EnsureNotificationChannel()
-                    Notification = new AndroidNotification { ChannelId = "demizon_channel" }
+                    Notification = new AndroidNotification
+                    {
+                        ChannelId = "demizon_channel",
+                        ClickAction = "OPEN_EVENT_DETAIL"
+                    }
                 }
             };
 

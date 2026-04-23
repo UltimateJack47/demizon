@@ -21,6 +21,7 @@ namespace Demizon.Maui.Platforms.Android;
         ConfigChanges.ScreenLayout |
         ConfigChanges.SmallestScreenSize |
         ConfigChanges.Density)]
+[IntentFilter(new[] { "OPEN_EVENT_DETAIL" }, Categories = new[] { Intent.CategoryDefault })]
 public class MainActivity : MauiAppCompatActivity
 {
     internal const string ChannelId = "demizon_channel";
@@ -54,8 +55,11 @@ public class MainActivity : MauiAppCompatActivity
         EnsureNotificationChannel();
 
         // Show FCM notifications that arrive while the app is in the foreground
-        CrossFirebaseCloudMessaging.Current.NotificationReceived += (_, e) =>
-            ShowLocalNotification(e.Notification.Title ?? "Demižón", e.Notification.Body ?? string.Empty);
+        CrossFirebaseCloudMessaging.Current.NotificationReceived += (sender, e) =>
+        {
+            System.Console.WriteLine($"[DEBUG_LOG] NotificationReceived: {e.Notification.Title}");
+            ShowLocalNotification(e.Notification.Title ?? "Demižón", e.Notification.Body ?? string.Empty, e.Notification.Data);
+        };
     }
 
     private void EnsureNotificationChannel()
@@ -68,13 +72,25 @@ public class MainActivity : MauiAppCompatActivity
         ((NotificationManager)GetSystemService(NotificationService)!).CreateNotificationChannel(channel);
     }
 
-    internal void ShowLocalNotification(string title, string body)
+    internal void ShowLocalNotification(string title, string body, IDictionary<string, string>? data)
     {
+        var intent = new Intent(this, typeof(MainActivity));
+        intent.AddFlags(ActivityFlags.ClearTop | ActivityFlags.SingleTop);
+
+        if (data != null)
+        {
+            foreach (var key in data.Keys)
+                intent.PutExtra(key, data[key]);
+        }
+
+        var pendingIntent = PendingIntent.GetActivity(this, 0, intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+
         var notification = new NotificationCompat.Builder(this, ChannelId)
             .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
             .SetContentTitle(title)
             .SetContentText(body)
             .SetAutoCancel(true)
+            .SetContentIntent(pendingIntent)
             .SetPriority(NotificationCompat.PriorityDefault)
             .Build()!;
 
