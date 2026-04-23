@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Demizon.Contracts.Attendances;
 using Demizon.Contracts.Events;
+using Demizon.Contracts.Notifications;
 using Demizon.Maui.Services;
 
 namespace Demizon.Maui.ViewModels;
@@ -21,6 +22,7 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     private bool IsRehearsal => EventId == 0 && !string.IsNullOrEmpty(RehearsalDateString);
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanSendReminder))]
     private EventDto? _event;
 
     [ObservableProperty]
@@ -48,7 +50,11 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     public bool ShowAttendees => !IsRehearsal && Attendees?.TotalCount > 0;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanSendReminder))]
     private bool _isAdmin;
+
+    public bool CanSendReminder =>
+        IsAdmin && !IsRehearsal && Event is { IsCancelled: false } ev && ev.DateFrom > DateTime.Now;
 
     // Display labels for the Picker (Czech). Conversion to/from API values (English) happens at load/save.
     public List<string> RoleOptions { get; } = ["Tanečník", "Muzikant"];
@@ -173,6 +179,33 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
     {
         await navigation.GoToAsync(AppRoutes.EditEvent,
             new Dictionary<string, object> { ["eventId"] = EventId });
+    }
+
+    [RelayCommand]
+    private async Task SendReminderAsync()
+    {
+        if (!CanSendReminder) return;
+
+        var confirm = await Shell.Current.DisplayAlert(
+            "Upozornit na docházku",
+            "Odeslat notifikaci všem členům, kteří nemají vyplněnou docházku na tuto akci?",
+            "Odeslat", "Zrušit");
+        if (!confirm) return;
+
+        IsBusy = true;
+        try
+        {
+            var result = await apiClient.NotifyMissingAttendanceAsync(EventId);
+            var message = result.NotifiedCount == 0
+                ? $"Všichni ({result.SkippedWithAttendance}) už docházku mají vyplněnou."
+                : $"Notifikace odeslána {result.NotifiedCount} členům. {result.SkippedWithAttendance} už docházku má vyplněnou.";
+            await Shell.Current.DisplayAlert("Hotovo", message, "OK");
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlert("Chyba", $"Odeslání selhalo: {ex.Message}", "OK");
+        }
+        finally { IsBusy = false; }
     }
 
     [RelayCommand]

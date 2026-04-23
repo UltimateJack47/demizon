@@ -108,6 +108,9 @@ public interface IApiClient
     [Patch("/api/events/{id}/public")]
     Task ToggleEventPublicAsync(int id);
 
+    [Post("/api/events/{id}/notify-missing-attendance")]
+    Task<NotifyMissingAttendanceResponse> NotifyMissingAttendanceAsync(int id);
+
     // Videos
     [Get("/api/videos")]
     Task<List<VideoLinkDto>> GetVideosAsync();

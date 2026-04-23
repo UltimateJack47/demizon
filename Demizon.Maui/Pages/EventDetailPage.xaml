@@ -230,6 +230,15 @@
                             CornerRadius="12"
                             FontAttributes="Bold" />
 
+                    <Button Text="🔔 Upozornit na docházku"
+                            Command="{Binding SendReminderCommand}"
+                            IsVisible="{Binding CanSendReminder}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                            BackgroundColor="#6B8E4E"
+                            TextColor="White"
+                            CornerRadius="12"
+                            FontAttributes="Bold" />
+
                     <Button Text="🗑️ Smazat akci"
                             Command="{Binding DeleteEventCommand}"
                             BackgroundColor="Transparent"

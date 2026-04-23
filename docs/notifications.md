@@ -30,14 +30,24 @@ Odesílají se pro každou **budoucí, nezrušenou** akci:
 | 30 dní před akcí | „Připomínka akce za měsíc" |
 | 14 dní před akcí | „Připomínka akce za 2 týdny" |
 
-- **Komu**: všem členům
-- **Deduplikace**: jeden záznam na akci + milník (`SentNotification` s `MemberId = null`)
+- **Komu**: pouze členům, kteří **nemají vyplněnou docházku** na danou akci (Attendance s `EventId = ev.Id`). Pokud se člen v 60d neozval, dostane notifikaci znovu v 30d i 14d. Jakmile si docházku vyplní, na další milník už ji nedostane.
+- **Deduplikace**: jeden záznam na akci + milník + člen (`SentNotification` s konkrétním `MemberId`).
+- **Legacy kompatibilita**: pokud pro daný milník existuje starý broadcast záznam (`MemberId = null`) z doby před per-member režimem, milník se přeskočí jako již doručený (nezasílá se znovu každému).
 
 #### Inteligentní přeskakování milníků
 Pokud je akce zadána pozdě (blíže než daný milník), starší milníky se přeskočí.
 Příklad: akce zadána 20 dní před konáním → milník 60d i 30d se přeskočí, odešle se pouze 14d.
 
-### 3. Připomínky zkoušky (nevyplněná docházka)
+### 3. Manuální připomínka docházky (admin, akce)
+- **Kdo spouští**: admin ručně přes tlačítko „🔔 Upozornit na docházku" v detailu akce v mobilní aplikaci
+- **Endpoint**: `POST /api/events/{id}/notify-missing-attendance` (`Demizon.Mvc/Controllers/Api/EventsController.cs`), `[Authorize(Roles = "Admin")]`
+- **Kdy**: jen pro budoucí, nezrušené akce
+- **Komu**: členům, kteří **nemají vyplněnou docházku** na danou akci (stejný filtr jako automatické milníky)
+- **Kanály**: FCM + Web Push paralelně
+- **Deduplikace**: žádná – je to explicitní akce admina. Nezapisuje se do `SentNotification`, takže nezasahuje do milníkové logiky.
+- **Odpověď**: `NotifyMissingAttendanceResponse { NotifiedCount, SkippedWithAttendance }` pro zobrazení v UI.
+
+### 4. Připomínky zkoušky (nevyplněná docházka)
 - **Kdy**: 5 dní, 3 dny a 1 den před každým **pátekem** (zkouška)
 - **Výjimka**: pátek, na který připadá akce (`Event.DateFrom.Date == pátek`), není považován za zkoušku
 - **Komu**: pouze členům, kteří **nemají vyplněnou docházku** na daný pátek
