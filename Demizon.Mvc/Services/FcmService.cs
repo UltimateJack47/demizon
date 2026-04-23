@@ -55,13 +55,13 @@ public class FcmService(ILogger<FcmService> logger)
         logger.LogInformation("Firebase initialized from {Path}.", credentialFile);
     }
 
-    public async Task<bool> SendAsync(string deviceToken, string title, string body,
+    public async Task<FcmSendResult> SendAsync(string deviceToken, string title, string body,
         Dictionary<string, string>? data = null)
     {
         if (!IsInitialized)
         {
             logger.LogWarning("Firebase not initialized. Skipping push notification.");
-            return false;
+            return FcmSendResult.Failed;
         }
 
         try
@@ -79,12 +79,26 @@ public class FcmService(ILogger<FcmService> logger)
             };
 
             await FirebaseMessaging.DefaultInstance.SendAsync(message);
-            return true;
+            return FcmSendResult.Success;
+        }
+        catch (FirebaseMessagingException ex) when (ex.MessagingErrorCode == MessagingErrorCode.Unregistered ||
+                                                  ex.MessagingErrorCode == MessagingErrorCode.InvalidArgument ||
+                                                  ex.MessagingErrorCode == MessagingErrorCode.SenderIdMismatch)
+        {
+            logger.LogWarning(ex, "FCM token {Token} is invalid or unregistered (ErrorCode: {ErrorCode}). Should be removed.", deviceToken, ex.MessagingErrorCode);
+            return FcmSendResult.InvalidToken;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to send FCM notification to token {Token}.", deviceToken);
-            return false;
+            return FcmSendResult.Failed;
         }
     }
+}
+
+public enum FcmSendResult
+{
+    Success,
+    InvalidToken,
+    Failed
 }

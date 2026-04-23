@@ -66,12 +66,20 @@ public class AttendanceReminderBackgroundService(
 
             foreach (var dt in deviceTokens)
             {
-                await fcm.SendAsync(
+                var result = await fcm.SendAsync(
                     dt.Token,
                     "Nevyplněná docházka",
                     $"Nezapomeň vyplnit docházku na akci: {ev.Name}",
                     new Dictionary<string, string> { ["eventId"] = ev.Id.ToString() });
+
+                if (result == FcmSendResult.InvalidToken)
+                {
+                    db.DeviceTokens.Remove(dt);
+                }
             }
         }
+
+        if (db.ChangeTracker.HasChanges())
+            await db.SaveChangesAsync(ct);
     }
 }

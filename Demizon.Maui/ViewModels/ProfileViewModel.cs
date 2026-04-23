@@ -6,7 +6,7 @@ using Plugin.Firebase.CloudMessaging;
 
 namespace Demizon.Maui.ViewModels;
 
-public partial class ProfileViewModel(IApiClient apiClient, TokenStorage tokenStorage, INavigationService navigation) : ObservableObject
+public partial class ProfileViewModel(IApiClient apiClient, TokenStorage tokenStorage, INavigationService navigation, NotificationSyncService syncService) : ObservableObject
 {
     [ObservableProperty]
     private string _login = string.Empty;
@@ -41,15 +41,19 @@ public partial class ProfileViewModel(IApiClient apiClient, TokenStorage tokenSt
         Login = login ?? "—";
         Role = role ?? "—";
 
-        // Restore saved notification preference without triggering the toggle handler
+        // Restore saved notification preference
+        var savedPref = Preferences.Default.Get("notifications_enabled", false);
+        
+        // Verify actual system permission
+        var status = await Permissions.CheckStatusAsync<Permissions.PostNotifications>();
+        var actuallyEnabled = savedPref && status == PermissionStatus.Granted;
+
         _handlingNotificationToggle = true;
-        NotificationsEnabled = Preferences.Default.Get("notifications_enabled", false);
+        NotificationsEnabled = actuallyEnabled;
         _handlingNotificationToggle = false;
 
-        // If notifications were previously enabled, re-register the FCM token on each load
-        // (token may have changed or the previous registration used a placeholder)
-        if (NotificationsEnabled)
-            MainThread.BeginInvokeOnMainThread(async () => await EnsureTokenRegisteredAsync());
+        // Use service to sync state and ensure token is registered
+        _ = syncService.SyncAsync();
 
         var token = await tokenStorage.GetAccessTokenAsync();
         if (!string.IsNullOrEmpty(token))
@@ -121,24 +125,6 @@ public partial class ProfileViewModel(IApiClient apiClient, TokenStorage tokenSt
         {
             _handlingNotificationToggle = false;
             IsBusy = false;
-        }
-    }
-
-    private async Task EnsureTokenRegisteredAsync()
-    {
-        try
-        {
-            var fcmToken = await CrossFirebaseCloudMessaging.Current.GetTokenAsync();
-            if (string.IsNullOrEmpty(fcmToken))
-            {
-                NotificationError = "Re-registrace selhala: FCM token prázdný.";
-                return;
-            }
-            await apiClient.RegisterDeviceAsync(new RegisterDeviceRequest(fcmToken, "android"));
-        }
-        catch (Exception ex)
-        {
-            NotificationError = $"Re-registrace selhala: {ex.Message}";
         }
     }
 

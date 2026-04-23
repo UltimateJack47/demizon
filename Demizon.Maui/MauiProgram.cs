@@ -37,6 +37,7 @@ public static class MauiProgram
             .AddHttpMessageHandler<AuthHandler>();
 
         // ViewModels
+        services.AddSingleton<NotificationSyncService>();
         services.AddTransient<LoginViewModel>();
         services.AddTransient<AttendanceViewModel>();
         services.AddTransient<AttendanceStatsViewModel>();

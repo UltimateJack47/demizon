@@ -6,12 +6,14 @@ public partial class App : Application
 {
     private readonly AppShell _shell;
     private readonly TokenStorage _tokenStorage;
+    private readonly NotificationSyncService _notificationSyncService;
 
-    public App(AppShell shell, TokenStorage tokenStorage)
+    public App(AppShell shell, TokenStorage tokenStorage, NotificationSyncService notificationSyncService)
     {
         InitializeComponent();
         _shell = shell;
         _tokenStorage = tokenStorage;
+        _notificationSyncService = notificationSyncService;
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
@@ -38,6 +40,7 @@ public partial class App : Application
             if (_tokenStorage.IsTokenValid())
             {
                 await Shell.Current.GoToAsync(AppRoutes.MainTabs);
+                _ = _notificationSyncService.SyncAsync();
                 return;
             }
 
@@ -51,6 +54,7 @@ public partial class App : Application
             {
                 await _tokenStorage.SaveAsync(result, login ?? string.Empty);
                 await Shell.Current.GoToAsync(AppRoutes.MainTabs);
+                _ = _notificationSyncService.SyncAsync();
             }
             else
             {

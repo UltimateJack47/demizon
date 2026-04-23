@@ -81,8 +81,12 @@ public sealed class AttendanceReminderService(
         Dictionary<string, string>? data, CancellationToken ct = default)
     {
         var memberSubs = await subscriptionService.GetByMemberAsync(memberId);
+        var reachedByAny = false;
         foreach (var sub in memberSubs)
+        {
             await webPush.SendAsync(sub, title, body);
+            reachedByAny = true;
+        }
 
         var deviceTokens = await db.DeviceTokens
             .Where(d => d.MemberId == memberId)
@@ -90,14 +94,21 @@ public sealed class AttendanceReminderService(
 
         foreach (var dt in deviceTokens)
         {
-            try { await fcm.SendAsync(dt.Token, title, body, data); }
-            catch (Exception ex)
+            var result = await fcm.SendAsync(dt.Token, title, body, data);
+            if (result == FcmSendResult.Success)
             {
-                logger.LogError(ex, "FCM send failed for member {MemberId}, token {Token}.", memberId, dt.Token);
+                reachedByAny = true;
+            }
+            else if (result == FcmSendResult.InvalidToken)
+            {
+                db.DeviceTokens.Remove(dt);
             }
         }
 
-        return memberSubs.Count > 0 || deviceTokens.Count > 0;
+        if (db.ChangeTracker.HasChanges())
+            await db.SaveChangesAsync(ct);
+
+        return reachedByAny;
     }
 
     /// <summary>
@@ -114,12 +125,15 @@ public sealed class AttendanceReminderService(
         var allDeviceTokens = await db.DeviceTokens.ToListAsync(ct);
         foreach (var dt in allDeviceTokens)
         {
-            try { await fcm.SendAsync(dt.Token, title, body, data); }
-            catch (Exception ex)
+            var result = await fcm.SendAsync(dt.Token, title, body, data);
+            if (result == FcmSendResult.InvalidToken)
             {
-                logger.LogError(ex, "FCM send failed for token {Token}.", dt.Token);
+                db.DeviceTokens.Remove(dt);
             }
         }
+
+        if (db.ChangeTracker.HasChanges())
+            await db.SaveChangesAsync(ct);
     }
 }
 

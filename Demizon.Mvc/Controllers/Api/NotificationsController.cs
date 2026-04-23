@@ -79,7 +79,20 @@ public class NotificationsController(DemizonContext db, FcmService fcm) : Contro
         var body = $"Test odeslaný v {DateTime.Now:dd.MM.yyyy HH:mm:ss}";
         var anySent = false;
         foreach (var dt in deviceTokens)
-            anySent |= await fcm.SendAsync(dt.Token, "Test notifikace 🔔", body);
+        {
+            var result = await fcm.SendAsync(dt.Token, "Test notifikace 🔔", body);
+            if (result == FcmSendResult.Success)
+            {
+                anySent = true;
+            }
+            else if (result == FcmSendResult.InvalidToken)
+            {
+                db.DeviceTokens.Remove(dt);
+            }
+        }
+
+        if (db.ChangeTracker.HasChanges())
+            await db.SaveChangesAsync();
 
         if (!anySent)
             return StatusCode(503, new { error = "Firebase není nakonfigurován nebo odeslání selhalo." });
