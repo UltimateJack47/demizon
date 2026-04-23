@@ -4,6 +4,7 @@
              xmlns:vm="clr-namespace:Demizon.Maui.ViewModels.Attendance"
              xmlns:dto="clr-namespace:Demizon.Contracts.Events;assembly=Demizon.Contracts"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:behaviors="clr-namespace:Demizon.Maui.Behaviors"
              x:Class="Demizon.Maui.Pages.Attendance.AttendancePage"
              x:Name="ThisPage"
              x:DataType="vm:AttendanceViewModel"
@@ -75,9 +76,12 @@
                      IsRefreshing="{Binding IsRefreshing}">
             <Grid x:Name="ContentGrid">
                 <!-- Event list -->
-                <CollectionView ItemsSource="{Binding Events}"
-                                ItemSizingStrategy="MeasureFirstItem"
-                                IsVisible="{Binding HasEvents}">
+                <CollectionView x:Name="EventsCollectionView"
+                                ItemsSource="{Binding Events}"
+                                ItemSizingStrategy="MeasureAllItems"
+                                IsVisible="{Binding HasEvents}"
+                                SelectionMode="Single"
+                                SelectionChanged="OnEventSelectionChanged">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="dto:EventDto">
                             <Border Style="{StaticResource CardBorder}" Margin="16,6">
@@ -91,14 +95,16 @@
                                         <Setter Property="StrokeThickness" Value="2" />
                                     </DataTrigger>
                                 </Border.Triggers>
+                                <!-- Tap navigation is handled by CollectionView.SelectionChanged in code-behind.
+                                     Long-press is handled by a custom behavior that attaches a native
+                                     Android OnLongClickListener to the card. It reads the current
+                                     BindingContext of the Border at the time of the gesture — so it
+                                     works reliably even with RecyclerView view recycling. -->
                                 <Border.Behaviors>
-                                    <toolkit:TouchBehavior
-                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.NavigateToEventCommand}"
-                                        CommandParameter="{Binding .}"
-                                        LongPressCommand="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ShowNoteCommand}"
-                                        LongPressCommandParameter="{Binding MyAttendance.Comment}"
-                                        LongPressDuration="500" />
+                                    <behaviors:LongPressBehavior
+                                        Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.ShowNoteCommand}" />
                                 </Border.Behaviors>
+
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                                     <!-- Date column -->
                                     <Border Grid.Column="0"
@@ -166,6 +172,7 @@
                                                  CornerRadius="7"
                                                  HorizontalOptions="Center"
                                                  Color="{Binding MyAttendance, Converter={StaticResource AttendanceColorConverter}}" />
+                                        <!-- Note indicator: just shows there's a comment; long-press the card to read it. -->
                                         <Label Text="📝" FontSize="9"
                                                HorizontalOptions="Center"
                                                IsVisible="{Binding MyAttendance.Comment, Converter={StaticResource StringToBoolConverter}, FallbackValue=False}" />

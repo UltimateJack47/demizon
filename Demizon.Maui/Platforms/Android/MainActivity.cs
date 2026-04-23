@@ -3,6 +3,7 @@ using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using AndroidX.Core.App;
+using AndroidX.Core.View;
 using Plugin.Firebase.CloudMessaging;
 using Plugin.Firebase.CloudMessaging.Platforms.Android;
 using Plugin.Firebase.Core.Platforms.Android;
@@ -28,8 +29,10 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnCreate(savedInstanceState);
 
-        // Ensure page content doesn't render behind the status bar
-        AndroidX.Core.View.WindowCompat.SetDecorFitsSystemWindows(Window!, true);
+        // Android 15 (SDK 35+) enforces edge-to-edge — system bars draw over the app window.
+        // Apply the system-bar insets as padding on the root content view so pages don't
+        // render under the status bar (top) or gesture/nav bar (bottom).
+        ApplySystemBarsInsets();
 
         CrossFirebase.Initialize(this);
         FirebaseCloudMessagingImplementation.OnNewIntent(Intent);
@@ -67,5 +70,23 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnNewIntent(intent);
         FirebaseCloudMessagingImplementation.OnNewIntent(intent);
+    }
+
+    private void ApplySystemBarsInsets()
+    {
+        var content = Window?.DecorView.FindViewById(global::Android.Resource.Id.Content);
+        if (content is null) return;
+
+        ViewCompat.SetOnApplyWindowInsetsListener(content, new SystemBarsInsetsListener());
+    }
+
+    private sealed class SystemBarsInsetsListener : Java.Lang.Object, IOnApplyWindowInsetsListener
+    {
+        public WindowInsetsCompat OnApplyWindowInsets(global::Android.Views.View v, WindowInsetsCompat insets)
+        {
+            var bars = insets.GetInsets(WindowInsetsCompat.Type.SystemBars() | WindowInsetsCompat.Type.DisplayCutout());
+            v.SetPadding(bars.Left, bars.Top, bars.Right, bars.Bottom);
+            return WindowInsetsCompat.Consumed;
+        }
     }
 }

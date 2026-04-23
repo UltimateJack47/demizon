@@ -124,7 +124,7 @@ public partial class EditEventViewModel(IApiClient apiClient, INavigationService
     [RelayCommand]
     public async Task DeleteAsync()
     {
-        var confirm = await Application.Current!.MainPage!
+        var confirm = await Shell.Current
             .DisplayAlert("Smazat akci", "Opravdu chcete smazat tuto akci?", "Smazat", "Zrušit");
         if (!confirm) return;
 

@@ -1,3 +1,5 @@
+using Demizon.Contracts.Events;
+using Demizon.Maui.Behaviors;
 using Demizon.Maui.ViewModels.Attendance;
 
 namespace Demizon.Maui.Pages.Attendance;
@@ -15,6 +17,22 @@ public partial class AttendancePage : ContentPage
 #if ANDROID
         HandlerChanged += OnHandlerChanged;
 #endif
+    }
+
+    private async void OnEventSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not CollectionView cv) return;
+        if (e.CurrentSelection.FirstOrDefault() is not EventDto selected) return;
+
+        // Clear selection immediately so re-tapping the same item also navigates.
+        cv.SelectedItem = null;
+
+        // If a long-press just fired on this card, suppress the navigation that would
+        // otherwise race in on finger release — the alert is already showing.
+        if (LongPressTracker.JustFired) return;
+
+        if (_vm is null) return;
+        await _vm.NavigateToEventCommand.ExecuteAsync(selected);
     }
 
     protected override void OnAppearing()

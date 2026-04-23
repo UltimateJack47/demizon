@@ -1,4 +1,6 @@
+using CommunityToolkit.Maui.Behaviors;
 using Demizon.Contracts.Attendances;
+using Demizon.Maui.Behaviors;
 using Demizon.Maui.ViewModels.Attendance;
 
 namespace Demizon.Maui.Pages.Attendance;
@@ -350,6 +352,7 @@ public partial class AllMembersAttendancePage : ContentPage
                 {
                     tap.Tapped += async (_, _) =>
                     {
+                        if (LongPressTracker.JustFired) return;
                         try { await _vm.NavigateToEventCommand.ExecuteAsync(eventId); }
                         catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít detail akce.", "OK"); }
                     };
@@ -358,6 +361,7 @@ public partial class AllMembersAttendancePage : ContentPage
                 {
                     tap.Tapped += async (_, _) =>
                     {
+                        if (LongPressTracker.JustFired) return;
                         try { await _vm.NavigateToMemberAttendanceAsync(eventId, capturedMemberId, capturedName); }
                         catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít docházku člena.", "OK"); }
                     };
@@ -367,6 +371,7 @@ public partial class AllMembersAttendancePage : ContentPage
                     var commentText = cell?.Comment;
                     tap.Tapped += async (_, _) =>
                     {
+                        if (LongPressTracker.JustFired) return;
                         if (!string.IsNullOrWhiteSpace(commentText))
                             await DisplayAlert($"Poznámka – {capturedName}", commentText, "OK");
                         else
@@ -381,6 +386,7 @@ public partial class AllMembersAttendancePage : ContentPage
                 {
                     tap.Tapped += async (_, _) =>
                     {
+                        if (LongPressTracker.JustFired) return;
                         try { await _vm.NavigateToRehearsalAsync(capturedDate); }
                         catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít detail zkoušky.", "OK"); }
                     };
@@ -389,6 +395,7 @@ public partial class AllMembersAttendancePage : ContentPage
                 {
                     tap.Tapped += async (_, _) =>
                     {
+                        if (LongPressTracker.JustFired) return;
                         try { await _vm.NavigateToMemberRehearsalAsync(capturedDate, capturedMemberId, capturedName); }
                         catch { await DisplayAlert("Chyba", "Nepodařilo se otevřít docházku člena.", "OK"); }
                     };
@@ -398,6 +405,7 @@ public partial class AllMembersAttendancePage : ContentPage
                     var commentText = cell?.Comment;
                     tap.Tapped += async (_, _) =>
                     {
+                        if (LongPressTracker.JustFired) return;
                         if (!string.IsNullOrWhiteSpace(commentText))
                             await DisplayAlert($"Poznámka – {capturedName}", commentText, "OK");
                         else
@@ -407,6 +415,26 @@ public partial class AllMembersAttendancePage : ContentPage
             }
 
             border.GestureRecognizers.Add(tap);
+        }
+
+        // Long-press on a cell with a comment shows that member's note in a dialog.
+        // Uses CommunityToolkit's TouchBehavior because it handles OnTouchListener
+        // chaining with the TapGestureRecognizer above — our own LongPressBehavior
+        // (which uses view.Touch) would otherwise overwrite the tap recognizer's listener.
+        if (hasComment)
+        {
+            var noteText = cell!.Comment!;
+            var noteTitle = $"Poznámka – {memberFullName}";
+            border.Behaviors.Add(new TouchBehavior
+            {
+                LongPressDuration = 500,
+                LongPressCommand = new Command(async () =>
+                {
+                    LongPressTracker.LastFiredUtc = DateTime.UtcNow;
+                    try { await DisplayAlert(noteTitle, noteText, "OK"); }
+                    catch { /* page torn down */ }
+                })
+            });
         }
 
         Grid.SetColumn(border, gridCol);

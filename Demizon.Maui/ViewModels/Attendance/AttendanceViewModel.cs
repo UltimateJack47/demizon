@@ -141,25 +141,44 @@ public partial class AttendanceViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task NavigateToEvent(EventDto eventDto)
+    private async Task NavigateToEvent(EventDto? eventDto)
     {
-        if (eventDto.Id == 0)
+        // TouchBehavior.CommandParameter in CommunityToolkit occasionally arrives as null here
+        // (type-mismatch path in AsyncRelayCommand<T> passes default). Guard explicitly.
+        if (eventDto is null) return;
+
+        try
         {
-            // Rehearsal: navigate with date instead of eventId
-            var date = eventDto.DateFrom.ToString("yyyy-MM-dd");
-            await _navigation.GoToAsync($"{AppRoutes.EventDetail}?rehearsalDate={date}");
+            if (eventDto.Id == 0)
+            {
+                var date = eventDto.DateFrom.ToString("yyyy-MM-dd");
+                await _navigation.GoToAsync($"{AppRoutes.EventDetail}?rehearsalDate={date}");
+            }
+            else
+            {
+                await _navigation.GoToAsync($"{AppRoutes.EventDetail}?eventId={eventDto.Id}");
+            }
         }
-        else
+        catch (Exception)
         {
-            await _navigation.GoToAsync($"{AppRoutes.EventDetail}?eventId={eventDto.Id}");
+            ErrorMessage = "Nepodařilo se otevřít detail akce.";
         }
     }
 
     [RelayCommand]
-    private async Task ShowNote(string? comment)
+    private async Task ShowNote(EventDto? eventDto)
     {
-        if (!string.IsNullOrWhiteSpace(comment))
+        // Called by LongPressBehavior with the card's BindingContext (the EventDto).
+        var comment = eventDto?.MyAttendance?.Comment;
+        if (string.IsNullOrWhiteSpace(comment)) return;
+        try
+        {
             await Shell.Current.DisplayAlert("Poznámka", comment, "OK");
+        }
+        catch
+        {
+            // Shell.Current can be null during transitions; swallow.
+        }
     }
 
     [RelayCommand]
