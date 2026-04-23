@@ -25,6 +25,21 @@ public class MainActivity : MauiAppCompatActivity
 {
     internal const string ChannelId = "demizon_channel";
 
+    /// <summary>
+    /// Page-scoped horizontal-swipe handler. Pages set this in OnAppearing
+    /// and clear it in OnDisappearing. Only one at a time — deeper shell
+    /// navigation wouldn't see concurrent pages.
+    /// </summary>
+    internal static SwipeGestureInterceptor? CurrentSwipeInterceptor { get; set; }
+
+    public override bool DispatchTouchEvent(global::Android.Views.MotionEvent? e)
+    {
+        var interceptor = CurrentSwipeInterceptor;
+        if (interceptor is not null && e is not null && interceptor.OnDispatchTouch(e))
+            return true;
+        return base.DispatchTouchEvent(e);
+    }
+
     protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
