@@ -184,10 +184,24 @@ var localizationOptions = new RequestLocalizationOptions()
     .SetDefaultCulture(supportedCultures[0])
     .AddSupportedCultures(supportedCultures)
     .AddSupportedUICultures(supportedCultures);
-// Cookie provider first (manual user choice), then Accept-Language header (auto-detect browser locale)
+// Cookie provider first (manual user choice), then Slovak-to-Czech remap, then Accept-Language header (auto-detect browser locale)
 localizationOptions.RequestCultureProviders = new List<IRequestCultureProvider>
 {
     new CookieRequestCultureProvider(),
+    new CustomRequestCultureProvider(context =>
+    {
+        var header = context.Request.Headers.AcceptLanguage.ToString();
+        if (string.IsNullOrWhiteSpace(header))
+            return Task.FromResult<ProviderCultureResult?>(null);
+
+        var prefersSlovak = header
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(part => part.Split(';')[0].Trim())
+            .Any(lang => lang.StartsWith("sk", StringComparison.OrdinalIgnoreCase));
+
+        return Task.FromResult<ProviderCultureResult?>(
+            prefersSlovak ? new ProviderCultureResult("cs-CZ", "cs-CZ") : null);
+    }),
     new AcceptLanguageHeaderRequestCultureProvider()
 };
 app.UseRequestLocalization(localizationOptions);
