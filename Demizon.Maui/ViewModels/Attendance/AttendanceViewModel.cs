@@ -13,6 +13,8 @@ namespace Demizon.Maui.ViewModels.Attendance;
 /// Monthly attendance overview — shows all events in the selected month
 /// with the current user's attendance status for each.
 /// </summary>
+[QueryProperty(nameof(CurrentYear), "year")]
+[QueryProperty(nameof(CurrentMonth), "month")]
 public partial class AttendanceViewModel : ObservableObject
 {
     private static readonly CultureInfo CsCulture = new("cs-CZ");
@@ -33,9 +35,19 @@ public partial class AttendanceViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(MonthLabel))]
     private int _currentYear;
 
+    partial void OnCurrentYearChanged(int value)
+    {
+        if (_isInitialized) LoadCommand.Execute(null);
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MonthLabel))]
     private int _currentMonth;
+
+    partial void OnCurrentMonthChanged(int value)
+    {
+        if (_isInitialized) LoadCommand.Execute(null);
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasEvents))]
@@ -60,12 +72,15 @@ public partial class AttendanceViewModel : ObservableObject
     public int AttendedCount => Events.Count(e => e.MyAttendance?.Status == "yes");
     public int TotalCount => Events.Count(e => !e.IsCancelled);
 
+    private bool _isInitialized;
+
     [RelayCommand]
     public async Task LoadAsync()
     {
         if (IsBusy) return;
         IsBusy = true;
         ErrorMessage = null;
+        _isInitialized = true;
 
         try
         {
@@ -189,7 +204,9 @@ public partial class AttendanceViewModel : ObservableObject
     {
         try
         {
-            await _navigation.GoToAsync(AppRoutes.AttdStats);
+            var from = new DateTime(CurrentYear, CurrentMonth, 1).ToString("yyyy-MM-dd");
+            var to = new DateTime(CurrentYear, CurrentMonth, DateTime.DaysInMonth(CurrentYear, CurrentMonth)).ToString("yyyy-MM-dd");
+            await _navigation.GoToAsync($"{AppRoutes.AttdStats}?from={from}&to={to}");
         }
         catch (Exception)
         {
@@ -202,7 +219,7 @@ public partial class AttendanceViewModel : ObservableObject
     {
         try
         {
-            await _navigation.GoToAsync(AppRoutes.AttdOverview);
+            await _navigation.GoToAsync($"{AppRoutes.AttdOverview}?year={CurrentYear}&month={CurrentMonth}");
         }
         catch (Exception)
         {

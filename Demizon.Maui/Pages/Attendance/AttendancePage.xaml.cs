@@ -16,7 +16,7 @@ public partial class AttendancePage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        if (BindingContext is AttendanceViewModel vm)
+        if (BindingContext is AttendanceViewModel vm && !vm.IsBusy && !vm.HasEvents)
             vm.LoadCommand.Execute(null);
 
 #if ANDROID

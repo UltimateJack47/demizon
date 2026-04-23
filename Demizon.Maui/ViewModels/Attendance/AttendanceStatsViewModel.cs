@@ -10,6 +10,8 @@ namespace Demizon.Maui.ViewModels.Attendance;
 /// Attendance statistics — shows rehearsal and action attendance rates
 /// for all members in a configurable date range.
 /// </summary>
+[QueryProperty(nameof(DateFrom), "from")]
+[QueryProperty(nameof(DateTo), "to")]
 public partial class AttendanceStatsViewModel : ObservableObject
 {
     private readonly IApiClient _apiClient;
@@ -24,8 +26,18 @@ public partial class AttendanceStatsViewModel : ObservableObject
     [ObservableProperty]
     private DateTime _dateFrom;
 
+    partial void OnDateFromChanged(DateTime value)
+    {
+        if (_isInitialized) LoadCommand.Execute(null);
+    }
+
     [ObservableProperty]
     private DateTime _dateTo;
+
+    partial void OnDateToChanged(DateTime value)
+    {
+        if (_isInitialized) LoadCommand.Execute(null);
+    }
 
     public DateTime MaxDate => DateTime.Today;
 
@@ -48,12 +60,15 @@ public partial class AttendanceStatsViewModel : ObservableObject
     public int TotalRehearsals => Stats.FirstOrDefault()?.TotalRehearsals ?? 0;
     public int TotalActions => Stats.FirstOrDefault()?.TotalActions ?? 0;
 
+    private bool _isInitialized;
+
     [RelayCommand]
     public async Task LoadAsync()
     {
         if (IsBusy) return;
         IsBusy = true;
         ErrorMessage = null;
+        _isInitialized = true;
 
         try
         {

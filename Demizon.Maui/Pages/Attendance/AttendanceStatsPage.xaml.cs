@@ -13,7 +13,7 @@ public partial class AttendanceStatsPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        if (BindingContext is AttendanceStatsViewModel vm)
+        if (BindingContext is AttendanceStatsViewModel vm && !vm.IsBusy && !vm.HasStats)
             vm.LoadCommand.Execute(null);
     }
 }

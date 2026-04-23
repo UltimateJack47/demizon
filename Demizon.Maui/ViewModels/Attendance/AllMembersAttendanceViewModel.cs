@@ -9,6 +9,8 @@ namespace Demizon.Maui.ViewModels.Attendance;
 /// <summary>
 /// Monthly overview of all members' attendance — shows every member × every event/rehearsal column.
 /// </summary>
+[QueryProperty(nameof(CurrentYear), "year")]
+[QueryProperty(nameof(CurrentMonth), "month")]
 public partial class AllMembersAttendanceViewModel : ObservableObject
 {
     private static readonly CultureInfo CsCulture = new("cs-CZ");
@@ -41,9 +43,19 @@ public partial class AllMembersAttendanceViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(MonthLabel))]
     private int _currentYear;
 
+    partial void OnCurrentYearChanged(int value)
+    {
+        if (_isInitialized) LoadCommand.Execute(null);
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MonthLabel))]
     private int _currentMonth;
+
+    partial void OnCurrentMonthChanged(int value)
+    {
+        if (_isInitialized) LoadCommand.Execute(null);
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasData))]
@@ -61,12 +73,15 @@ public partial class AllMembersAttendanceViewModel : ObservableObject
     public bool HasData => Table is not null && Table.Members.Count > 0;
     public bool IsEmpty => !IsBusy && !HasData;
 
+    private bool _isInitialized;
+
     [RelayCommand]
     public async Task LoadAsync()
     {
         if (IsBusy) return;
         IsBusy = true;
         ErrorMessage = null;
+        _isInitialized = true;
 
         try
         {

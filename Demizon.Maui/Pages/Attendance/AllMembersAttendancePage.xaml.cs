@@ -27,7 +27,9 @@ public partial class AllMembersAttendancePage : ContentPage
         base.OnAppearing();
         if (_vm is not null)
             _vm.PropertyChanged += OnViewModelPropertyChanged;
-        _vm?.LoadCommand.Execute(null);
+
+        if (_vm is not null && !_vm.IsBusy && !_vm.HasData)
+            _vm.LoadCommand.Execute(null);
 
 #if ANDROID
         var activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity;
