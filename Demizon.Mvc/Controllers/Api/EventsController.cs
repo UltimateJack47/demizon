@@ -2,6 +2,8 @@ using Demizon.Contracts.Events;
 using Demizon.Contracts.Notifications;
 using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
+using Demizon.Core.Services.GoogleCalendar;
+using Demizon.Core.Services.Member;
 using Demizon.Dal.Entities;
 using Demizon.Mvc.Extensions;
 using Demizon.Mvc.Mapping;
@@ -19,6 +21,8 @@ namespace Demizon.Mvc.Controllers.Api;
 public class EventsController(
     IEventService eventService,
     IAttendanceService attendanceService,
+    IMemberService memberService,
+    IGoogleCalendarService googleCalendarService,
     AttendanceReminderService attendanceReminder) : ControllerBase
 {
     [HttpGet("upcoming")]
@@ -193,6 +197,10 @@ public class EventsController(
             ev.IsCancelled = request.IsCancelled;
 
             await eventService.UpdateAsync(id, ev);
+
+            // Sync updated time/name to Google Calendar for all attendees
+            await SyncGoogleCalendarForEventAsync(ev);
+
             return Ok(ev.ToDto());
         }
         catch (Common.Exceptions.EntityNotFoundException)
@@ -273,5 +281,39 @@ public class EventsController(
             NotifyMissingAttendanceOutcome.Ok => Ok(result.Response),
             _ => StatusCode(500),
         };
+    }
+
+    /// <summary>
+    /// Aktualizuje Google Calendar události pro všechny členy, kteří mají attendance s GoogleEventId pro danou akci.
+    /// </summary>
+    private async Task SyncGoogleCalendarForEventAsync(Dal.Entities.Event ev)
+    {
+        var attendances = await attendanceService.GetAll()
+            .Where(a => a.EventId == ev.Id && a.GoogleEventId != null)
+            .Include(a => a.Member)
+            .ToListAsync();
+
+        foreach (var att in attendances)
+        {
+            if (string.IsNullOrEmpty(att.GoogleEventId) ||
+                string.IsNullOrEmpty(att.Member.GoogleRefreshToken) ||
+                string.IsNullOrEmpty(att.Member.GoogleCalendarId))
+                continue;
+
+            try
+            {
+                await googleCalendarService.UpdateEventAsync(
+                    att.Member.GoogleRefreshToken,
+                    att.Member.GoogleCalendarId,
+                    att.GoogleEventId,
+                    ev.DateFrom,
+                    ev.DateTo,
+                    ev.Name);
+            }
+            catch
+            {
+                // Google Calendar sync failure must not block event update
+            }
+        }
     }
 }

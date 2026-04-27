@@ -60,29 +60,15 @@ public sealed class GoogleCalendarService : IGoogleCalendarService, IDisposable
     public async Task<string?> CreateEventAsync(
         string refreshToken,
         string calendarId,
-        DateTime date,
+        DateTime dateFrom,
+        DateTime? dateTo,
         string? eventTitle,
         CancellationToken ct = default)
     {
         try
         {
             var service = await BuildCalendarServiceAsync(refreshToken, ct);
-
-            DateTime startTime;
-            DateTime endTime;
-
-            if (date.TimeOfDay == TimeSpan.Zero)
-            {
-                // Páteční zkouška bez akce — pevný čas z konfigurace
-                startTime = date.Date.AddHours(_settings.RehearsalStartHour);
-                endTime = date.Date.AddHours(_settings.RehearsalEndHour);
-            }
-            else
-            {
-                // Akce s reálným DateFrom — použijeme skutečný čas akce
-                startTime = date;
-                endTime = date.AddHours(_settings.EventDurationHours);
-            }
+            var (startTime, endTime) = ResolveTimeRange(dateFrom, dateTo);
 
             var calEvent = new CalendarEvent
             {
@@ -102,13 +88,53 @@ public sealed class GoogleCalendarService : IGoogleCalendarService, IDisposable
 
             var request = service.Events.Insert(calEvent, calendarId);
             var createdEvent = await request.ExecuteAsync(ct);
-            _logger.LogInformation("Vytvořena Google Calendar událost {EventId} pro datum {Date}.", createdEvent.Id, date);
+            _logger.LogInformation("Vytvořena Google Calendar událost {EventId} pro datum {Date}.", createdEvent.Id, dateFrom);
             return createdEvent.Id;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Selhalo vytvoření Google Calendar události pro datum {Date}.", date);
+            _logger.LogError(ex, "Selhalo vytvoření Google Calendar události pro datum {Date}.", dateFrom);
             return null;
+        }
+    }
+
+    public async Task<bool> UpdateEventAsync(
+        string refreshToken,
+        string calendarId,
+        string googleEventId,
+        DateTime dateFrom,
+        DateTime? dateTo,
+        string? eventTitle,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var service = await BuildCalendarServiceAsync(refreshToken, ct);
+            var (startTime, endTime) = ResolveTimeRange(dateFrom, dateTo);
+
+            var patch = new CalendarEvent
+            {
+                Summary = eventTitle,
+                Start = new CalendarEventDateTime
+                {
+                    DateTimeDateTimeOffset = ToLocalOffset(startTime),
+                    TimeZone = _settings.TimeZone
+                },
+                End = new CalendarEventDateTime
+                {
+                    DateTimeDateTimeOffset = ToLocalOffset(endTime),
+                    TimeZone = _settings.TimeZone
+                }
+            };
+
+            await service.Events.Patch(patch, calendarId, googleEventId).ExecuteAsync(ct);
+            _logger.LogInformation("Aktualizována Google Calendar událost {EventId}.", googleEventId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Selhala aktualizace Google Calendar události {EventId}.", googleEventId);
+            return false;
         }
     }
 
@@ -138,6 +164,23 @@ public sealed class GoogleCalendarService : IGoogleCalendarService, IDisposable
             _logger.LogError(ex, "Selhalo smazání Google Calendar události {EventId}.", googleEventId);
             return false;
         }
+    }
+
+    /// <summary>
+    /// Určí skutečný start/end čas. Pro zkoušky (dateTo == null) použije konfiguraci,
+    /// pro akce s dateTo použije reálný rozsah.
+    /// </summary>
+    private (DateTime start, DateTime end) ResolveTimeRange(DateTime dateFrom, DateTime? dateTo)
+    {
+        if (dateTo is null)
+        {
+            // Zkouška — pevný čas z konfigurace
+            return (dateFrom.Date.AddHours(_settings.RehearsalStartHour),
+                    dateFrom.Date.AddHours(_settings.RehearsalEndHour));
+        }
+
+        // Akce s reálným DateFrom/DateTo
+        return (dateFrom, dateTo.Value);
     }
 
     /// <summary>

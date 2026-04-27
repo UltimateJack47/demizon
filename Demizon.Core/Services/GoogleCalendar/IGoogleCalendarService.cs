@@ -11,10 +11,16 @@ public interface IGoogleCalendarService
     /// <summary>
     /// Vytvoří událost v Google Calendar pro daný datum a název.
     /// Pro páteční zkoušky (TimeOfDay == Zero) použije pevný čas z konfigurace.
-    /// Pro akce (DateFrom s reálným časem) použije skutečný čas akce.
+    /// Pro akce (DateFrom s reálným časem) použije skutečný čas; dateTo určuje konec.
     /// Vrátí Google Event ID nebo null při selhání.
     /// </summary>
-    Task<string?> CreateEventAsync(string refreshToken, string calendarId, DateTime date, string? eventTitle, CancellationToken ct = default);
+    Task<string?> CreateEventAsync(string refreshToken, string calendarId, DateTime dateFrom, DateTime? dateTo, string? eventTitle, CancellationToken ct = default);
+
+    /// <summary>
+    /// Aktualizuje existující událost v Google Calendar (čas, název).
+    /// Vrátí true při úspěchu, false při selhání.
+    /// </summary>
+    Task<bool> UpdateEventAsync(string refreshToken, string calendarId, string googleEventId, DateTime dateFrom, DateTime? dateTo, string? eventTitle, CancellationToken ct = default);
 
     /// <summary>
     /// Smaže událost z Google Calendar dle ID.

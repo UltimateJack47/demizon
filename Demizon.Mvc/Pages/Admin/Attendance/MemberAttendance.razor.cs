@@ -319,11 +319,13 @@ public partial class MemberAttendance : ComponentBase
                 : $"Zkouška Demizon – {model.Date:d. M. yyyy}";
 
             var eventDate = model.Event is not null ? model.Event.DateFrom : model.Date;
+            var eventDateTo = model.Event?.DateTo;
 
             var createdId = await GoogleCalendarService.CreateEventAsync(
                 member.GoogleRefreshToken,
                 member.GoogleCalendarId,
                 eventDate,
+                eventDateTo,
                 title);
 
             if (createdId is not null && model.Id != 0)

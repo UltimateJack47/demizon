@@ -12,3 +12,5 @@ riderModule.iml
 # Firebase secrets — copy FirebaseConfig.template.cs → FirebaseConfig.cs and fill in values
 /Demizon.Maui/Platforms/Android/FirebaseConfig.cs
 /Demizon.Maui/Platforms/Android/google-services.json
+/Demizon.Mvc/demizon.sqlite-shm
+/Demizon.Mvc/demizon.sqlite-wal

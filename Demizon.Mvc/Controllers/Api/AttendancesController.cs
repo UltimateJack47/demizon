@@ -77,7 +77,7 @@ public class AttendancesController(
                 if (string.IsNullOrEmpty(attendance.GoogleEventId))
                 {
                     var googleEventId = await googleCalendarService.CreateEventAsync(
-                        member.GoogleRefreshToken, member.GoogleCalendarId, ev.DateFrom, ev.Name);
+                        member.GoogleRefreshToken, member.GoogleCalendarId, ev.DateFrom, ev.DateTo, ev.Name);
                     if (googleEventId is not null)
                     {
                         attendance.GoogleEventId = googleEventId;
@@ -140,7 +140,7 @@ public class AttendancesController(
                 {
                     var title = $"Zkouška Demizon – {day:d. M. yyyy}";
                     var googleEventId = await googleCalendarService.CreateEventAsync(
-                        member.GoogleRefreshToken, member.GoogleCalendarId, day, title);
+                        member.GoogleRefreshToken, member.GoogleCalendarId, day, null, title);
                     if (googleEventId is not null)
                     {
                         attendance.GoogleEventId = googleEventId;
@@ -222,7 +222,7 @@ public class AttendancesController(
                     if (string.IsNullOrEmpty(attendance.GoogleEventId))
                     {
                         var googleEventId = await googleCalendarService.CreateEventAsync(
-                            member.GoogleRefreshToken, member.GoogleCalendarId, ev.DateFrom, ev.Name);
+                            member.GoogleRefreshToken, member.GoogleCalendarId, ev.DateFrom, ev.DateTo, ev.Name);
                         if (googleEventId is not null)
                         {
                             attendance.GoogleEventId = googleEventId;
