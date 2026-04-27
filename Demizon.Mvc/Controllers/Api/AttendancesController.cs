@@ -266,7 +266,6 @@ public class AttendancesController(
                         if (googleEventId is not null)
                         {
                             attendance.GoogleEventId = googleEventId;
-                            await attendanceService.CreateOrUpdateAsync(attendance);
                         }
                     }
                 }
@@ -275,15 +274,20 @@ public class AttendancesController(
                     await googleCalendarService.DeleteEventAsync(
                         member.GoogleRefreshToken, member.GoogleCalendarId, attendance.GoogleEventId);
                     attendance.GoogleEventId = null;
-                    await attendanceService.CreateOrUpdateAsync(attendance);
                 }
             }
         }
-        catch
+        catch (Common.Exceptions.GoogleTokenRevokedException)
         {
-            // Google Calendar sync failure must not block saving attendance
+            logger.LogWarning("Google token pro člena {MemberId} byl odvolán — mažu uložené credentials.", memberId);
+            await memberService.DisconnectGoogleCalendarAsync(memberId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Google Calendar sync selhal pro člena {MemberId}, akce {EventId}.", memberId, eventId);
         }
 
+        await attendanceService.CreateOrUpdateAsync(attendance);
         return Ok(attendance.ToDto());
     }
 
