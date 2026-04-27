@@ -213,6 +213,17 @@ public class EventsController(
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
+        // Clean up Google Calendar events for all attendees before cascade-deleting
+        try
+        {
+            var ev = await eventService.GetOneAsync(id);
+            await CleanupGoogleCalendarForEventAsync(ev.Id);
+        }
+        catch (Common.Exceptions.EntityNotFoundException)
+        {
+            return NotFound();
+        }
+
         var success = await eventService.DeleteAsync(id);
         return success ? NoContent() : NotFound();
     }
@@ -313,6 +324,38 @@ public class EventsController(
             catch
             {
                 // Google Calendar sync failure must not block event update
+            }
+        }
+    }
+
+    /// <summary>
+    /// Smaže Google Calendar události pro všechny členy, kteří mají attendance s GoogleEventId pro danou akci.
+    /// Volá se před cascade-smazáním eventu z DB.
+    /// </summary>
+    private async Task CleanupGoogleCalendarForEventAsync(int eventId)
+    {
+        var attendances = await attendanceService.GetAll()
+            .Where(a => a.EventId == eventId && a.GoogleEventId != null)
+            .Include(a => a.Member)
+            .ToListAsync();
+
+        foreach (var att in attendances)
+        {
+            if (string.IsNullOrEmpty(att.GoogleEventId) ||
+                string.IsNullOrEmpty(att.Member.GoogleRefreshToken) ||
+                string.IsNullOrEmpty(att.Member.GoogleCalendarId))
+                continue;
+
+            try
+            {
+                await googleCalendarService.DeleteEventAsync(
+                    att.Member.GoogleRefreshToken,
+                    att.Member.GoogleCalendarId,
+                    att.GoogleEventId);
+            }
+            catch
+            {
+                // Google Calendar cleanup failure must not block event deletion
             }
         }
     }

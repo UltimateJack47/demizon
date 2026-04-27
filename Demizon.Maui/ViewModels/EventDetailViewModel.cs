@@ -241,7 +241,10 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
             WeakReferenceMessenger.Default.Send(new EventsChangedMessage());
             await navigation.GoBackAsync();
         }
-        catch (Exception) { /* ignore */ }
+        catch (Exception)
+        {
+            await Shell.Current.DisplayAlert("Chyba", "Nepodařilo se smazat akci.", "OK");
+        }
         finally { IsBusy = false; }
     }
 }

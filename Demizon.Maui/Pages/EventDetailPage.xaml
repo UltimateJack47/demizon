@@ -242,7 +242,8 @@
 
                     <Button Text="🗑️ Smazat akci"
                             Command="{Binding DeleteEventCommand}"
-                            IsVisible="{Binding Event.IsRehearsal, Converter={StaticResource InvertedBoolConverter}}"
+                            IsVisible="{Binding IsAdmin}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
                             BackgroundColor="Transparent"
                             TextColor="#C0392B"
                             BorderColor="#C0392B"
