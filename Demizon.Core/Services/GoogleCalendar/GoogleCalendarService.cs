@@ -184,13 +184,15 @@ public sealed class GoogleCalendarService : IGoogleCalendarService, IDisposable
     }
 
     /// <summary>
-    /// Převede lokální DateTime (Prague) na DateTimeOffset se správným offsetem pro dané datum,
+    /// Převede DateTime na DateTimeOffset v pražské časové zóně se správným offsetem,
     /// včetně letního času (UTC+2 v létě, UTC+1 v zimě).
     /// </summary>
     private DateTimeOffset ToLocalOffset(DateTime localTime)
     {
         var tz = TimeZoneInfo.FindSystemTimeZoneById(_settings.TimeZone);
-        return new DateTimeOffset(localTime, tz.GetUtcOffset(localTime));
+        // Ensure Kind is Unspecified so DateTimeOffset constructor doesn't throw for UTC-kind values
+        var unspecified = DateTime.SpecifyKind(localTime, DateTimeKind.Unspecified);
+        return new DateTimeOffset(unspecified, tz.GetUtcOffset(unspecified));
     }
 
     private async Task<CalendarService> BuildCalendarServiceAsync(string refreshToken, CancellationToken ct)

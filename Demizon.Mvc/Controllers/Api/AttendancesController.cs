@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Demizon.Mvc.Controllers.Api;
 
@@ -22,7 +23,8 @@ public class AttendancesController(
     IEventService eventService,
     IMemberService memberService,
     IGoogleCalendarService googleCalendarService,
-    IAttendanceReportService reportService) : ControllerBase
+    IAttendanceReportService reportService,
+    ILogger<AttendancesController> logger) : ControllerBase
 {
     [HttpGet("me")]
     public async Task<ActionResult<List<AttendanceDto>>> GetMyAttendances()
@@ -76,21 +78,34 @@ public class AttendancesController(
             {
                 if (string.IsNullOrEmpty(attendance.GoogleEventId))
                 {
+                    logger.LogInformation(
+                        "Vytvářím GCal událost pro člena {MemberId}, akce {EventId} ({EventName}), DateFrom={DateFrom}, DateTo={DateTo}.",
+                        memberId, ev.Id, ev.Name, ev.DateFrom, ev.DateTo);
                     var googleEventId = await googleCalendarService.CreateEventAsync(
                         member.GoogleRefreshToken, member.GoogleCalendarId, ev.DateFrom, ev.DateTo, ev.Name);
                     if (googleEventId is not null)
                     {
                         attendance.GoogleEventId = googleEventId;
                     }
+                    else
+                    {
+                        logger.LogWarning("GCal CreateEvent vrátil null pro člena {MemberId}, akce {EventId}.", memberId, ev.Id);
+                    }
                 }
             }
             else if (!string.IsNullOrEmpty(attendance.GoogleEventId))
             {
-                // SMAŽ DŘÍV, než uložiš do DB
+                // SMAŽ DŘÍV, než uložíš do DB
                 await googleCalendarService.DeleteEventAsync(
                     member.GoogleRefreshToken, member.GoogleCalendarId, attendance.GoogleEventId);
                 attendance.GoogleEventId = null;
             }
+        }
+        else
+        {
+            logger.LogDebug(
+                "GCal sync přeskočen pro člena {MemberId}: RefreshToken={HasToken}, CalendarId={HasCalId}.",
+                memberId, !string.IsNullOrEmpty(member.GoogleRefreshToken), !string.IsNullOrEmpty(member.GoogleCalendarId));
         }
 
         // TEPRVE POTOM ulož do DB (s GoogleEventId buď vyplněným nebo null)

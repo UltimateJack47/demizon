@@ -213,19 +213,17 @@ public class EventsController(
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        // Clean up Google Calendar events for all attendees before cascade-deleting
         try
         {
-            var ev = await eventService.GetOneAsync(id);
-            await CleanupGoogleCalendarForEventAsync(ev.Id);
+            // Clean up Google Calendar events for all attendees before cascade-deleting
+            await CleanupGoogleCalendarForEventAsync(id);
+            var success = await eventService.DeleteAsync(id);
+            return success ? NoContent() : StatusCode(500, new { error = "Smazání akce selhalo." });
         }
         catch (Common.Exceptions.EntityNotFoundException)
         {
             return NotFound();
         }
-
-        var success = await eventService.DeleteAsync(id);
-        return success ? NoContent() : NotFound();
     }
 
     [HttpPatch("{id:int}/cancel")]

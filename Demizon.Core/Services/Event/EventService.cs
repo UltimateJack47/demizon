@@ -48,21 +48,21 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
     
     public async Task<bool> DeleteAsync(int id)
     {
+        var entity = await DemizonContext.Events.FindAsync(id);
+        if (entity is null)
+        {
+            throw new EntityNotFoundException($"Event with id: {id} not found.");
+        }
+
         try
         {
-            var entity = await DemizonContext.Events.FindAsync(id);
-            if (entity is null)
-            {
-                throw new EntityNotFoundException();
-            }
-
             DemizonContext.Events.Remove(entity);
             await DemizonContext.SaveChangesAsync();
             return true;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to process Event operation.");
+            logger.LogError(ex, "Failed to delete Event {EventId}.", id);
             return false;
         }
     }
