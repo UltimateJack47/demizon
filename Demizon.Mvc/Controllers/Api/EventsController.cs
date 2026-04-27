@@ -4,6 +4,7 @@ using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
 using Demizon.Core.Services.GoogleCalendar;
 using Demizon.Core.Services.Member;
+using Demizon.Dal;
 using Demizon.Dal.Entities;
 using Demizon.Mvc.Extensions;
 using Demizon.Mvc.Mapping;
@@ -23,6 +24,7 @@ public class EventsController(
     IAttendanceService attendanceService,
     IMemberService memberService,
     IGoogleCalendarService googleCalendarService,
+    DemizonContext dbContext,
     AttendanceReminderService attendanceReminder) : ControllerBase
 {
     [HttpGet("upcoming")]
@@ -215,8 +217,13 @@ public class EventsController(
     {
         try
         {
-            // Clean up Google Calendar events for all attendees before cascade-deleting
+            // Verify event exists
+            await eventService.GetOneAsync(id);
+
+            // Clean up Google Calendar events and delete attendances before the event
             await CleanupGoogleCalendarForEventAsync(id);
+            await DeleteAttendancesForEventAsync(id);
+
             var success = await eventService.DeleteAsync(id);
             return success ? NoContent() : StatusCode(500, new { error = "Smazání akce selhalo." });
         }
@@ -356,5 +363,24 @@ public class EventsController(
                 // Google Calendar cleanup failure must not block event deletion
             }
         }
+    }
+
+    /// <summary>
+    /// Smaže všechny attendance a sent notification záznamy pro daný event.
+    /// SQLite nemá spolehlivý ON DELETE CASCADE, proto mažeme ručně.
+    /// </summary>
+    private async Task DeleteAttendancesForEventAsync(int eventId)
+    {
+        var attendances = await dbContext.Attendances
+            .Where(a => a.EventId == eventId)
+            .ToListAsync();
+        dbContext.Attendances.RemoveRange(attendances);
+
+        var notifications = await dbContext.SentNotifications
+            .Where(n => n.EventId == eventId)
+            .ToListAsync();
+        dbContext.SentNotifications.RemoveRange(notifications);
+
+        await dbContext.SaveChangesAsync();
     }
 }

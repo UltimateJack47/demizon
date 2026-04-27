@@ -127,7 +127,8 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
                 .HasForeignKey(x => x.MemberId);
             b.HasOne<Event>(x => x.Event)
                 .WithMany(y => y.Attendances)
-                .HasForeignKey(x => x.EventId);
+                .HasForeignKey(x => x.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
             b.Property(s => s.Date).IsRequired();
             b.Property(s => s.Status).HasDefaultValue(AttendanceStatus.No).HasConversion<int>().IsRequired();
             b.Property(s => s.ActivityRole).HasConversion<string>();

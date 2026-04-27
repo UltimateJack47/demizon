@@ -72,33 +72,42 @@ public class AttendancesController(
 
         // Google Calendar sync — pouze PŘED uložením do DB
         var member = await memberService.GetOneAsync(memberId);
+        var gcalWarning = (string?)null;
         if (!string.IsNullOrEmpty(member.GoogleRefreshToken) && !string.IsNullOrEmpty(member.GoogleCalendarId))
         {
-            if (attendance.Status == AttendanceStatus.Yes)
+            try
             {
-                if (string.IsNullOrEmpty(attendance.GoogleEventId))
+                if (attendance.Status == AttendanceStatus.Yes)
                 {
-                    logger.LogInformation(
-                        "Vytvářím GCal událost pro člena {MemberId}, akce {EventId} ({EventName}), DateFrom={DateFrom}, DateTo={DateTo}.",
-                        memberId, ev.Id, ev.Name, ev.DateFrom, ev.DateTo);
-                    var googleEventId = await googleCalendarService.CreateEventAsync(
-                        member.GoogleRefreshToken, member.GoogleCalendarId, ev.DateFrom, ev.DateTo, ev.Name);
-                    if (googleEventId is not null)
+                    if (string.IsNullOrEmpty(attendance.GoogleEventId))
                     {
-                        attendance.GoogleEventId = googleEventId;
-                    }
-                    else
-                    {
-                        logger.LogWarning("GCal CreateEvent vrátil null pro člena {MemberId}, akce {EventId}.", memberId, ev.Id);
+                        logger.LogInformation(
+                            "Vytvářím GCal událost pro člena {MemberId}, akce {EventId} ({EventName}), DateFrom={DateFrom}, DateTo={DateTo}.",
+                            memberId, ev.Id, ev.Name, ev.DateFrom, ev.DateTo);
+                        var googleEventId = await googleCalendarService.CreateEventAsync(
+                            member.GoogleRefreshToken, member.GoogleCalendarId, ev.DateFrom, ev.DateTo, ev.Name);
+                        if (googleEventId is not null)
+                        {
+                            attendance.GoogleEventId = googleEventId;
+                        }
+                        else
+                        {
+                            logger.LogWarning("GCal CreateEvent vrátil null pro člena {MemberId}, akce {EventId}.", memberId, ev.Id);
+                        }
                     }
                 }
+                else if (!string.IsNullOrEmpty(attendance.GoogleEventId))
+                {
+                    await googleCalendarService.DeleteEventAsync(
+                        member.GoogleRefreshToken, member.GoogleCalendarId, attendance.GoogleEventId);
+                    attendance.GoogleEventId = null;
+                }
             }
-            else if (!string.IsNullOrEmpty(attendance.GoogleEventId))
+            catch (Common.Exceptions.GoogleTokenRevokedException)
             {
-                // SMAŽ DŘÍV, než uložíš do DB
-                await googleCalendarService.DeleteEventAsync(
-                    member.GoogleRefreshToken, member.GoogleCalendarId, attendance.GoogleEventId);
-                attendance.GoogleEventId = null;
+                logger.LogWarning("Google token pro člena {MemberId} byl odvolán — mažu uložené credentials.", memberId);
+                await memberService.DisconnectGoogleCalendarAsync(memberId);
+                gcalWarning = "Propojení s Google Calendar vypršelo. Prosím znovu propojte v nastavení profilu.";
             }
         }
         else
@@ -111,6 +120,8 @@ public class AttendancesController(
         // TEPRVE POTOM ulož do DB (s GoogleEventId buď vyplněným nebo null)
         await attendanceService.CreateOrUpdateAsync(attendance);
 
+        if (gcalWarning is not null)
+            Response.Headers.Append("X-GCal-Warning", gcalWarning);
         return Ok(attendance.ToDto());
     }
 
@@ -147,31 +158,45 @@ public class AttendancesController(
 
         // Google Calendar sync pro zkoušky
         var member = await memberService.GetOneAsync(memberId);
+        var gcalWarning = (string?)null;
         if (!string.IsNullOrEmpty(member.GoogleRefreshToken) && !string.IsNullOrEmpty(member.GoogleCalendarId))
         {
-            if (attendance.Status == AttendanceStatus.Yes)
+            try
             {
-                if (string.IsNullOrEmpty(attendance.GoogleEventId))
+                if (attendance.Status == AttendanceStatus.Yes)
                 {
-                    var title = $"Zkouška Demizon – {day:d. M. yyyy}";
-                    var googleEventId = await googleCalendarService.CreateEventAsync(
-                        member.GoogleRefreshToken, member.GoogleCalendarId, day, null, title);
-                    if (googleEventId is not null)
+                    if (string.IsNullOrEmpty(attendance.GoogleEventId))
                     {
-                        attendance.GoogleEventId = googleEventId;
+                        var title = $"Zkouška Demizon – {day:d. M. yyyy}";
+                        var googleEventId = await googleCalendarService.CreateEventAsync(
+                            member.GoogleRefreshToken, member.GoogleCalendarId, day, null, title);
+                        if (googleEventId is not null)
+                        {
+                            attendance.GoogleEventId = googleEventId;
+                        }
                     }
                 }
+                else if (!string.IsNullOrEmpty(attendance.GoogleEventId))
+                {
+                    await googleCalendarService.DeleteEventAsync(
+                        member.GoogleRefreshToken, member.GoogleCalendarId, attendance.GoogleEventId);
+                    attendance.GoogleEventId = null;
+                }
             }
-            else if (!string.IsNullOrEmpty(attendance.GoogleEventId))
+            catch (Common.Exceptions.GoogleTokenRevokedException)
             {
-                await googleCalendarService.DeleteEventAsync(
-                    member.GoogleRefreshToken, member.GoogleCalendarId, attendance.GoogleEventId);
-                attendance.GoogleEventId = null;
+                logger.LogWarning("Google token pro člena {MemberId} byl odvolán — mažu uložené credentials.", memberId);
+                await memberService.DisconnectGoogleCalendarAsync(memberId);
+                gcalWarning = "Propojení s Google Calendar vypršelo. Prosím znovu propojte v nastavení profilu.";
             }
         }
 
         await attendanceService.CreateOrUpdateAsync(attendance);
-        return Ok(attendance.ToDto());
+
+        if (gcalWarning is not null)
+            Response.Headers.Append("X-GCal-Warning", gcalWarning);
+        var result = attendance.ToDto();
+        return Ok(result);
     }
 
     /// <summary>

@@ -1,5 +1,6 @@
 using System.Net;
 using Demizon.Common.Configuration;
+using Demizon.Common.Exceptions;
 using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
@@ -200,8 +201,15 @@ public sealed class GoogleCalendarService : IGoogleCalendarService, IDisposable
         var tokenResponse = new TokenResponse { RefreshToken = refreshToken };
         var credential = new UserCredential(_flow, "user", tokenResponse);
 
-        // Získá čerstvý access token na základě uloženého refresh tokenu
-        await credential.RefreshTokenAsync(ct);
+        try
+        {
+            await credential.RefreshTokenAsync(ct);
+        }
+        catch (TokenResponseException ex) when (ex.Error?.Error == "invalid_grant")
+        {
+            _logger.LogWarning("Google refresh token byl odvolán nebo expiroval.");
+            throw new GoogleTokenRevokedException();
+        }
 
         return new CalendarService(new BaseClientService.Initializer
         {

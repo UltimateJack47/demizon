@@ -171,6 +171,10 @@ public partial class EventDetailViewModel(IApiClient apiClient, INavigationServi
             WeakReferenceMessenger.Default.Send(new EventsChangedMessage());
             await navigation.GoBackAsync();
         }
+        catch (Exception)
+        {
+            await Shell.Current.DisplayAlert("Chyba", "Nepodařilo se uložit docházku.", "OK");
+        }
         finally { IsBusy = false; }
     }
 
