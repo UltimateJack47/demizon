@@ -37,9 +37,22 @@
         <NavMenu></NavMenu>
         <div style="margin-top: auto;">
             <MudDivider Class="pb-1"/>
-            <MudText Typo="Typo.caption" Class="pa-3" Style="color: var(--mud-palette-text-secondary);">
-                © @DateTime.Now.Year FS Demižón Strážnice
-            </MudText>
+            <MudStack Class="pa-3" Spacing="0">
+                <MudText Typo="Typo.caption" Style="color: var(--mud-palette-text-secondary);">
+                    © @DateTime.Now.Year FS Demižón Strážnice
+                </MudText>
+                <MudStack Row="true" Spacing="2">
+                    <MudLink Href="/Privacy-Policy" Typo="Typo.caption" Color="Color.Default"
+                             Style="opacity: 0.6; font-size: 0.7rem;">
+                        @(_isCzech ? "Ochrana osobních údajů" : "Privacy Policy")
+                    </MudLink>
+                    <MudText Typo="Typo.caption" Style="opacity: 0.4; font-size: 0.7rem;">·</MudText>
+                    <MudLink Href="/Terms-of-Service" Typo="Typo.caption" Color="Color.Default"
+                             Style="opacity: 0.6; font-size: 0.7rem;">
+                        @(_isCzech ? "Podmínky užívání" : "Terms of Service")
+                    </MudLink>
+                </MudStack>
+            </MudStack>
         </div>
     </MudDrawer>
 
@@ -52,6 +65,7 @@
 
 @code {
     bool DrawerOpen = true;
+    bool _isCzech => Thread.CurrentThread.CurrentUICulture.Name == "cs-CZ";
 
     void DrawerToggle()
     {

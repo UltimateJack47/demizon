@@ -1,0 +1,232 @@
+@page "/Privacy-Policy"
+
+@if (_isCzech)
+{
+    <PageTitle>Zásady ochrany osobních údajů – FS Demižón</PageTitle>
+
+    <MudText Typo="Typo.h4" Class="mb-1">Zásady ochrany osobních údajů</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-6">Naposledy aktualizováno: 28. dubna 2026</MudText>
+
+    <MudStack Spacing="4">
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">1. Správce osobních údajů</MudText>
+            <MudText Typo="Typo.body1">
+                Správcem osobních údajů je folklorní soubor <strong>FS Demižón Strážnice</strong>,
+                se sídlem Orelská jednota Strážnice, 696 62 Strážnice.
+                V případě dotazů nás kontaktujte na
+                <MudLink Href="mailto:fs.demizon@gmail.com" Color="Color.Primary">fs.demizon@gmail.com</MudLink>.
+            </MudText>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">2. Jaké údaje zpracováváme</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">V rámci provozu aplikace pro členy souboru zpracováváme:</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Jméno a příjmení</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">E-mailová adresa</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Profilová fotografie (volitelně)</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Záznamy o docházce na zkoušky a akce</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Token zařízení pro push notifikace (volitelně)</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">OAuth token pro Google Calendar (volitelně, pouze při aktivním propojení)</MudListItem>
+            </MudList>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">3. Účel zpracování</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">Osobní údaje zpracováváme výhradně pro tyto účely:</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight"><strong>Správa členství</strong> – vedení evidence členů souboru.</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight"><strong>Docházka</strong> – evidování přítomnosti na zkouškách a akcích.</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight"><strong>Notifikace</strong> – zasílání upozornění na akce a zkoušky (pouze se souhlasem).</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight"><strong>Google Calendar</strong> – synchronizace akcí do osobního kalendáře (pouze při aktivním propojení).</MudListItem>
+            </MudList>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">4. Integrace s Google Calendar</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">Pokud propojíte svůj účet s Google Calendar, naše aplikace:</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Uloží OAuth refresh token potřebný pro přístup ke kalendáři.</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Vytváří, upravuje a maže události ve vámi zvoleném Google kalendáři.</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Nepřistupuje k žádným jiným datům vašeho Google účtu.</MudListItem>
+            </MudList>
+            <MudText Typo="Typo.body1" Class="mt-2">
+                Propojení lze kdykoli zrušit v nastavení profilu. Přístup aplikace lze rovněž odvolat přímo v
+                <MudLink Href="https://myaccount.google.com/permissions" Target="_blank" Color="Color.Primary">správě přístupu Google</MudLink>.
+            </MudText>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">5. Sdílení údajů s třetími stranami</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">Vaše údaje neprodáváme ani neposkytujeme třetím stranám za komerčním účelem. Sdílíme je pouze v rozsahu nezbytném pro provoz:</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">
+                    <strong>Google LLC</strong> – při použití integrace Google Calendar (v souladu s
+                    <MudLink Href="https://policies.google.com/privacy" Target="_blank" Color="Color.Primary">zásadami Google</MudLink>).
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">
+                    <strong>Google Firebase (FCM)</strong> – pro doručování push notifikací (pouze token zařízení).
+                </MudListItem>
+            </MudList>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">6. Zabezpečení</MudText>
+            <MudText Typo="Typo.body1">
+                Data jsou uložena v zabezpečené databázi. Přístup k aplikaci je chráněn přihlášením.
+                Přístup do administrátorské části mají pouze oprávnění členové. Přenos probíhá šifrovaně přes HTTPS.
+            </MudText>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">7. Vaše práva (GDPR)</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">Máte právo:</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">na přístup ke svým osobním údajům</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">na opravu nepřesných údajů</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">na výmaz údajů (právo být zapomenut)</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">na omezení zpracování</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">vznést námitku proti zpracování</MudListItem>
+            </MudList>
+            <MudText Typo="Typo.body1" Class="mt-2">
+                Pro uplatnění práv nás kontaktujte na <MudLink Href="mailto:fs.demizon@gmail.com" Color="Color.Primary">fs.demizon@gmail.com</MudLink>.
+            </MudText>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">8. Doba uchování údajů</MudText>
+            <MudText Typo="Typo.body1">
+                Údaje uchováváme po dobu aktivního členství. Po ukončení členství jsou na žádost anonymizovány nebo smazány.
+                OAuth tokeny pro Google Calendar jsou smazány ihned po odpojení integrace.
+            </MudText>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">9. Změny těchto zásad</MudText>
+            <MudText Typo="Typo.body1">
+                Tyto zásady můžeme příležitostně aktualizovat. O podstatných změnách informujeme prostřednictvím aplikace.
+                Datum aktualizace je uvedeno v záhlaví stránky.
+            </MudText>
+        </MudCardContent></MudCard>
+    </MudStack>
+}
+else
+{
+    <PageTitle>Privacy Policy – FS Demižón</PageTitle>
+
+    <MudText Typo="Typo.h4" Class="mb-1">Privacy Policy</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-6">Last updated: April 28, 2026</MudText>
+
+    <MudStack Spacing="4">
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">1. Data Controller</MudText>
+            <MudText Typo="Typo.body1">
+                The data controller is <strong>FS Demižón Strážnice</strong>, folk ensemble based at
+                Orelská jednota Strážnice, 696 62 Strážnice, Czech Republic.
+                For any enquiries please contact us at
+                <MudLink Href="mailto:fs.demizon@gmail.com" Color="Color.Primary">fs.demizon@gmail.com</MudLink>.
+            </MudText>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">2. Data We Collect</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">As part of running the member application, we collect:</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Full name</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Email address</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Profile photo (optional)</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Attendance records for rehearsals and events</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Device push notification token (optional)</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Google Calendar OAuth token (optional, only when you connect the integration)</MudListItem>
+            </MudList>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">3. Purpose of Processing</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">We process personal data exclusively for the following purposes:</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight"><strong>Membership management</strong> – maintaining the ensemble member roster.</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight"><strong>Attendance</strong> – recording presence at rehearsals and events.</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight"><strong>Notifications</strong> – sending reminders about upcoming events (with your consent).</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight"><strong>Google Calendar</strong> – syncing events to your personal calendar (only when you activate the integration).</MudListItem>
+            </MudList>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">4. Google Calendar Integration</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">If you choose to connect your Google Calendar, our application will:</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Store an OAuth refresh token required to access your calendar.</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Create, update and delete events in your selected Google Calendar based on your attendance.</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">Not access any other data in your Google account.</MudListItem>
+            </MudList>
+            <MudText Typo="Typo.body1" Class="mt-2">
+                You may disconnect the integration at any time in your profile settings. You can also revoke access directly via
+                <MudLink Href="https://myaccount.google.com/permissions" Target="_blank" Color="Color.Primary">Google Account Permissions</MudLink>.
+            </MudText>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">5. Third-Party Sharing</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">We do not sell or share your data with third parties for commercial purposes. Data is shared only as necessary to operate the service:</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">
+                    <strong>Google LLC</strong> – when using Google Calendar integration (subject to
+                    <MudLink Href="https://policies.google.com/privacy" Target="_blank" Color="Color.Primary">Google's Privacy Policy</MudLink>).
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">
+                    <strong>Google Firebase (FCM)</strong> – for delivering push notifications to mobile devices (device token only).
+                </MudListItem>
+            </MudList>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">6. Data Security</MudText>
+            <MudText Typo="Typo.body1">
+                All data is stored in a secured database. Access to the application is protected by authentication.
+                Administrative access is restricted to authorised ensemble members. All data in transit is encrypted via HTTPS.
+            </MudText>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">7. Your Rights (GDPR)</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">You have the right to:</MudText>
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">access your personal data</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">request correction of inaccurate data</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">request erasure of your data (right to be forgotten)</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">restrict processing of your data</MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.ChevronRight">object to processing of your data</MudListItem>
+            </MudList>
+            <MudText Typo="Typo.body1" Class="mt-2">
+                To exercise these rights, contact us at <MudLink Href="mailto:fs.demizon@gmail.com" Color="Color.Primary">fs.demizon@gmail.com</MudLink>.
+            </MudText>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">8. Data Retention</MudText>
+            <MudText Typo="Typo.body1">
+                We retain personal data for the duration of active membership. Upon leaving the ensemble, data is
+                anonymised or deleted upon request. Google Calendar OAuth tokens are deleted immediately upon disconnecting
+                the integration.
+            </MudText>
+        </MudCardContent></MudCard>
+
+        <MudCard Elevation="1"><MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-2">9. Changes to This Policy</MudText>
+            <MudText Typo="Typo.body1">
+                We may update this Privacy Policy from time to time. Members will be notified of material changes through
+                the application. The date of the latest update is shown at the top of this page.
+            </MudText>
+        </MudCardContent></MudCard>
+    </MudStack>
+}
+
+@code {
+    private bool _isCzech;
+
+    protected override void OnInitialized()
+    {
+        _isCzech = Thread.CurrentThread.CurrentUICulture.Name == "cs-CZ";
+    }
+}
