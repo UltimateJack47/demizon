@@ -58,6 +58,10 @@
   <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
     <AndroidResource Include="Platforms\Android\Resources\xml\network_security_config.xml"
                      Link="Resources\xml\network_security_config.xml" />
+    <AndroidResource Include="Platforms\Android\Resources\drawable\ic_notification.xml"
+                     Link="Resources\drawable\ic_notification.xml" />
+    <AndroidResource Include="Platforms\Android\Resources\values\colors.xml"
+                     Link="Resources\values\colors.xml" />
     <GoogleServicesJson Include="Platforms\Android\google-services.json" />
   </ItemGroup>
 </Project>

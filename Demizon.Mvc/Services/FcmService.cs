@@ -77,7 +77,9 @@ public class FcmService(ILogger<FcmService> logger)
                     Notification = new AndroidNotification
                     {
                         ChannelId = "demizon_channel",
-                        ClickAction = "OPEN_EVENT_DETAIL"
+                        ClickAction = "OPEN_EVENT_DETAIL",
+                        Icon = "ic_notification",
+                        Color = "#8B1A1A"
                     }
                 }
             };

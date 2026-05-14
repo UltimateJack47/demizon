@@ -96,7 +96,7 @@ public class MainActivity : MauiAppCompatActivity
             PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
 
         var notification = new NotificationCompat.Builder(this, ChannelId)
-            .SetSmallIcon(global::Android.Resource.Drawable.IcDialogInfo)
+            .SetSmallIcon(Resource.Drawable.ic_notification)
             .SetContentTitle(title)
             .SetContentText(body)
             .SetAutoCancel(true)
