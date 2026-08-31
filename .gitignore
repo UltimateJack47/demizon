@@ -14,3 +14,14 @@ riderModule.iml
 /Demizon.Maui/Platforms/Android/google-services.json
 /Demizon.Mvc/demizon.sqlite-shm
 /Demizon.Mvc/demizon.sqlite-wal
+
+# Flutter / Dart (demizon_flutter)
+demizon_flutter/.dart_tool/
+demizon_flutter/.packages
+demizon_flutter/build/
+demizon_flutter/pubspec.lock
+demizon_flutter/**/*.g.dart
+demizon_flutter/android/
+demizon_flutter/ios/
+demizon_flutter/lib/firebase_options.dart
+demizon_flutter/**/google-services.json
