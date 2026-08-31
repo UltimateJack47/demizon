@@ -1,6 +1,9 @@
-﻿using Demizon.Common.Configuration;
-using ImageMagick;
+using Demizon.Common.Configuration;
 using Microsoft.Extensions.Options;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
 
 namespace Demizon.Core.Services.FileUpload;
 
@@ -46,13 +49,9 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
     {
         using var ms = new MemoryStream();
         await fileRequest.Stream.CopyToAsync(ms);
-        var originalBytes = ms.ToArray();
+        ms.Position = 0;
 
-        // Optimize full image: max 1200px width, JPEG quality 80%
-        byte[] fullData = OptimizeImage(originalBytes, MaxImageWidth, JpegQuality);
-
-        // Create thumbnail: max 200px width
-        byte[] thumbData = OptimizeImage(originalBytes, ThumbnailWidth, JpegQuality);
+        var (fullData, thumbData) = OptimizeImage(ms);
 
         return new FileUploadResult
         {
@@ -86,40 +85,46 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
         };
     }
 
-    private static byte[] OptimizeImage(byte[] imageBytes, int maxWidth, int quality)
+    /// <summary>
+    /// Dekóduje obrázek jednou a vrátí z něj plnou i náhledovou variantu jako JPEG.
+    /// <see cref="DecoderOptions.TargetSize"/> u JPEGu spustí škálovaný IDCT, takže se
+    /// plný raster zdrojové fotky nikdy nealokuje.
+    /// </summary>
+    private static (byte[] Full, byte[] Thumbnail) OptimizeImage(Stream source)
     {
-        using var image = new MagickImage(imageBytes);
-
-        if (image.Width > maxWidth)
+        var options = new DecoderOptions
         {
-            var ratio = (double)maxWidth / image.Width;
-            var newHeight = (uint)(image.Height * ratio);
-            image.Resize((uint)maxWidth, newHeight);
-        }
+            TargetSize = new Size(MaxImageWidth, MaxImageWidth),
+            MaxFrames = 1
+        };
 
-        image.Format = MagickFormat.Jpeg;
-        image.Quality = (uint)quality;
-        image.Strip();
+        using var image = Image.Load(options, source);
 
-        using var output = new MemoryStream();
-        image.Write(output);
-        return output.ToArray();
+        // EXIF orientaci je nutné promítnout do pixelů dřív, než metadata zahodíme,
+        // jinak by se fotky z mobilu na výšku zobrazovaly otočené.
+        image.Mutate(x => x.AutoOrient());
+        image.Metadata.ExifProfile = null;
+        image.Metadata.IptcProfile = null;
+        image.Metadata.XmpProfile = null;
+
+        // Pořadí je závazné: ResizeToWidth zmenšuje sdílenou instanci na místě,
+        // takže plná varianta musí vzniknout před náhledem.
+        var full = ResizeToWidth(image, MaxImageWidth);
+        var thumbnail = ResizeToWidth(image, ThumbnailWidth);
+
+        return (full, thumbnail);
     }
 
-    private void ResizeAndCreate(Uri fileUri, string fileName)
+    private static byte[] ResizeToWidth(Image image, int maxWidth)
     {
-        foreach (var (resizeName, resizeDimensions) in UploadSettings.Resize)
+        if (image.Width > maxWidth)
         {
-            using var image = new MagickImage(fileUri.AbsolutePath);
-            if (image.Height <= resizeDimensions.Height && image.Width <= resizeDimensions.Width)
-            {
-                continue;
-            }
-
-            image.Resize((uint)resizeDimensions.Width, (uint)resizeDimensions.Height);
-            string resizedFileName = resizeName.ToLower() + "_" + fileName;
-            string resizedFile = Path.GetDirectoryName(fileUri.AbsolutePath) + "/" + resizedFileName;
-            image.Write(resizedFile);
+            var newHeight = (int)Math.Round(image.Height * ((double)maxWidth / image.Width));
+            image.Mutate(x => x.Resize(maxWidth, Math.Max(1, newHeight)));
         }
+
+        using var output = new MemoryStream();
+        image.SaveAsJpeg(output, new JpegEncoder { Quality = JpegQuality });
+        return output.ToArray();
     }
 }
