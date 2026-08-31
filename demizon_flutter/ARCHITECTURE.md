@@ -101,8 +101,15 @@ Názvy metod = názvy z `IApiClient.cs` **bez sufixu `Async`** a v camelCase:
 `DeleteVideoAsync`, `ToggleEventCancelledAsync`, `ToggleEventPublicAsync`.
 Zbývá **35 živých endpointů**.
 
-Obrázky se nestahují přes klienta — jde o přímé URL:
-`{baseUrl}/api/files/{id}/thumbnail` a `{baseUrl}/api/files/{id}`.
+Obrázky se nestahují přes klienta — jde o přímé URL. Backend vystavuje
+**jediný** endpoint s parametrem velikosti (`FilesController.cs:16`):
+
+```
+{baseUrl}/api/files/{id}/image?size=thumb
+{baseUrl}/api/files/{id}/image?size=full
+```
+
+Používej helpery z `lib/core/formatting.dart`, ne ručně skládané řetězce.
 
 ## Kontrakt statusů docházky
 

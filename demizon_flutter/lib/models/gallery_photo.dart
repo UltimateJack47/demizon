@@ -5,7 +5,7 @@ part 'gallery_photo.g.dart';
 /// Protějšek Demizon.Contracts/Gallery/GalleryPhotoDto.cs
 ///
 /// Fotka v galerii. Samotný obrázek se nestahuje přes API klienta —
-/// je na `{baseUrl}/api/files/{id}` (náhled `/thumbnail`).
+/// je na `{baseUrl}/api/files/{id}/image?size=full|thumb`.
 @JsonSerializable()
 class GalleryPhoto {
   const GalleryPhoto({

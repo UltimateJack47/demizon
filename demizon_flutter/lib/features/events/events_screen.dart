@@ -9,12 +9,6 @@ import 'package:demizon/models/models.dart';
 
 import 'events_controller.dart';
 
-// TODO(verify): očekávané helpery z `core/formatting.dart`:
-//   String formatDate(DateTime)      → "dd.MM.yyyy"
-//   String formatDateTimeLong(DateTime) → "dd. MMMM yyyy, HH:mm" (cs-CZ,
-//                                      protějšek DateFormatConverter.cs)
-//   String formatTime(DateTime)      → "HH:mm"
-
 /// Přepis `Demizon.Maui/Pages/EventsPage.xaml` + `ViewModels/EventsViewModel.cs`.
 class EventsScreen extends ConsumerWidget {
   const EventsScreen({super.key});

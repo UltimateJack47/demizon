@@ -123,15 +123,14 @@ class EventDetailController
   Future<EventDetailState> build(EventDetailArgs arg) async {
     final api = ref.read(apiClientProvider);
 
-    // TODO(verify): očekávaný kontrakt `TokenStorage.getRole()` →
-    // Future<String?> (protějšek TokenStorage.GetRoleAsync).
-    final role = await ref.read(tokenStorageProvider).getRole();
+    // `TokenStorage.role` je Future<String?> (protějšek GetRoleAsync).
+    final role = await ref.read(tokenStorageProvider).role;
     final isAdmin = role?.toLowerCase() == 'admin';
 
     if (arg.isRehearsal) {
       final date = arg.rehearsalDate!;
-      // TODO(verify): pojmenované parametry konstruktoru `Event` podle
-      // lib/models/event.dart (protějšek EventDto).
+      // Zkouška se z API nenačítá — `Event` si složíme lokálně,
+      // stejně jako EventDetailViewModel.cs:88.
       final event = Event(
         id: 0,
         name: 'Zkouška',

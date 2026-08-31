@@ -13,10 +13,16 @@ import 'api_config.dart';
 ///  - `ViewModels/EventDetailViewModel.cs:62-74` — mapování rolí CZ↔API
 ///  - `ViewModels/GalleryViewModel.cs:26-27` — URL obrázků
 
-const String czechLocale = 'cs_CZ';
+/// ICU zná českou lokalizaci pod kódem `cs`; `cs_CZ` se na ni jen mapuje.
+/// Obrazovky ostatních agentů používají `'cs'`, drží se tedy stejná hodnota.
+const String czechLocale = 'cs';
 
 /// Musí se zavolat jednou před prvním formátováním (v `main.dart`, před
-/// `runApp`). Bez toho `DateFormat` s locale `cs_CZ` vyhodí výjimku.
+/// `runApp`). Bez toho `DateFormat` s českým locale vyhodí výjimku.
+///
+/// TODO(verify): `main.dart` teď volá `initializeDateFormatting('cs_CZ')`.
+/// Intl to má přes `verifiedLocale` srazit na `cs`; ověřit na běžící aplikaci,
+/// případně sjednotit na tuto funkci.
 Future<void> initializeCzechFormatting() =>
     initializeDateFormatting(czechLocale);
 
@@ -26,24 +32,28 @@ Future<void> initializeCzechFormatting() =>
 /// `MMMM` je v ICU tvar „v datu“ (genitiv — *srpna*), `LLLL` samostatný
 /// (nominativ — *srpen*). .NET to rozlišoval přes `MonthGenitiveNames`, takže
 /// tohle dělení dává stejný výsledek jako MAUI.
-String formatDateTimeCz(DateTime value) =>
+String formatDateTimeLong(DateTime value) =>
     DateFormat('dd. MMMM yyyy, HH:mm', czechLocale).format(value);
 
-/// Samotné datum: `31. srpna 2026`.
-String formatDateCz(DateTime value) =>
+/// Dlouhé datum bez času: `31. srpna 2026`.
+String formatDateLong(DateTime value) =>
     DateFormat('dd. MMMM yyyy', czechLocale).format(value);
 
+/// Číselné datum do seznamů: `31.08.2026`.
+String formatDate(DateTime value) =>
+    DateFormat('dd.MM.yyyy', czechLocale).format(value);
+
 /// Samotný čas: `19:30`.
-String formatTimeCz(DateTime value) =>
+String formatTime(DateTime value) =>
     DateFormat('HH:mm', czechLocale).format(value);
 
 /// Popisek měsíce nad kalendářem/tabulkou: `srpen 2026`.
 /// Protějšek `MonthLabel` v obou docházkových ViewModelech.
-String formatMonthLabelCz(int year, int month) =>
+String formatMonthLabel(int year, int month) =>
     DateFormat('LLLL yyyy', czechLocale).format(DateTime(year, month));
 
 /// Krátké datum do hlavičky sloupce tabulky docházky: `31.8.`
-String formatShortDateCz(DateTime value) =>
+String formatShortDate(DateTime value) =>
     DateFormat('d.M.', czechLocale).format(value);
 
 /// Datum pro API a pro parametry rout (`yyyy-MM-dd`), např. `rehearsalDate`
@@ -75,12 +85,10 @@ String? displayRoleToApi(String? displayRole) => switch (displayRole) {
 /// Obrázky se nestahují přes `ApiClient` — widget `Image.network` si je bere
 /// přímo z těchto URL.
 ///
-/// TODO(verify): ARCHITECTURE.md uvádí tvar `{baseUrl}/api/files/{id}` a
-/// `/thumbnail`, jenže backend takové cesty nemá. `FilesController.cs:16`
-/// vystavuje jediný endpoint `GET /api/files/{id}/image?size=full|thumb`
-/// a MAUI ho tak i volalo (`GalleryViewModel.cs:26-27`,
-/// `DanceDetailViewModel.cs:53-54`). Drží se tu proto backend; až se to ověří
-/// proti běžícímu serveru, opravit i ARCHITECTURE.md.
+/// Backend vystavuje jediný endpoint s parametrem velikosti —
+/// `GET /api/files/{id}/image?size=full|thumb` (`FilesController.cs:16`).
+/// MAUI ho volala stejně (`GalleryViewModel.cs:26-27`,
+/// `DanceDetailViewModel.cs:53-54`).
 String imageUrl(int fileId) => '${ApiConfig.baseUrl}/api/files/$fileId/image?size=full';
 
 String thumbnailUrl(int fileId) =>

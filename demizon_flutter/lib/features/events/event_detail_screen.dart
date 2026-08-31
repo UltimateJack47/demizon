@@ -14,9 +14,10 @@ import 'event_detail_controller.dart';
 /// Obrazovka běží ve dvou režimech (viz `EventDetailController`):
 /// akce (`eventId`) a zkouška (`rehearsalDate`).
 ///
-/// TODO(verify): router musí umět obojí — `/events/:id` pro akci a pro zkoušku
-/// něco jako `/events/rehearsal?date=yyyy-MM-dd` (v `core/routes.dart` zatím
-/// konstanta pro zkoušku není; MAUI používal `event-detail?rehearsalDate=…`).
+/// Cesta ke zkoušce je `/events/0?rehearsalDate=yyyy-MM-dd` (viz
+/// `rehearsalDetailPath` v `features/attendance/attendance_controller.dart`),
+/// proto se `eventId == 0` s vyplněným datem chápe jako zkouška — stejně jako
+/// `EventDetailViewModel.IsRehearsal`.
 class EventDetailScreen extends ConsumerStatefulWidget {
   const EventDetailScreen({super.key, this.eventId, this.rehearsalDate});
 
@@ -32,10 +33,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   bool _commentLoaded = false;
   bool _isBusy = false;
 
-  late final EventDetailArgs _args = EventDetailArgs(
-    eventId: widget.eventId,
-    rehearsalDate: widget.rehearsalDate,
-  );
+  late final EventDetailArgs _args =
+      (widget.rehearsalDate != null &&
+              (widget.eventId == null || widget.eventId == 0))
+          ? EventDetailArgs(rehearsalDate: widget.rehearsalDate)
+          : EventDetailArgs(eventId: widget.eventId);
 
   @override
   void dispose() {
@@ -59,7 +61,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     final initial = async.value;
     if (!_commentLoaded && initial != null) {
       _commentLoaded = true;
-      _commentController.text = initial.comment ?? '';
+      final text = initial.comment ?? '';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _commentController.text = text;
+      });
     }
 
     return Scaffold(
@@ -105,7 +110,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           _commentField(),
           const SizedBox(height: 24),
           FilledButton(
-            onPressed: _isBusy ? null : () => _saveAttendance(s),
+            onPressed: _isBusy ? null : _saveAttendance,
             child: const Text('Uložit docházku'),
           ),
           if (s.isAdmin) ...[
@@ -363,8 +368,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
             isExpanded: true,
             value: s.activityRole,
             hint: const Text('Vyberte roli'),
-            // TODO(verify): `roleOptions` z core/formatting.dart —
-            // ["Tanečník", "Muzikant"] (EventDetailViewModel.cs:60).
+            // `roleOptions` = ["Tanečník", "Muzikant"] (EventDetailViewModel.cs:60);
+            // na API hodnoty se převádí až při ukládání.
             items: [
               for (final role in roleOptions)
                 DropdownMenuItem(value: role, child: Text(role)),
@@ -478,7 +483,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
   // ── Akce ────────────────────────────────────────────────────────────────
 
-  Future<void> _saveAttendance(EventDetailState s) async {
+  Future<void> _saveAttendance() async {
     setState(() => _isBusy = true);
     try {
       await ref

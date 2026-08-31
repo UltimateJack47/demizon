@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/models.dart';
@@ -58,6 +59,38 @@ class AuthException implements Exception {
 final authControllerProvider =
     AsyncNotifierProvider<AuthController, AuthState>(AuthController.new);
 
+/// Zkratky pro router (`core/router.dart`), aby nemusel rozbalovat
+/// `AsyncValue` ručně.
+extension AuthSessionX on AsyncValue<AuthState> {
+  /// `true` jen při potvrzené session. Během obnovy (`AsyncLoading`) je `false`.
+  bool get isAuthenticated => valueOrNull is Authenticated;
+
+  /// `true`, dokud běží auto-login při startu. Router může tuto fázi využít
+  /// k zobrazení splash místo krátkého probliknutí přihlašovací obrazovky.
+  bool get isRestoring => isLoading;
+
+  Authenticated? get session => valueOrNull is Authenticated
+      ? valueOrNull! as Authenticated
+      : null;
+}
+
+/// Most mezi Riverpodem a `GoRouter.refreshListenable` — router se
+/// překreslí, kdykoli se změní stav session (přihlášení, odhlášení,
+/// vypršení tokenu).
+final authRefreshListenableProvider = Provider<Listenable>((ref) {
+  final notifier = _AuthRefreshNotifier();
+  ref.listen<AsyncValue<AuthState>>(
+    authControllerProvider,
+    (_, __) => notifier.notify(),
+  );
+  ref.onDispose(notifier.dispose);
+  return notifier;
+});
+
+class _AuthRefreshNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
+}
+
 class AuthController extends AsyncNotifier<AuthState> {
   TokenStorage get _tokens => ref.read(tokenStorageProvider);
 
@@ -104,8 +137,6 @@ class AuthController extends AsyncNotifier<AuthState> {
   Future<void> login(String login, String password) async {
     state = const AsyncLoading();
     try {
-      // TODO(verify): pojmenované parametry `login`/`password` v `TokenRequest`
-      // a `refreshToken` v `RefreshRequest` — modely píše jiný agent.
       final response = await ref
           .read(apiClientProvider)
           .login(TokenRequest(login: login, password: password));

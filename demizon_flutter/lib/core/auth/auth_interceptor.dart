@@ -139,8 +139,6 @@ class AuthInterceptor extends Interceptor {
     final login = await _tokenStorage.login;
 
     try {
-      // TODO(verify): modely píše jiný agent — zkontrolovat, že `RefreshRequest`
-      // má pojmenovaný parametr `refreshToken` (ne poziční).
       final response = await _refreshDio.post<Map<String, dynamic>>(
         '/api/auth/refresh',
         data: RefreshRequest(refreshToken: refreshToken).toJson(),

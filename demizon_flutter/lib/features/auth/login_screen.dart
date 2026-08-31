@@ -1,10 +1,7 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:demizon/core/auth/auth_controller.dart';
-import 'package:demizon/core/routes.dart';
 import 'package:demizon/core/theme.dart';
 
 /// Přepis `Demizon.Maui/Pages/LoginPage.xaml` + `ViewModels/LoginViewModel.cs`.
@@ -44,17 +41,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      // TODO(verify): očekávaný kontrakt `AuthController.login(login, password)`
-      // — uloží tokeny přes TokenStorage a nastaví stav session.
+      // AuthController uloží tokeny a přepne stav session; navigaci na
+      // "//main/attendance" (MAUI: AppRoutes.MainTabs) řeší redirect
+      // v `core/router.dart` podle stavu, ne tato obrazovka.
       await ref
           .read(authControllerProvider.notifier)
           .login(_loginController.text, _passwordController.text);
-
-      if (!mounted) return;
-      // MAUI: navigation.GoToAsync(AppRoutes.MainTabs) == "//main/attendance".
-      context.go(AppRoutes.attendance);
-    } on DioException catch (e) {
-      setState(() => _errorMessage = _messageFor(e));
+    } on AuthException catch (e) {
+      // Hlášky pro uživatele (401 / nedostupný server / ostatní) skládá
+      // AuthController — jsou to doslovné texty z LoginViewModel.cs:39-50.
+      setState(() => _errorMessage = e.message);
     } catch (_) {
       setState(
         () => _errorMessage = 'Přihlášení selhalo. Zkuste to prosím znovu.',
@@ -62,21 +58,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } finally {
       if (mounted) setState(() => _isBusy = false);
     }
-  }
-
-  /// Protějšek tří `catch` větví v `LoginViewModel.LoginAsync`.
-  String _messageFor(DioException e) {
-    if (e.response?.statusCode == 401) {
-      return 'Nesprávné přihlašovací jméno nebo heslo.';
-    }
-    return switch (e.type) {
-      DioExceptionType.connectionError ||
-      DioExceptionType.connectionTimeout ||
-      DioExceptionType.sendTimeout ||
-      DioExceptionType.receiveTimeout =>
-        'Nelze se připojit k serveru. Zkontrolujte síťové připojení.',
-      _ => 'Přihlášení selhalo. Zkuste to prosím znovu.',
-    };
   }
 
   @override
@@ -210,9 +191,7 @@ class _Hero extends StatelessWidget {
             alignment: Alignment.center,
             child: ClipOval(
               child: Image.asset(
-                // TODO(verify): soubor `assets/images/demizon_logo.jpg` je
-                // potřeba do projektu doplnit (v MAUI byl `demizon_logo.png`
-                // v Resources/Images).
+                // Zkopírováno z Demizon.Maui/Resources/Raw/demizon_logo.jpg.
                 'assets/images/demizon_logo.jpg',
                 width: 80,
                 height: 80,

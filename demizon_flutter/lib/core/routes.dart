@@ -5,6 +5,7 @@
 /// segment interpretoval jako tab. go_router tímto netrpí, takže cesty jsou
 /// normální hierarchické URL.
 abstract final class AppRoutes {
+  static const splash = '/splash';
   static const login = '/login';
 
   static const attendance = '/attendance';
