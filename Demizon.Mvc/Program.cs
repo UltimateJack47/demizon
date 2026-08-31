@@ -75,7 +75,15 @@ builder.Services.AddOptions<UploadSettings>()
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddServerSideBlazor(options =>
+{
+    // Výchozí hodnoty jsou 100 odpojených okruhů držených 3 minuty. Každý okruh
+    // nese scoped služby MudBlazoru a načtená DTO, takže na 1GB stroji je to
+    // desítky až stovky MB odpadu. Pro velikost tohoto souboru stačí zlomek.
+    options.DisconnectedCircuitMaxRetained = 10;
+    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(1);
+    options.DetailedErrors = builder.Environment.IsDevelopment();
+});
 builder.Services.AddMudServices();
 
 builder.Services.AddCoreServices();

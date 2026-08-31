@@ -162,21 +162,50 @@ Ověřeno, že limit nerozbíjí běžný provoz: 24 Mpx fotka projde na 69 MB R
 
 ---
 
+### ✅ 5. Priorita 1 — paměť (částečně)
+
+- [x] **Blazor Server circuity.** `Program.cs` — `AddServerSideBlazor` nakonfigurováno na
+      `DisconnectedCircuitMaxRetained = 10` a `DisconnectedCircuitRetentionPeriod = 1 min`
+      (default bylo 100 okruhů × 3 min). `DetailedErrors` jen ve vývoji.
+- [x] **Workstation GC** v `Demizon.Mvc.csproj` — `ServerGarbageCollection=false`,
+      `ConcurrentGarbageCollection=false`.
+- [x] **SQLite pragmas** (předsunuto z Priority 2, protože nahrazuje zablokovaný
+      `AddDbContextFactory`). `SqliteBusyTimeoutInterceptor` nyní aplikuje i
+      `journal_size_limit=32 MB` a `wal_autocheckpoint=512`. Ověřeno proti reálné DB:
+      všechny tři pragmy se propíšou.
+
+#### ⛔ Zablokováno — `AddDbContextFactory`
+
+**Není to bezpečná výměna.** Entity mají `virtual` navigační vlastnosti napříč celým
+modelem (`Attendance.cs:31,35`, `Event.cs:32`, `Member.cs:35,37,39`, `Dance.cs:19,21` …)
+a `DatabaseServiceConfigurationExtension.cs:17` zapíná `UseLazyLoadingProxies()`.
+Kdyby služby vytvářely krátkodobé kontexty a vracely entity, každý přístup k navigační
+vlastnosti po dispose by hodil `ObjectDisposedException`.
+
+Refaktor by tedy znamenal: převést všech 10 služeb v `Demizon.Core/Services/` na
+`IDbContextFactory<DemizonContext>`, **vypnout lazy loading** a projít každé místo,
+kde se spoléhá na líné načtení navigace, a nahradit ho explicitním `Include()`.
+To je několikadenní práce s vysokým rizikem regresí — chce vlastní průchod a testování.
+
+Dobrá zpráva: Razor komponenty `DemizonContext` neinjektují vůbec (ověřeno grepem),
+jdou přes služby. Refaktor se tedy odehraje čistě v `Demizon.Core`, ne v UI.
+
+#### ⛔ Zablokováno — veřejné stránky bez circuitu
+
+`Pages/_Host.cshtml:8` používá předosmičkový hostingový model: jediná direktiva
+`<component type="typeof(App)" render-mode="ServerPrerendered" />` platí pro celou
+aplikaci. Per-stránkový render mode vyžaduje migraci na .NET 8+ model —
+`MapRazorComponents<App>()` a `@rendermode` na jednotlivých komponentách.
+To je architektonická změna celého Blazor hostu, ne konfigurační přepínač.
+
+Dopad, dokud se to nevyřeší: každá anonymní návštěva veřejné stránky
+(`Index`, `Photos`, `Dances`, `PrivacyPolicy`, `TermsOfService` — 5 z 19 stránek
+a zdaleka nejvíc trafficu) otevře plnohodnotný SignalR okruh. Snížená retence
+odpojených okruhů (výše) to zmírňuje, neodstraňuje.
+
+---
+
 ## TODO
-
-### Priorita 1 — paměť (bez toho appka na 1 GB spadne)
-
-- [ ] **Blazor Server circuity.** V repu není jediné `AddServerSideBlazor(o => ...)`.
-      Nastavit `DisconnectedCircuitMaxRetained = 10`, `DisconnectedCircuitRetentionPeriod = 1 min`.
-- [ ] **Veřejné stránky bez circuitu.** `Pages/_Host.cshtml:8` má `render-mode="ServerPrerendered"`,
-      takže i anonymní návštěva homepage otevře SignalR okruh. Veřejné stránky
-      (`Index`, `Photos`, `Dances`, `PrivacyPolicy`, `TermsOfService` — 5 z 19 a nejvíc trafficu)
-      interaktivitu nepotřebují.
-- [ ] **Workstation GC** v `Demizon.Mvc.csproj`:
-      `<ServerGarbageCollection>false</ServerGarbageCollection>`,
-      `<ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>`.
-- [ ] **`AddDbContextFactory`** místo `AddDbContext` — v Blazor Serveru je scope celý okruh,
-      ne request. Řeší zároveň i nekonečně rostoucí WAL.
 
 ### Priorita 2 — disk
 

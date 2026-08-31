@@ -8,6 +8,15 @@
         <LangVersion>default</LangVersion>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <UserSecretsId>107a1f1d-2b6e-43e5-bab9-1c84faff249c</UserSecretsId>
+
+        <!--
+          Cílový hosting je Scaleway Stardust: 1 vCPU, 1 GB RAM. Web SDK zapíná
+          Server GC defaultně, ten má velké gen0 budgety a nevrací paměť OS —
+          proces vyroste na stovky MB, i když živých dat je zlomek.
+          Workstation GC je pro jednojádrový stroj s málo pamětí správná volba.
+        -->
+        <ServerGarbageCollection>false</ServerGarbageCollection>
+        <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
     </PropertyGroup>
 
     <ItemGroup>
