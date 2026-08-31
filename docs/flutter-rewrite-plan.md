@@ -87,9 +87,43 @@ Poznámky:
 - `DateTime` přichází ze serveru s `Kind=Unspecified`; `DateTime.parse` to bere
   jako lokální čas. Pro jedno pásmo správně, ale je to označené `// TODO(verify):`.
 
-### 🔄 Rozpracováno
+### ✅ API klient a auth
 
-API klient, auth pipeline, a obrazovky (login, akce, docházka, tance, galerie, profil).
+- `lib/api/api_client.dart` — **35 živých endpointů** (7 mrtvých vynecháno), retrofit.
+- `lib/core/auth/token_storage.dart` — 7 klíčů v secure storage, in-memory cache expirace.
+- `lib/core/auth/auth_interceptor.dart` — proaktivní refresh 5 min před expirací
+  + fallback na 401, souběh přes jeden sdílený `Future`.
+  Refresh jde přes **samostatnou Dio instanci bez interceptoru**, takže odpadá
+  obdoba `TokenRefreshHelper.cs:36` (v MAUI existoval jen kvůli cyklické DI závislosti).
+- `lib/core/auth/auth_controller.dart`, `lib/core/providers.dart`, `lib/core/formatting.dart`.
+
+### ✅ Všech 16 obrazovek
+
+| Oblast | Obrazovky |
+|---|---|
+| auth | login |
+| events | seznam, detail (duální režim akce/zkouška), založení, editace |
+| attendance | měsíční přehled, křížová tabulka všech členů, statistiky, editace docházky člena |
+| dances | seznam s filtrem, detail (videa / fotky / dokumenty) |
+| gallery | mřížka, prohlížeč (+ pinch-to-zoom, vylepšení proti MAUI) |
+| profile | profil, editace, změna hesla |
+
+### Rozsah k 2026-09-01
+
+**61 souborů, 8 049 řádků Dart** (modely 703, API 190, core 1 023, obrazovky 6 077).
+Proti 6 409 řádkům C#+XAML v MAUI. Číslo je vyšší než odhadovaných 3 500–4 500,
+protože kód nese hustou dokumentaci s odkazy na zdrojové MAUI soubory — ta při
+ověřování a dolaďování ušetří čas.
+
+### Provedené kontroly (bez SDK)
+
+Kód nejde zkompilovat, ale statická kontrola proběhla a je čistá:
+- všechny relativní i `package:` importy ukazují na existující soubory,
+- všechny třídy volané z `router.dart` jsou definované,
+- pojmenované parametry v konstruktorech obrazovek sedí na volání z routeru.
+
+Jedna skutečná trhlina z paralelní práce se tím našla a opravila: router očekával
+`MemberAttendanceArgs`, obrazovka bere `MemberAttendanceTarget`.
 
 ## ⚠️ Nic z toho není zkompilované
 
@@ -119,8 +153,7 @@ podpisů. `flutter analyze` je najde všechny naráz.
       nativní projekty (android/, ios/), které tu zatím nejsou
 - [ ] `flutterfire configure` → `lib/firebase_options.dart`; přenést
       `google-services.json` z `Demizon.Maui/Platforms/Android/`
-- [ ] Zkopírovat `assets/images/demizon_logo.jpg` z
-      `Demizon.Maui/Resources/Raw/demizon_logo.jpg`
+- [x] ~~Zkopírovat `assets/images/demizon_logo.jpg`~~ — hotovo, včetně `.svg` varianty
 - [ ] Ikony a splash (`flutter_launcher_icons`, `flutter_native_splash`)
       ze `Demizon.Maui/Resources/AppIcon/`
 - [ ] `applicationId` nastavit na `com.demizon.administrace` (shodné s MAUI,

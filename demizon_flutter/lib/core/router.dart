@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../features/attendance/all_members_attendance_screen.dart';
 import '../features/attendance/attendance_screen.dart';
 import '../features/attendance/attendance_stats_screen.dart';
+import '../features/attendance/member_attendance_detail_controller.dart';
 import '../features/attendance/member_attendance_detail_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/dances/dance_detail_screen.dart';
@@ -105,10 +106,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'member',
-                    builder: (context, state) {
-                      final args = state.extra as MemberAttendanceArgs?;
-                      return MemberAttendanceDetailScreen(args: args);
-                    },
+                    // Cíl se předává přes `extra`, protože nese víc než id
+                    // (člen + akce NEBO datum zkoušky). Když chybí — deep link,
+                    // hot restart — vrať se na přehled místo pádu.
+                    redirect: (context, state) =>
+                        state.extra is MemberAttendanceTarget
+                            ? null
+                            : AppRoutes.attendanceOverview,
+                    builder: (context, state) => MemberAttendanceDetailScreen(
+                      target: state.extra! as MemberAttendanceTarget,
+                    ),
                   ),
                 ],
               ),

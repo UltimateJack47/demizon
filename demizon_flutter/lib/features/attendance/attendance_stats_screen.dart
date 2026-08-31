@@ -52,7 +52,11 @@ class _AttendanceStatsScreenState extends ConsumerState<AttendanceStatsScreen> {
       initialDate: _range.to,
       // MAUI: MinimumDate="{Binding DateFrom}", MaximumDate="{Binding MaxDate}"
       firstDate: _range.from,
-      lastDate: _today,
+      // MAUI mělo natvrdo `MaxDate => Today`, jenže hlavní obrazovka posílá
+      // jako `to` poslední den zobrazeného měsíce — u aktuálního měsíce tedy
+      // datum v budoucnu. `showDatePicker` by na tom spadl na assertu, proto
+      // se strop roztahuje na už zvolené datum.
+      lastDate: _range.to.isAfter(_today) ? _range.to : _today,
     );
     if (picked != null) setState(() => _range = _range.copyWith(to: picked));
   }

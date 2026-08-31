@@ -25,6 +25,15 @@ class DateRange {
     return DateRange(DateTime(today.year, 1, 1), today);
   }
 
+  /// Pro router: `?from=2026-01-01&to=2026-01-31`. Chybějící hodnoty
+  /// spadnou zpět na výchozí období.
+  factory DateRange.fromQuery(Map<String, String> query) {
+    final fallback = DateRange.thisYear();
+    final from = DateTime.tryParse(query['from'] ?? '') ?? fallback.from;
+    final to = DateTime.tryParse(query['to'] ?? '') ?? fallback.to;
+    return DateRange(from, to);
+  }
+
   final DateTime from;
   final DateTime to;
 

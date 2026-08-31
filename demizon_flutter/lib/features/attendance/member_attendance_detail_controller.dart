@@ -21,6 +21,18 @@ class MemberAttendanceTarget {
     required this.memberName,
   });
 
+  /// Pro router: `?eventId=12&memberId=3&memberName=Jan%20Novák`
+  /// nebo `?rehearsalDate=2026-01-16&memberId=3&memberName=…`.
+  /// go_router hodnoty dekóduje sám, `Uri.decodeComponent` se tu nevolá.
+  factory MemberAttendanceTarget.fromQuery(Map<String, String> query) {
+    return MemberAttendanceTarget(
+      eventId: int.tryParse(query['eventId'] ?? ''),
+      rehearsalDate: DateTime.tryParse(query['rehearsalDate'] ?? ''),
+      memberId: int.tryParse(query['memberId'] ?? '') ?? 0,
+      memberName: query['memberName'] ?? '',
+    );
+  }
+
   final int? eventId;
   final DateTime? rehearsalDate;
   final int memberId;
@@ -101,6 +113,12 @@ class MemberAttendanceDetailController extends FamilyAsyncNotifier<
   @override
   Future<MemberAttendanceDetailState> build(
       MemberAttendanceTarget arg) async {
+    // MAUI se v `LoadAsync` jen tiše vrátilo (`if (MemberId == 0) return;`).
+    // Tady je z toho chyba — obrazovka ukáže „Nepodařilo se načíst docházku.“
+    if (arg.memberId == 0 || (!arg.isRehearsal && (arg.eventId ?? 0) == 0)) {
+      throw ArgumentError('Chybí memberId nebo eventId/rehearsalDate.');
+    }
+
     final api = ref.read(apiClientProvider);
 
     if (arg.isRehearsal) {

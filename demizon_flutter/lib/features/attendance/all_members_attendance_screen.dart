@@ -135,13 +135,13 @@ class _AllMembersAttendanceScreenState
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Tabulka
+// Tabulka — deklarativní protějšek 343 řádků `BuildTable` & spol.
 // ─────────────────────────────────────────────────────────────────────────
 
 /// Zamrzlý sloupec jmen + vodorovně scrollovatelná datová část.
 /// Obojí je uvnitř jednoho svislého scrollu, takže se řádky nikdy nerozejdou;
-/// hlavička sloupců je uvnitř téhož vodorovného scrollu jako data, takže
-/// není potřeba synchronizovat dva `ScrollController`y.
+/// hlavička sloupců je uvnitř téhož vodorovného scrollu jako data, takže není
+/// potřeba synchronizovat dva `ScrollController`y.
 class _AttendanceTable extends StatelessWidget {
   const _AttendanceTable({required this.state});
 
@@ -164,51 +164,40 @@ class _AttendanceTable extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                children: [
-                  const _HeaderCell(width: _nameColumnWidth, child: Text(
-                    'Člen',
-                    style: TextStyle(
-                      color: DemizonColors.textOnPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  )),
-                  for (var r = 0; r < members.length; r++)
-                    _NameCell(name: members[r].fullName, row: r),
-                ],
-              ),
+              Column(children: [
+                _cell(
+                  width: _nameColumnWidth,
+                  height: _headerHeight,
+                  color: DemizonColors.primary,
+                  child: const Text('Člen', style: _headerTextStyle),
+                ),
+                for (var r = 0; r < members.length; r++)
+                  _nameCell(context, members[r].fullName, r),
+              ]),
               Expanded(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   physics: fits ? const NeverScrollableScrollPhysics() : null,
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          for (final column in columns)
-                            _ColumnHeader(column: column),
-                        ],
-                      ),
-                      for (var r = 0; r < members.length; r++)
-                        Row(
-                          children: [
-                            for (var c = 0; c < columns.length; c++)
-                              _AttendanceCell(
-                                state: state,
-                                member: members[r],
-                                column: columns[c],
-                                // Server posílá buňky ve stejném pořadí jako
-                                // sloupce; kratší řádek znamená chybějící data.
-                                cell: c < members[r].cells.length
-                                    ? members[r].cells[c]
-                                    : null,
-                                row: r,
-                              ),
-                          ],
-                        ),
-                    ],
-                  ),
+                  child: Column(children: [
+                    Row(children: [
+                      for (final column in columns) _columnHeader(column),
+                    ]),
+                    for (var r = 0; r < members.length; r++)
+                      Row(children: [
+                        for (var c = 0; c < columns.length; c++)
+                          _dataCell(
+                            context,
+                            member: members[r],
+                            column: columns[c],
+                            // Server posílá buňky ve stejném pořadí jako
+                            // sloupce; kratší řádek = chybějící data.
+                            cell: c < members[r].cells.length
+                                ? members[r].cells[c]
+                                : null,
+                            row: r,
+                          ),
+                      ]),
+                  ]),
                 ),
               ),
             ],
@@ -217,160 +206,164 @@ class _AttendanceTable extends StatelessWidget {
       },
     );
   }
-}
 
-class _HeaderCell extends StatelessWidget {
-  const _HeaderCell({
-    required this.width,
-    required this.child,
-    this.color = DemizonColors.primary,
-    this.onTap,
-  });
-
-  final double width;
-  final Widget child;
-  final Color color;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
+  /// Jedna buňka mřížky — jediné místo, kde se řeší rozměry a pozadí.
+  Widget _cell({
+    required double width,
+    required double height,
+    required Widget child,
+    Color? color,
+    EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+    Alignment alignment = Alignment.center,
+    VoidCallback? onTap,
+    VoidCallback? onLongPress,
+  }) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Container(
         width: width,
-        height: _headerHeight,
+        height: height,
         color: color,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        padding: padding,
+        alignment: alignment,
         child: child,
       ),
     );
   }
-}
 
-class _ColumnHeader extends StatelessWidget {
-  const _ColumnHeader({required this.column});
-
-  final MonthlyColumn column;
-
-  @override
-  Widget build(BuildContext context) {
-    return _HeaderCell(
-      width: _cellWidth,
-      color: column.isEvent ? _eventGold : DemizonColors.primary,
-      // Tap na hlavičku otevře detail akce (hlavička není vázaná na člena).
-      onTap: column.eventId == null
-          ? null
-          : () => context.push(eventDetailPath(column.eventId!)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+  Widget _columnHeader(MonthlyColumn column) {
+    return Builder(
+      builder: (context) => _cell(
+        width: _cellWidth,
+        height: _headerHeight,
+        color: column.isEvent ? _eventGold : DemizonColors.primary,
+        // Tap na hlavičku otevře detail akce (není vázaná na člena).
+        onTap: column.eventId == null
+            ? null
+            : () => context.push(eventDetailPath(column.eventId!)),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
           Text(
             column.label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: DemizonColors.textOnPrimary,
+            style: _headerTextStyle.copyWith(
               fontSize: 10,
-              fontWeight:
-                  column.isEvent ? FontWeight.bold : FontWeight.normal,
+              fontWeight: column.isEvent ? FontWeight.bold : FontWeight.normal,
             ),
           ),
           Opacity(
             opacity: 0.85,
             child: Text(
               DateFormat('d.M.').format(column.date),
-              style: const TextStyle(
-                color: DemizonColors.textOnPrimary,
+              style: _headerTextStyle.copyWith(
                 fontSize: 9,
+                fontWeight: FontWeight.normal,
               ),
             ),
           ),
-        ],
+        ]),
       ),
     );
   }
-}
 
-class _NameCell extends StatelessWidget {
-  const _NameCell({required this.name, required this.row});
+  Widget _nameCell(BuildContext context, String name, int row) => _cell(
+        width: _nameColumnWidth,
+        height: _rowHeight,
+        color: _rowBackground(context, row),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        alignment: Alignment.centerLeft,
+        child: Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 12),
+        ),
+      );
 
-  final String name;
-  final int row;
+  Widget _dataCell(
+    BuildContext context, {
+    required MemberMonthlyRow member,
+    required MonthlyColumn column,
+    required MemberCell? cell,
+    required int row,
+  }) {
+    final comment = cell?.comment;
+    final hasComment = comment != null && comment.trim().isNotEmpty;
+    final (symbol, color) = _cellSymbol(cell?.status, column.isCancelled);
+    final note = 'Poznámka – ${member.fullName}';
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _nameColumnWidth,
+    return _cell(
+      width: _cellWidth,
       height: _rowHeight,
       color: _rowBackground(context, row),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      alignment: Alignment.centerLeft,
-      child: Text(
-        name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 12),
+      padding: const EdgeInsets.all(2),
+      onTap: column.isCancelled
+          ? null
+          : () => _onCellTap(context, member, column, comment),
+      onLongPress: hasComment ? () => _showNote(context, note, comment) : null,
+      child: Opacity(
+        // Zrušený sloupec byl v MAUI jen o odstín tmavší béžová.
+        opacity: column.isCancelled ? 0.5 : 1,
+        child: Stack(children: [
+          Center(
+            child: Text(
+              symbol,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ),
+          if (hasComment)
+            const Positioned(
+              top: 2,
+              right: 2,
+              child: Text('📝', style: TextStyle(fontSize: 8)),
+            ),
+        ]),
       ),
     );
   }
-}
-
-class _AttendanceCell extends StatelessWidget {
-  const _AttendanceCell({
-    required this.state,
-    required this.member,
-    required this.column,
-    required this.cell,
-    required this.row,
-  });
-
-  final AllMembersAttendanceState state;
-  final MemberMonthlyRow member;
-  final MonthlyColumn column;
-  final MemberCell? cell;
-  final int row;
-
-  bool get _hasComment =>
-      cell?.comment != null && cell!.comment!.trim().isNotEmpty;
 
   /// Rozlišení „jsem to já / jsem admin / jsem nikdo“
   /// (`AllMembersAttendancePage.xaml.cs:345-424`).
-  void _onTap(BuildContext context) {
+  void _onCellTap(
+    BuildContext context,
+    MemberMonthlyRow member,
+    MonthlyColumn column,
+    String? comment,
+  ) {
     final isMine = state.isCurrentUser(member.memberId);
+    final eventId = column.eventId;
 
-    if (column.eventId != null) {
-      if (isMine) {
-        context.push(eventDetailPath(column.eventId!));
-        return;
-      }
-      if (state.isAdmin) {
-        context.push(memberAttendanceDetailPath(
-          eventId: column.eventId!,
-          memberId: member.memberId,
-          memberName: member.fullName,
-        ));
-        return;
-      }
-    } else {
-      if (isMine) {
-        context.push(rehearsalDetailPath(column.date));
-        return;
-      }
-      if (state.isAdmin) {
-        context.push(memberRehearsalDetailPath(
-          date: column.date,
-          memberId: member.memberId,
-          memberName: member.fullName,
-        ));
-        return;
-      }
+    if (isMine) {
+      context.push(eventId != null
+          ? eventDetailPath(eventId)
+          : rehearsalDetailPath(column.date));
+      return;
+    }
+
+    if (state.isAdmin) {
+      context.push(eventId != null
+          ? memberAttendanceDetailPath(
+              eventId: eventId,
+              memberId: member.memberId,
+              memberName: member.fullName,
+            )
+          : memberRehearsalDetailPath(
+              date: column.date,
+              memberId: member.memberId,
+              memberName: member.fullName,
+            ));
+      return;
     }
 
     // Nikdo: buď poznámka, nebo vysvětlení, proč nejde editovat.
-    if (_hasComment) {
-      _showNote(context, 'Poznámka – ${member.fullName}', cell!.comment!);
+    if (comment != null && comment.trim().isNotEmpty) {
+      _showNote(context, 'Poznámka – ${member.fullName}', comment);
     } else {
       _showNote(
         context,
@@ -379,78 +372,13 @@ class _AttendanceCell extends StatelessWidget {
       );
     }
   }
-
-  @override
-  Widget build(BuildContext context) {
-    final (symbol, color) = _cellSymbol(cell?.status, column.isCancelled);
-
-    return GestureDetector(
-      onTap: column.isCancelled ? null : () => _onTap(context),
-      onLongPress: _hasComment
-          ? () => _showNote(
-                context,
-                'Poznámka – ${member.fullName}',
-                cell!.comment!,
-              )
-          : null,
-      child: Container(
-        width: _cellWidth,
-        height: _rowHeight,
-        color: _rowBackground(context, row),
-        padding: const EdgeInsets.all(2),
-        child: Opacity(
-          // Zrušený sloupec byl v MAUI jen o odstín tmavší béžová.
-          opacity: column.isCancelled ? 0.5 : 1,
-          child: Stack(
-            children: [
-              Center(
-                child: Text(
-                  symbol,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-              ),
-              if (_hasComment)
-                const Positioned(
-                  top: 2,
-                  right: 2,
-                  child: Text('📝', style: TextStyle(fontSize: 8)),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('📋', style: TextStyle(fontSize: 48)),
-          SizedBox(height: 12),
-          Text(
-            'V tomto měsíci nejsou žádná data',
-            style: TextStyle(fontSize: 16, color: DemizonColors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// Pomocné funkce
-// ─────────────────────────────────────────────────────────────────────────
+const _headerTextStyle = TextStyle(
+  color: DemizonColors.textOnPrimary,
+  fontWeight: FontWeight.bold,
+  fontSize: 12,
+);
 
 /// Symbol a barva buňky. Barvy jdou výhradně přes
 /// `DemizonTheme.attendanceColor` — v MAUI byly hexy rozeseté po code-behindu.
@@ -468,8 +396,7 @@ class _EmptyState extends StatelessWidget {
 /// patřil hlavičce — proto se tady posouvá o jedna.
 Color _rowBackground(BuildContext context, int row) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
-  final striped = (row + 1).isEven;
-  if (striped) {
+  if ((row + 1).isEven) {
     return isDark ? DemizonColors.warmBeigeDark : DemizonColors.warmBeige;
   }
   return isDark
@@ -491,4 +418,25 @@ void _showNote(BuildContext context, String title, String text) {
       ],
     ),
   );
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('📋', style: TextStyle(fontSize: 48)),
+          SizedBox(height: 12),
+          Text(
+            'V tomto měsíci nejsou žádná data',
+            style: TextStyle(fontSize: 16, color: DemizonColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
 }

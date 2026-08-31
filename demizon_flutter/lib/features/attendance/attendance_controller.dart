@@ -25,6 +25,17 @@ class YearMonth {
     return YearMonth(today.year, today.month);
   }
 
+  /// Pro router: `?year=2026&month=1`. Chybějící nebo nečitelné hodnoty
+  /// znamenají aktuální měsíc (MAUI: konstruktor VM nastavil `DateTime.Today`).
+  factory YearMonth.fromQuery(Map<String, String> query) {
+    final year = int.tryParse(query['year'] ?? '');
+    final month = int.tryParse(query['month'] ?? '');
+    if (year == null || month == null || month < 1 || month > 12) {
+      return YearMonth.now();
+    }
+    return YearMonth(year, month);
+  }
+
   final int year;
   final int month;
 
