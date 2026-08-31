@@ -9,11 +9,6 @@ import 'package:demizon/models/models.dart';
 import 'all_members_attendance_controller.dart';
 import 'attendance_controller.dart';
 
-/// Zlatý akcent sloupců, které jsou akce (ne zkoušky). V MAUI hex `#C9A227`
-/// zapsaný přímo v `AllMembersAttendancePage.xaml.cs:183`.
-// TODO(verify): sjednotit s `attendance_screen.dart` a přesunout do `DemizonColors`.
-const _eventGold = Color(0xFFC9A227);
-
 // Rozměry mřížky — 1:1 z `AllMembersAttendancePage.xaml.cs:13-16`.
 const _nameColumnWidth = 130.0;
 const _cellWidth = 56.0;
@@ -237,7 +232,7 @@ class _AttendanceTable extends StatelessWidget {
       builder: (context) => _cell(
         width: _cellWidth,
         height: _headerHeight,
-        color: column.isEvent ? _eventGold : DemizonColors.primary,
+        color: column.isEvent ? DemizonColors.eventGold : DemizonColors.primary,
         // Tap na hlavičku otevře detail akce (není vázaná na člena).
         onTap: column.eventId == null
             ? null

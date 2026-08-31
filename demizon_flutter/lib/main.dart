@@ -16,7 +16,9 @@ Future<void> main() async {
     debugPrint('Firebase se nepodařilo inicializovat: $e');
   }
 
-  await initializeDateFormatting('cs_CZ');
+  // Musi souhlasit s locale, se kterym volaji DateFormat v core/formatting.dart
+  // ('cs'). Pri nesouladu vyhodi DateFormat LocaleDataException.
+  await initializeDateFormatting('cs');
 
   runApp(const ProviderScope(child: DemizonApp()));
 }

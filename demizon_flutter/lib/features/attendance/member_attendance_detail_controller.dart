@@ -215,24 +215,4 @@ class MemberAttendanceDetailController extends FamilyAsyncNotifier<
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Role
-//
-// TODO(verify): ARCHITECTURE.md chce tuhle mapu v `core/formatting.dart`.
-// Až tam vznikne (`EventDetailViewModel.cs:62-74` ji potřebuje taky),
-// nahradit tyhle tři deklarace importem a odsud smazat.
-// ─────────────────────────────────────────────────────────────────────────
-
-/// Popisky pro výběr role. MAUI: `RoleOptions`.
-const roleOptions = ['Tanečník', 'Muzikant'];
-
-String? apiRoleToDisplay(String? apiRole) => switch (apiRole) {
-      'dancer' => 'Tanečník',
-      'musician' => 'Muzikant',
-      _ => null,
-    };
-
-String? displayRoleToApi(String? displayRole) => switch (displayRole) {
-      'Tanečník' => 'dancer',
-      'Muzikant' => 'musician',
-      _ => null,
-    };
+// Mapa rolí CZ<->API žije v `core/formatting.dart` — používá ji i detail akce.

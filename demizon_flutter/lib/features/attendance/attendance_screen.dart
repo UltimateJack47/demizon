@@ -8,12 +8,6 @@ import 'package:demizon/models/models.dart';
 
 import 'attendance_controller.dart';
 
-/// Zlatý akcent akcí (na rozdíl od zkoušek). V MAUI byl hex `#C9A227`
-/// napsaný přímo v `AttendancePage.xaml` i v code-behindu přehledu.
-// TODO(verify): až se bude sahat do `core/theme.dart`, přesunout do
-// `DemizonColors` jako `eventGold` a odsud smazat.
-const _eventGold = Color(0xFFC9A227);
-
 /// Přepis `Pages/Attendance/AttendancePage.xaml` + `AttendanceViewModel.cs`.
 ///
 /// Hlavní obrazovka docházky: měsíční seznam akcí a zkoušek se stavem
@@ -272,7 +266,7 @@ class _EventCard extends StatelessWidget {
           // DataTrigger IsRehearsal=False → zlatý rámeček.
           side: event.isRehearsal
               ? BorderSide.none
-              : const BorderSide(color: _eventGold, width: 2),
+              : const BorderSide(color: DemizonColors.eventGold, width: 2),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -301,7 +295,7 @@ class _EventCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         const _Badge(
                           text: '⭐ Akce',
-                          color: _eventGold,
+                          color: DemizonColors.eventGold,
                         ),
                       ],
                       if (event.place != null &&

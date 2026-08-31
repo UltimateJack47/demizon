@@ -27,6 +27,10 @@ abstract final class DemizonColors {
   static const attendanceMaybe = Color(0xFFF39C12);
   static const attendanceNone = Color(0xFFBDC3C7);
 
+  /// Zlatý akcent, kterým se v přehledech odlišují akce od zkoušek.
+  /// V MAUI to byl hex `#C9A227` opsaný ve dvou souborech.
+  static const eventGold = Color(0xFFC9A227);
+
   static const error = Color(0xFFE74C3C);
   static const success = Color(0xFF27AE60);
   static const warning = Color(0xFFF39C12);

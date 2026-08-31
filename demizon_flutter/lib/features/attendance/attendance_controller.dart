@@ -57,6 +57,10 @@ class YearMonth {
   /// Pozor na `LLLL` vs `MMMM`: .NET u formátu bez dne použije nominativ
   /// („leden“), což v `intl` odpovídá samostatnému tvaru `LLLL`.
   /// `MMMM` by dalo genitiv („ledna“).
+  ///
+  // TODO(verify): české názvy měsíců fungují jen po
+  // `initializeDateFormatting('cs')` (package:intl/date_symbol_data_local.dart)
+  // v `main.dart`. Bez toho `intl` spadne na `LocaleDataException`.
   String get label => DateFormat('LLLL yyyy', 'cs').format(firstDay);
 
   @override
