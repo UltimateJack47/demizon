@@ -111,7 +111,7 @@ class AuthController extends AsyncNotifier<AuthState> {
       await _tokens.initialize();
 
       if (!_tokens.isExpiringSoon) {
-        return _authenticatedFromStorage();
+        return await _authenticatedFromStorage();
       }
 
       final refreshToken = await _tokens.readRefreshToken();
@@ -123,7 +123,7 @@ class AuthController extends AsyncNotifier<AuthState> {
           .refresh(RefreshRequest(refreshToken: refreshToken));
 
       await _tokens.saveTokens(response, login ?? '');
-      return _authenticatedFromStorage();
+      return await _authenticatedFromStorage();
     } catch (_) {
       // MAUI zde rovněž jen vyčistilo úložiště a zůstalo na přihlášení.
       await _tokens.clear();

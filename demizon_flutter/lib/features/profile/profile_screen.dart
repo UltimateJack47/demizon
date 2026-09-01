@@ -218,10 +218,10 @@ class _ProfileBody extends ConsumerWidget {
         const SizedBox(height: 16),
 
         // --------------------------------------------------- O aplikaci
-        Center(
+        const Center(
           child: Text(
             'Verze aplikace: $kAppVersion',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               color: DemizonColors.textSecondary,
             ),

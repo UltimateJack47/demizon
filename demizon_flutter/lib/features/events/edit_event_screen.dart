@@ -303,7 +303,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
             ),
             Switch(
               value: value,
-              activeColor: activeColor,
+              activeThumbColor: activeColor,
               onChanged: _isBusy ? null : onChanged,
             ),
           ],

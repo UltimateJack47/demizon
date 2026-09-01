@@ -1,6 +1,7 @@
 # Přepis mobilní aplikace z .NET MAUI do Flutteru
 
 > **Živý dokument.** Průběžně aktualizovat.
+> Poslední aktualizace: 2026-09-01 (build zelený).
 > Založeno: 2026-09-01. Větev: `feat/flutter-app`. Adresář: `demizon_flutter/`.
 
 ## Proč
@@ -125,39 +126,63 @@ Kód nejde zkompilovat, ale statická kontrola proběhla a je čistá:
 Jedna skutečná trhlina z paralelní práce se tím našla a opravila: router očekával
 `MemberAttendanceArgs`, obrazovka bere `MemberAttendanceTarget`.
 
-## ⚠️ Nic z toho není zkompilované
+## ✅ Zkompilováno a postaveno
 
-**Flutter SDK není na vývojovém stroji nainstalovaný** (`flutter --version` →
-command not found). Veškerý Dart kód je tedy napsaný, ale neověřený. Nedořešená
-místa jsou v kódu značená `// TODO(verify):`.
+Flutter **3.47.2 / Dart 3.13.2** doinstalován 2026-09-01. Stav:
 
-První kroky po instalaci SDK:
+| Krok | Výsledek |
+|---|---|
+| `flutter pub get` | OK |
+| `dart run build_runner build` | **42 vygenerovaných souborů** |
+| `flutter analyze` | **No issues found!** |
+| `flutter test` | **8 testů prošlo** |
+| `flutter build apk --debug` | **APK postaveno** (159 MB debug) |
 
-```bash
-cd demizon_flutter
-flutter pub get
-dart run build_runner build --delete-conflicting-outputs
-flutter analyze
-```
+Obavy z integračních chyb po paralelní práci pěti agentů se nenaplnily — analyzér
+našel jen **3 nálezy** na 61 souborech a žádnou skutečnou chybu. Zásluhu na tom má
+`ARCHITECTURE.md` napsaný před spuštěním agentů.
 
-Očekávat je potřeba dávku chyb z integrace — modely, API klient a obrazovky psalo
-paralelně pět agentů podle společného kontraktu, takže se mohou lišit v detailech
-podpisů. `flutter analyze` je najde všechny naráz.
+### Co bylo potřeba opravit
+
+| Problém | Oprava |
+|---|---|
+| `intl ^0.19.0` × `flutter_localizations` chce `^0.20.3` | bump |
+| `retrofit 4.10.0` × `retrofit_generator 9.7.0` — generátor neznal `Parser.DartMappable` | generátor na `^10.2.10` |
+| `json_annotation` a SDK constraint pod požadovaným minimem | `^4.12.0`, `sdk: ^3.8.0` |
+| `return _authenticatedFromStorage()` bez `await` uvnitř `try` | **skutečná chyba** — výjimka by utekla mimo `catch` a obnova session by spadla místo tichého návratu na přihlášení |
+| `Switch.activeColor` deprecated | `activeThumbColor` |
+| `flutter_local_notifications` vyžaduje core library desugaring | `isCoreLibraryDesugaringEnabled` + `desugar_jdk_libs` v `android/app/build.gradle.kts` |
+| `flutter create` přidal boilerplate test na neexistující `MyApp` | nahrazen `test/contract_test.dart` |
+
+### Testy
+
+`test/contract_test.dart` — 8 testů na kontrakt mezi aplikací a API. Cílí na věci,
+které kompilátor nehlídá a přepis je mohl tiše rozbít: statusy docházky
+(`yes`/`maybe`/`no`), obousměrné mapování rolí, formát data pro endpointy zkoušek
+(`yyyy-MM-dd`) a tvar URL souborů.
+
+### Nativní projekty
+
+`flutter create --platforms=android,ios --org com.demizon` → 73 souborů.
+- `applicationId = com.demizon.administrace` — **shodné s MAUI**, aby šla appka
+  nasadit jako update, ne jako druhá aplikace vedle stávající.
+- `android:label="Demižón"` (výchozí `demizon` z generátoru nahrazeno).
 
 ## TODO
 
 ### Nutné před prvním spuštěním
 
-- [ ] Nainstalovat Flutter SDK, `flutter pub get`, `build_runner`, `flutter analyze`
-- [ ] `flutter create --platforms=android,ios .` v `demizon_flutter/` — dogenerovat
-      nativní projekty (android/, ios/), které tu zatím nejsou
+- [x] ~~Nainstalovat Flutter SDK, `flutter pub get`, `build_runner`, `flutter analyze`~~
+- [x] ~~`flutter create --platforms=android,ios .`~~ — hotovo, 73 souborů
 - [ ] `flutterfire configure` → `lib/firebase_options.dart`; přenést
       `google-services.json` z `Demizon.Maui/Platforms/Android/`
 - [x] ~~Zkopírovat `assets/images/demizon_logo.jpg`~~ — hotovo, včetně `.svg` varianty
 - [ ] Ikony a splash (`flutter_launcher_icons`, `flutter_native_splash`)
       ze `Demizon.Maui/Resources/AppIcon/`
-- [ ] `applicationId` nastavit na `com.demizon.administrace` (shodné s MAUI,
-      aby šlo nasadit jako update)
+- [x] ~~`applicationId` na `com.demizon.administrace`~~ — hotovo
+- [ ] **Spustit na reálném zařízení** — zatím nebyl připojený žádný telefon ani
+      emulátor (`flutter devices` hlásí jen Windows/Chrome/Edge). Bez toho není
+      ověřené vůbec žádné chování za běhu.
 
 ### Zbývá dopsat
 
