@@ -135,8 +135,9 @@ Flutter **3.47.2 / Dart 3.13.2** doinstalován 2026-09-01. Stav:
 | `flutter pub get` | OK |
 | `dart run build_runner build` | **42 vygenerovaných souborů** |
 | `flutter analyze` | **No issues found!** |
-| `flutter test` | **8 testů prošlo** |
+| `flutter test` | **14 testů prošlo** |
 | `flutter build apk --debug` | **APK postaveno** (159 MB debug) |
+| **spuštěno na emulátoru** | **Pixel 9 / API 36 — aplikace běží** |
 
 Obavy z integračních chyb po paralelní práci pěti agentů se nenaplnily — analyzér
 našel jen **3 nálezy** na 61 souborech a žádnou skutečnou chybu. Zásluhu na tom má
@@ -161,6 +162,32 @@ které kompilátor nehlídá a přepis je mohl tiše rozbít: statusy docházky
 (`yes`/`maybe`/`no`), obousměrné mapování rolí, formát data pro endpointy zkoušek
 (`yyyy-MM-dd`) a tvar URL souborů.
 
+### Ověřeno za běhu na emulátoru
+
+Aplikace nastartuje, vykreslí přihlašovací obrazovku včetně loga a české
+diakritiky, a korektně zobrazí chybu při neúspěšném přihlášení.
+
+Firebase při startu selže (`Failed to load FirebaseOptions from resource`),
+protože chybí `google-services.json` — `try/catch` v `main.dart` to ale zachytí
+a aplikace pokračuje. To je zatím v pořádku; notifikace stejně nejsou dopsané.
+
+**Dvě chyby, které odhalilo teprve spuštění** (statická analýza je najít nemohla):
+
+1. **Hero pruh na přihlašovací obrazovce zabíral jen část šířky.**
+   `Container` v `_Hero` měl `height: 320`, ale žádnou šířku. Nepozicované dítě
+   `Stacku` se smrskne na šířku obsahu a zarovná se do levého horního rohu —
+   nadpis „FS Demižón" pak přetékal přes hranu. Opraveno `width: double.infinity`.
+   Statickým scanem ověřeno, že jinde se stejný vzor nevyskytuje.
+
+2. **Přihlašování shodilo vlastní obrazovku.** `AuthController.login()` přepínalo
+   stav na `AsyncLoading`, router to přes `isRestoring => isLoading` vyhodnotil
+   jako obnovu session a odskočil na splash. Přihlašovací obrazovka se zahodila
+   uprostřed requestu, chybová hláška se nikdy nezobrazila a následný `setState()`
+   spadl na disposed widgetu.
+   Opraveno na dvou úrovních: `login()` stav na `AsyncLoading` nepřepíná (spinner
+   si drží obrazovka sama) a `isRestoring` je nově `isLoading && !hasValue`.
+   Zamčeno regresními testy v `test/auth_state_test.dart`.
+
 ### Nativní projekty
 
 `flutter create --platforms=android,ios --org com.demizon` → 73 souborů.
@@ -180,9 +207,10 @@ které kompilátor nehlídá a přepis je mohl tiše rozbít: statusy docházky
 - [ ] Ikony a splash (`flutter_launcher_icons`, `flutter_native_splash`)
       ze `Demizon.Maui/Resources/AppIcon/`
 - [x] ~~`applicationId` na `com.demizon.administrace`~~ — hotovo
-- [ ] **Spustit na reálném zařízení** — zatím nebyl připojený žádný telefon ani
-      emulátor (`flutter devices` hlásí jen Windows/Chrome/Edge). Bez toho není
-      ověřené vůbec žádné chování za běhu.
+- [x] ~~Spustit na zařízení~~ — běží na emulátoru Pixel 9 / API 36
+- [ ] Ověřit na **fyzickém telefonu** a proti běžícímu backendu (přihlášení,
+      docházka, notifikace). Zatím ověřena jen přihlašovací obrazovka a chybová
+      cesta přihlášení — dál se bez platných údajů a dostupného API nedostaneme.
 
 ### Zbývá dopsat
 

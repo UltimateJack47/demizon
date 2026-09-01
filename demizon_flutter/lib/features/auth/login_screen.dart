@@ -50,11 +50,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on AuthException catch (e) {
       // Hlášky pro uživatele (401 / nedostupný server / ostatní) skládá
       // AuthController — jsou to doslovné texty z LoginViewModel.cs:39-50.
-      setState(() => _errorMessage = e.message);
+      if (mounted) setState(() => _errorMessage = e.message);
     } catch (_) {
-      setState(
-        () => _errorMessage = 'Přihlášení selhalo. Zkuste to prosím znovu.',
-      );
+      if (mounted) {
+        setState(
+          () => _errorMessage = 'Přihlášení selhalo. Zkuste to prosím znovu.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isBusy = false);
     }
@@ -163,6 +165,10 @@ class _Hero extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
+      // Bez explicitni sirky se Container ve Stacku smrskne na sirku obsahu
+      // a zarovna se do leveho horniho rohu — hero pruh pak zabira jen cast
+      // obrazovky a nadpis pretece pres jeho hranu.
+      width: double.infinity,
       height: 320,
       padding: const EdgeInsets.only(top: 56, bottom: 72),
       decoration: const BoxDecoration(

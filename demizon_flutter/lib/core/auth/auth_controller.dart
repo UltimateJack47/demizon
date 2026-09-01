@@ -65,9 +65,13 @@ extension AuthSessionX on AsyncValue<AuthState> {
   /// `true` jen při potvrzené session. Během obnovy (`AsyncLoading`) je `false`.
   bool get isAuthenticated => valueOrNull is Authenticated;
 
-  /// `true`, dokud běží auto-login při startu. Router může tuto fázi využít
-  /// k zobrazení splash místo krátkého probliknutí přihlašovací obrazovky.
-  bool get isRestoring => isLoading;
+  /// `true` jen během úvodního auto-loginu při startu (`build()`), kdy stav
+  /// ještě nemá žádnou hodnotu. Router tuto fázi překrývá splashem, aby
+  /// přihlášenému neprobleskla přihlašovací obrazovka.
+  ///
+  /// Přihlašování samo stav na `AsyncLoading` nepřepíná — jinak by router
+  /// uprostřed requestu zahodil přihlašovací obrazovku i s chybovou hláškou.
+  bool get isRestoring => isLoading && !hasValue;
 
   Authenticated? get session => valueOrNull is Authenticated
       ? valueOrNull! as Authenticated
@@ -135,7 +139,9 @@ class AuthController extends AsyncNotifier<AuthState> {
   /// Při neúspěchu vyhodí [AuthException] s českou hláškou a stav vrátí zpět
   /// na [Unauthenticated].
   Future<void> login(String login, String password) async {
-    state = const AsyncLoading();
+    // Stav zamerne NEprepiname na AsyncLoading: router cte isLoading jako
+    // "obnovuje se session" a odskocil by na splash, cimz by se prihlasovaci
+    // obrazovka uprostred requestu zahodila. Spinner si drzi obrazovka sama.
     try {
       final response = await ref
           .read(apiClientProvider)
