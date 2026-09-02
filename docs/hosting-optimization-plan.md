@@ -211,10 +211,16 @@ ale s příštím major updatem by se to rozpadlo.
       `journal_size_limit=32 MB` a `wal_autocheckpoint=512`. Ověřeno proti reálné DB:
       všechny tři pragmy se propíšou.
 
-#### ⚠️ Otevřené ladění, které vyplynulo z code review
+#### ⚠️ Ladění, které vyplynulo z code review — rozhodnuto 2026-09-02
 
 Dvě hodnoty z bodu 5 vypadají jako řešení, ale při bližším pohledu jimi nejsou.
-Obojí je kompromis nad paměťovým budgetem, ne chyba — patří rozhodnout, ne opravit.
+Obojí je kompromis nad paměťovým budgetem, ne chyba.
+
+> **Rozhodnutí:** obě hodnoty **zůstávají jak jsou**. U okruhů proto, že ladit je bez
+> měření by znamenalo vyměnit jeden odhad za druhý — viz nový úkol v Prioritě 2.
+> U WAL pragem proto, že `journal_size_limit` je neškodná pojistka a častější menší
+> checkpointy mají větší šanci proklouznout mezi čtenáři; jen se přestávají vydávat
+> za vyřešený problém.
 
 **a) `DisconnectedCircuitMaxRetained = 10` je pravděpodobně příliš málo.**
 Protože `_Host.cshtml` dává circuit i anonymnímu návštěvníkovi (viz blok níže), padají
@@ -244,10 +250,12 @@ Ve scénáři, na který ta opatření míří (hromadný zápis při otevřený
 WAL roste dál. Snížení autocheckpointu z 1000 na 512 navíc **zdvojnásobuje počet
 pokusů** o checkpoint proti stejné kontenci, se kterou se potýká `busy_timeout`.
 
-`journal_size_limit` je neškodná pojistka a může zůstat. Co WAL skutečně zastropuje,
-je periodický `wal_checkpoint(TRUNCATE)` z Priority 2 — do té doby nemají tyhle dvě
-pragmy vydávat za vyřešený problém. `wal_autocheckpoint=512` chce naměřit, jinak jde
-jen o výměnu jednoho odhadu za druhý.
+`journal_size_limit` je neškodná pojistka a zůstává. Co WAL skutečně zastropuje,
+je periodický `wal_checkpoint(TRUNCATE)` z Priority 2 — **do té doby se řádek 7
+v diagnóze nepovažuje za vyřešený.** `wal_autocheckpoint=512` taky zůstává:
+častější menší checkpointy mají větší šanci proklouznout mezi čtenáři než vzácné
+velké, ale je to argument bez měření, takže se s tou hodnotou nemá hýbat naslepo
+ani jedním směrem.
 
 #### ⛔ Zablokováno — `AddDbContextFactory`
 
@@ -284,6 +292,13 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
 
 ### Priorita 2 — disk
 
+- [ ] **Naměřit skutečnou paměť na jeden odpojený Blazor okruh** a podle toho nastavit
+      `DisconnectedCircuitMaxRetained`. Dnešní hodnota 10 je zvolená konzervativně,
+      odhad 1–3 MB/okruh je nepodložený. Bez měření je volba mezi RAM a rizikem, že
+      admin přijde o rozepsaný formulář docházky, jen výměna jednoho odhadu za druhý.
+      Postup: v kontejneru s `--memory=768m` otevřít N okruhů, odpojit je a odečíst
+      RSS před a po. Skutečné řešení zůstává per-page render mode, který anonymní
+      provoz z poolu odstraní úplně.
 - [ ] **Purge job** pro `AuditLog` (retence 90 dní), `RefreshTokens` (revokované + expirované),
       `SentNotifications` (180 dní). Nejlépe do `UnifiedNotificationService.RunCheckAsync`,
       která už běží 1×/hod.
