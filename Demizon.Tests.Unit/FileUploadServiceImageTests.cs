@@ -3,6 +3,7 @@ using Demizon.Core.Services.FileUpload;
 using Demizon.Tests.Unit.Fakes;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace Demizon.Tests.Unit;
@@ -199,12 +200,77 @@ public class FileUploadServiceImageTests
         Assert.True(Guid.TryParse(result.FileName, out _), "FileName má být GUID");
     }
 
+    // ---------------------------------------------------------------- chybové vstupy
+
+    /// <summary>
+    /// Nedekódovatelný vstup je chyba <b>klienta</b>, ne serveru. Služba proto nesmí
+    /// nechat výjimku probublat do controlleru (tam by z ní bylo HTTP 500), ale vrátit
+    /// neúspěch se zprávou, kterou má smysl uživateli zobrazit.
+    /// </summary>
     [Fact]
-    public async Task UploadImageToDbAsync_odmitne_neobrazkovy_vstup()
+    public async Task UploadImageToDbAsync_neobrazkovy_vstup_vrati_neuspech_a_ne_vyjimku()
     {
         var garbage = "toto rozhodne neni obrazek"u8.ToArray();
 
-        await Assert.ThrowsAnyAsync<Exception>(() => UploadImageAsync(garbage));
+        var result = await UploadImageAsync(garbage);
+
+        Assert.False(result.IsSuccessful);
+        Assert.Equal("Soubor není platný obrázek.", result.ErrorMessage);
+        Assert.Null(result.Data);
+        Assert.Null(result.ThumbnailData);
+    }
+
+    [Fact]
+    public async Task UploadImageToDbAsync_prazdny_vstup_vrati_neuspech()
+    {
+        var result = await UploadImageAsync([]);
+
+        Assert.False(result.IsSuccessful);
+        Assert.NotNull(result.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task UploadImageToDbAsync_pri_neuspechu_zachova_metadata_pro_hlaseni()
+    {
+        var result = await UploadImageAsync("neni obrazek"u8.ToArray(), ".png", "image/png");
+
+        // Volající z toho staví chybovou zprávu, takže jméno a typ musí přežít.
+        Assert.Equal("photo", result.FileName);
+        Assert.Equal(".png", result.FileExtension);
+        Assert.Equal(0, result.FileSize);
+    }
+
+    /// <summary>
+    /// Strop alokátoru ImageSharpu (128 MB, viz <c>CoreServicesRegistrationExtension</c>)
+    /// se projeví u formátů bez škálovaného dekódu — PNG alokuje celý raster dopředu.
+    /// Musí z toho být srozumitelný neúspěch, ne HTTP 500.
+    /// </summary>
+    [Fact]
+    public async Task UploadImageToDbAsync_obrazek_nad_stropem_alokatoru_vrati_srozumitelny_neuspech()
+    {
+        // 3000×3000 Rgb24 = 27 MB rasteru, tedy nad nastavených 16 MB.
+        // Zdroj musí vzniknout PŘED snížením stropu — generátor alokuje přes stejný
+        // globální alokátor, takže by jinak spadl už on.
+        var oversizedPng = TestImages.Png(3000, 3000);
+
+        // Strop se nastavuje lokálně a vrací se zpátky: AddCoreServices() ho v produkci
+        // mění globálně na Configuration.Default, což by ovlivnilo i ostatní testy v běhu.
+        var original = Configuration.Default.MemoryAllocator;
+        Configuration.Default.MemoryAllocator = MemoryAllocator.Create(
+            new MemoryAllocatorOptions { AllocationLimitMegabytes = 16 });
+        try
+        {
+            var result = await UploadImageAsync(oversizedPng, ".png", "image/png");
+
+            Assert.False(result.IsSuccessful);
+            Assert.Equal(
+                "Obrázek má příliš mnoho pixelů na zpracování. Zmenši rozlišení a nahraj ho znovu.",
+                result.ErrorMessage);
+        }
+        finally
+        {
+            Configuration.Default.MemoryAllocator = original;
+        }
     }
 
     // ---------------------------------------------------------------- dokumenty

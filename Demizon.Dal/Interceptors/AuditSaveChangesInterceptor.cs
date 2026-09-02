@@ -4,6 +4,7 @@ using Demizon.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace Demizon.Dal.Interceptors;
 
@@ -15,7 +16,9 @@ namespace Demizon.Dal.Interceptors;
 /// Audituje se jen <b>asynchronní</b> cesta. Produkční kód synchronní <c>SaveChanges()</c>
 /// nikde nepoužívá; kdyby ho někdo doplnil, změny by se do auditu nedostaly.
 /// </remarks>
-public class AuditSaveChangesInterceptor(ICurrentUserAccessor currentUserAccessor) : SaveChangesInterceptor
+public class AuditSaveChangesInterceptor(
+    ICurrentUserAccessor currentUserAccessor,
+    ILogger<AuditSaveChangesInterceptor>? logger = null) : SaveChangesInterceptor
 {
     // Vlastnosti obsahující citlivá data – vyloučeny z audit logu
     private static readonly HashSet<string> SensitiveProperties = new(StringComparer.OrdinalIgnoreCase)
@@ -99,20 +102,33 @@ public class AuditSaveChangesInterceptor(ICurrentUserAccessor currentUserAccesso
     {
         if (!_isResolvingKeys && _pendingKeys.Count > 0 && eventData.Context is DemizonContext context)
         {
-            foreach (var (audit, entry) in _pendingKeys)
+            var pending = _pendingKeys.ToList();
+            _pendingKeys.Clear();
+
+            foreach (var (audit, entry) in pending)
             {
                 var primaryKey = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
                 audit.EntityId = primaryKey?.CurrentValue?.ToString() ?? "0";
             }
-
-            _pendingKeys.Clear();
 
             // Vnořené uložení nese jen AuditLog řádky, které se samy neauditují,
             // takže rekurze skončí hned. _isResolvingKeys je pojistka pro čitelnost.
             _isResolvingKeys = true;
             try
             {
-                await context.SaveChangesAsync(cancellationToken);
+                // CancellationToken.None záměrně: data volajícího jsou v tuhle chvíli
+                // už commitnutá, takže zrušení při shutdownu nesmí shodit dopsání klíčů.
+                await context.SaveChangesAsync(CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                // Klíčové: tohle uložení běží AŽ PO commitu volajícího, takže výjimka
+                // odsud by z úspěšně uloženého zápisu udělala zdánlivě neúspěšný —
+                // volající by se domníval, že se nic neuložilo, a zkusil to znovu.
+                // Zastaralé EntityId v auditu je výrazně menší škoda než duplicitní řádek.
+                logger?.LogWarning(ex,
+                    "Nepodařilo se doplnit skutečné primární klíče do {Count} audit záznamů. "
+                    + "Data jsou uložená, audit u nich nese dočasný klíč.", pending.Count);
             }
             finally
             {

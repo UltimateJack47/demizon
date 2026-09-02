@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using SixLabors.ImageSharp.Processing;
 
@@ -52,7 +53,16 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
         await fileRequest.Stream.CopyToAsync(ms);
         ms.Position = 0;
 
-        var (fullData, thumbData) = OptimizeImage(ms);
+        byte[] fullData;
+        byte[] thumbData;
+        try
+        {
+            (fullData, thumbData) = OptimizeImage(ms);
+        }
+        catch (Exception ex) when (ex is ImageFormatException or InvalidMemoryOperationException)
+        {
+            return FailedImage(fileRequest, ex);
+        }
 
         return new FileUploadResult
         {
@@ -83,6 +93,36 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
             Data = bytes,
             ThumbnailData = null,
             IsSuccessful = true
+        };
+    }
+
+    /// <summary>
+    /// Poškozený soubor i obrázek, na který nestačí strop alokátoru ImageSharpu
+    /// (<c>AllocationLimitMegabytes</c> v <c>CoreServicesRegistrationExtension</c>),
+    /// jsou chyby na <b>vstupu</b>. Bez tohoto převodu by výjimka z dekodéru probublala
+    /// až do controlleru a klient by dostal HTTP 500 místo srozumitelného 400.
+    /// </summary>
+    /// <remarks>
+    /// Strop se v praxi projeví jen u formátů bez škálovaného dekódu — PNG, BMP a TIFF
+    /// alokují celý raster dopředu, takže narazí kolem 35 Mpx. JPEG projde i na 100 Mpx,
+    /// protože <c>DecoderOptions.TargetSize</c> u něj spustí škálovaný IDCT.
+    /// </remarks>
+    private static FileUploadResult FailedImage(FileUploadRequest fileRequest, Exception ex)
+    {
+        var isTooLarge = ex is InvalidMemoryOperationException
+                         || ex.InnerException is InvalidMemoryOperationException;
+
+        return new FileUploadResult
+        {
+            IsSuccessful = false,
+            ErrorMessage = isTooLarge
+                ? "Obrázek má příliš mnoho pixelů na zpracování. Zmenši rozlišení a nahraj ho znovu."
+                : "Soubor není platný obrázek.",
+            FileName = fileRequest.FileName,
+            FileExtension = fileRequest.FileExtension,
+            ContentType = fileRequest.ContentType,
+            RelativePath = string.Empty,
+            FileSize = 0
         };
     }
 

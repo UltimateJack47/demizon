@@ -99,8 +99,9 @@ public class GalleryController(IFileService fileService, IFileUploadService file
             ContentType = file.ContentType
         });
 
+        // Neúspěch tady znamená nedekódovatelný nebo příliš velký obrázek — chyba klienta.
         if (!result.IsSuccessful)
-            return StatusCode(500, "Upload failed.");
+            return BadRequest(result.ErrorMessage ?? "Upload failed.");
 
         var entity = new Dal.Entities.File
         {

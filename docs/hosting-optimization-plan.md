@@ -40,8 +40,8 @@ Build na serveru to nebyl — na server jde jen `docker pull`. Skutečné pří�
 | # | Riziko | Stav |
 |---|---|---|
 | 1 | **Magick.NET Q16** — 8 B/px, alokace mimo GC haldu, žádné `ResourceLimits` | ✅ **vyřešeno** (viz níže) |
-| 2 | Blazor Server circuity bez konfigurace — `ServerPrerendered` dává circuit **i anonymnímu návštěvníkovi**, default `DisconnectedCircuitMaxRetained = 100` × 3 min | ⬜ TODO |
-| 3 | Server GC zapnutý defaultně, bez heap limitu — nevrací paměť OS | ⬜ TODO |
+| 2 | Blazor Server circuity bez konfigurace — `ServerPrerendered` dává circuit **i anonymnímu návštěvníkovi**, default `DisconnectedCircuitMaxRetained = 100` × 3 min | ⚠️ **částečně** (retence snížena, viz ✅ 5; per-page render mode zablokovaný) |
+| 3 | Server GC zapnutý defaultně, bez heap limitu — nevrací paměť OS | ✅ **vyřešeno** (Workstation GC, viz ✅ 5) |
 | 4 | BLOBy v SQLite se načítají celé do paměti, bez streamování | ⬜ TODO |
 
 ---
@@ -187,7 +187,15 @@ Dále dokončena **migrace CryptoHelper 4 → 5**: v branchi byly přepsané 3 z
 Zbylých 6 ve třech souborech (`AuthenticationService.cs` — webové přihlášení,
 `MembersController.cs` — změna hesla, `MemberViewModel.cs` — zakládání členů)
 jelo dál přes obsolete `Crypto`. Chování bylo stejné (shim nad `PasswordHasher`),
-ale s příštím major updatem by se to rozpadlo. `dotnet publish` je nyní bez `CS0618`.
+ale s příštím major updatem by se to rozpadlo.
+
+> `dotnet publish -c Release` už nehlásí **žádné** `CS0618` z CryptoHelperu. Jedno
+> `CS0618` ale zbývá, a to nové, zavlečené bumpem FirebaseAdmin 3.1.0 → 3.6.0:
+> `FcmService.cs:71` — `Message.Token` je zastaralé ve prospěch `Fid`. Ověřeno, že
+> `Token` v 3.6.0 stále funguje (nese `[JsonProperty("token")]` a projde validací),
+> takže push notifikace rozbité nejsou. **Záměrně neměněno** — `Fid` je Firebase
+> Installation ID, což není totéž co registrační token, takže mechanické přejmenování
+> by bylo chybné. Vyžaduje vlastní průchod, viz Priorita 3.
 
 ---
 
@@ -202,6 +210,44 @@ ale s příštím major updatem by se to rozpadlo. `dotnet publish` je nyní bez
       `AddDbContextFactory`). `SqliteBusyTimeoutInterceptor` nyní aplikuje i
       `journal_size_limit=32 MB` a `wal_autocheckpoint=512`. Ověřeno proti reálné DB:
       všechny tři pragmy se propíšou.
+
+#### ⚠️ Otevřené ladění, které vyplynulo z code review
+
+Dvě hodnoty z bodu 5 vypadají jako řešení, ale při bližším pohledu jimi nejsou.
+Obojí je kompromis nad paměťovým budgetem, ne chyba — patří rozhodnout, ne opravit.
+
+**a) `DisconnectedCircuitMaxRetained = 10` je pravděpodobně příliš málo.**
+Protože `_Host.cshtml` dává circuit i anonymnímu návštěvníkovi (viz blok níže), padají
+veřejné návštěvy a přihlášení adminové do **stejného** poolu. Pár náhodných návštěv
+veřejné stránky tedy vytlačí adminův odpojený okruh během sekund, a s retencí 1 minuta
+stačí, aby adminovi zhasla obrazovka telefonu nad rozepsaným formulářem docházky
+a po návratu dostal „reconnection failed“ a přišel o rozepsaná data.
+
+| Varianta | Paměť navíc (odhad 1–3 MB/okruh) | Riziko ztráty rozepsané práce |
+|---|---:|---|
+| dnes: 10 × 1 min | ~10–30 MB | vysoké |
+| 30 × 1 min | ~30–90 MB | střední |
+| 30 × 3 min (default retence) | ~30–90 MB, drženo 3× dél | nízké |
+| default: 100 × 3 min | ~100–300 MB | nízké, ale na 1 GB nereálné |
+
+Odhad na okruh je nutné **naměřit**, ne hádat. Skutečné řešení je per-page render mode,
+který anonymní provoz z poolu odstraní úplně — do té doby je to volba mezi RAM a UX.
+
+**b) `wal_autocheckpoint=512` a `journal_size_limit=32 MB` spolu WAL neomezí.**
+Ověřeno na reálné DB: `page_size = 4096`, takže 512 stránek = **2 MB**. Autocheckpoint
+tedy spouští checkpoint už na 2 MB a limit 32 MB je za normálního provozu nedosažitelný —
+uplatnil by se jen při checkpointu, který WAL resetuje. A přesně to podle diagnózy
+(řádek 7) nejde: `AddDbContext` je scoped na celý Blazor okruh, takže čtenáři drží
+snapshoty a checkpoint nedoběhne.
+
+Ve scénáři, na který ta opatření míří (hromadný zápis při otevřených okruzích), tedy
+WAL roste dál. Snížení autocheckpointu z 1000 na 512 navíc **zdvojnásobuje počet
+pokusů** o checkpoint proti stejné kontenci, se kterou se potýká `busy_timeout`.
+
+`journal_size_limit` je neškodná pojistka a může zůstat. Co WAL skutečně zastropuje,
+je periodický `wal_checkpoint(TRUNCATE)` z Priority 2 — do té doby nemají tyhle dvě
+pragmy vydávat za vyřešený problém. `wal_autocheckpoint=512` chce naměřit, jinak jde
+jen o výměnu jednoho odhadu za druhý.
 
 #### ⛔ Zablokováno — `AddDbContextFactory`
 
