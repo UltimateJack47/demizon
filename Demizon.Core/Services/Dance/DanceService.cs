@@ -42,9 +42,10 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
         }
         catch (Exception ex)
         {
-            // Bez tohohle by entita zůstala Added a vložila se při příštím uložení
-            // v tomtéž Blazor okruhu — vrácené false by nic nezaručovalo.
-            DemizonContext.DiscardPendingChange(dance);
+            // Bez tohohle by rozpracovaná změna zůstala v trackeru a uložila se
+            // při příštím — nesouvisejícím — SaveChanges v tomtéž Blazor okruhu,
+            // takže vrácené false by nic nezaručovalo.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Dance operation.");
             return false;
         }
@@ -52,11 +53,9 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
     
     public async Task<bool> DeleteAsync(int id)
     {
-        // Entita je deklarovaná mimo try, aby po selhání šla vrátit do Unchanged.
-        Dal.Entities.Dance? entity = null;
         try
         {
-            entity = await DemizonContext.Dances.FindAsync(id);
+            var entity = await DemizonContext.Dances.FindAsync(id);
             if (entity is null)
             {
                 throw new EntityNotFoundException();
@@ -68,8 +67,9 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
         }
         catch (Exception ex)
         {
-            // Vrátí entitu do Unchanged, jinak by se smazání přehrálo při příštím uložení.
-            DemizonContext.DiscardPendingChange(entity);
+            // Vrátí tracker do čistého stavu, jinak by se smazání přehrálo
+            // při příštím uložení v tomtéž okruhu.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Dance operation.");
             return false;
         }

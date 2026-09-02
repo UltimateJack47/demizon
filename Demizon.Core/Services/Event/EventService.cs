@@ -42,9 +42,10 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
         }
         catch (Exception ex)
         {
-            // Bez tohohle by entita zůstala Added a vložila se při příštím uložení
-            // v tomtéž Blazor okruhu — vrácené false by nic nezaručovalo.
-            DemizonContext.DiscardPendingChange(newEvent);
+            // Bez tohohle by rozpracovaná změna zůstala v trackeru a uložila se
+            // při příštím — nesouvisejícím — SaveChanges v tomtéž Blazor okruhu,
+            // takže vrácené false by nic nezaručovalo.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Event operation.");
             return false;
         }
@@ -66,8 +67,9 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
         }
         catch (Exception ex)
         {
-            // Vrátí entitu do Unchanged, jinak by se smazání přehrálo při příštím uložení.
-            DemizonContext.DiscardPendingChange(entity);
+            // Vrátí tracker do čistého stavu, jinak by se smazání přehrálo
+            // při příštím uložení v tomtéž okruhu.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to delete Event {EventId}.", id);
             return false;
         }

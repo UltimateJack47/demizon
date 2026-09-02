@@ -49,9 +49,10 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
         }
         catch (Exception ex)
         {
-            // Zahodí rozpracovaný zápis, jinak by se docházka uložila až při příštím
-            // nesouvisejícím SaveChanges v tomtéž Blazor okruhu.
-            DemizonContext.DiscardPendingChange(attendance);
+            // Na cestě update je trackovaná načtená entita, ne ta předaná — proto
+            // se maže celý tracker a ne konkrétní instance. Jinak by se neúspěšný
+            // zápis přehrál při příštím nesouvisejícím SaveChanges v tomtéž okruhu.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Attendance operation.");
             return false;
         }
@@ -59,11 +60,9 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
 
     public async Task<bool> DeleteAsync(int id)
     {
-        // Entita je deklarovaná mimo try, aby po selhání šla vrátit do Unchanged.
-        Dal.Entities.Attendance? entity = null;
         try
         {
-            entity = await DemizonContext.Attendances.FindAsync(id);
+            var entity = await DemizonContext.Attendances.FindAsync(id);
             if (entity is null)
             {
                 throw new EntityNotFoundException();
@@ -75,8 +74,9 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
         }
         catch (Exception ex)
         {
-            // Vrátí entitu do Unchanged, jinak by se smazání přehrálo při příštím uložení.
-            DemizonContext.DiscardPendingChange(entity);
+            // Vrátí tracker do čistého stavu, jinak by se smazání přehrálo
+            // při příštím uložení v tomtéž okruhu.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Attendance operation.");
             return false;
         }

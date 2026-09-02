@@ -164,53 +164,183 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         Assert.Equal(member.Id, stored.MemberId);
     }
 
-    // ---------------------------------------------------------------- pomůcka samotná
+    // ------------------------------------------------- díry, které cílení na jednu entitu mělo
 
-    [Theory]
-    [InlineData(EntityState.Added, EntityState.Detached)]
-    [InlineData(EntityState.Modified, EntityState.Unchanged)]
-    [InlineData(EntityState.Deleted, EntityState.Unchanged)]
-    public async Task DiscardPendingChange_prevede_stav_na_ocekavany(
-        EntityState from, EntityState expected)
+    /// <summary>
+    /// Cílit úklid na jednu entitu nestačí: <c>AddAsync(member)</c> u člena s fotkou
+    /// nastraží jako <c>Added</c> i tu fotku, takže odpojení samotného člena ji nechá
+    /// v trackeru a vložila by se s příštím uložením. Přesně tenhle graf ukládá
+    /// <c>MemberForm.razor</c> při zakládání člena s profilovkou.
+    /// </summary>
+    [Fact]
+    public async Task Neuspesne_ulozeni_grafu_nenecha_v_trackeru_ani_navazane_entity()
+    {
+        await using var db = _fixture.NewContext();
+        var service = new MemberService(db, NullLogger<MemberService>.Instance);
+
+        var member = InvalidMember("vadny-s-fotkou");
+        member.Photos.Add(new Dal.Entities.File
+        {
+            Path = "db-stored",
+            FileExtension = ".jpg",
+            ContentType = "image/jpeg",
+            FileSize = 10
+        });
+
+        Assert.False(await service.CreateAsync(member));
+
+        Assert.DoesNotContain(db.ChangeTracker.Entries(), e => e.State != EntityState.Unchanged);
+    }
+
+    [Fact]
+    public async Task Po_neuspesnem_ulozeni_grafu_se_neulozi_osirela_fotka()
+    {
+        await using var db = _fixture.NewContext();
+        var service = new MemberService(db, NullLogger<MemberService>.Instance);
+
+        var invalid = InvalidMember("vadny-s-fotkou");
+        invalid.Photos.Add(new Dal.Entities.File
+        {
+            Path = "db-stored",
+            FileExtension = ".jpg",
+            ContentType = "image/jpeg",
+            FileSize = 10
+        });
+
+        Assert.False(await service.CreateAsync(invalid));
+        Assert.True(await service.CreateAsync(TestData.Member(login: "opraveny")));
+
+        await using var verify = _fixture.NewContext();
+        Assert.Single(await verify.Members.ToListAsync());
+        Assert.Empty(await verify.Files.ToListAsync());
+    }
+
+    /// <summary>
+    /// Na cestě update kopíruje <c>CreateOrUpdateAsync</c> hodnoty do <em>načtené</em>
+    /// entity, takže trackovaná je ona, ne ta předaná. Úklid cílený na předanou instanci
+    /// by byl no-op a neúspěšný update by se přehrál později.
+    /// </summary>
+    [Fact]
+    public async Task Neuspesny_update_dochazky_nezustane_v_trackeru()
+    {
+        await using var seed = _fixture.NewContext();
+        var member = await TestData.SeedMemberAsync(seed);
+        var day = new DateTime(2026, 5, 1, 18, 0, 0, DateTimeKind.Utc);
+        var attendance = TestData.RehearsalAttendance(member.Id, day, AttendanceStatus.No);
+        seed.Attendances.Add(attendance);
+        await seed.SaveChangesAsync();
+
+        await using var db = _fixture.NewContext();
+        var service = new AttendanceService(db, NullLogger<AttendanceService>.Instance);
+
+        // Stejné Id, ale MemberId ukazuje nikam — update projde přes SetValues
+        // na načtenou entitu a selže až na FK.
+        Assert.False(await service.CreateOrUpdateAsync(new Attendance
+        {
+            Id = attendance.Id,
+            MemberId = 99999,
+            EventId = null,
+            Date = day,
+            Status = AttendanceStatus.Yes
+        }));
+
+        Assert.DoesNotContain(db.ChangeTracker.Entries(), e => e.State != EntityState.Unchanged);
+
+        await using var verify = _fixture.NewContext();
+        var stored = Assert.Single(await verify.Attendances.ToListAsync());
+        Assert.Equal(member.Id, stored.MemberId);
+        Assert.Equal(AttendanceStatus.No, stored.Status);
+    }
+
+    /// <summary>
+    /// <c>AuditSaveChangesInterceptor</c> přidává <c>AuditLog</c> řádky ještě před
+    /// uložením. Když pak uložení selže, nesmí zůstat <c>Added</c> — jinak by se
+    /// vložily s příštím uložením jako záznam o změně, která se nikdy nestala.
+    /// </summary>
+    [Fact]
+    public async Task Neuspesne_ulozeni_nenecha_v_trackeru_osirele_audit_radky()
+    {
+        await using var db = _fixture.NewContext();
+        var service = new MemberService(db, NullLogger<MemberService>.Instance);
+
+        Assert.False(await service.CreateAsync(InvalidMember("vadny")));
+
+        Assert.DoesNotContain(db.ChangeTracker.Entries<AuditLog>(), e => e.State == EntityState.Added);
+    }
+
+    [Fact]
+    public async Task Po_neuspesnem_ulozeni_neni_v_auditu_zaznam_o_nestale_zmene()
+    {
+        await using var db = _fixture.NewContext();
+        var service = new MemberService(db, NullLogger<MemberService>.Instance);
+
+        Assert.False(await service.CreateAsync(InvalidMember("vadny")));
+        Assert.True(await service.CreateAsync(TestData.Member(login: "opraveny")));
+
+        await using var verify = _fixture.NewContext();
+        var audits = await verify.AuditLogs.Where(a => a.EntityType == nameof(Member)).ToListAsync();
+        // Právě jeden — za člena, který se skutečně uložil.
+        Assert.Single(audits);
+    }
+
+    /// <summary>
+    /// Zahazuje se i hodnota v paměti, ne jen stav. Kdyby zůstala, další čtení
+    /// z téhož kontextu by vydalo člena jako smazaného, přesto že soft delete selhal.
+    /// </summary>
+    [Fact]
+    public async Task Zahozeni_zmeny_vrati_i_hodnoty_v_pameti()
     {
         await using var seed = _fixture.NewContext();
         var member = await TestData.SeedMemberAsync(seed);
 
         await using var db = _fixture.NewContext();
         var tracked = await db.Members.SingleAsync(m => m.Id == member.Id);
-        db.Entry(tracked).State = from == EntityState.Added ? EntityState.Unchanged : from;
+        tracked.Name = "Prepsano";
+        tracked.DeletedAt = DateTime.UtcNow;
 
-        object target = tracked;
-        if (from == EntityState.Added)
-        {
-            // Added se nasimuluje novou, netrackovanou entitou.
-            target = TestData.Member(login: "novy");
-            db.Members.Add((Member)target);
-        }
+        db.DiscardPendingChanges();
 
-        db.DiscardPendingChange(target);
+        Assert.Equal("Jan", tracked.Name);
+        Assert.Null(tracked.DeletedAt);
+        Assert.Equal(EntityState.Unchanged, db.Entry(tracked).State);
+    }
 
-        Assert.Equal(expected, db.Entry(target).State);
+    // ------------------------------------------------- pomůcka samotná
+
+    [Fact]
+    public async Task DiscardPendingChanges_odpoji_vkladane_entity()
+    {
+        await using var db = _fixture.NewContext();
+        var pending = TestData.Member(login: "novy");
+        db.Members.Add(pending);
+
+        db.DiscardPendingChanges();
+
+        Assert.Equal(EntityState.Detached, db.Entry(pending).State);
     }
 
     [Fact]
-    public async Task DiscardPendingChange_nechava_netrackovanou_entitu_bez_zmeny()
+    public async Task DiscardPendingChanges_vrati_mazane_entity_do_Unchanged()
     {
+        await using var seed = _fixture.NewContext();
+        var member = await TestData.SeedMemberAsync(seed);
+
         await using var db = _fixture.NewContext();
-        var detached = TestData.Member(login: "nikdy-netrackovany");
+        var tracked = await db.Members.SingleAsync(m => m.Id == member.Id);
+        db.Members.Remove(tracked);
 
-        db.DiscardPendingChange(detached);
+        db.DiscardPendingChanges();
 
-        Assert.Equal(EntityState.Detached, db.Entry(detached).State);
+        Assert.Equal(EntityState.Unchanged, db.Entry(tracked).State);
     }
 
     [Fact]
-    public async Task DiscardPendingChange_zvlada_null()
+    public async Task DiscardPendingChanges_na_cistem_kontextu_nic_nerozbije()
     {
         await using var db = _fixture.NewContext();
 
-        db.DiscardPendingChange(null);
+        db.DiscardPendingChanges();
 
-        Assert.Empty(db.ChangeTracker.Entries());
+        Assert.DoesNotContain(db.ChangeTracker.Entries(), e => e.State != EntityState.Unchanged);
     }
 }

@@ -20,7 +20,7 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 | Projekt | Co testuje | Rychlost |
 |---|---|---|
 | `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result` | ~3 s / 72 testů |
-| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 126 testů |
+| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 130 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
 
@@ -183,6 +183,34 @@ Bez toho vrácené `false` neznamenalo „neuložilo se“, ale „neuložilo se
 hlášení. Vzor zahazovaných výsledků ale zůstává na dobré dvacítce dalších míst —
 viz TODO níž.
 
+### Vlastní revize: entitně cílený úklid propouštěl tři případy
+
+Kolo 6 review spadlo na session limitu ještě před čtením diffu, tak jsem si změnu
+z kola 5 prošel sám — a našel v ní tři díry. Původní `DiscardPendingChange(entity)`
+cílil na jednu konkrétní instanci, což nestačí:
+
+| Případ | Proč cílení nestačilo |
+|---|---|
+| **Grafy** | `AddAsync(member)` u člena s fotkou nastraží jako `Added` i tu fotku. Odpojení člena ji nechalo v trackeru — a přesně tenhle graf ukládá `MemberForm.razor` při zakládání člena s profilovkou. |
+| **Update přes jinou instanci** | `AttendanceService.CreateOrUpdateAsync` kopíruje hodnoty do *načtené* entity, takže trackovaná je ona, ne ta předaná. `Entry()` na předané byl **no-op** a oprava na té cestě nedělala nic. |
+| **Audit** | `AuditSaveChangesInterceptor` přidává `AuditLog` řádky v `SavingChangesAsync`. Po selhání zůstaly `Added` a vložily by se s příštím uložením jako záznam o změně, která se nikdy nestala. |
+
+Pomůcka je proto bezparametrová `DiscardPendingChanges()` a maže **celý** tracker.
+Volající služby ukládají vždy hned po své vlastní změně, takže všechno rozpracované
+v momentě selhání *je* ta selhaná operace.
+
+Navíc se u `Modified` zahazují i **hodnoty v paměti** (`CurrentValues.SetValues(OriginalValues)`),
+ne jen stav. Bez toho by entita zůstala s nezapsanými hodnotami označená jako čistá
+a další čtení z téhož kontextu by vydalo třeba člena jako smazaného, přesto že soft
+delete selhal.
+
+Ověřeno oběma směry: s entitně cílenou variantou padá právě těch 5 testů, které ty
+tři díry pokrývají.
+
+> **Poučení:** u opravy change trackeru je „která entita“ špatná otázka. EF trackuje
+> grafy, interceptory přidávají vlastní entity a `SetValues` píše do jiné instance,
+> než která přišla na vstup. Rozsah selhání je celý tracker, ne jeden objekt.
+
 ---
 
 ## Pokrytí
@@ -196,7 +224,7 @@ viz TODO níž.
 | `AttendanceStatusContractTests` | `"yes"/"maybe"/"no"`, case-insensitivita, fallback na `No`, a hlavně že serializace a parsování jsou navzájem inverzní |
 | `ResultTests` | `Ok`/`Fail` semantika, `Ok(null)` jako platný úspěch |
 
-### `Demizon.Tests.Integration` (126)
+### `Demizon.Tests.Integration` (130)
 
 | Soubor | Co hlídá |
 |---|---|

@@ -57,9 +57,10 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         }
         catch (Exception ex)
         {
-            // Bez tohohle by entita zůstala Added a vložila se při příštím uložení
-            // v tomtéž Blazor okruhu — vrácené false by nic nezaručovalo.
-            DemizonContext.DiscardPendingChange(member);
+            // Bez tohohle by rozpracovaná změna zůstala v trackeru a uložila se
+            // při příštím — nesouvisejícím — SaveChanges v tomtéž Blazor okruhu,
+            // takže vrácené false by nic nezaručovalo.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Member operation.");
             return false;
         }
@@ -89,11 +90,9 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
 
     public async Task<bool> DeleteAsync(int id)
     {
-        // Entita je deklarovaná mimo try, aby po selhání šla vrátit do Unchanged.
-        Dal.Entities.Member? entity = null;
         try
         {
-            entity = await DemizonContext.Members.FindAsync(id);
+            var entity = await DemizonContext.Members.FindAsync(id);
             if (entity is null)
             {
                 throw new EntityNotFoundException();
@@ -106,9 +105,9 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         }
         catch (Exception ex)
         {
-            // Soft delete je z pohledu EF Modified — vrácením do Unchanged se zahodí,
-            // aby se DeletedAt nenastavilo až při příštím nesouvisejícím uložení.
-            DemizonContext.DiscardPendingChange(entity);
+            // Soft delete je z pohledu EF Modified — zahodí se i hodnota DeletedAt
+            // v paměti, aby další čtení z tohoto kontextu člena nevydalo smazaného.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Member operation.");
             return false;
         }
