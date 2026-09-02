@@ -383,7 +383,7 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
 
         await using var db = _fixture.NewContext();
         var members = new MemberService(db, NullLogger<MemberService>.Instance);
-        var events = new EventService(db, NullIogger());
+        var events = new EventService(db, NullLogger<EventService>.Instance);
 
         var invalid = TestData.Member(login: "tester");
         invalid.Id = member.Id;
@@ -409,7 +409,7 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         await seed.SaveChangesAsync();
 
         await using var db = _fixture.NewContext();
-        var service = new EventService(db, NullIogger());
+        var service = new EventService(db, NullLogger<EventService>.Instance);
 
         // Vynutíme selhání zápisu tím, že akci přepíšeme na neplatný stav.
         var tracked = await db.Events.SingleAsync(e => e.Id == ev.Id);
@@ -422,5 +422,4 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         Assert.False((await verify.Events.SingleAsync(e => e.Id == ev.Id)).IsCancelled);
     }
 
-    private static ILogger<EventService> NullIogger() => NullLogger<EventService>.Instance;
 }

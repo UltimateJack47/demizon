@@ -246,6 +246,9 @@ Zbylé tři nálezy kola 6:
   událost už nešlo smazat ani pozdějším přepnutím na „nepřijdu“. Jediné místo ze
   seznamu níž, které jsem opravil i mimo rozsah PR, právě kvůli tomu externímu
   a nevratnému efektu.
+  <br>Kolo 7 ale ukázalo, že tím je pokrytá jen **cesta selhání**: osiřelá událost
+  vzniká i při **úspěšném** uložení nové docházky, protože `model.Id` zůstane 0.
+  To je samostatná chyba se změnou kontraktu služby, viz TODO níž.
 
 ---
 
@@ -295,10 +298,26 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
       už mění; zbývají minimálně: `ListEvents.razor:122,145`,
       `ListVideoLinks.razor:72,107`, `ListMembers.razor:192`, `ListDances.razor:108`,
       `AttendancesController.cs` (6×),
-      `DancesController.cs:129,143`, `FilesController.cs:126`.
+      `DancesController.cs:129,143`, `FilesController.cs:126`,
+      a v `MemberAttendance.razor.cs` ta dvě místa, která ukládají a mažou
+      `GoogleEventId` (opravená jsou jen ta dvě, která rozhodovala o vytvoření
+      události v kalendáři).
       Lepší než doplňovat kontroly jednu po druhé je převést služby na
       `Result`/`Result<T>` z `Demizon.Common` — ten typ v repu už je a přesně na tohle
       se hodí, a compiler pak zahození výsledku umí nahlásit. Chce testy na oba směry.
+- [ ] **Osiřelé události v Google Calendaru u nově vytvořené docházky.**
+      Nezávisí na tom, jestli uložení selže — děje se to i na **úspěšné** cestě.
+      `MemberAttendance.razor.cs` má `model.Id = attendanceResult.Id;`, což je
+      no-op: `AttendanceForm` binduje přímo na předaný objekt a vrací tutéž
+      instanci, takže `attendanceResult` **je** `model`. A `ToEntity()` vyrábí novou
+      entitu, na kterou klíč přiřadí databáze — do view modelu se nikdy nedostane.
+      U nové docházky tedy `model.Id` zůstane 0, podmínka
+      `if (createdId is not null && model.Id != 0)` v `SyncGoogleCalendarAsync`
+      neprojde a ID vytvořené události se nikam nezapíše. Pozdější přepnutí na
+      „nepřijdu“ ji pak nemá čím smazat. Oprava znamená nechat
+      `IAttendanceService.CreateOrUpdateAsync` vrátit uloženou entitu (nebo klíč),
+      což je změna kontraktu — proto mimo rozsah PR s optimalizací.
+      Chce test na celý cyklus: vytvoření docházky → uložení ID → smazání události.
 - [ ] **CI workflow** — `dotnet test Demizon.Backend.slnf` na každý push.
       Navázat na `build.yml` z *hosting-optimization-plan.md* (zatím nezaložený).
 - [ ] **Testy controllerů** přes `WebApplicationFactory` — autorizace endpointů

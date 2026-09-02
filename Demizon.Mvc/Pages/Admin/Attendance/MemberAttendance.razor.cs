@@ -261,6 +261,17 @@ public partial class MemberAttendance : ComponentBase
         bool isSelf = model.MemberId == LoggedUser.Id;
         AttendanceStatus statusAfterSave = AttendanceStatus.No;
 
+        // AttendanceForm binduje přímo na předaný objekt (@bind-Value="Model.Status")
+        // a vrací tutéž instanci, takže model je po zavření dialogu už přepsaný —
+        // a u existující docházky je to zároveň řádek v mřížce. Když se uložení
+        // nepovede, musí se zobrazení přebudovat z databáze, jinak by buňka ukazovala
+        // hodnotu, která nikde není uložená.
+        async Task RefreshViewAsync()
+        {
+            if (refreshUserData) await LoadData();
+            await LoadTableData();
+        }
+
         try
         {
             var attendanceResult = result.Data as AttendanceViewModel;
@@ -271,6 +282,7 @@ public partial class MemberAttendance : ComponentBase
                 if (model.Id != 0 && !await AttendanceService.DeleteAsync(model.Id))
                 {
                     Snackbar.Add("Docházku se nepodařilo resetovat.", Severity.Error);
+                    await RefreshViewAsync();
                     return;
                 }
 
@@ -279,23 +291,30 @@ public partial class MemberAttendance : ComponentBase
             }
             else
             {
-                // Kritické: bez téhle kontroly by se pokračovalo k synchronizaci
-                // s Google Calendarem a vznikla by tam reálná událost pro docházku,
-                // která se neuložila. A protože model.Id zůstane 0, vrácené ID se
-                // nikam nezapíše, takže tu osiřelou událost už nejde smazat ani
-                // pozdějším přepnutím na "nepřijdu".
+                // Bez téhle kontroly by se pokračovalo k synchronizaci s Google
+                // Calendarem a vznikla by tam reálná událost pro docházku, která se
+                // neuložila — a nešla by už smazat, protože ID události se ukládá
+                // k docházkovému řádku, který neexistuje.
                 if (!await AttendanceService.CreateOrUpdateAsync(attendanceResult.ToEntity()))
                 {
                     Snackbar.Add("Docházku se nepodařilo uložit.", Severity.Error);
+                    await RefreshViewAsync();
                     return;
                 }
 
                 Snackbar.Add("Docházka uložena.", Severity.Success);
                 statusAfterSave = attendanceResult.Status;
+
+                // POZOR, známá chyba (viz docs/testing-plan.md): u NOVÉ docházky
+                // zůstane model.Id nulové, takže osiřelá událost v kalendáři vzniká
+                // i na úspěšné cestě. attendanceResult je tatáž instance jako model,
+                // takže tenhle řádek je no-op, a ToEntity() navíc vyrábí novou entitu,
+                // na kterou databáze klíč přiřadí — do view modelu se nikdy nedostane.
+                // Opravit znamená nechat službu klíč vrátit, což je změna kontraktu
+                // mimo rozsah tohoto PR.
                 model.Id = attendanceResult.Id;
             }
-            if (refreshUserData) await LoadData();
-            await LoadTableData();
+            await RefreshViewAsync();
         }
         catch
         {

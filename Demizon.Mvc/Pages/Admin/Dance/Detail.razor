@@ -567,26 +567,25 @@ else
                     continue;
                 }
 
+                var entity = new Dal.Entities.File
                 {
-                    var entity = new Dal.Entities.File
-                    {
-                        Path = file.Name,
-                        FileExtension = result.FileExtension,
-                        ContentType = result.ContentType,
-                        FileSize = result.FileSize,
-                        Data = result.Data,
-                        ThumbnailData = null,
-                        IsPublic = false,
-                        DanceId = Id,
-                        Kind = FileKind.Document
-                    };
-                    // Viz fotky výše: návratovou hodnotu je nutné kontrolovat, protože
-                    // služba výjimku spolkne a vrátí false.
-                    if (await FileService.CreateAsync(entity))
-                        uploaded++;
-                    else
-                        failures.Add($"{file.Name}: uložení do databáze se nezdařilo");
-                }
+                    Path = file.Name,
+                    FileExtension = result.FileExtension,
+                    ContentType = result.ContentType,
+                    FileSize = result.FileSize,
+                    Data = result.Data,
+                    ThumbnailData = null,
+                    IsPublic = false,
+                    DanceId = Id,
+                    Kind = FileKind.Document
+                };
+
+                // Viz fotky výše: návratovou hodnotu je nutné kontrolovat, protože
+                // služba výjimku spolkne a vrátí false.
+                if (await FileService.CreateAsync(entity))
+                    uploaded++;
+                else
+                    failures.Add($"{file.Name}: uložení do databáze se nezdařilo");
             }
 
         }
