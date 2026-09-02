@@ -20,7 +20,7 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 | Projekt | Co testuje | Rychlost |
 |---|---|---|
 | `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result` | ~3 s / 72 testů |
-| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 115 testů |
+| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 126 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
 
@@ -175,9 +175,13 @@ selhání zápisu do DB **nedosažitelný**.
 > volajícího — a `await Sluzba.CreateAsync(x);` bez kontroly návratové hodnoty je
 > tichá ztráta dat, kterou kompilátor nenahlásí.
 
-Opraveno na čtyřech místech, která tento PR už mění. **Vzor ale zůstává v repu:**
-`ListDances.razor:108` zahazuje `DanceService.CreateAsync` stejně a služby samy jsou
-navržené tak, že to svádí. Viz TODO níž.
+Opraveno dvěma vrstvami. **Ve službách** samotných: každý `catch` teď volá
+`DiscardPendingChange`, protože EF po výjimce ze `SaveChangesAsync` change tracker
+nevrací a entita by se v Blazor okruhu vložila při příštím — nesouvisejícím — uložení.
+Bez toho vrácené `false` neznamenalo „neuložilo se“, ale „neuložilo se *teď*“.
+**Ve stránkách**, které tento PR mění: kontrola návratové hodnoty místo zeleného
+hlášení. Vzor zahazovaných výsledků ale zůstává na dobré dvacítce dalších míst —
+viz TODO níž.
 
 ---
 
@@ -192,7 +196,7 @@ navržené tak, že to svádí. Viz TODO níž.
 | `AttendanceStatusContractTests` | `"yes"/"maybe"/"no"`, case-insensitivita, fallback na `No`, a hlavně že serializace a parsování jsou navzájem inverzní |
 | `ResultTests` | `Ok`/`Fail` semantika, `Ok(null)` jako platný úspěch |
 
-### `Demizon.Tests.Integration` (115)
+### `Demizon.Tests.Integration` (126)
 
 | Soubor | Co hlídá |
 |---|---|
@@ -201,6 +205,7 @@ navržené tak, že to svádí. Viz TODO níž.
 | `MemberServiceTests` | Soft delete přes globální filtr, historie docházky přežije smazání, `UpdateAsync` nepřepíše Google tokeny, Connect/Disconnect kalendáře |
 | `AttendanceReportServiceTests` | Zkoušky (`EventId == null`) vs. akce, distinct dat vs. počet řádků, `Maybe` se nepočítá jako účast, filtr `IsAttendanceVisible`, ochrana proti dělení nulou |
 | `AttendanceAndEventServiceTests` | Vložení vs. přepis podle `Id`, `LastUpdated` nastavuje služba, nesrovnalost v chování `DeleteAsync` mezi službami |
+| `ChangeTrackerRecoveryTests` | Služby po neúspěšném zápisu uklidí change tracker, takže vrácené `false` skutečně znamená „neuložilo se“ a další pokus projde |
 | `ModelAndMigrationsTests` | **Model odpovídá snapshotu migrací**, všechny migrace projdou od nuly, enumy jako text, unique index, kaskáda, seed data |
 | `SqlitePragmaInterceptorTests` | `busy_timeout` / `journal_size_limit` / `wal_autocheckpoint` se skutečně propíšou, a to na **každé** nové spojení |
 
@@ -215,12 +220,19 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
 
 ## TODO
 
-- [ ] **Projít zbylá zahazovaná `bool` z Core služeb.** 11 metod v 6 službách
-      (`Create`/`Update`/`Delete` v `Dance`, `Event`, `File`, `Member`, `VideoLink`,
-      `Attendance`) spolkne výjimku a vrátí `false`. Volající to většinou ignorují —
-      známý zbytek je `ListDances.razor:108`. Buď zavést důslednou kontrolu, nebo
-      lépe převést služby na `Result`/`Result<T>` z `Demizon.Common`, který v repu
-      už je a přesně na tohle se hodí. Chce testy na oba směry.
+- [ ] **Projít zbylá zahazovaná `bool` z Core služeb.** Vzor má **12 metod**:
+      `CreateAsync` + `DeleteAsync` v `Dance`, `Event`, `File`, `Member`
+      a `VideoLink`, plus `CreateOrUpdateAsync` + `DeleteAsync` v `Attendance`.
+      (`UpdateAsync` do vzoru **nepatří** — vrací `Task` a výjimku propouští.)
+      Samotné služby už po sobě uklidí change tracker, ale **volající návratovou
+      hodnotu většinou ignorují** a hlásí úspěch. Tento PR opravil jen místa, která
+      už mění; zbývají minimálně: `ListEvents.razor:122,145`,
+      `ListVideoLinks.razor:72,107`, `ListMembers.razor:192`, `ListDances.razor:108`,
+      `MemberAttendance.razor.cs:270,276,335,351`, `AttendancesController.cs` (6×),
+      `DancesController.cs:129,143`, `FilesController.cs:126`.
+      Lepší než doplňovat kontroly jednu po druhé je převést služby na
+      `Result`/`Result<T>` z `Demizon.Common` — ten typ v repu už je a přesně na tohle
+      se hodí, a compiler pak zahození výsledku umí nahlásit. Chce testy na oba směry.
 - [ ] **CI workflow** — `dotnet test Demizon.Backend.slnf` na každý push.
       Navázat na `build.yml` z *hosting-optimization-plan.md* (zatím nezaložený).
 - [ ] **Testy controllerů** přes `WebApplicationFactory` — autorizace endpointů

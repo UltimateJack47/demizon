@@ -345,7 +345,13 @@ else
             var data = result.Data as VideoLinkViewModel;
             try
             {
-                await VideoLinkService.CreateAsync(data!.ToEntity());
+                // CreateAsync výjimku spolkne a vrátí false, takže catch níž se neuplatní.
+                if (!await VideoLinkService.CreateAsync(data!.ToEntity()))
+                {
+                    Snackbar.Add("Video se nepodařilo přidat.", Severity.Error);
+                    return;
+                }
+
                 Snackbar.Add("Video bylo přidáno.", Severity.Success);
                 await LoadDance();
             }
@@ -507,9 +513,12 @@ else
             new DialogOptions { Position = DialogPosition.Center, CloseButton = false });
         if (confirm is true)
         {
-            await FileService.DeleteAsync(id);
+            // DeleteAsync výjimku spolkne a vrátí false — bez kontroly by se ohlásil
+            // zelený úspěch nad mřížkou, ve které záznam pořád je.
+            var deleted = await FileService.DeleteAsync(id);
             await LoadDance();
-            Snackbar.Add("Fotografie smazána.", Severity.Success);
+            Snackbar.Add(deleted ? "Fotografie smazána." : "Smazání se nezdařilo.",
+                deleted ? Severity.Success : Severity.Error);
         }
     }
 
@@ -524,6 +533,10 @@ else
         _uploadingDocuments = true;
         StateHasChanged();
 
+        // Selhání se slévají do jedné zprávy: MudBlazor zobrazí jen prvních
+        // MaxDisplayedSnackbars (default 5), takže hlášení po jednom se ztrácejí.
+        var failures = new List<string>();
+
         try
         {
             var uploaded = 0;
@@ -532,7 +545,7 @@ else
                 var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
                 if (!AllowedDocExtensions.Contains(ext))
                 {
-                    Snackbar.Add($"Soubor {file.Name} není podporovaný formát.", Severity.Warning);
+                    failures.Add($"{file.Name}: nepodporovaný formát");
                     continue;
                 }
 
@@ -565,12 +578,18 @@ else
                     if (await FileService.CreateAsync(entity))
                         uploaded++;
                     else
-                        Snackbar.Add($"Dokument {file.Name} se nepodařilo uložit.", Severity.Warning);
+                        failures.Add($"{file.Name}: uložení do databáze se nezdařilo");
                 }
             }
 
             if (uploaded > 0)
                 Snackbar.Add($"Nahráno {uploaded} dokumentů k tanci.", Severity.Success);
+
+            if (failures.Count > 0)
+                Snackbar.Add(
+                    $"Nepodařilo se zpracovat {failures.Count} souborů: {string.Join(" | ", failures)}",
+                    Severity.Warning);
+
             await LoadDance();
         }
         catch
@@ -591,9 +610,12 @@ else
             new DialogOptions { Position = DialogPosition.Center, CloseButton = false });
         if (confirm is true)
         {
-            await FileService.DeleteAsync(id);
+            // DeleteAsync výjimku spolkne a vrátí false — bez kontroly by se ohlásil
+            // zelený úspěch nad mřížkou, ve které záznam pořád je.
+            var deleted = await FileService.DeleteAsync(id);
             await LoadDance();
-            Snackbar.Add("Dokument smazán.", Severity.Success);
+            Snackbar.Add(deleted ? "Dokument smazán." : "Smazání se nezdařilo.",
+                deleted ? Severity.Success : Severity.Error);
         }
     }
 

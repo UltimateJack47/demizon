@@ -230,9 +230,12 @@
             new DialogOptions { Position = DialogPosition.Center, CloseButton = false });
         if (confirm is true)
         {
-            await FileService.DeleteAsync(id);
+            // DeleteAsync výjimku spolkne a vrátí false — bez kontroly by se ohlásil
+            // zelený úspěch nad mřížkou, ve které fotka pořád je.
+            var deleted = await FileService.DeleteAsync(id);
             await RefreshTable();
-            Snackbar.Add("Fotografie smazána.", Severity.Success);
+            Snackbar.Add(deleted ? "Fotografie smazána." : "Smazání se nezdařilo.",
+                deleted ? Severity.Success : Severity.Error);
         }
     }
 

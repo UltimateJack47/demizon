@@ -1,5 +1,6 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
+using Demizon.Dal.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -41,6 +42,9 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
         }
         catch (Exception ex)
         {
+            // Bez tohohle by entita zůstala Added a vložila se při příštím uložení
+            // v tomtéž Blazor okruhu — vrácené false by nic nezaručovalo.
+            DemizonContext.DiscardPendingChange(newEvent);
             logger.LogError(ex, "Failed to process Event operation.");
             return false;
         }
@@ -62,6 +66,8 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
         }
         catch (Exception ex)
         {
+            // Vrátí entitu do Unchanged, jinak by se smazání přehrálo při příštím uložení.
+            DemizonContext.DiscardPendingChange(entity);
             logger.LogError(ex, "Failed to delete Event {EventId}.", id);
             return false;
         }

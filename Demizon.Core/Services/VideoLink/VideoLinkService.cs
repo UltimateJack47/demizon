@@ -1,5 +1,6 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
+using Demizon.Dal.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -41,6 +42,9 @@ public class VideoLinkService(DemizonContext demizonContext, ILogger<VideoLinkSe
         }
         catch (Exception ex)
         {
+            // Bez tohohle by entita zůstala Added a vložila se při příštím uložení
+            // v tomtéž Blazor okruhu — vrácené false by nic nezaručovalo.
+            DemizonContext.DiscardPendingChange(file);
             logger.LogError(ex, "Failed to process VideoLink operation.");
             return false;
         }
@@ -48,9 +52,11 @@ public class VideoLinkService(DemizonContext demizonContext, ILogger<VideoLinkSe
     
     public async Task<bool> DeleteAsync(int id)
     {
+        // Entita je deklarovaná mimo try, aby po selhání šla vrátit do Unchanged.
+        Dal.Entities.VideoLink? entity = null;
         try
         {
-            var entity = await DemizonContext.VideoLinks.FindAsync(id);
+            entity = await DemizonContext.VideoLinks.FindAsync(id);
             if (entity is null)
             {
                 throw new EntityNotFoundException();
@@ -62,6 +68,8 @@ public class VideoLinkService(DemizonContext demizonContext, ILogger<VideoLinkSe
         }
         catch (Exception ex)
         {
+            // Vrátí entitu do Unchanged, jinak by se smazání přehrálo při příštím uložení.
+            DemizonContext.DiscardPendingChange(entity);
             logger.LogError(ex, "Failed to process VideoLink operation.");
             return false;
         }
