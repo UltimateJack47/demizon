@@ -1,0 +1,14 @@
+{
+  "solution": {
+    "path": "Demizon.sln",
+    "projects": [
+      "Demizon.Common\\Demizon.Common.csproj",
+      "Demizon.Contracts\\Demizon.Contracts.csproj",
+      "Demizon.Core\\Demizon.Core.csproj",
+      "Demizon.Dal\\Demizon.Dal.csproj",
+      "Demizon.Mvc\\Demizon.Mvc.csproj",
+      "Demizon.Tests.Unit\\Demizon.Tests.Unit.csproj",
+      "Demizon.Tests.Integration\\Demizon.Tests.Integration.csproj"
+    ]
+  }
+}

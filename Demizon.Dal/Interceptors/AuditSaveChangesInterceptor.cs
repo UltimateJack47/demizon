@@ -2,6 +2,7 @@ using System.Text.Json;
 using Demizon.Common.Services;
 using Demizon.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Demizon.Dal.Interceptors;
@@ -10,6 +11,10 @@ namespace Demizon.Dal.Interceptors;
 /// Automaticky zaznamenává změny entit do AuditLog tabulky.
 /// Scoped lifetime – injektuje ICurrentUserAccessor (implementovaný v MVC vrstvě).
 /// </summary>
+/// <remarks>
+/// Audituje se jen <b>asynchronní</b> cesta. Produkční kód synchronní <c>SaveChanges()</c>
+/// nikde nepoužívá; kdyby ho někdo doplnil, změny by se do auditu nedostaly.
+/// </remarks>
 public class AuditSaveChangesInterceptor(ICurrentUserAccessor currentUserAccessor) : SaveChangesInterceptor
 {
     // Vlastnosti obsahující citlivá data – vyloučeny z audit logu
@@ -18,12 +23,20 @@ public class AuditSaveChangesInterceptor(ICurrentUserAccessor currentUserAccesso
         "PasswordHash", "TokenHash"
     };
 
+    /// <summary>
+    /// Audit řádky vložených entit, kterým se skutečný primární klíč doplní teprve po uložení.
+    /// </summary>
+    private readonly List<(AuditLog Audit, EntityEntry Entry)> _pendingKeys = [];
+
+    /// <summary>Brání rekurzi při dopisování klíčů, které samo volá <c>SaveChangesAsync</c>.</summary>
+    private bool _isResolvingKeys;
+
     public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
-        if (eventData.Context is DemizonContext context)
+        if (!_isResolvingKeys && eventData.Context is DemizonContext context)
         {
             var userId = currentUserAccessor.GetCurrentUserLogin() ?? "system";
             var auditEntries = new List<AuditLog>();
@@ -34,12 +47,15 @@ public class AuditSaveChangesInterceptor(ICurrentUserAccessor currentUserAccesso
                     || entry.State is EntityState.Detached or EntityState.Unchanged)
                     continue;
 
+                var primaryKey = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
+
                 var auditLog = new AuditLog
                 {
-                    EntityType = entry.Entity.GetType().Name,
-                    EntityId = entry.Properties
-                        .FirstOrDefault(p => p.Metadata.IsPrimaryKey())
-                        ?.CurrentValue?.ToString() ?? "0",
+                    // Metadata.ClrType, ne Entity.GetType(): s UseLazyLoadingProxies() jsou
+                    // entity načtené z DB instancemi dynamických podtypů, takže runtime typ
+                    // se jmenuje např. "MemberProxy". Model zná skutečný název entity.
+                    EntityType = entry.Metadata.ClrType.Name,
+                    EntityId = primaryKey?.CurrentValue?.ToString() ?? "0",
                     Action = entry.State.ToString(),
                     UserId = userId,
                     Timestamp = DateTime.UtcNow,
@@ -58,6 +74,12 @@ public class AuditSaveChangesInterceptor(ICurrentUserAccessor currentUserAccesso
                         : null
                 };
 
+                // U vkládaných entit je klíč zatím jen dočasný placeholder, který EF generuje
+                // jako záporné číslo. Skutečnou hodnotu zná až databáze, takže se doplní
+                // v SavedChangesAsync – jinak by audit nešel spárovat s řádkem, který popisuje.
+                if (primaryKey is { IsTemporary: true })
+                    _pendingKeys.Add((auditLog, entry));
+
                 auditEntries.Add(auditLog);
             }
 
@@ -68,5 +90,43 @@ public class AuditSaveChangesInterceptor(ICurrentUserAccessor currentUserAccesso
         }
 
         return await base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+
+    public override async ValueTask<int> SavedChangesAsync(
+        SaveChangesCompletedEventData eventData,
+        int result,
+        CancellationToken cancellationToken = default)
+    {
+        if (!_isResolvingKeys && _pendingKeys.Count > 0 && eventData.Context is DemizonContext context)
+        {
+            foreach (var (audit, entry) in _pendingKeys)
+            {
+                var primaryKey = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
+                audit.EntityId = primaryKey?.CurrentValue?.ToString() ?? "0";
+            }
+
+            _pendingKeys.Clear();
+
+            // Vnořené uložení nese jen AuditLog řádky, které se samy neauditují,
+            // takže rekurze skončí hned. _isResolvingKeys je pojistka pro čitelnost.
+            _isResolvingKeys = true;
+            try
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
+            finally
+            {
+                _isResolvingKeys = false;
+            }
+        }
+
+        return await base.SavedChangesAsync(eventData, result, cancellationToken);
+    }
+
+    public override Task SaveChangesFailedAsync(DbContextErrorEventData eventData,
+        CancellationToken cancellationToken = default)
+    {
+        _pendingKeys.Clear();
+        return base.SaveChangesFailedAsync(eventData, cancellationToken);
     }
 }

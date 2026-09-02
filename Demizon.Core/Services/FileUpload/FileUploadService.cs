@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using SixLabors.ImageSharp.Processing;
 
 namespace Demizon.Core.Services.FileUpload;
@@ -87,15 +88,29 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
 
     /// <summary>
     /// Dekóduje obrázek jednou a vrátí z něj plnou i náhledovou variantu jako JPEG.
-    /// <see cref="DecoderOptions.TargetSize"/> u JPEGu spustí škálovaný IDCT, takže se
-    /// plný raster zdrojové fotky nikdy nealokuje.
     /// </summary>
+    /// <remarks>
+    /// Kontrakt je „strop na šířku, výška volná, nikdy nezvětšovat“ — stejně jako
+    /// v původní implementaci nad ImageMagickem.
+    /// <para>
+    /// <see cref="DecoderOptions.TargetSize"/> se přitom vyhodnocuje jako
+    /// <c>ResizeMode.Max</c>, tedy jako bounding box <em>bez</em> stropu na faktoru 1.0.
+    /// Kdyby se sem předal čtverec <c>1200×1200</c>, fotka na výšku by vyšla užší než
+    /// 1200 px a malá fotka by se naopak zvětšila. Proto se box počítá z poměru stran
+    /// samotného zdroje a faktor se zastropuje na 1.0 — u JPEGu tím pořád zapneme
+    /// škálovaný IDCT, takže se plný raster zdrojové fotky nikdy nealokuje.
+    /// </para>
+    /// </remarks>
     private static (byte[] Full, byte[] Thumbnail) OptimizeImage(Stream source)
     {
+        // Identify čte jen hlavičku, žádný raster nealokuje.
+        var info = Image.Identify(source);
+        source.Position = 0;
+
         var options = new DecoderOptions
         {
-            TargetSize = new Size(MaxImageWidth, MaxImageWidth),
-            MaxFrames = 1
+            MaxFrames = 1,
+            TargetSize = ComputeDecodeSize(info)
         };
 
         using var image = Image.Load(options, source);
@@ -114,6 +129,29 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
 
         return (full, thumbnail);
     }
+
+    /// <summary>
+    /// Spočítá rozměry pro škálovaný dekód v <em>uložených</em> souřadnicích: zachová
+    /// poměr stran zdroje a zastropuje zobrazenou šířku na <see cref="MaxImageWidth"/>.
+    /// </summary>
+    private static Size ComputeDecodeSize(ImageInfo info)
+    {
+        // Dekodér EXIF rotaci neaplikuje, takže u orientací 5–8 (rotace o 90°/270°)
+        // je zobrazená šířka uloženou výškou a strop musí jít na opačnou osu.
+        var storedWidthAxis = SwapsAxes(info) ? info.Height : info.Width;
+
+        // Math.Min(1.0, …) je to, co brání upscalu malých obrázků.
+        var scale = Math.Min(1.0, (double)MaxImageWidth / storedWidthAxis);
+
+        return new Size(
+            Math.Max(1, (int)Math.Round(info.Width * scale)),
+            Math.Max(1, (int)Math.Round(info.Height * scale)));
+    }
+
+    private static bool SwapsAxes(ImageInfo info) =>
+        info.Metadata.ExifProfile is { } exif
+        && exif.TryGetValue(ExifTag.Orientation, out var orientation)
+        && orientation.Value is 5 or 6 or 7 or 8;
 
     private static byte[] ResizeToWidth(Image image, int maxWidth)
     {

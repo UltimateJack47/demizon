@@ -75,7 +75,7 @@ public static class MemberMappingExtensions
         Email = vm.Email,
         PasswordHash = string.IsNullOrWhiteSpace(vm.Password)
             ? vm.PasswordHash
-            : Crypto.HashPassword(vm.Password),
+            : PasswordHasher.HashPassword(vm.Password),
         Role = vm.Role,
         Gender = vm.Gender,
         IsVisible = !vm.IsExternal && vm.IsVisible,

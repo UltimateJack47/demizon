@@ -463,7 +463,7 @@ public class AttendancesController(
         return Ok(new MonthlyAttendanceTableDto(columns, memberRows));
     }
 
-    private static AttendanceStatus ParseStatus(string? status) => status?.ToLowerInvariant() switch
+    internal static AttendanceStatus ParseStatus(string? status) => status?.ToLowerInvariant() switch
     {
         "yes" => AttendanceStatus.Yes,
         "maybe" => AttendanceStatus.Maybe,

@@ -1,7 +1,7 @@
 # Optimalizace backendu a nasazení na Scaleway Stardust
 
 > **Živý dokument.** Průběžně aktualizovat při každé dokončené položce.
-> Založeno: 2026-09-01. Poslední aktualizace: 2026-09-01.
+> Založeno: 2026-09-01. Poslední aktualizace: 2026-09-02.
 
 ## Kontext
 
@@ -134,8 +134,10 @@ Přímá reference nebyla potřeba. `dotnet list package --vulnerable` je nyní 
 #### CryptoHelper 4.0.0 → 5.1.0 — co bylo ověřeno
 
 Dvě breaking změny:
-1. Třída `Crypto` přejmenována na `PasswordHasher`. Mechanicky opraveno ve třech souborech:
-   `RefreshTokenService.cs:32,64`, `AuthController.cs:21,28`, `DatabaseController.cs:44`.
+1. Třída `Crypto` přejmenována na `PasswordHasher`. Celkem **9 volání v 6 souborech**:
+   `RefreshTokenService.cs:32,64`, `AuthController.cs:21,28`, `DatabaseController.cs:44`
+   a — doplněno až později, viz bod 6 — `AuthenticationService.cs:21,27,81`,
+   `MembersController.cs:45,51`, `MemberViewModel.cs:78`.
 2. „Security hardening" v v5.0.0 přidalo **validační limity při ověřování**:
    `MinimumIterCount = 10_000`, `MaxSaltLength = 64 B`, odmítání slabých PRF.
    Hash s parametry pod těmito limity se **neověří** → uživatel se nepřihlásí.
@@ -159,6 +161,33 @@ místo vyčerpání paměti kontejneru skončí zpracování výjimkou.
 
 Ověřeno, že limit nerozbíjí běžný provoz: 24 Mpx fotka projde na 69 MB RSS,
 100 Mpx na 104 MB RSS, obě produkují platný výstup.
+
+---
+
+### ✅ 6. Testovací infrastruktura a opravy, které z ní vypadly
+
+Solution neměla ani jeden testovací projekt. Přidané: `Demizon.Tests.Unit` (68 testů)
+a `Demizon.Tests.Integration` (109 testů), plus `Demizon.Backend.slnf`, protože
+`dotnet test Demizon.sln` neprojde — `Demizon.Maui` chce workload `maui-android`.
+Podrobnosti a plán dalších vrstev: **`docs/testing-plan.md`**.
+
+Testy odhalily tři chyby, které build ani ruční proklikání nezachytí:
+
+1. **`TargetSize` v ImageSharpu není strop na šířku, ale bounding box bez stropu na
+   faktoru 1.0.** Fotky na výšku vycházely užší než 1200 px (3000×4000 → 900×1200,
+   1000×5000 → 240×1200) a malé fotky se naopak **zvětšovaly** (800×600 → 1200×900).
+   Regres vznikl právě při náhradě Magick.NETu. Opraveno v `ComputeDecodeSize`,
+   škálovaný IDCT a s ním paměťová výhoda zůstaly.
+2. **Audit log nesl u vložených entit dočasný primární klíč** (`-2147482632`), protože
+   `SavingChangesAsync` běží před uložením. Žádný záznam `Added` nešel spárovat s řádkem.
+3. **Audit log měl pro tutéž entitu dva různé názvy typu** — `entry.Entity.GetType().Name`
+   vrací s `UseLazyLoadingProxies()` `"MemberProxy"`. Opraveno na `entry.Metadata.ClrType.Name`.
+
+Dále dokončena **migrace CryptoHelper 4 → 5**: v branchi byly přepsané 3 z 9 volání.
+Zbylých 6 ve třech souborech (`AuthenticationService.cs` — webové přihlášení,
+`MembersController.cs` — změna hesla, `MemberViewModel.cs` — zakládání členů)
+jelo dál přes obsolete `Crypto`. Chování bylo stejné (shim nad `PasswordHasher`),
+ale s příštím major updatem by se to rozpadlo. `dotnet publish` je nyní bez `CS0618`.
 
 ---
 
@@ -212,12 +241,12 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
 - [ ] **Purge job** pro `AuditLog` (retence 90 dní), `RefreshTokens` (revokované + expirované),
       `SentNotifications` (180 dní). Nejlépe do `UnifiedNotificationService.RunCheckAsync`,
       která už běží 1×/hod.
-- [ ] **Whitelist entit v auditu** — `AuditSaveChangesInterceptor.cs:31`. Dnes se auditují
+- [ ] **Whitelist entit v auditu** — `AuditSaveChangesInterceptor.cs`. Dnes se auditují
       i `RefreshToken`, `SentNotification`, `DeviceToken`, `File`, které tvoří ~90 % objemu
-      a nemají auditní hodnotu.
+      a nemají auditní hodnotu. **Priorita stoupla:** oprava dočasných primárních klíčů
+      (viz *testing-plan.md*) přidává u každého vložení jedno UPDATE kolečko a nejčastější
+      insert je právě `RefreshToken` — po whitelistu extra zápis skoro zmizí.
 - [ ] **Index na `AuditLog.Timestamp`** — jinak bude i purge full scan.
-- [ ] **SQLite pragmas** v `SqliteBusyTimeoutInterceptor.cs:29`:
-      `journal_size_limit=33554432`, `wal_autocheckpoint=512`.
 - [ ] **`auto_vacuum=INCREMENTAL`** + jednorázový `VACUUM` + periodický
       `wal_checkpoint(TRUNCATE)`. (Pozor: `VACUUM` potřebuje dočasně ~2× velikost DB volného místa.)
 - [ ] **Kvóta na uploady.** Dnes limit 25 MB/soubor a **žádný** limit na počet ani celkový objem.
@@ -316,8 +345,10 @@ vychází ~400 buildů měsíčně zdarma. Pro tenhle projekt bohatě stačí.
 
 **Navržený tvar:**
 
-1. **`build.yml`** — trigger `push` do `master`. Postaví Docker image a pushne ho
-   do registry se dvěma tagy: `latest` a `sha-<commit>`.
+1. **`build.yml`** — trigger `push` do `master`. Nejdřív `dotnet test Demizon.Backend.slnf`
+   (177 testů, ~6 s), pak Docker image do registry se dvěma tagy: `latest` a `sha-<commit>`.
+   Pozor: **`Demizon.sln` v CI stavět nelze**, `Demizon.Maui` vyžaduje workload
+   `maui-android` — proto solution filter.
 2. **`deploy.yml`** — trigger `workflow_dispatch` (ruční spuštění) nebo `release`.
    Přes SSH na server udělá `docker pull` + restart kontejneru + `docker image prune -f`.
 
