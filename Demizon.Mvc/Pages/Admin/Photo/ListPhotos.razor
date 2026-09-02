@@ -162,8 +162,6 @@
                 await FileService.CreateAsync(entity);
                 uploaded++;
             }
-
-            await RefreshTable();
         }
         catch (Exception)
         {
@@ -171,6 +169,21 @@
         }
         finally
         {
+            // Obnova seznamu taky patří do finally: když smyčku přerušila výjimka
+            // u pozdějšího souboru, ty dřívější už jsou uložené a mřížka by jinak
+            // zůstala zastaralá. Vlastní try, aby selhání obnovy nepřebilo původní chybu.
+            if (uploaded > 0)
+            {
+                try
+                {
+                    await RefreshTable();
+                }
+                catch (Exception)
+                {
+                    // Obnovu si admin vyvolá ručně; původní chyba je důležitější.
+                }
+            }
+
             // Hlášení patří do finally: počítá se skutečně uložené, ne předané, a musí
             // se objevit i když smyčku přerušila výjimka. Odmítnuté se slévají do jedné
             // zprávy, protože MudBlazor má strop na počet zobrazených snackbarů
