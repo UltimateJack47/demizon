@@ -34,3 +34,15 @@ demizon_flutter/ios/Flutter/Flutter.framework
 demizon_flutter/ios/Flutter/Flutter.podspec
 demizon_flutter/lib/firebase_options.dart
 demizon_flutter/**/google-services.json
+
+# AI tooling: sdílená konfigurace se commituje, osobní zůstává lokální.
+# .claude/settings.json (graft hooky), .claude/helpers/, .claude/skills/,
+# .mcp.json, .ignore a .grok/ popisují nastavení projektu a v repu být mají.
+#
+# settings.local.json je osobní allowlist nástrojů. Ignoruje ho i globální
+# gitignore, ale zdejší pravidlo je tu proto, aby repo bylo samostatné —
+# na cizím stroji ten globální ignore není. (Do 2026-09-02 byl navíc
+# trackovaný, takže na něj ignore vůbec neplatil a pořád se objevoval
+# jako změněný; odtrackován v témže commitu.)
+/.claude/settings.local.json
+/.claude/settings.json.bak-*
