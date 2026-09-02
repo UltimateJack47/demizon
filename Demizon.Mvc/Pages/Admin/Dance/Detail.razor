@@ -436,8 +436,12 @@ else
                     DanceId = Id,
                     Kind = FileKind.Image
                 };
-                await FileService.CreateAsync(entity);
-                uploaded++;
+                // FileService.CreateAsync spolkne každou výjimku a jen vrátí false, takže
+                // bez téhle kontroly by `uploaded` počítalo pokusy, ne skutečná uložení.
+                if (await FileService.CreateAsync(entity))
+                    uploaded++;
+                else
+                    failures.Add($"{file.Name}: uložení do databáze se nezdařilo");
             }
         }
         catch
@@ -448,7 +452,8 @@ else
         {
             // Obnova seznamu taky patří do finally: když smyčku přerušila výjimka
             // u pozdějšího souboru, ty dřívější už jsou uložené a mřížka by jinak
-            // zůstala zastaralá. Vlastní try, aby selhání obnovy nepřebilo původní chybu.
+            // zůstala zastaralá. Selhání obnovy se musí ohlásit — jinak by admin viděl
+            // "Nahráno 3 foto" nad nezměněnou mřížkou a přirozeně by nahrával znovu.
             if (uploaded > 0)
             {
                 try
@@ -457,7 +462,8 @@ else
                 }
                 catch (Exception)
                 {
-                    // Obnovu si admin vyvolá ručně; původní chyba je důležitější.
+                    Snackbar.Add("Fotky jsou uložené, ale detail se nepodařilo obnovit. Obnov stránku.",
+                        Severity.Warning);
                 }
             }
 
@@ -554,8 +560,12 @@ else
                         DanceId = Id,
                         Kind = FileKind.Document
                     };
-                    await FileService.CreateAsync(entity);
-                    uploaded++;
+                    // Viz fotky výše: návratovou hodnotu je nutné kontrolovat, protože
+                    // služba výjimku spolkne a vrátí false.
+                    if (await FileService.CreateAsync(entity))
+                        uploaded++;
+                    else
+                        Snackbar.Add($"Dokument {file.Name} se nepodařilo uložit.", Severity.Warning);
                 }
             }
 

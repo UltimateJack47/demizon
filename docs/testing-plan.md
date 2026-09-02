@@ -151,6 +151,34 @@ Vedlejší poznatek z ladění: dva testy nejdřív padaly ze **zastaralého bui
 `Demizon.Dal.dll` v test outputu. Signatura selhání je přitom identická se skutečnou
 chybou, takže než začneš hledat příčinu v kódu, vyplatí se smazat `obj/` a `bin/`.
 
+### Kolo 4: premisa opravy stála na počítadle, které nic negarantovalo
+
+Kolo 4 našlo, že celá logika „počítej skutečně uložené, ne předané“ stála na
+`uploaded++` **za** voláním `FileService.CreateAsync(entity)`, jehož návratovou
+hodnotu nikdo nekontroloval. A ta služba — jako 11 dalších metod v 6 službách —
+**spolkne každou výjimku, zaloguje ji a vrátí `false`**:
+
+```csharp
+public async Task<bool> CreateAsync(File file)
+{
+    try { await DemizonContext.AddAsync(file); await DemizonContext.SaveChangesAsync(); return true; }
+    catch (Exception ex) { logger.LogError(ex, "Failed to process File operation."); return false; }
+}
+```
+
+Důsledek: při plném disku nebo porušené constraintě vrátí každý insert `false`,
+`uploaded` je 3, mřížka se zbytečně obnoví a admin dostane zelené „Nahráno 3 foto“,
+přesto že se neuložilo nic. Vnější `catch`, na kterém byla oprava postavená, je pro
+selhání zápisu do DB **nedosažitelný**.
+
+> **Poučení:** služba, která vrací `bool` místo výjimky, přenáší odpovědnost na
+> volajícího — a `await Sluzba.CreateAsync(x);` bez kontroly návratové hodnoty je
+> tichá ztráta dat, kterou kompilátor nenahlásí.
+
+Opraveno na čtyřech místech, která tento PR už mění. **Vzor ale zůstává v repu:**
+`ListDances.razor:108` zahazuje `DanceService.CreateAsync` stejně a služby samy jsou
+navržené tak, že to svádí. Viz TODO níž.
+
 ---
 
 ## Pokrytí
@@ -187,6 +215,12 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
 
 ## TODO
 
+- [ ] **Projít zbylá zahazovaná `bool` z Core služeb.** 11 metod v 6 službách
+      (`Create`/`Update`/`Delete` v `Dance`, `Event`, `File`, `Member`, `VideoLink`,
+      `Attendance`) spolkne výjimku a vrátí `false`. Volající to většinou ignorují —
+      známý zbytek je `ListDances.razor:108`. Buď zavést důslednou kontrolu, nebo
+      lépe převést služby na `Result`/`Result<T>` z `Demizon.Common`, který v repu
+      už je a přesně na tohle se hodí. Chce testy na oba směry.
 - [ ] **CI workflow** — `dotnet test Demizon.Backend.slnf` na každý push.
       Navázat na `build.yml` z *hosting-optimization-plan.md* (zatím nezaložený).
 - [ ] **Testy controllerů** přes `WebApplicationFactory` — autorizace endpointů

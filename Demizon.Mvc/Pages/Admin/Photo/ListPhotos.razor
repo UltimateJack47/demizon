@@ -159,8 +159,13 @@
                     ThumbnailData = result.ThumbnailData,
                     IsPublic = true
                 };
-                await FileService.CreateAsync(entity);
-                uploaded++;
+                // FileService.CreateAsync spolkne každou výjimku a jen vrátí false, takže
+                // bez téhle kontroly by `uploaded` počítalo pokusy, ne skutečná uložení,
+                // a admin by dostal "Nahráno 3 foto", i kdyby se nic neuložilo.
+                if (await FileService.CreateAsync(entity))
+                    uploaded++;
+                else
+                    failures.Add($"{file.Name}: uložení do databáze se nezdařilo");
             }
         }
         catch (Exception)
@@ -171,7 +176,8 @@
         {
             // Obnova seznamu taky patří do finally: když smyčku přerušila výjimka
             // u pozdějšího souboru, ty dřívější už jsou uložené a mřížka by jinak
-            // zůstala zastaralá. Vlastní try, aby selhání obnovy nepřebilo původní chybu.
+            // zůstala zastaralá. Selhání obnovy se musí ohlásit — jinak by admin viděl
+            // "Nahráno 3 foto" nad nezměněnou mřížkou a přirozeně by nahrával znovu.
             if (uploaded > 0)
             {
                 try
@@ -180,7 +186,8 @@
                 }
                 catch (Exception)
                 {
-                    // Obnovu si admin vyvolá ručně; původní chyba je důležitější.
+                    Snackbar.Add("Fotky jsou uložené, ale seznam se nepodařilo obnovit. Obnov ho ručně.",
+                        Severity.Warning);
                 }
             }
 

@@ -221,11 +221,15 @@
 
             if (IsUpdate)
             {
+                // UpdateAsync výjimku propouští, takže ji zachytí catch níž.
                 await MemberService.UpdateAsync(Model.Id, dbModel);
             }
-            else
+            else if (!await MemberService.CreateAsync(dbModel))
             {
-                await MemberService.CreateAsync(dbModel);
+                // CreateAsync naopak výjimku spolkne a jen vrátí false. Bez téhle
+                // kontroly by se ohlásilo "Člen byl vytvořen", i kdyby se neuložil.
+                Snackbar.Add("Člena se nepodařilo vytvořit.", Severity.Error);
+                return;
             }
 
             Snackbar.Add(IsUpdate ? "Člen byl upraven." : "Člen byl vytvořen.", Severity.Success);
