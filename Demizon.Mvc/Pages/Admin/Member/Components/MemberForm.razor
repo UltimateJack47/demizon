@@ -197,20 +197,26 @@
                     ContentType = File.ContentType
                 });
 
-                if (result.IsSuccessful)
+                // Fotku admin přiložil záměrně, takže ji nelze mlčky zahodit a uložení
+                // vyhlásit za úspěšné. Dialog zůstává otevřený s rozepsanými daty,
+                // aby šla fotka vyměnit a uložení zopakovat.
+                if (!result.IsSuccessful)
                 {
-                    var photo = new Dal.Entities.File
-                    {
-                        MemberId = Model.Id,
-                        Path = result.RelativePath,
-                        ContentType = result.ContentType,
-                        FileSize = result.FileSize,
-                        FileExtension = result.FileExtension,
-                        Data = result.Data,
-                        ThumbnailData = result.ThumbnailData,
-                    };
-                    dbModel.Photos.Add(photo);
+                    Snackbar.Add(result.ErrorMessage ?? "Fotku se nepodařilo zpracovat.", Severity.Error);
+                    return;
                 }
+
+                var photo = new Dal.Entities.File
+                {
+                    MemberId = Model.Id,
+                    Path = result.RelativePath,
+                    ContentType = result.ContentType,
+                    FileSize = result.FileSize,
+                    FileExtension = result.FileExtension,
+                    Data = result.Data,
+                    ThumbnailData = result.ThumbnailData,
+                };
+                dbModel.Photos.Add(photo);
             }
 
             if (IsUpdate)

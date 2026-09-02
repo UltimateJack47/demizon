@@ -401,6 +401,9 @@ else
 
         try
         {
+            var uploaded = 0;
+            var failures = new List<string>();
+
             foreach (var file in files)
             {
                 await using var stream = file.OpenReadStream(25 * 1024 * 1024);
@@ -413,25 +416,36 @@ else
                     ContentType = file.ContentType
                 });
 
-                if (result.IsSuccessful)
+                if (!result.IsSuccessful)
                 {
-                    var entity = new Dal.Entities.File
-                    {
-                        Path = result.RelativePath,
-                        FileExtension = result.FileExtension,
-                        ContentType = result.ContentType,
-                        FileSize = result.FileSize,
-                        Data = result.Data,
-                        ThumbnailData = result.ThumbnailData,
-                        IsPublic = false,
-                        DanceId = Id,
-                        Kind = FileKind.Image
-                    };
-                    await FileService.CreateAsync(entity);
+                    failures.Add($"{file.Name}: {result.ErrorMessage}");
+                    continue;
                 }
+
+                var entity = new Dal.Entities.File
+                {
+                    Path = result.RelativePath,
+                    FileExtension = result.FileExtension,
+                    ContentType = result.ContentType,
+                    FileSize = result.FileSize,
+                    Data = result.Data,
+                    ThumbnailData = result.ThumbnailData,
+                    IsPublic = false,
+                    DanceId = Id,
+                    Kind = FileKind.Image
+                };
+                await FileService.CreateAsync(entity);
+                uploaded++;
             }
 
-            Snackbar.Add($"Nahráno {files.Count} foto k tanci.", Severity.Success);
+            // Počítá se skutečně uložené, ne předané — jinak by hlášení tvrdilo úspěch
+            // i u fotky, kterou dekodér odmítl.
+            if (uploaded > 0)
+                Snackbar.Add($"Nahráno {uploaded} foto k tanci.", Severity.Success);
+
+            foreach (var failure in failures)
+                Snackbar.Add(failure, Severity.Warning);
+
             await LoadDance();
         }
         catch

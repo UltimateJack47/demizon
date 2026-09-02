@@ -19,8 +19,8 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 
 | Projekt | Co testuje | Rychlost |
 |---|---|---|
-| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result` | ~3 s / 68 testů |
-| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 109 testů |
+| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result` | ~3 s / 72 testů |
+| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 111 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
 
@@ -100,9 +100,41 @@ Entita načtená z DB se proto auditovala jako `"MemberProxy"`, ale nově vlože
 
 ---
 
+## Poučení z code review
+
+Dvě kola review nad tímto PR. Kolo 1 našlo dvě středně závažné chyby, kolo 2 pak
+**dvě vysoce závažné, které způsobila oprava z kola 1** — a to je hlavní poučení:
+
+> Změna kontraktu z „vyhodí výjimku“ na „vrátí neúspěch“ odstraní záchytnou síť
+> `catch (Exception)` u **všech** volajících naráz. Nestačí zkontrolovat, že volající
+> návratovou hodnotu testují; je nutné projít i to, co dělají, když je test negativní,
+> a co hlásí uživateli **po** smyčce.
+
+`FileUploadService.UploadImageToDbAsync` dřív u vadného obrázku vyhodil výjimku a všech
+pět volajících mělo `catch` s hlášením „Nahrávání se nezdařilo“. Po převodu na
+`IsSuccessful = false` měly tři z nich `if (result.IsSuccessful) { … }` **bez else**
+a hlášení o úspěchu za smyčkou:
+
+| Místo | Důsledek | Stav |
+|---|---|---|
+| `ListPhotos.razor` | „Nahráno 3 foto“ i když 2 fotky vypadly | ✅ v kole 1 |
+| `Dance/Detail.razor` | totéž u fotek k tanci | ✅ v kole 2 |
+| `MemberForm.razor` | člen uložen **bez** fotky, hlášeno jako úspěch | ✅ v kole 2 |
+
+U `MemberForm` se uložení nově přeruší a dialog zůstane otevřený — fotku admin přiložil
+záměrně, takže ji nelze mlčky zahodit.
+
+Druhé poučení, k auditu: `catch`, který výjimku spolkne, musí uklidit i **stav change
+trackeru**. Neuložené `AuditLog` řádky zůstávaly `Modified`, a protože kontext je scoped
+na celý Blazor okruh, přehrály by se při příštím — nesouvisejícím — `SaveChanges`
+uživatele. Kdyby příčinou bylo `SQLITE_BUSY` a zopakovalo se, shodilo by to uživateli
+jeho vlastní zápis. Řeší se `State = EntityState.Detached` v `catch` bloku.
+
+---
+
 ## Pokrytí
 
-### `Demizon.Tests.Unit` (68)
+### `Demizon.Tests.Unit` (72)
 
 | Soubor | Co hlídá |
 |---|---|
@@ -111,7 +143,7 @@ Entita načtená z DB se proto auditovala jako `"MemberProxy"`, ale nově vlože
 | `AttendanceStatusContractTests` | `"yes"/"maybe"/"no"`, case-insensitivita, fallback na `No`, a hlavně že serializace a parsování jsou navzájem inverzní |
 | `ResultTests` | `Ok`/`Fail` semantika, `Ok(null)` jako platný úspěch |
 
-### `Demizon.Tests.Integration` (109)
+### `Demizon.Tests.Integration` (111)
 
 | Soubor | Co hlídá |
 |---|---|

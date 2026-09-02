@@ -83,11 +83,14 @@ public class GalleryController(IFileService fileService, IFileUploadService file
     [RequestSizeLimit(25 * 1024 * 1024)]
     public async Task<IActionResult> Upload(IFormFile file)
     {
+        // Hlášení jsou česky, protože ErrorMessage z Demizon.Core taky — klient je
+        // renderuje beze změny a členská aplikace je česká. Míchat na jednom endpointu
+        // CZ a EN podle toho, která validace spadla, by bylo horší než obojí.
         if (file.Length == 0)
-            return BadRequest("No file provided.");
+            return BadRequest("Nebyl předán žádný soubor.");
 
         if (!file.ContentType.StartsWith("image/"))
-            return BadRequest("Only image files are allowed.");
+            return BadRequest("Nahrát lze jen obrázek.");
 
         await using var stream = file.OpenReadStream();
         var result = await fileUploadService.UploadImageToDbAsync(new FileUploadRequest
@@ -101,7 +104,7 @@ public class GalleryController(IFileService fileService, IFileUploadService file
 
         // Neúspěch tady znamená nedekódovatelný nebo příliš velký obrázek — chyba klienta.
         if (!result.IsSuccessful)
-            return BadRequest(result.ErrorMessage ?? "Upload failed.");
+            return BadRequest(result.ErrorMessage ?? "Nahrání se nezdařilo.");
 
         var entity = new Dal.Entities.File
         {

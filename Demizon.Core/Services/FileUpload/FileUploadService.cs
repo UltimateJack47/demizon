@@ -1,4 +1,5 @@
 using Demizon.Common.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
@@ -9,7 +10,9 @@ using SixLabors.ImageSharp.Processing;
 
 namespace Demizon.Core.Services.FileUpload;
 
-public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) : IFileUploadService
+public class FileUploadService(
+    IOptionsSnapshot<UploadSettings> uploadSettings,
+    ILogger<FileUploadService>? logger = null) : IFileUploadService
 {
     private const int MaxImageWidth = 1200;
     private const int ThumbnailWidth = 200;
@@ -59,7 +62,16 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
         {
             (fullData, thumbData) = OptimizeImage(ms);
         }
-        catch (Exception ex) when (ex is ImageFormatException or InvalidMemoryOperationException)
+        // Výčet je záměrný, ne `catch (Exception)`: chyba ve vlastním kódu (třeba
+        // v ComputeDecodeSize) má skončit 500 se stack trace, ne tichým „neplatný obrázek“.
+        // Všechny čtyři typy jsou dokumentované návratové cesty ImageSharpu pro vstup,
+        // který nelze dekódovat — včetně NotSupportedException, kterou hlásí Identify
+        // i Load u rozpoznaných, ale nepodporovaných variant formátu (bezeztrátový
+        // aritmetický JPEG, komprese BMP mimo RLE, řada variant TIFFu).
+        catch (Exception ex) when (ex is ImageFormatException
+                                       or InvalidMemoryOperationException
+                                       or ImageProcessingException
+                                       or NotSupportedException)
         {
             return FailedImage(fileRequest, ex);
         }
@@ -107,10 +119,18 @@ public class FileUploadService(IOptionsSnapshot<UploadSettings> uploadSettings) 
     /// alokují celý raster dopředu, takže narazí kolem 35 Mpx. JPEG projde i na 100 Mpx,
     /// protože <c>DecoderOptions.TargetSize</c> u něj spustí škálovaný IDCT.
     /// </remarks>
-    private static FileUploadResult FailedImage(FileUploadRequest fileRequest, Exception ex)
+    private FileUploadResult FailedImage(FileUploadRequest fileRequest, Exception ex)
     {
         var isTooLarge = ex is InvalidMemoryOperationException
                          || ex.InnerException is InvalidMemoryOperationException;
+
+        // Bez tohohle záznamu by byla regrese dekodéru, useknutý multipart request
+        // a legitimně příliš velká fotka v provozu nerozlišitelné — operátor by viděl
+        // jen HTTP 400 s jedním ze dvou hlášení a nikde žádný stack trace.
+        logger?.LogInformation(ex,
+            "Zpracování obrázku {FileName}{FileExtension} ({FileSize} B) selhalo: {Reason}.",
+            fileRequest.FileName, fileRequest.FileExtension, fileRequest.FileSize,
+            isTooLarge ? "nad stropem alokátoru" : "nedekódovatelný vstup");
 
         return new FileUploadResult
         {

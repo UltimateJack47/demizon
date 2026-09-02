@@ -129,6 +129,14 @@ public class AuditSaveChangesInterceptor(
                 logger?.LogWarning(ex,
                     "Nepodařilo se doplnit skutečné primární klíče do {Count} audit záznamů. "
                     + "Data jsou uložená, audit u nich nese dočasný klíč.", pending.Count);
+
+                // Bez odpojení by ty řádky zůstaly Modified. Kontext je scoped na celý
+                // Blazor okruh, takže by se neuložené UPDATE přehrály při příštím —
+                // úplně nesouvisejícím — SaveChanges uživatele. Kdyby příčinou bylo
+                // SQLITE_BUSY a zopakovalo se, spadl by uživateli jeho vlastní zápis
+                // kvůli zbytku audit účetnictví. Kompromis „menší škoda“ tím padá.
+                foreach (var (audit, _) in pending)
+                    context.Entry(audit).State = EntityState.Detached;
             }
             finally
             {

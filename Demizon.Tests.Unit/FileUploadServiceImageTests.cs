@@ -305,4 +305,70 @@ public class FileUploadServiceImageTests
         image[(int)(image.Width * relativeX), (int)(image.Height * relativeY)];
 
     private static bool IsReddish(Rgb24 pixel) => pixel.R > 150 && pixel.G < 100 && pixel.B < 100;
+
+    /// <summary>
+    /// Regresní test k nálezu z code review: filtr výjimek původně pokrýval jen
+    /// <c>ImageFormatException</c> a <c>InvalidMemoryOperationException</c>, takže
+    /// rozpoznaný ale nepodporovaný formát (ImageSharp na něj hlásí
+    /// <see cref="NotSupportedException"/>) končil dál HTTP 500.
+    /// </summary>
+    [Fact]
+    public async Task UploadImageToDbAsync_nepodporovana_varianta_formatu_vrati_neuspech()
+    {
+        var unsupportedTiff = BuildTiffWithUnsupportedCompression();
+
+        // Nejdřív se pojmenuje, o jakou cestu jde: hlavička je platná, takže Identify
+        // projde, a teprve dekód vyhodí NotSupportedException — ta z ImageFormatException
+        // NEdědí. Kdyby ImageSharp typ výjimky změnil, spadne tenhle assert a připomene,
+        // že se má revidovat filtr v OptimizeImage, ne jen očekávaný výsledek.
+        Assert.Equal(16, Image.Identify(unsupportedTiff).Width);
+        var raw = Assert.Throws<NotSupportedException>(() => Image.Load(unsupportedTiff));
+        Assert.IsNotType<ImageFormatException>(raw);
+
+        var result = await UploadImageAsync(unsupportedTiff, ".tiff", "image/tiff");
+
+        Assert.False(result.IsSuccessful);
+        Assert.Equal("Soubor není platný obrázek.", result.ErrorMessage);
+    }
+
+    /// <summary>
+    /// Minimální little-endian TIFF, jehož tag Compression hlásí JPEG (6) — starou
+    /// variantu, kterou ImageSharp 3.x nepodporuje. Hlavička i IFD jsou platné.
+    /// </summary>
+    private static byte[] BuildTiffWithUnsupportedCompression()
+    {
+        var stream = new MemoryStream();
+        var writer = new BinaryWriter(stream);
+
+        writer.Write("II"u8.ToArray());   // little endian
+        writer.Write((ushort)42);          // magic
+        writer.Write(8u);                  // offset prvního IFD
+
+        (ushort Tag, ushort Type, uint Count, uint Value)[] entries =
+        [
+            (256, 3, 1, 16),   // ImageWidth
+            (257, 3, 1, 16),   // ImageLength
+            (258, 3, 1, 8),    // BitsPerSample
+            (259, 3, 1, 6),    // Compression = 6 (staré JPEG) — nepodporované
+            (262, 3, 1, 1),    // PhotometricInterpretation = BlackIsZero
+            (273, 4, 1, 0),    // StripOffsets — doplní se níž
+            (278, 4, 1, 16),   // RowsPerStrip
+            (279, 4, 1, 8)     // StripByteCounts
+        ];
+
+        var ifdEnd = 8 + 2 + entries.Length * 12 + 4;
+        writer.Write((ushort)entries.Length);
+        foreach (var (tag, type, count, value) in entries)
+        {
+            writer.Write(tag);
+            writer.Write(type);
+            writer.Write(count);
+            writer.Write(tag == 273 ? (uint)ifdEnd : value);
+        }
+        writer.Write(0u);                  // žádné další IFD
+        writer.Write(new byte[8]);         // tělo stripu
+        writer.Flush();
+
+        return stream.ToArray();
+    }
 }

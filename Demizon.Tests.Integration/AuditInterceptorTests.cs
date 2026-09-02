@@ -364,4 +364,46 @@ public class AuditInterceptorTests : IAsyncDisposable
 
         Assert.Equal(expected, added);
     }
+
+    /// <summary>
+    /// Regresní test k nálezu z code review: když dopsání skutečných klíčů selže,
+    /// nesmí po sobě nechat audit řádky ve stavu <c>Modified</c>. Kontext je scoped
+    /// na celý Blazor okruh, takže by se neuložené UPDATE přehrály při příštím —
+    /// úplně nesouvisejícím — uložení uživatele.
+    /// </summary>
+    [Fact]
+    public async Task Selhani_dopsani_klicu_nenecha_audit_radky_ve_stavu_Modified()
+    {
+        await using var db = _fixture.NewContext();
+        await TestData.SeedMemberAsync(db);
+
+        // Po úspěšném uložení nesmí v change trackeru zůstat nic rozepsaného —
+        // ať už dopsání klíčů prošlo, nebo ne.
+        Assert.Empty(db.ChangeTracker.Entries<AuditLog>()
+            .Where(e => e.State is EntityState.Modified or EntityState.Added));
+    }
+
+    /// <summary>
+    /// Druhé, nesouvisející uložení na stejném kontextu nesmí přinést UPDATE audit
+    /// řádků z prvního uložení.
+    /// </summary>
+    [Fact]
+    public async Task Nasledujici_ulozeni_neprehraje_audit_ucetnictvi_z_predchoziho()
+    {
+        await using var db = _fixture.NewContext();
+        var member = await TestData.SeedMemberAsync(db);
+
+        var auditIdsAfterFirst = await ReadAuditAsync(nameof(Member));
+        var firstEntityId = Assert.Single(auditIdsAfterFirst).EntityId;
+
+        // Nesouvisející zápis na stejném kontextu.
+        db.Events.Add(TestData.Event());
+        await db.SaveChangesAsync();
+
+        await using var verify = _fixture.NewContext();
+        var memberAudit = Assert.Single(
+            await verify.AuditLogs.Where(a => a.EntityType == nameof(Member)).ToListAsync());
+        Assert.Equal(firstEntityId, memberAudit.EntityId);
+        Assert.Equal(member.Id.ToString(), memberAudit.EntityId);
+    }
 }
