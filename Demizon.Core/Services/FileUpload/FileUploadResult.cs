@@ -4,6 +4,13 @@ public class FileUploadResult
 {
     public bool IsSuccessful { get; set; }
 
+    /// <summary>
+    /// Důvod neúspěchu formulovaný pro uživatele. Vyplněný jen když je
+    /// <see cref="IsSuccessful"/> false — chyba je na vstupu, ne na serveru,
+    /// takže ji volající má přeložit na HTTP 400, ne 500.
+    /// </summary>
+    public string? ErrorMessage { get; set; }
+
     public string FileName { get; set; } = null!;
 
     public string FileExtension { get; set; } = null!;

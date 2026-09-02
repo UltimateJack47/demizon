@@ -345,7 +345,13 @@ else
             var data = result.Data as VideoLinkViewModel;
             try
             {
-                await VideoLinkService.CreateAsync(data!.ToEntity());
+                // CreateAsync výjimku spolkne a vrátí false, takže catch níž se neuplatní.
+                if (!await VideoLinkService.CreateAsync(data!.ToEntity()))
+                {
+                    Snackbar.Add("Video se nepodařilo přidat.", Severity.Error);
+                    return;
+                }
+
                 Snackbar.Add("Video bylo přidáno.", Severity.Success);
                 await LoadDance();
             }
@@ -399,6 +405,11 @@ else
         _uploadingPhotos = true;
         StateHasChanged();
 
+        // Deklarace jsou před try, aby průběžný výsledek přežil výjimku z pozdějšího
+        // insertu — jinak by se admin nedozvěděl ani o fotkách, které se uložit stihly.
+        var uploaded = 0;
+        var failures = new List<string>();
+
         try
         {
             foreach (var file in files)
@@ -413,26 +424,31 @@ else
                     ContentType = file.ContentType
                 });
 
-                if (result.IsSuccessful)
+                if (!result.IsSuccessful)
                 {
-                    var entity = new Dal.Entities.File
-                    {
-                        Path = result.RelativePath,
-                        FileExtension = result.FileExtension,
-                        ContentType = result.ContentType,
-                        FileSize = result.FileSize,
-                        Data = result.Data,
-                        ThumbnailData = result.ThumbnailData,
-                        IsPublic = false,
-                        DanceId = Id,
-                        Kind = FileKind.Image
-                    };
-                    await FileService.CreateAsync(entity);
+                    failures.Add($"{file.Name}: {result.ErrorMessage}");
+                    continue;
                 }
-            }
 
-            Snackbar.Add($"Nahráno {files.Count} foto k tanci.", Severity.Success);
-            await LoadDance();
+                var entity = new Dal.Entities.File
+                {
+                    Path = result.RelativePath,
+                    FileExtension = result.FileExtension,
+                    ContentType = result.ContentType,
+                    FileSize = result.FileSize,
+                    Data = result.Data,
+                    ThumbnailData = result.ThumbnailData,
+                    IsPublic = false,
+                    DanceId = Id,
+                    Kind = FileKind.Image
+                };
+                // FileService.CreateAsync spolkne každou výjimku a jen vrátí false, takže
+                // bez téhle kontroly by `uploaded` počítalo pokusy, ne skutečná uložení.
+                if (await FileService.CreateAsync(entity))
+                    uploaded++;
+                else
+                    failures.Add($"{file.Name}: uložení do databáze se nezdařilo");
+            }
         }
         catch
         {
@@ -440,6 +456,35 @@ else
         }
         finally
         {
+            // Obnova seznamu taky patří do finally: když smyčku přerušila výjimka
+            // u pozdějšího souboru, ty dřívější už jsou uložené a mřížka by jinak
+            // zůstala zastaralá. Selhání obnovy se musí ohlásit — jinak by admin viděl
+            // "Nahráno 3 foto" nad nezměněnou mřížkou a přirozeně by nahrával znovu.
+            if (uploaded > 0)
+            {
+                try
+                {
+                    await LoadDance();
+                }
+                catch (Exception)
+                {
+                    Snackbar.Add("Fotky jsou uložené, ale detail se nepodařilo obnovit. Obnov stránku.",
+                        Severity.Warning);
+                }
+            }
+
+            // Hlášení patří do finally: počítá se skutečně uložené, ne předané, a musí
+            // se objevit i když smyčku přerušila výjimka. Odmítnuté se slévají do jedné
+            // zprávy, protože MudBlazor má strop na počet zobrazených snackbarů
+            // (MaxDisplayedSnackbars) a zbytek by zahodil.
+            if (uploaded > 0)
+                Snackbar.Add($"Nahráno {uploaded} foto k tanci.", Severity.Success);
+
+            if (failures.Count > 0)
+                Snackbar.Add(
+                    $"Nepodařilo se zpracovat {failures.Count} souborů: {string.Join(" | ", failures)}",
+                    Severity.Warning);
+
             _uploadingPhotos = false;
             StateHasChanged();
         }
@@ -468,9 +513,12 @@ else
             new DialogOptions { Position = DialogPosition.Center, CloseButton = false });
         if (confirm is true)
         {
-            await FileService.DeleteAsync(id);
+            // DeleteAsync výjimku spolkne a vrátí false — bez kontroly by se ohlásil
+            // zelený úspěch nad mřížkou, ve které záznam pořád je.
+            var deleted = await FileService.DeleteAsync(id);
             await LoadDance();
-            Snackbar.Add("Fotografie smazána.", Severity.Success);
+            Snackbar.Add(deleted ? "Fotografie smazána." : "Smazání se nezdařilo.",
+                deleted ? Severity.Success : Severity.Error);
         }
     }
 
@@ -485,15 +533,19 @@ else
         _uploadingDocuments = true;
         StateHasChanged();
 
+        // Selhání se slévají do jedné zprávy: MudBlazor zobrazí jen prvních
+        // MaxDisplayedSnackbars (default 5), takže hlášení po jednom se ztrácejí.
+        var failures = new List<string>();
+        var uploaded = 0;
+
         try
         {
-            var uploaded = 0;
             foreach (var file in files)
             {
                 var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
                 if (!AllowedDocExtensions.Contains(ext))
                 {
-                    Snackbar.Add($"Soubor {file.Name} není podporovaný formát.", Severity.Warning);
+                    failures.Add($"{file.Name}: nepodporovaný formát");
                     continue;
                 }
 
@@ -507,28 +559,35 @@ else
                     ContentType = file.ContentType
                 });
 
-                if (result.IsSuccessful)
+                if (!result.IsSuccessful)
                 {
-                    var entity = new Dal.Entities.File
-                    {
-                        Path = file.Name,
-                        FileExtension = result.FileExtension,
-                        ContentType = result.ContentType,
-                        FileSize = result.FileSize,
-                        Data = result.Data,
-                        ThumbnailData = null,
-                        IsPublic = false,
-                        DanceId = Id,
-                        Kind = FileKind.Document
-                    };
-                    await FileService.CreateAsync(entity);
-                    uploaded++;
+                    // Bez tohohle by odmítnutý dokument neskončil ani v failures, ani
+                    // v uploaded — klik by vypadal, že neudělal vůbec nic.
+                    failures.Add($"{file.Name}: {result.ErrorMessage}");
+                    continue;
                 }
+
+                var entity = new Dal.Entities.File
+                {
+                    Path = file.Name,
+                    FileExtension = result.FileExtension,
+                    ContentType = result.ContentType,
+                    FileSize = result.FileSize,
+                    Data = result.Data,
+                    ThumbnailData = null,
+                    IsPublic = false,
+                    DanceId = Id,
+                    Kind = FileKind.Document
+                };
+
+                // Viz fotky výše: návratovou hodnotu je nutné kontrolovat, protože
+                // služba výjimku spolkne a vrátí false.
+                if (await FileService.CreateAsync(entity))
+                    uploaded++;
+                else
+                    failures.Add($"{file.Name}: uložení do databáze se nezdařilo");
             }
 
-            if (uploaded > 0)
-                Snackbar.Add($"Nahráno {uploaded} dokumentů k tanci.", Severity.Success);
-            await LoadDance();
         }
         catch
         {
@@ -536,6 +595,29 @@ else
         }
         finally
         {
+            // Stejně jako u fotek: hlášení i obnova patří do finally, aby výjimka
+            // u pozdějšího souboru nezahodila informaci o těch dřívějších, které
+            // se uložit stihly.
+            if (uploaded > 0)
+            {
+                try
+                {
+                    await LoadDance();
+                }
+                catch (Exception)
+                {
+                    Snackbar.Add("Dokumenty jsou uložené, ale detail se nepodařilo obnovit. Obnov stránku.",
+                        Severity.Warning);
+                }
+
+                Snackbar.Add($"Nahráno {uploaded} dokumentů k tanci.", Severity.Success);
+            }
+
+            if (failures.Count > 0)
+                Snackbar.Add(
+                    $"Nepodařilo se zpracovat {failures.Count} souborů: {string.Join(" | ", failures)}",
+                    Severity.Warning);
+
             _uploadingDocuments = false;
             StateHasChanged();
         }
@@ -548,9 +630,12 @@ else
             new DialogOptions { Position = DialogPosition.Center, CloseButton = false });
         if (confirm is true)
         {
-            await FileService.DeleteAsync(id);
+            // DeleteAsync výjimku spolkne a vrátí false — bez kontroly by se ohlásil
+            // zelený úspěch nad mřížkou, ve které záznam pořád je.
+            var deleted = await FileService.DeleteAsync(id);
             await LoadDance();
-            Snackbar.Add("Dokument smazán.", Severity.Success);
+            Snackbar.Add(deleted ? "Dokument smazán." : "Smazání se nezdařilo.",
+                deleted ? Severity.Success : Severity.Error);
         }
     }
 

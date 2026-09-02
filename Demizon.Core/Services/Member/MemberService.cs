@@ -1,5 +1,6 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
+using Demizon.Dal.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -43,7 +44,7 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         entry.Property(m => m.GoogleCalendarId).IsModified = false;
         entry.Property(m => m.GoogleConnectedAt).IsModified = false;
 
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task<bool> CreateAsync(Dal.Entities.Member member)
@@ -56,6 +57,10 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         }
         catch (Exception ex)
         {
+            // Bez tohohle by rozpracovaná změna zůstala v trackeru a uložila se
+            // při příštím — nesouvisejícím — SaveChanges v tomtéž Blazor okruhu,
+            // takže vrácené false by nic nezaručovalo.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Member operation.");
             return false;
         }
@@ -69,7 +74,7 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         entity.GoogleRefreshToken = refreshToken;
         entity.GoogleCalendarId = calendarId;
         entity.GoogleConnectedAt = DateTime.UtcNow;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task DisconnectGoogleCalendarAsync(int memberId)
@@ -80,7 +85,7 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         entity.GoogleRefreshToken = null;
         entity.GoogleCalendarId = null;
         entity.GoogleConnectedAt = null;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -100,6 +105,9 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         }
         catch (Exception ex)
         {
+            // Soft delete je z pohledu EF Modified — zahodí se i hodnota DeletedAt
+            // v paměti, aby další čtení z tohoto kontextu člena nevydalo smazaného.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Member operation.");
             return false;
         }

@@ -1,5 +1,6 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
+using Demizon.Dal.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -48,6 +49,10 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
         }
         catch (Exception ex)
         {
+            // Na cestě update je trackovaná načtená entita, ne ta předaná — proto
+            // se maže celý tracker a ne konkrétní instance. Jinak by se neúspěšný
+            // zápis přehrál při příštím nesouvisejícím SaveChanges v tomtéž okruhu.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Attendance operation.");
             return false;
         }
@@ -69,6 +74,9 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
         }
         catch (Exception ex)
         {
+            // Vrátí tracker do čistého stavu, jinak by se smazání přehrálo
+            // při příštím uložení v tomtéž okruhu.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Attendance operation.");
             return false;
         }

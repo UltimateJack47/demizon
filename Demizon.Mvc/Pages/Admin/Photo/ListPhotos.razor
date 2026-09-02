@@ -124,6 +124,11 @@
         _uploading = true;
         StateHasChanged();
 
+        // Deklarace jsou před try, aby průběžný výsledek přežil výjimku z pozdějšího
+        // insertu — jinak by se admin nedozvěděl ani o fotkách, které se uložit stihly.
+        var uploaded = 0;
+        var failures = new List<string>();
+
         try
         {
             foreach (var file in files)
@@ -138,24 +143,30 @@
                     ContentType = file.ContentType
                 });
 
-                if (result.IsSuccessful)
+                if (!result.IsSuccessful)
                 {
-                    var entity = new Dal.Entities.File
-                    {
-                        Path = result.RelativePath,
-                        FileExtension = result.FileExtension,
-                        ContentType = result.ContentType,
-                        FileSize = result.FileSize,
-                        Data = result.Data,
-                        ThumbnailData = result.ThumbnailData,
-                        IsPublic = true
-                    };
-                    await FileService.CreateAsync(entity);
+                    failures.Add($"{file.Name}: {result.ErrorMessage}");
+                    continue;
                 }
-            }
 
-            Snackbar.Add($"Nahráno {files.Count} foto.", Severity.Success);
-            await RefreshTable();
+                var entity = new Dal.Entities.File
+                {
+                    Path = result.RelativePath,
+                    FileExtension = result.FileExtension,
+                    ContentType = result.ContentType,
+                    FileSize = result.FileSize,
+                    Data = result.Data,
+                    ThumbnailData = result.ThumbnailData,
+                    IsPublic = true
+                };
+                // FileService.CreateAsync spolkne každou výjimku a jen vrátí false, takže
+                // bez téhle kontroly by `uploaded` počítalo pokusy, ne skutečná uložení,
+                // a admin by dostal "Nahráno 3 foto", i kdyby se nic neuložilo.
+                if (await FileService.CreateAsync(entity))
+                    uploaded++;
+                else
+                    failures.Add($"{file.Name}: uložení do databáze se nezdařilo");
+            }
         }
         catch (Exception)
         {
@@ -163,6 +174,35 @@
         }
         finally
         {
+            // Obnova seznamu taky patří do finally: když smyčku přerušila výjimka
+            // u pozdějšího souboru, ty dřívější už jsou uložené a mřížka by jinak
+            // zůstala zastaralá. Selhání obnovy se musí ohlásit — jinak by admin viděl
+            // "Nahráno 3 foto" nad nezměněnou mřížkou a přirozeně by nahrával znovu.
+            if (uploaded > 0)
+            {
+                try
+                {
+                    await RefreshTable();
+                }
+                catch (Exception)
+                {
+                    Snackbar.Add("Fotky jsou uložené, ale seznam se nepodařilo obnovit. Obnov ho ručně.",
+                        Severity.Warning);
+                }
+            }
+
+            // Hlášení patří do finally: počítá se skutečně uložené, ne předané, a musí
+            // se objevit i když smyčku přerušila výjimka. Odmítnuté se slévají do jedné
+            // zprávy, protože MudBlazor má strop na počet zobrazených snackbarů
+            // (MaxDisplayedSnackbars) a zbytek by zahodil.
+            if (uploaded > 0)
+                Snackbar.Add($"Nahráno {uploaded} foto.", Severity.Success);
+
+            if (failures.Count > 0)
+                Snackbar.Add(
+                    $"Nepodařilo se zpracovat {failures.Count} souborů: {string.Join(" | ", failures)}",
+                    Severity.Warning);
+
             _uploading = false;
             StateHasChanged();
         }
@@ -190,9 +230,12 @@
             new DialogOptions { Position = DialogPosition.Center, CloseButton = false });
         if (confirm is true)
         {
-            await FileService.DeleteAsync(id);
+            // DeleteAsync výjimku spolkne a vrátí false — bez kontroly by se ohlásil
+            // zelený úspěch nad mřížkou, ve které fotka pořád je.
+            var deleted = await FileService.DeleteAsync(id);
             await RefreshTable();
-            Snackbar.Add("Fotografie smazána.", Severity.Success);
+            Snackbar.Add(deleted ? "Fotografie smazána." : "Smazání se nezdařilo.",
+                deleted ? Severity.Success : Severity.Error);
         }
     }
 

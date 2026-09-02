@@ -1,5 +1,6 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
+using Demizon.Dal.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -28,7 +29,7 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
         }
         DemizonContext.Entry(entity).CurrentValues.SetValues(updatedEvent);
         DemizonContext.Entry(entity).State = EntityState.Modified;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task<bool> CreateAsync(Dal.Entities.Event newEvent)
@@ -41,6 +42,10 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
         }
         catch (Exception ex)
         {
+            // Bez tohohle by rozpracovaná změna zůstala v trackeru a uložila se
+            // při příštím — nesouvisejícím — SaveChanges v tomtéž Blazor okruhu,
+            // takže vrácené false by nic nezaručovalo.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Event operation.");
             return false;
         }
@@ -62,6 +67,9 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
         }
         catch (Exception ex)
         {
+            // Vrátí tracker do čistého stavu, jinak by se smazání přehrálo
+            // při příštím uložení v tomtéž okruhu.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to delete Event {EventId}.", id);
             return false;
         }
@@ -72,6 +80,6 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
         var entity = await DemizonContext.Events.FindAsync(id)
             ?? throw new EntityNotFoundException($"Event with id: {id} not found.");
         entity.IsCancelled = isCancelled;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 }

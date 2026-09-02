@@ -1,5 +1,6 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
+using Demizon.Dal.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -28,7 +29,7 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
         }
         DemizonContext.Entry(entity).CurrentValues.SetValues(updatedDance);
         DemizonContext.Entry(entity).State = EntityState.Modified;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task<bool> CreateAsync(Dal.Entities.Dance dance)
@@ -41,6 +42,10 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
         }
         catch (Exception ex)
         {
+            // Bez tohohle by rozpracovaná změna zůstala v trackeru a uložila se
+            // při příštím — nesouvisejícím — SaveChanges v tomtéž Blazor okruhu,
+            // takže vrácené false by nic nezaručovalo.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Dance operation.");
             return false;
         }
@@ -62,6 +67,9 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
         }
         catch (Exception ex)
         {
+            // Vrátí tracker do čistého stavu, jinak by se smazání přehrálo
+            // při příštím uložení v tomtéž okruhu.
+            DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Dance operation.");
             return false;
         }

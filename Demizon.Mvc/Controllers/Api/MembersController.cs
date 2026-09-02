@@ -42,13 +42,13 @@ public class MembersController(IMemberService memberService) : ControllerBase
         var memberId = User.GetMemberId();
         var member = await memberService.GetOneAsync(memberId);
 
-        if (!Crypto.VerifyHashedPassword(member.PasswordHash, request.CurrentPassword))
+        if (!PasswordHasher.VerifyHashedPassword(member.PasswordHash, request.CurrentPassword))
             return BadRequest(new { error = "Nesprávné aktuální heslo." });
 
         if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 4)
             return BadRequest(new { error = "Nové heslo musí mít alespoň 4 znaky." });
 
-        member.PasswordHash = Crypto.HashPassword(request.NewPassword);
+        member.PasswordHash = PasswordHasher.HashPassword(request.NewPassword);
         await memberService.UpdateAsync(memberId, member);
         return Ok();
     }

@@ -29,7 +29,7 @@ public class RefreshTokenService(DemizonContext db)
             old.IsRevoked = true;
 
         var rawToken = GenerateSecureToken();
-        var tokenHash = Crypto.HashPassword(rawToken);
+        var tokenHash = PasswordHasher.HashPassword(rawToken);
 
         db.RefreshTokens.Add(new RefreshToken
         {
@@ -61,7 +61,7 @@ public class RefreshTokenService(DemizonContext db)
             .Where(t => !t.IsRevoked && t.ExpiresAt > DateTime.UtcNow && t.TokenPrefix == prefix)
             .ToListAsync();
 
-        var match = candidates.FirstOrDefault(t => Crypto.VerifyHashedPassword(t.TokenHash, rawToken));
+        var match = candidates.FirstOrDefault(t => PasswordHasher.VerifyHashedPassword(t.TokenHash, rawToken));
 
         if (match is null)
             return null;

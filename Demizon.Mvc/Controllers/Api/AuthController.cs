@@ -18,14 +18,14 @@ public class AuthController(
     RefreshTokenService refreshTokenService,
     IOptions<JwtSettings> jwtOptions) : ControllerBase
 {
-    private static readonly string DummyHash = Crypto.HashPassword("timing-attack-defense");
+    private static readonly string DummyHash = PasswordHasher.HashPassword("timing-attack-defense");
 
     [HttpPost("token")]
     [EnableRateLimiting("auth")]
     public async Task<ActionResult<TokenResponse>> Token([FromBody] TokenRequest request)
     {
         var member = memberService.GetOneByLogin(request.Login);
-        var isValid = Crypto.VerifyHashedPassword(member?.PasswordHash ?? DummyHash, request.Password);
+        var isValid = PasswordHasher.VerifyHashedPassword(member?.PasswordHash ?? DummyHash, request.Password);
 
         if (member is null || !isValid || member.IsExternal)
             return Unauthorized(new { error = "Invalid credentials." });

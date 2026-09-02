@@ -14,11 +14,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CryptoHelper" Version="4.0.0" />
-        <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
-        <PackageReference Include="Google.Apis.Calendar.v3" Version="1.73.0.4073" />
-        <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.11.1" />
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.9.0" />
+        <PackageReference Include="CryptoHelper" Version="5.1.0" />
+        <PackageReference Include="Google.Apis.Auth" Version="1.76.0" />
+        <PackageReference Include="Google.Apis.Calendar.v3" Version="1.75.0.4206" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="[3.1.12]" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
     </ItemGroup>
     
 </Project>

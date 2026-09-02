@@ -197,29 +197,39 @@
                     ContentType = File.ContentType
                 });
 
-                if (result.IsSuccessful)
+                // Fotku admin přiložil záměrně, takže ji nelze mlčky zahodit a uložení
+                // vyhlásit za úspěšné. Dialog zůstává otevřený s rozepsanými daty,
+                // aby šla fotka vyměnit a uložení zopakovat.
+                if (!result.IsSuccessful)
                 {
-                    var photo = new Dal.Entities.File
-                    {
-                        MemberId = Model.Id,
-                        Path = result.RelativePath,
-                        ContentType = result.ContentType,
-                        FileSize = result.FileSize,
-                        FileExtension = result.FileExtension,
-                        Data = result.Data,
-                        ThumbnailData = result.ThumbnailData,
-                    };
-                    dbModel.Photos.Add(photo);
+                    Snackbar.Add(result.ErrorMessage ?? "Fotku se nepodařilo zpracovat.", Severity.Error);
+                    return;
                 }
+
+                var photo = new Dal.Entities.File
+                {
+                    MemberId = Model.Id,
+                    Path = result.RelativePath,
+                    ContentType = result.ContentType,
+                    FileSize = result.FileSize,
+                    FileExtension = result.FileExtension,
+                    Data = result.Data,
+                    ThumbnailData = result.ThumbnailData,
+                };
+                dbModel.Photos.Add(photo);
             }
 
             if (IsUpdate)
             {
+                // UpdateAsync výjimku propouští, takže ji zachytí catch níž.
                 await MemberService.UpdateAsync(Model.Id, dbModel);
             }
-            else
+            else if (!await MemberService.CreateAsync(dbModel))
             {
-                await MemberService.CreateAsync(dbModel);
+                // CreateAsync naopak výjimku spolkne a jen vrátí false. Bez téhle
+                // kontroly by se ohlásilo "Člen byl vytvořen", i kdyby se neuložil.
+                Snackbar.Add("Člena se nepodařilo vytvořit.", Severity.Error);
+                return;
             }
 
             Snackbar.Add(IsUpdate ? "Člen byl upraven." : "Člen byl vytvořen.", Severity.Success);

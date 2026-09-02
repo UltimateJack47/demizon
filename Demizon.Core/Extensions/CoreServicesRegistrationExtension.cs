@@ -14,8 +14,22 @@ namespace Demizon.Core.Extensions;
 
 public static class CoreServicesRegistrationExtension
 {
+    /// <summary>
+    /// Strop pro alokátor ImageSharpu. Pojistka pro případ, že by k nám dorazil obrázek,
+    /// na který nestačí ani škálovaný dekód ve <see cref="Services.FileUpload.FileUploadService"/> —
+    /// místo vyčerpání paměti kontejneru skončí zpracování výjimkou.
+    /// </summary>
+    private const int ImageAllocationLimitMegabytes = 128;
+
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
+        SixLabors.ImageSharp.Configuration.Default.MemoryAllocator =
+            SixLabors.ImageSharp.Memory.MemoryAllocator.Create(
+                new SixLabors.ImageSharp.Memory.MemoryAllocatorOptions
+                {
+                    AllocationLimitMegabytes = ImageAllocationLimitMegabytes
+                });
+
         services.AddTransient<IEventService, EventService>();
         services.AddTransient<IMemberService, MemberService>();
         services.AddTransient<IFileService, FileService>();

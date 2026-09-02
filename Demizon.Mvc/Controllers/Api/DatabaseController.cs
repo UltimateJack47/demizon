@@ -41,7 +41,7 @@ public class DatabaseController(ILogger<DatabaseController> logger, DemizonConte
                 Surname = "Test",
                 Email = "admin@demizon.local",
                 Login = "jack",
-                PasswordHash = Crypto.HashPassword("testpass"),
+                PasswordHash = PasswordHasher.HashPassword("testpass"),
                 Role = UserRole.Admin,
                 DeletedAt = null
             };
