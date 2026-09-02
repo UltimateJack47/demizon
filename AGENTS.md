@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Scope and current source of truth
-- Work primarily in `Demizon.Mvc` (Blazor Server + API in one host); this is the only web host in `Demizon.sln`.
+- Work primarily in `Demizon.Mvc` (Blazor Server + API in one host); this is the only web host in `Demizon.slnx`.
 - `Demizon.Api` contains a parallel standalone API host (same domain concepts/controllers), useful for API-only runs but not part of the solution file.
 - Shared layers: `Demizon.Contracts` (DTOs), `Demizon.Core` (business services), `Demizon.Dal` (EF Core + SQLite), `Demizon.Common` (settings/exceptions/helpers), `Demizon.Maui` (mobile client).
 
@@ -37,7 +37,11 @@
 - MAUI Android expects local secret files: `Platforms/Android/FirebaseConfig.cs` and `google-services.json` (both gitignored; template provided).
 
 ## Working commands (from repo root)
-- Restore/build main solution: `dotnet restore Demizon.sln` then `dotnet build Demizon.sln`.
+- Restore/build main solution: `dotnet restore Demizon.slnx` then `dotnet build Demizon.slnx`.
+- The solution is the **XML `.slnx` format** (migrated 2026-09-02); there is no `Demizon.sln` any more.
+  Keeping both would make every solution-discovering tool ambiguous (`MSB1011`).
+- `Demizon.slnx` includes `Demizon.Maui`, which needs the `maui-android` workload and will not build
+  on a machine without it. For build/test use the filter: `dotnet test Demizon.Backend.slnf`.
 - Run primary host (UI + API): `dotnet run --project Demizon.Mvc/Demizon.Mvc.csproj` (ports from `Demizon.Mvc/Properties/launchSettings.json`).
 - Run standalone API host if needed: `dotnet run --project Demizon.Api/Demizon.Api.csproj`.
 - EF migrations: use MVC as startup host, e.g. `dotnet ef migrations add <Name> --project Demizon.Dal --startup-project Demizon.Mvc`.

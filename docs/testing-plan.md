@@ -43,7 +43,7 @@ dotnet test Demizon.Backend.slnf          # oba projekty
 dotnet test Demizon.Tests.Unit            # jen rychlá logika
 ```
 
-> ⚠️ **`dotnet test Demizon.sln` neprojde.** `Demizon.Maui` vyžaduje workload
+> ⚠️ **`dotnet test Demizon.slnx` neprojde.** `Demizon.Maui` vyžaduje workload
 > `maui-android`, který na běžném stroji ani v CI není. Proto je v repu
 > `Demizon.Backend.slnf` — solution filter se všemi projekty kromě MAUI.
 > (MAUI se navíc přepisuje do Flutteru na samostatné branchi.)

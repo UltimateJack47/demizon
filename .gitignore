@@ -5,8 +5,8 @@ riderModule.iml
 /_ReSharper.Caches/
 /.idea
 /Demizon.Mvc/appsettings.Local.json
-/Demizon.sln.DotSettings.user
-/Demizon.sln.DotSettings
+/Demizon.slnx.DotSettings.user
+/Demizon.slnx.DotSettings
 /Demizon.Mvc/files
 
 # Firebase secrets — copy FirebaseConfig.template.cs → FirebaseConfig.cs and fill in values
@@ -14,6 +14,9 @@ riderModule.iml
 /Demizon.Maui/Platforms/Android/google-services.json
 /Demizon.Mvc/demizon.sqlite-shm
 /Demizon.Mvc/demizon.sqlite-wal
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
 
 # Flutter / Dart (demizon_flutter)
 demizon_flutter/.dart_tool/

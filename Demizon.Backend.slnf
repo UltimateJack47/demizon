@@ -1,6 +1,6 @@
 {
   "solution": {
-    "path": "Demizon.sln",
+    "path": "Demizon.slnx",
     "projects": [
       "Demizon.Common\\Demizon.Common.csproj",
       "Demizon.Contracts\\Demizon.Contracts.csproj",

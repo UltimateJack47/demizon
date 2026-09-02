@@ -1,0 +1,15 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Demizon.Common/Demizon.Common.csproj" />
+  <Project Path="Demizon.Contracts/Demizon.Contracts.csproj" />
+  <Project Path="Demizon.Core/Demizon.Core.csproj" />
+  <Project Path="Demizon.Dal/Demizon.Dal.csproj" />
+  <Project Path="Demizon.Maui/Demizon.Maui.csproj" />
+  <Project Path="Demizon.Mvc/Demizon.Mvc.csproj" />
+  <Project Path="Demizon.Tests.Integration/Demizon.Tests.Integration.csproj" />
+  <Project Path="Demizon.Tests.Unit/Demizon.Tests.Unit.csproj" />
+</Solution>

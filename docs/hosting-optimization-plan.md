@@ -168,7 +168,7 @@ Ověřeno, že limit nerozbíjí běžný provoz: 24 Mpx fotka projde na 69 MB R
 
 Solution neměla ani jeden testovací projekt. Přidané: `Demizon.Tests.Unit` (72 testů)
 a `Demizon.Tests.Integration` (133 testů), plus `Demizon.Backend.slnf`, protože
-`dotnet test Demizon.sln` neprojde — `Demizon.Maui` chce workload `maui-android`.
+`dotnet test Demizon.slnx` neprojde — `Demizon.Maui` chce workload `maui-android`.
 Podrobnosti a plán dalších vrstev: **`docs/testing-plan.md`**.
 
 Testy odhalily tři chyby, které build ani ruční proklikání nezachytí:
@@ -408,7 +408,7 @@ vychází ~400 buildů měsíčně zdarma. Pro tenhle projekt bohatě stačí.
 
 1. **`build.yml`** — trigger `push` do `master`. Nejdřív `dotnet test Demizon.Backend.slnf`
    (205 testů, ~6 s), pak Docker image do registry se dvěma tagy: `latest` a `sha-<commit>`.
-   Pozor: **`Demizon.sln` v CI stavět nelze**, `Demizon.Maui` vyžaduje workload
+   Pozor: **`Demizon.slnx` v CI stavět nelze**, `Demizon.Maui` vyžaduje workload
    `maui-android` — proto solution filter.
 2. **`deploy.yml`** — trigger `workflow_dispatch` (ruční spuštění) nebo `release`.
    Přes SSH na server udělá `docker pull` + restart kontejneru + `docker image prune -f`.
