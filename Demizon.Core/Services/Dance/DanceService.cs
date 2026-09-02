@@ -29,7 +29,7 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
         }
         DemizonContext.Entry(entity).CurrentValues.SetValues(updatedDance);
         DemizonContext.Entry(entity).State = EntityState.Modified;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task<bool> CreateAsync(Dal.Entities.Dance dance)

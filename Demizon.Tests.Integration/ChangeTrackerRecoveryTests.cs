@@ -7,6 +7,7 @@ using Demizon.Dal.Extensions;
 using Demizon.Dal.Entities;
 using Demizon.Tests.Integration.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Demizon.Tests.Integration;
@@ -343,4 +344,83 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
 
         Assert.DoesNotContain(db.ChangeTracker.Entries(), e => e.State != EntityState.Unchanged);
     }
+
+    // ------------------------------------------------- metody hlásící výjimkou
+
+    /// <summary>
+    /// Metody jako <c>UpdateAsync</c> chybu hlásí výjimkou, ne návratovou hodnotou.
+    /// Volající o selhání ví, ale rozpracovaná změna by mu bez úklidu zůstala
+    /// v kontextu scoped na celý Blazor okruh.
+    /// </summary>
+    [Fact]
+    public async Task Neuspesna_uprava_clena_nezustane_v_change_trackeru()
+    {
+        await using var seed = _fixture.NewContext();
+        var member = await TestData.SeedMemberAsync(seed);
+
+        await using var db = _fixture.NewContext();
+        var service = new MemberService(db, NullLogger<MemberService>.Instance);
+
+        var invalid = TestData.Member(login: "tester");
+        invalid.Id = member.Id;
+        invalid.Name = null!;
+
+        await Assert.ThrowsAnyAsync<Exception>(() => service.UpdateAsync(member.Id, invalid));
+
+        Assert.DoesNotContain(db.ChangeTracker.Entries(), e => e.State != EntityState.Unchanged);
+    }
+
+    /// <summary>
+    /// Jádro nálezu z posledního kola review: bez úklidu vyšel vadný UPDATE ven
+    /// s <b>následující nesouvisející</b> operací. Admin, který po neúspěšné úpravě
+    /// člena zakládal akci, o tu akci přišel — na chybě, která s ní nemá nic společného.
+    /// </summary>
+    [Fact]
+    public async Task Neuspesna_uprava_neotravi_nasledujici_nesouvisejici_operaci()
+    {
+        await using var seed = _fixture.NewContext();
+        var member = await TestData.SeedMemberAsync(seed);
+
+        await using var db = _fixture.NewContext();
+        var members = new MemberService(db, NullLogger<MemberService>.Instance);
+        var events = new EventService(db, NullIogger());
+
+        var invalid = TestData.Member(login: "tester");
+        invalid.Id = member.Id;
+        invalid.Name = null!;
+        await Assert.ThrowsAnyAsync<Exception>(() => members.UpdateAsync(member.Id, invalid));
+
+        // Úplně jiná entita, úplně jiná služba, stejný kontext.
+        Assert.True(await events.CreateAsync(TestData.Event("Akce po neúspěchu")));
+
+        await using var verify = _fixture.NewContext();
+        var stored = Assert.Single(await verify.Events.ToListAsync());
+        Assert.Equal("Akce po neúspěchu", stored.Name);
+        // A původní člen zůstal nedotčený.
+        Assert.Equal("Jan", (await verify.Members.SingleAsync(m => m.Id == member.Id)).Name);
+    }
+
+    [Fact]
+    public async Task Neuspesne_zruseni_akce_nezustane_v_change_trackeru()
+    {
+        await using var seed = _fixture.NewContext();
+        var ev = TestData.Event();
+        seed.Events.Add(ev);
+        await seed.SaveChangesAsync();
+
+        await using var db = _fixture.NewContext();
+        var service = new EventService(db, NullIogger());
+
+        // Vynutíme selhání zápisu tím, že akci přepíšeme na neplatný stav.
+        var tracked = await db.Events.SingleAsync(e => e.Id == ev.Id);
+        tracked.Name = null!;
+
+        await Assert.ThrowsAnyAsync<Exception>(() => service.SetCancelledAsync(ev.Id, true));
+
+        Assert.DoesNotContain(db.ChangeTracker.Entries(), e => e.State != EntityState.Unchanged);
+        await using var verify = _fixture.NewContext();
+        Assert.False((await verify.Events.SingleAsync(e => e.Id == ev.Id)).IsCancelled);
+    }
+
+    private static ILogger<EventService> NullIogger() => NullLogger<EventService>.Instance;
 }

@@ -73,4 +73,31 @@ public static class ChangeTrackerRecoveryExtension
             }
         }
     }
+
+    /// <summary>
+    /// Uloží změny a při selhání vyčistí change tracker, <b>než výjimku pustí dál</b>.
+    /// </summary>
+    /// <remarks>
+    /// Pro metody, které chybu hlásí výjimkou, ne návratovou hodnotou. Volající o selhání
+    /// ví, ale rozpracovaná změna by mu bez tohohle zůstala v kontextu scoped na celý
+    /// Blazor okruh a přehrála se s jeho příštím — nesouvisejícím — uložením.
+    /// <para>
+    /// Konkrétně: neúspěšná úprava člena zůstala <c>Modified</c>, a když admin pak založil
+    /// akci, vyšel s ní ven i ten vadný UPDATE. Uložení selhalo a admin přišel o akci,
+    /// kterou zakládal — na chybě, která s ní nemá nic společného.
+    /// </para>
+    /// </remarks>
+    public static async Task SaveChangesWithRecoveryAsync(this DemizonContext context,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            context.DiscardPendingChanges();
+            throw;
+        }
+    }
 }

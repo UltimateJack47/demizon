@@ -29,7 +29,7 @@ public class VideoLinkService(DemizonContext demizonContext, ILogger<VideoLinkSe
         }
         DemizonContext.Entry(entity).CurrentValues.SetValues(updatedVideoLink);
         DemizonContext.Entry(entity).State = EntityState.Modified;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task<bool> CreateAsync(Dal.Entities.VideoLink file)

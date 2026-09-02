@@ -20,7 +20,7 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 | Projekt | Co testuje | Rychlost |
 |---|---|---|
 | `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result` | ~3 s / 72 testů |
-| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 130 testů |
+| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 133 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
 
@@ -211,6 +211,42 @@ tři díry pokrývají.
 > grafy, interceptory přidávají vlastní entity a `SetValues` píše do jiné instance,
 > než která přišla na vstup. Rozsah selhání je celý tracker, ne jeden objekt.
 
+### Kolo 6: úklid chyběl i tam, kde se chyba hlásí výjimkou
+
+Předchozí kolo opravilo šest metod vracejících `bool`. Osm dalších ale chybu hlásí
+**výjimkou** (`UpdateAsync` v pěti službách, `SetCancelledAsync`,
+`Connect`/`DisconnectGoogleCalendarAsync`) a tracker po sobě neuklízely.
+
+`docs/testing-plan.md` ty metody z opravy vyloučil s tím, že „do vzoru nepatří —
+vrací `Task` a výjimku propouští“. To bylo jen z poloviny pravda: **zahazovaná
+návratová hodnota a únik v trackeru jsou dvě různé chyby** a neuplatňuje se jen ta
+první. Naměřeno: po neúspěšné úpravě člena vrátilo následující — úplně nesouvisející —
+`EventService.CreateAsync` **false** a admin o zakládanou akci přišel.
+
+Řeší to `SaveChangesWithRecoveryAsync()`: uloží a při selhání vyčistí tracker, než
+výjimku pustí dál. Jeden call na místo, kde dřív bylo `SaveChangesAsync()`.
+
+> **Poznámka k vyhodnocení dopadu.** Review popsalo změnu z předchozího kola tak, že
+> „mění tiché přehrání na jednu pozdější selhanou operaci“, tedy jako zhoršení.
+> Naměřeno to tak není: **před** ní zůstal vadný zápis v trackeru navždy a selhávalo
+> každé další uložení v okruhu; **po** ní se tracker po první selhané operaci vyčistí
+> a další už projde. Bylo to tedy zlepšení, jen nedokončené. Kolo 6 odstranilo
+> i tu jednu selhanou operaci.
+
+Zbylé tři nálezy kola 6:
+
+- Dokumentová smyčka v `Dance/Detail.razor` nebyla přestavěná jako fotková: `uploaded`,
+  hlášení i obnova zůstaly v `try`, takže výjimka u pozdějšího souboru zahodila
+  informaci o těch dřívějších, které se uložit stihly.
+- Tamtéž chybělo `else` u `result.IsSuccessful` — odmítnutý dokument neskončil ani
+  ve `failures`, ani v `uploaded`, takže klik vypadal, že neudělal vůbec nic.
+- **`MemberAttendance.razor.cs`** zahazoval výsledek a pokračoval k synchronizaci
+  s Google Calendarem. Vznikla tam reálná událost pro docházku, která se neuložila —
+  a protože `model.Id` zůstal 0, vrácené ID se nikam nezapsalo, takže tu osiřelou
+  událost už nešlo smazat ani pozdějším přepnutím na „nepřijdu“. Jediné místo ze
+  seznamu níž, které jsem opravil i mimo rozsah PR, právě kvůli tomu externímu
+  a nevratnému efektu.
+
 ---
 
 ## Pokrytí
@@ -224,7 +260,7 @@ tři díry pokrývají.
 | `AttendanceStatusContractTests` | `"yes"/"maybe"/"no"`, case-insensitivita, fallback na `No`, a hlavně že serializace a parsování jsou navzájem inverzní |
 | `ResultTests` | `Ok`/`Fail` semantika, `Ok(null)` jako platný úspěch |
 
-### `Demizon.Tests.Integration` (130)
+### `Demizon.Tests.Integration` (133)
 
 | Soubor | Co hlídá |
 |---|---|
@@ -251,12 +287,14 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
 - [ ] **Projít zbylá zahazovaná `bool` z Core služeb.** Vzor má **12 metod**:
       `CreateAsync` + `DeleteAsync` v `Dance`, `Event`, `File`, `Member`
       a `VideoLink`, plus `CreateOrUpdateAsync` + `DeleteAsync` v `Attendance`.
-      (`UpdateAsync` do vzoru **nepatří** — vrací `Task` a výjimku propouští.)
+      (`UpdateAsync` a spol. do vzoru **zahazované návratové hodnoty** nepatří —
+      hlásí výjimkou; únik v trackeru ale měly a je opravený přes
+      `SaveChangesWithRecoveryAsync`.)
       Samotné služby už po sobě uklidí change tracker, ale **volající návratovou
       hodnotu většinou ignorují** a hlásí úspěch. Tento PR opravil jen místa, která
       už mění; zbývají minimálně: `ListEvents.razor:122,145`,
       `ListVideoLinks.razor:72,107`, `ListMembers.razor:192`, `ListDances.razor:108`,
-      `MemberAttendance.razor.cs:270,276,335,351`, `AttendancesController.cs` (6×),
+      `AttendancesController.cs` (6×),
       `DancesController.cs:129,143`, `FilesController.cs:126`.
       Lepší než doplňovat kontroly jednu po druhé je převést služby na
       `Result`/`Result<T>` z `Demizon.Common` — ten typ v repu už je a přesně na tohle

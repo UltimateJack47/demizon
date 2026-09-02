@@ -536,10 +536,10 @@ else
         // Selhání se slévají do jedné zprávy: MudBlazor zobrazí jen prvních
         // MaxDisplayedSnackbars (default 5), takže hlášení po jednom se ztrácejí.
         var failures = new List<string>();
+        var uploaded = 0;
 
         try
         {
-            var uploaded = 0;
             foreach (var file in files)
             {
                 var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
@@ -559,7 +559,14 @@ else
                     ContentType = file.ContentType
                 });
 
-                if (result.IsSuccessful)
+                if (!result.IsSuccessful)
+                {
+                    // Bez tohohle by odmítnutý dokument neskončil ani v failures, ani
+                    // v uploaded — klik by vypadal, že neudělal vůbec nic.
+                    failures.Add($"{file.Name}: {result.ErrorMessage}");
+                    continue;
+                }
+
                 {
                     var entity = new Dal.Entities.File
                     {
@@ -582,15 +589,6 @@ else
                 }
             }
 
-            if (uploaded > 0)
-                Snackbar.Add($"Nahráno {uploaded} dokumentů k tanci.", Severity.Success);
-
-            if (failures.Count > 0)
-                Snackbar.Add(
-                    $"Nepodařilo se zpracovat {failures.Count} souborů: {string.Join(" | ", failures)}",
-                    Severity.Warning);
-
-            await LoadDance();
         }
         catch
         {
@@ -598,6 +596,29 @@ else
         }
         finally
         {
+            // Stejně jako u fotek: hlášení i obnova patří do finally, aby výjimka
+            // u pozdějšího souboru nezahodila informaci o těch dřívějších, které
+            // se uložit stihly.
+            if (uploaded > 0)
+            {
+                try
+                {
+                    await LoadDance();
+                }
+                catch (Exception)
+                {
+                    Snackbar.Add("Dokumenty jsou uložené, ale detail se nepodařilo obnovit. Obnov stránku.",
+                        Severity.Warning);
+                }
+
+                Snackbar.Add($"Nahráno {uploaded} dokumentů k tanci.", Severity.Success);
+            }
+
+            if (failures.Count > 0)
+                Snackbar.Add(
+                    $"Nepodařilo se zpracovat {failures.Count} souborů: {string.Join(" | ", failures)}",
+                    Severity.Warning);
+
             _uploadingDocuments = false;
             StateHasChanged();
         }

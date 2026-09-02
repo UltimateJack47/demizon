@@ -29,7 +29,7 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
         }
         DemizonContext.Entry(entity).CurrentValues.SetValues(updatedEvent);
         DemizonContext.Entry(entity).State = EntityState.Modified;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task<bool> CreateAsync(Dal.Entities.Event newEvent)
@@ -80,6 +80,6 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
         var entity = await DemizonContext.Events.FindAsync(id)
             ?? throw new EntityNotFoundException($"Event with id: {id} not found.");
         entity.IsCancelled = isCancelled;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 }

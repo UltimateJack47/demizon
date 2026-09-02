@@ -29,7 +29,7 @@ public class FileService(DemizonContext demizonContext, ILogger<FileService> log
         }
         DemizonContext.Entry(entity).CurrentValues.SetValues(updatedMember);
         DemizonContext.Entry(entity).State = EntityState.Modified;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task<bool> CreateAsync(Dal.Entities.File file)

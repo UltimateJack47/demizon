@@ -266,14 +266,30 @@ public partial class MemberAttendance : ComponentBase
             var attendanceResult = result.Data as AttendanceViewModel;
             if (attendanceResult is null)
             {
-                if (model.Id != 0)
-                    await AttendanceService.DeleteAsync(model.Id);
+                // Služby výjimku spolykají a vrátí false, takže catch níž se neuplatní —
+                // návratovou hodnotu je nutné kontrolovat.
+                if (model.Id != 0 && !await AttendanceService.DeleteAsync(model.Id))
+                {
+                    Snackbar.Add("Docházku se nepodařilo resetovat.", Severity.Error);
+                    return;
+                }
+
                 Snackbar.Add("Docházka resetována.", Severity.Info);
                 statusAfterSave = AttendanceStatus.No;
             }
             else
             {
-                await AttendanceService.CreateOrUpdateAsync(attendanceResult.ToEntity());
+                // Kritické: bez téhle kontroly by se pokračovalo k synchronizaci
+                // s Google Calendarem a vznikla by tam reálná událost pro docházku,
+                // která se neuložila. A protože model.Id zůstane 0, vrácené ID se
+                // nikam nezapíše, takže tu osiřelou událost už nejde smazat ani
+                // pozdějším přepnutím na "nepřijdu".
+                if (!await AttendanceService.CreateOrUpdateAsync(attendanceResult.ToEntity()))
+                {
+                    Snackbar.Add("Docházku se nepodařilo uložit.", Severity.Error);
+                    return;
+                }
+
                 Snackbar.Add("Docházka uložena.", Severity.Success);
                 statusAfterSave = attendanceResult.Status;
                 model.Id = attendanceResult.Id;

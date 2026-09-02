@@ -44,7 +44,7 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         entry.Property(m => m.GoogleCalendarId).IsModified = false;
         entry.Property(m => m.GoogleConnectedAt).IsModified = false;
 
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task<bool> CreateAsync(Dal.Entities.Member member)
@@ -74,7 +74,7 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         entity.GoogleRefreshToken = refreshToken;
         entity.GoogleCalendarId = calendarId;
         entity.GoogleConnectedAt = DateTime.UtcNow;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task DisconnectGoogleCalendarAsync(int memberId)
@@ -85,7 +85,7 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         entity.GoogleRefreshToken = null;
         entity.GoogleCalendarId = null;
         entity.GoogleConnectedAt = null;
-        await DemizonContext.SaveChangesAsync();
+        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task<bool> DeleteAsync(int id)
