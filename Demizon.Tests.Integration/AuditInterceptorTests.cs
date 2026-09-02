@@ -365,22 +365,106 @@ public class AuditInterceptorTests : IAsyncDisposable
         Assert.Equal(expected, added);
     }
 
-    /// <summary>
-    /// Regresní test k nálezu z code review: když dopsání skutečných klíčů selže,
-    /// nesmí po sobě nechat audit řádky ve stavu <c>Modified</c>. Kontext je scoped
-    /// na celý Blazor okruh, takže by se neuložené UPDATE přehrály při příštím —
-    /// úplně nesouvisejícím — uložení uživatele.
-    /// </summary>
     [Fact]
-    public async Task Selhani_dopsani_klicu_nenecha_audit_radky_ve_stavu_Modified()
+    public async Task Po_uspesnem_ulozeni_nezustava_v_change_trackeru_nic_rozepsaneho()
     {
         await using var db = _fixture.NewContext();
         await TestData.SeedMemberAsync(db);
 
-        // Po úspěšném uložení nesmí v change trackeru zůstat nic rozepsaného —
-        // ať už dopsání klíčů prošlo, nebo ne.
-        Assert.Empty(db.ChangeTracker.Entries<AuditLog>()
-            .Where(e => e.State is EntityState.Modified or EntityState.Added));
+        Assert.DoesNotContain(db.ChangeTracker.Entries<AuditLog>(),
+            e => e.State is EntityState.Modified or EntityState.Added);
+    }
+
+    // ------------------------------------------------- selhání dopsání klíčů
+
+    /// <summary>
+    /// Jádro opravy z code review: dopsání skutečných klíčů běží <b>až po commitu</b>
+    /// volajícího, takže jeho selhání nesmí probublat — jinak by z uloženého zápisu
+    /// udělalo zdánlivě neuložený a admin by ho zopakoval → duplicitní řádek.
+    /// </summary>
+    /// <remarks>
+    /// Tyto testy potřebují <see cref="FailAuditFixupInterceptor"/>. Bez něj jdou
+    /// všechny ostatní testy happy path a <c>catch</c> blok se nikdy nespustí —
+    /// oprava by tak zůstala úplně nepokrytá.
+    /// </remarks>
+    [Fact]
+    public async Task Selhani_dopsani_klicu_neshodi_ulozeni_volajiciho()
+    {
+        var poison = new FailAuditFixupInterceptor();
+        await using var db = _fixture.NewContext(poison);
+
+        var member = TestData.Member(login: "prezije");
+        db.Members.Add(member);
+
+        // Nesmí vyhodit, přesto že vnořené uložení selhalo.
+        await db.SaveChangesAsync();
+
+        Assert.Equal(1, poison.FailureCount);
+        await using var verify = _fixture.NewContext();
+        Assert.NotNull(await verify.Members.SingleOrDefaultAsync(m => m.Login == "prezije"));
+    }
+
+    /// <summary>
+    /// A druhá polovina opravy: <c>catch</c> musí uklidit i stav change trackeru.
+    /// Neuložené audit řádky by jinak zůstaly <c>Modified</c> a protože je kontext
+    /// scoped na celý Blazor okruh, přehrály by se při příštím — nesouvisejícím —
+    /// uložení uživatele. Kdyby příčinou bylo <c>SQLITE_BUSY</c> a zopakovalo se,
+    /// shodilo by to uživateli jeho vlastní zápis.
+    /// </summary>
+    [Fact]
+    public async Task Selhani_dopsani_klicu_odpoji_audit_radky_z_change_trackeru()
+    {
+        var poison = new FailAuditFixupInterceptor();
+        await using var db = _fixture.NewContext(poison);
+
+        db.Members.Add(TestData.Member(login: "prvni"));
+        await db.SaveChangesAsync();
+
+        Assert.DoesNotContain(db.ChangeTracker.Entries<AuditLog>(),
+            e => e.State == EntityState.Modified);
+    }
+
+    [Fact]
+    public async Task Po_selhani_dopsani_klicu_projde_dalsi_ulozeni_uzivatele()
+    {
+        var poison = new FailAuditFixupInterceptor();
+        await using var db = _fixture.NewContext(poison);
+
+        db.Members.Add(TestData.Member(login: "prvni"));
+        await db.SaveChangesAsync();
+        var failuresAfterFirst = poison.FailureCount;
+
+        // Nesouvisející druhý zápis na stejném kontextu. Kdyby po prvním zůstaly
+        // rozepsané audit UPDATE, přehrály by se tady — a poison by je znovu shodil,
+        // takže by tenhle await vyhodil výjimku.
+        db.Events.Add(TestData.Event());
+        await db.SaveChangesAsync();
+
+        await using var verify = _fixture.NewContext();
+        Assert.Single(await verify.Events.ToListAsync());
+        Assert.Single(await verify.Members.ToListAsync());
+        // Druhé uložení má vlastní vložený řádek, takže i ono se o dopsání klíčů pokusí.
+        Assert.Equal(failuresAfterFirst + 1, poison.FailureCount);
+    }
+
+    /// <summary>
+    /// Když dopsání selže, audit řádek zůstane v DB s dočasným klíčem. Je to záměrný
+    /// kompromis: zastaralé <c>EntityId</c> je menší škoda než duplicitní data.
+    /// </summary>
+    [Fact]
+    public async Task Pri_selhani_dopsani_zustane_v_auditu_docasny_klic()
+    {
+        var poison = new FailAuditFixupInterceptor();
+        await using var db = _fixture.NewContext(poison);
+
+        var member = TestData.Member(login: "docasny-klic");
+        db.Members.Add(member);
+        await db.SaveChangesAsync();
+
+        await using var verify = _fixture.NewContext();
+        var entry = Assert.Single(
+            await verify.AuditLogs.Where(a => a.EntityType == nameof(Member)).ToListAsync());
+        Assert.NotEqual(member.Id.ToString(), entry.EntityId);
     }
 
     /// <summary>

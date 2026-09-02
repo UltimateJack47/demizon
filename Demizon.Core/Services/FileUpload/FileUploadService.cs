@@ -124,10 +124,13 @@ public class FileUploadService(
         var isTooLarge = ex is InvalidMemoryOperationException
                          || ex.InnerException is InvalidMemoryOperationException;
 
-        // Bez tohohle záznamu by byla regrese dekodéru, useknutý multipart request
-        // a legitimně příliš velká fotka v provozu nerozlišitelné — operátor by viděl
-        // jen HTTP 400 s jedním ze dvou hlášení a nikde žádný stack trace.
-        logger?.LogInformation(ex,
+        // Warning, ne Information: appsettings.Production.json má
+        // Logging:LogLevel:Default = "Warning" a Program.cs žádný filtr nepřidává,
+        // takže Information by se na cílovém hostu zahodilo ještě před sinkem — a tím
+        // by celý smysl tohohle záznamu padl. Bez něj je regrese dekodéru, useknutý
+        // multipart request a legitimně velká fotka v provozu nerozlišitelná: operátor
+        // vidí jen HTTP 400 s jedním ze dvou hlášení a nikde žádný stack trace.
+        logger?.LogWarning(ex,
             "Zpracování obrázku {FileName}{FileExtension} ({FileSize} B) selhalo: {Reason}.",
             fileRequest.FileName, fileRequest.FileExtension, fileRequest.FileSize,
             isTooLarge ? "nad stropem alokátoru" : "nedekódovatelný vstup");

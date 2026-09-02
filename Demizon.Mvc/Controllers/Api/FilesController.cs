@@ -84,10 +84,16 @@ public class GalleryController(IFileService fileService, IFileUploadService file
     public async Task<IActionResult> Upload(IFormFile file)
     {
         // Hlášení jsou česky, protože ErrorMessage z Demizon.Core taky — klient je
-        // renderuje beze změny a členská aplikace je česká. Míchat na jednom endpointu
-        // CZ a EN podle toho, která validace spadla, by bylo horší než obojí.
+        // renderuje beze změny a členská aplikace je česká.
+        //
+        // Pozor: úplně anglicky zatím endpoint odpovědět umí, a to mimo tenhle kód.
+        // Parametr `IFormFile file` je non-nullable a projekt má zapnuté nullable
+        // reference types, takže [ApiController] na něj sám navěsí implicit required
+        // validaci — request bez části `file` skončí automatickým ProblemDetails
+        // ("The file field is required.") a sem vůbec nedojde. Sjednotit i to by
+        // znamenalo lokalizovat ProblemDetails globálně, což je vlastní úkol.
         if (file.Length == 0)
-            return BadRequest("Nebyl předán žádný soubor.");
+            return BadRequest("Nahraný soubor je prázdný.");
 
         if (!file.ContentType.StartsWith("image/"))
             return BadRequest("Nahrát lze jen obrázek.");

@@ -399,11 +399,13 @@ else
         _uploadingPhotos = true;
         StateHasChanged();
 
+        // Deklarace jsou před try, aby průběžný výsledek přežil výjimku z pozdějšího
+        // insertu — jinak by se admin nedozvěděl ani o fotkách, které se uložit stihly.
+        var uploaded = 0;
+        var failures = new List<string>();
+
         try
         {
-            var uploaded = 0;
-            var failures = new List<string>();
-
             foreach (var file in files)
             {
                 await using var stream = file.OpenReadStream(25 * 1024 * 1024);
@@ -438,14 +440,6 @@ else
                 uploaded++;
             }
 
-            // Počítá se skutečně uložené, ne předané — jinak by hlášení tvrdilo úspěch
-            // i u fotky, kterou dekodér odmítl.
-            if (uploaded > 0)
-                Snackbar.Add($"Nahráno {uploaded} foto k tanci.", Severity.Success);
-
-            foreach (var failure in failures)
-                Snackbar.Add(failure, Severity.Warning);
-
             await LoadDance();
         }
         catch
@@ -454,6 +448,18 @@ else
         }
         finally
         {
+            // Hlášení patří do finally: počítá se skutečně uložené, ne předané, a musí
+            // se objevit i když smyčku přerušila výjimka. Odmítnuté se slévají do jedné
+            // zprávy, protože MudBlazor má strop na počet zobrazených snackbarů
+            // (MaxDisplayedSnackbars) a zbytek by zahodil.
+            if (uploaded > 0)
+                Snackbar.Add($"Nahráno {uploaded} foto k tanci.", Severity.Success);
+
+            if (failures.Count > 0)
+                Snackbar.Add(
+                    $"Nepodařilo se zpracovat {failures.Count} souborů: {string.Join(" | ", failures)}",
+                    Severity.Warning);
+
             _uploadingPhotos = false;
             StateHasChanged();
         }

@@ -3,6 +3,7 @@ using Demizon.Dal;
 using Demizon.Dal.Interceptors;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Demizon.Tests.Integration.Infrastructure;
 
@@ -42,14 +43,24 @@ public sealed class DatabaseFixture : IAsyncDisposable, IDisposable
     /// Vytvoří nový kontext nad stejnou databází. Vlastní kontext na operaci je způsob,
     /// jak si test vynutí čtení z DB a ne z change trackeru předchozího zápisu.
     /// </summary>
-    public DemizonContext NewContext()
+    /// <param name="extraInterceptor">
+    /// Volitelný interceptor navěšený <b>za</b> ten auditní. Slouží k vynucení selhání
+    /// uvnitř auditu — viz <c>FailAuditFixupInterceptor</c>.
+    /// </param>
+    public DemizonContext NewContext(IInterceptor? extraInterceptor = null)
     {
+        var interceptors = new List<IInterceptor>
+        {
+            new SqliteBusyTimeoutInterceptor(),
+            new AuditSaveChangesInterceptor(CurrentUser)
+        };
+        if (extraInterceptor is not null)
+            interceptors.Add(extraInterceptor);
+
         var options = new DbContextOptionsBuilder<DemizonContext>()
             .UseSqlite(_connection)
             .UseLazyLoadingProxies()
-            .AddInterceptors(
-                new SqliteBusyTimeoutInterceptor(),
-                new AuditSaveChangesInterceptor(CurrentUser))
+            .AddInterceptors(interceptors)
             .Options;
 
         var context = new DemizonContext(options);

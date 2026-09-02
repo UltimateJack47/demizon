@@ -20,7 +20,7 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 | Projekt | Co testuje | Rychlost |
 |---|---|---|
 | `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result` | ~3 s / 72 testů |
-| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 111 testů |
+| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 115 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
 
@@ -130,6 +130,27 @@ na celý Blazor okruh, přehrály by se při příštím — nesouvisejícím �
 uživatele. Kdyby příčinou bylo `SQLITE_BUSY` a zopakovalo se, shodilo by to uživateli
 jeho vlastní zápis. Řeší se `State = EntityState.Detached` v `catch` bloku.
 
+### Kolo 3: test, který opravu netestoval
+
+Kolo 3 přineslo nález, který stojí za zapamatování: **dva regresní testy k opravě
+z kola 2 tu opravu vůbec neprocházely.** Oba šly happy path, kde vnořené uložení
+uspěje, takže `catch` blok s `EntityState.Detached` se nikdy nespustil. Reviewer to
+prokázal tím, že opravu odstranil a testy zůstaly zelené.
+
+Řeší to `FailAuditFixupInterceptor` — testovací interceptor registrovaný **za** ten
+auditní, který shodí právě a jen to vnořené uložení. Rozlišuje ho podle stavu audit
+řádků: při původním uložení jsou `Added`, při dopisování klíčů `Modified`.
+
+Ověřeno oběma směry: bez opravy padnou právě dva testy, s opravou projde 27/27.
+
+> **Poučení:** u opravy, která žije v `catch` bloku, nestačí napsat test, který
+> po opravě projde. Je nutné ho spustit i **proti kódu bez opravy** a vidět ho
+> zčervenat — jinak není jasné, jestli testuje opravu, nebo jen happy path.
+
+Vedlejší poznatek z ladění: dva testy nejdřív padaly ze **zastaralého buildu**
+`Demizon.Dal.dll` v test outputu. Signatura selhání je přitom identická se skutečnou
+chybou, takže než začneš hledat příčinu v kódu, vyplatí se smazat `obj/` a `bin/`.
+
 ---
 
 ## Pokrytí
@@ -143,12 +164,12 @@ jeho vlastní zápis. Řeší se `State = EntityState.Detached` v `catch` bloku.
 | `AttendanceStatusContractTests` | `"yes"/"maybe"/"no"`, case-insensitivita, fallback na `No`, a hlavně že serializace a parsování jsou navzájem inverzní |
 | `ResultTests` | `Ok`/`Fail` semantika, `Ok(null)` jako platný úspěch |
 
-### `Demizon.Tests.Integration` (111)
+### `Demizon.Tests.Integration` (115)
 
 | Soubor | Co hlídá |
 |---|---|
 | `RefreshTokenServiceTests` | Raw token nikdy v DB, jednorázovost (replay ochrana), expirace, revokace, rotace při novém tokenu, rozlišení tokenů se shodným prefixem, FK kaskáda |
-| `AuditInterceptorTests` | `Added`/`Modified`/`Deleted`, neprosakování `PasswordHash` a `TokenHash`, audit neauditující sám sebe, oba regresní testy k chybám 2 a 3, a to že `ExecuteUpdate` audit obchází |
+| `AuditInterceptorTests` | `Added`/`Modified`/`Deleted`, neprosakování `PasswordHash` a `TokenHash`, audit neauditující sám sebe, regresní testy k chybám 2 a 3, **selhání dopsání klíčů** (přes `FailAuditFixupInterceptor`) a to že `ExecuteUpdate` audit obchází |
 | `MemberServiceTests` | Soft delete přes globální filtr, historie docházky přežije smazání, `UpdateAsync` nepřepíše Google tokeny, Connect/Disconnect kalendáře |
 | `AttendanceReportServiceTests` | Zkoušky (`EventId == null`) vs. akce, distinct dat vs. počet řádků, `Maybe` se nepočítá jako účast, filtr `IsAttendanceVisible`, ochrana proti dělení nulou |
 | `AttendanceAndEventServiceTests` | Vložení vs. přepis podle `Id`, `LastUpdated` nastavuje služba, nesrovnalost v chování `DeleteAsync` mezi službami |
