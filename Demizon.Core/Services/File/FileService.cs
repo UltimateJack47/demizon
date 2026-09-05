@@ -1,4 +1,5 @@
-﻿using Demizon.Common.Exceptions;
+using Demizon.Common.Exceptions;
+using Demizon.Core.Services.Storage;
 using Demizon.Dal;
 using Demizon.Dal.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Demizon.Core.Services.File;
 
-public class FileService(DemizonContext demizonContext, ILogger<FileService> logger) : IFileService
+public class FileService(
+    DemizonContext demizonContext,
+    IStorageQuotaService storageQuota,
+    ILogger<FileService> logger) : IFileService
 {
     private DemizonContext DemizonContext { get; set; } = demizonContext;
 
@@ -36,15 +40,21 @@ public class FileService(DemizonContext demizonContext, ILogger<FileService> log
     {
         try
         {
+            var storedBytes = file.FileSize
+                              + (file.ThumbnailData?.LongLength ?? 0);
+            var (allowed, reason) = await storageQuota.EnsureCanStoreAsync(storedBytes);
+            if (!allowed)
+            {
+                logger.LogWarning("Upload rejected by storage quota: {Reason}", reason);
+                return false;
+            }
+
             await DemizonContext.AddAsync(file);
             await DemizonContext.SaveChangesAsync();
             return true;
         }
         catch (Exception ex)
         {
-            // Bez tohohle by rozpracovaná změna zůstala v trackeru a uložila se
-            // při příštím — nesouvisejícím — SaveChanges v tomtéž Blazor okruhu,
-            // takže vrácené false by nic nezaručovalo.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process File operation.");
             return false;
@@ -67,8 +77,6 @@ public class FileService(DemizonContext demizonContext, ILogger<FileService> log
         }
         catch (Exception ex)
         {
-            // Vrátí tracker do čistého stavu, jinak by se smazání přehrálo
-            // při příštím uložení v tomtéž okruhu.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process File operation.");
             return false;
