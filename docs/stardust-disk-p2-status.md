@@ -6,19 +6,20 @@
 
 1. **Audit whitelist** — `AuditSaveChangesInterceptor` skips `RefreshToken`, `SentNotification`, `DeviceToken`, `File`.
 2. **Purge + WAL** — `DiskMaintenanceHostedService` (hourly): AuditLog 90d, revoked/expired RefreshTokens, SentNotifications 180d; `wal_checkpoint(TRUNCATE)` + `incremental_vacuum`.
-3. **EF** — migration `20260905121900_AddAuditLogTimestampIndex`; `DemizonContext` has `HasIndex(Timestamp)`. Snapshot/Designer alignment may still need a local `dotnet ef` refresh.
+3. **EF** — migration `20260905121900_AddAuditLogTimestampIndex` (+ Designer); `DemizonContext` / snapshot have `HasIndex(Timestamp)`.
 4. **SQLite** — `auto_vacuum=INCREMENTAL` in `SqliteBusyTimeoutInterceptor` (one-time `VACUUM` still an ops note).
-5. **Upload quotas** — `UploadSettings` MaxFileBytes 25MB, MaxTotalStorageBytes 2GB, MaxFileCount 2000; `StorageQuotaService` + gates in `FileService` / `FileUploadService`; UI: ListPhotos + MemberForm use `MaxFileBytes`.
+5. **Upload quotas** — `UploadSettings` MaxFileBytes 25MB, MaxTotalStorageBytes 2GB, MaxFileCount 2000; `StorageQuotaService` + gates in `FileService` / `FileUploadService`; UI: ListPhotos + MemberForm + Dance `Detail.razor` use `MaxFileBytes`.
 6. **DatabaseController** — Admin role + try/finally for `/tmp` ZIP.
 7. **Docker** — `.dockerignore` expanded; redundant `dotnet build` removed; `docker-entrypoint.sh` deleted.
 8. **Tests** — `RefreshToken_se_neaudituje` expects empty audit.
+9. **Docs** — `docs/hosting-optimization-plan.md` Priority 2 checkboxes synced (2026-09-05).
 
 ## Leftover / follow-ups
 
-- Dance `Detail.razor` may still hardcode `25 * 1024 * 1024` for `OpenReadStream` (ListPhotos/MemberForm fixed).
-- EF `DemizonContextModelSnapshot` / Designer for Timestamp index — verify with local `dotnet ef`.
-- One-time `VACUUM` after enabling incremental auto_vacuum.
+- One-time `VACUUM` after enabling incremental auto_vacuum (ops note).
 - Circuit RSS measurement (Priority 2 non-disk leftover from plan).
+- Priority 3 hygiene (dead code, VAPID rotation, sqlite in git, ReadyToRun, Railway leftovers, DataProtection keys, MudBlazor visual QA).
+- Deferred deploy decisions (domain/HTTPS/OAuth).
 - Run `dotnet test` locally (no clone/VM in this agent).
 
-See also: `docs/hosting-optimization-plan.md` (full plan; checkbox sync may lag this status file).
+See also: `docs/hosting-optimization-plan.md`.
