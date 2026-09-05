@@ -1,8 +1,6 @@
-# Patches (gzip+base64) for feat/stardust-disk-optimization cleanup
+# Patches for feat/stardust-disk-optimization cleanup
 
-**URGENT:** `Demizon.Mvc/Pages/Admin/Dance/Detail.razor` on this branch tip is corrupted (literal path string from a failed MCP push). Restore via the Detail patch below.
-
-Decode and install from repo root:
+**Detail.razor was deleted from tip** (corrupted by failed MCP ~32KB write). Restore Detail + EF + hosting docs:
 
 ```bash
 python3 - <<'PY'
@@ -17,8 +15,9 @@ for src, dst in files.items():
     pathlib.Path(dst).parent.mkdir(parents=True, exist_ok=True)
     pathlib.Path(dst).write_bytes(data)
     print('wrote', dst, len(data))
+b64 = ''.join(pathlib.Path(f'docs/patches/hosting-optimization-plan.md.gz.b64.part{i}').read_text().strip() for i in range(3))
+pathlib.Path('docs/hosting-optimization-plan.md').write_bytes(gzip.decompress(base64.b64decode(b64)))
+print('wrote hosting-optimization-plan.md')
 PY
-git add -A && git commit -m 'fix(disk): apply Detail MaxFileBytes + EF Timestamp index artifacts'
+git add -A && git commit -m 'fix(disk): restore Detail MaxFileBytes + EF Timestamp index + P2 docs'
 ```
-
-Also sync `docs/hosting-optimization-plan.md` Priority 2 checkboxes (date 2026-09-05) — see agent box `/workspace/fixed_hosting.md` or decode hosting patch if present.
