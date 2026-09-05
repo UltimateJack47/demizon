@@ -1,4 +1,4 @@
-﻿using System.IO.Compression;
+using System.IO.Compression;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Demizon.Dal;
@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Demizon.Mvc.Controllers.Api;
 
 /// <summary>
-/// Endpoint pro backup/restore databáze a seed pro inicializaci.
+/// Endpoint for database backup and seed initialization.
 /// </summary>
 [ApiController]
 [Route("api/database")]
@@ -17,24 +17,17 @@ public class DatabaseController(ILogger<DatabaseController> logger, DemizonConte
 {
     private const string DatabasePath = "/data/demizon.sqlite";
 
-    /// <summary>
-    /// Naplní prázdnou DB testem pro inicializaci.
-    /// POST /api/database/seed
-    /// Dostupné bez loginu (jen pro empty DB!)
-    /// </summary>
     [HttpPost("seed")]
     [AllowAnonymous]
     public async Task<IActionResult> SeedDatabase()
     {
         try
         {
-            // Kontrola: pouze pokud je DB prázdná
             if (await dbContext.Members.AnyAsync())
             {
                 return BadRequest("Database is not empty. Seed is only for initialization.");
             }
 
-            // Vytvoř testovacího člena
             var testMember = new Member
             {
                 Name = "Admin",
@@ -49,7 +42,7 @@ public class DatabaseController(ILogger<DatabaseController> logger, DemizonConte
             dbContext.Members.Add(testMember);
             await dbContext.SaveChangesAsync();
 
-            logger.LogInformation("Database seeded with test member: admin@demizon.local / admin123");
+            logger.LogInformation("Database seeded with test member");
             return Ok(new
             {
                 message = "Database seeded successfully",
@@ -67,14 +60,11 @@ public class DatabaseController(ILogger<DatabaseController> logger, DemizonConte
         }
     }
 
-    /// <summary>
-    /// Stáhne aktuální SQLite databázi jako ZIP soubor.
-    /// GET /api/database/backup
-    /// </summary>
     [HttpGet("backup")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DownloadBackup()
     {
+        string? zipPath = null;
         try
         {
             if (!System.IO.File.Exists(DatabasePath))
@@ -82,13 +72,11 @@ public class DatabaseController(ILogger<DatabaseController> logger, DemizonConte
                 return NotFound("Database file not found");
             }
 
-            var zipPath = $"/tmp/demizon-backup-{DateTime.UtcNow:yyyy-MM-dd-HHmmss}.zip";
-            using (var zip = System.IO.Compression.ZipFile.Open(zipPath, System.IO.Compression.ZipArchiveMode.Create))
+            zipPath = $"/tmp/demizon-backup-{DateTime.UtcNow:yyyy-MM-dd-HHmmss}.zip";
+            using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
             {
-                // Přidej hlavní DB soubor
                 zip.CreateEntryFromFile(DatabasePath, "demizon.sqlite");
-                
-                // Přidej WAL a SHM soubory pokud existují
+
                 var walPath = $"{DatabasePath}-wal";
                 var shmPath = $"{DatabasePath}-shm";
                 if (System.IO.File.Exists(walPath))
@@ -98,8 +86,6 @@ public class DatabaseController(ILogger<DatabaseController> logger, DemizonConte
             }
 
             var fileBytes = await System.IO.File.ReadAllBytesAsync(zipPath);
-            System.IO.File.Delete(zipPath); // Vyčistit po sobě
-
             return File(fileBytes, "application/zip", $"demizon-backup-{DateTime.UtcNow:yyyy-MM-dd-HHmmss}.zip");
         }
         catch (Exception ex)
@@ -107,10 +93,18 @@ public class DatabaseController(ILogger<DatabaseController> logger, DemizonConte
             logger.LogError(ex, "Database backup failed");
             return StatusCode(500, new { error = "Backup failed", details = ex.Message });
         }
+        finally
+        {
+            if (zipPath is not null && System.IO.File.Exists(zipPath))
+            {
+                try { System.IO.File.Delete(zipPath); }
+                catch (Exception ex) { logger.LogWarning(ex, "Failed to delete temp backup zip {Path}", zipPath); }
+            }
+        }
     }
 
     [HttpGet("info")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public IActionResult GetDatabaseInfo()
     {
         try
