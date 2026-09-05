@@ -1,4 +1,4 @@
-﻿using Demizon.Common.Services;
+using Demizon.Common.Services;
 using Demizon.Dal;
 using Demizon.Mvc.Services;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +17,7 @@ public static class MvcServicesRegistrationExtension
         services.AddScoped<PageService>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
+        services.AddHostedService<DiskMaintenanceHostedService>();
 
         return services;
     }
