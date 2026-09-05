@@ -26,10 +26,20 @@ public class SqliteBusyTimeoutInterceptor : DbConnectionInterceptor
     /// </summary>
     private const int WalAutoCheckpointPages = 512;
 
+    /// <summary>
+    /// <c>auto_vacuum=INCREMENTAL</c> is database-level. Setting it on an existing DB
+    /// that was created with <c>NONE</c> (EF Core default) has <b>no effect</b> until a
+    /// one-time <c>VACUUM</c> rewrites the file. That VACUUM temporarily needs ~2× the
+    /// DB size free on disk — do it offline / with enough headroom, e.g.:
+    /// <code>sqlite3 /data/demizon.sqlite "PRAGMA auto_vacuum=INCREMENTAL; VACUUM;"</code>
+    /// After that, <c>PRAGMA incremental_vacuum(N)</c> (see DiskMaintenanceHostedService)
+    /// can reclaim free pages without a full rewrite.
+    /// </summary>
     private static readonly string PragmaBatch =
         $"PRAGMA busy_timeout={BusyTimeoutMs};" +
         $"PRAGMA journal_size_limit={JournalSizeLimitBytes};" +
-        $"PRAGMA wal_autocheckpoint={WalAutoCheckpointPages};";
+        $"PRAGMA wal_autocheckpoint={WalAutoCheckpointPages};" +
+        "PRAGMA auto_vacuum=INCREMENTAL;";
 
     public override void ConnectionOpened(DbConnection connection, ConnectionEndEventData eventData)
     {
