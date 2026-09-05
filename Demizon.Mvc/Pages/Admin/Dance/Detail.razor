@@ -8,6 +8,8 @@
 @using Demizon.Mvc.Pages.Admin.VideoLink.Components
 @using Demizon.Mvc.ViewModels
 @using Microsoft.EntityFrameworkCore
+@using Demizon.Common.Configuration
+@using Microsoft.Extensions.Options
 
 @inject IFileService FileService
 @inject IFileUploadService FileUploadService
@@ -15,6 +17,7 @@
 @inject IVideoLinkService VideoLinkService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject IOptionsSnapshot<UploadSettings> UploadOptions
 
 @layout AdminMainLayout
 @attribute [Authorize(Roles = "Admin, Standard")]
@@ -414,7 +417,7 @@ else
         {
             foreach (var file in files)
             {
-                await using var stream = file.OpenReadStream(25 * 1024 * 1024);
+                await using var stream = file.OpenReadStream(UploadOptions.Value.MaxFileBytes);
                 var result = await FileUploadService.UploadImageToDbAsync(new FileUploadRequest
                 {
                     Stream = stream,
@@ -549,7 +552,7 @@ else
                     continue;
                 }
 
-                await using var stream = file.OpenReadStream(25 * 1024 * 1024);
+                await using var stream = file.OpenReadStream(UploadOptions.Value.MaxFileBytes);
                 var result = await FileUploadService.UploadDocumentToDbAsync(new FileUploadRequest
                 {
                     Stream = stream,

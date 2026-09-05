@@ -27,6 +27,19 @@ public class AuditSaveChangesInterceptor(
     };
 
     /// <summary>
+    /// High-volume / low-value entity types. Auditing them filled ~90 % of AuditLog
+    /// growth on Stardust (especially RefreshToken with 60 min JWT expiry) and after
+    /// the temporary-PK fixup each insert also triggers an extra UPDATE.
+    /// </summary>
+    private static readonly HashSet<string> ExcludedEntityTypes = new(StringComparer.Ordinal)
+    {
+        nameof(RefreshToken),
+        nameof(SentNotification),
+        nameof(DeviceToken),
+        "File",
+    };
+
+    /// <summary>
     /// Audit řádky vložených entit, kterým se skutečný primární klíč doplní teprve po uložení.
     /// </summary>
     private readonly List<(AuditLog Audit, EntityEntry Entry)> _pendingKeys = [];
@@ -50,6 +63,10 @@ public class AuditSaveChangesInterceptor(
                     || entry.State is EntityState.Detached or EntityState.Unchanged)
                     continue;
 
+                var entityTypeName = entry.Metadata.ClrType.Name;
+                if (ExcludedEntityTypes.Contains(entityTypeName))
+                    continue;
+
                 var primaryKey = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
 
                 var auditLog = new AuditLog
@@ -57,7 +74,7 @@ public class AuditSaveChangesInterceptor(
                     // Metadata.ClrType, ne Entity.GetType(): s UseLazyLoadingProxies() jsou
                     // entity načtené z DB instancemi dynamických podtypů, takže runtime typ
                     // se jmenuje např. "MemberProxy". Model zná skutečný název entity.
-                    EntityType = entry.Metadata.ClrType.Name,
+                    EntityType = entityTypeName,
                     EntityId = primaryKey?.CurrentValue?.ToString() ?? "0",
                     Action = entry.State.ToString(),
                     UserId = userId,

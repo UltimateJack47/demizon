@@ -1,4 +1,4 @@
-﻿**/.dockerignore
+**/.dockerignore
 **/.env
 **/.git
 **/.gitignore
@@ -23,3 +23,13 @@
 **/values.dev.yaml
 LICENSE
 README.md
+graft/
+docs/
+Demizon.Maui/
+demizon_flutter/
+**/*.sqlite
+**/*.sqlite-*
+**/appsettings.Local.json
+.claude/
+.grok/
+.mcp.json

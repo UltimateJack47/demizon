@@ -125,8 +125,11 @@ public class AuditInterceptorTests : IAsyncDisposable
         Assert.DoesNotContain("PasswordHash", entry.NewValues);
     }
 
+    /// <summary>
+    /// RefreshToken je na whitelistu vyloučených entit — high-volume noise pro Stardust disk.
+    /// </summary>
     [Fact]
-    public async Task Audit_neobsahuje_hash_refresh_tokenu()
+    public async Task RefreshToken_se_neaudituje()
     {
         await using var seed = _fixture.NewContext();
         var member = await TestData.SeedMemberAsync(seed);
@@ -141,9 +144,7 @@ public class AuditInterceptorTests : IAsyncDisposable
         });
         await db.SaveChangesAsync();
 
-        var entry = Assert.Single(await ReadAuditAsync(nameof(RefreshToken)));
-        Assert.DoesNotContain("TAJNY-HASH-TOKENU", entry.NewValues);
-        Assert.DoesNotContain("TokenHash", entry.NewValues);
+        Assert.Empty(await ReadAuditAsync(nameof(RefreshToken)));
     }
 
     [Fact]

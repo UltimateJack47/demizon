@@ -1,4 +1,4 @@
-﻿using Demizon.Dal.Entities;
+using Demizon.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
 using File = Demizon.Dal.Entities.File;
 
@@ -56,7 +56,6 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
                 .OnDelete(DeleteBehavior.Cascade);
             b.Property(m => m.GoogleRefreshToken).HasMaxLength(512);
             b.Property(m => m.GoogleCalendarId).HasMaxLength(256);
-            // Soft delete – globální filtr skryje smazané členy
             b.HasQueryFilter(m => m.DeletedAt == null);
         });
 
@@ -104,7 +103,6 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(s => s.Name).IsRequired();
             b.Property(s => s.IsVisible).IsRequired();
         });
-
 
         modelBuilder.Entity<PushSubscription>(b =>
         {
@@ -165,6 +163,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(x => x.EntityId).HasMaxLength(50).IsRequired();
             b.Property(x => x.Action).HasMaxLength(20).IsRequired();
             b.Property(x => x.UserId).HasMaxLength(100).IsRequired();
+            b.HasIndex(x => x.Timestamp);
         });
 
         modelBuilder.Entity<SentNotification>(b =>

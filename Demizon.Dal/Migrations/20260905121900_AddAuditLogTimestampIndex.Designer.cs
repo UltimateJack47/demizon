@@ -3,6 +3,7 @@ using System;
 using Demizon.Dal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Demizon.Dal.Migrations
 {
     [DbContext(typeof(DemizonContext))]
-    partial class DemizonContextModelSnapshot : ModelSnapshot
+    [Migration("20260905121900_AddAuditLogTimestampIndex")]
+    partial class AddAuditLogTimestampIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

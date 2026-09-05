@@ -1,7 +1,7 @@
 # Optimalizace backendu a nasazení na Scaleway Stardust
 
 > **Živý dokument.** Průběžně aktualizovat při každé dokončené položce.
-> Založeno: 2026-09-01. Poslední aktualizace: 2026-09-02.
+> Založeno: 2026-09-01. Poslední aktualizace: 2026-09-05.
 
 ## Kontext
 
@@ -292,6 +292,9 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
 
 ### Priorita 2 — disk
 
+> Aktualizace 2026-09-05: Priority 2 implementace v PR #5 (`feat/stardust-disk-optimization`).
+> Zůstává: naměření RSS okruhů; jednorázový ops `VACUUM` při nasazení.
+
 - [ ] **Naměřit skutečnou paměť na jeden odpojený Blazor okruh** a podle toho nastavit
       `DisconnectedCircuitMaxRetained`. Dnešní hodnota 10 je zvolená konzervativně,
       odhad 1–3 MB/okruh je nepodložený. Bez měření je volba mezi RAM a rizikem, že
@@ -299,21 +302,21 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
       Postup: v kontejneru s `--memory=768m` otevřít N okruhů, odpojit je a odečíst
       RSS před a po. Skutečné řešení zůstává per-page render mode, který anonymní
       provoz z poolu odstraní úplně.
-- [ ] **Purge job** pro `AuditLog` (retence 90 dní), `RefreshTokens` (revokované + expirované),
+- [x] **Purge job** pro `AuditLog` (retence 90 dní), `RefreshTokens` (revokované + expirované),
       `SentNotifications` (180 dní). Nejlépe do `UnifiedNotificationService.RunCheckAsync`,
       která už běží 1×/hod.
-- [ ] **Whitelist entit v auditu** — `AuditSaveChangesInterceptor.cs`. Dnes se auditují
+- [x] **Whitelist entit v auditu** — `AuditSaveChangesInterceptor.cs`. Dnes se auditují
       i `RefreshToken`, `SentNotification`, `DeviceToken`, `File`, které tvoří ~90 % objemu
       a nemají auditní hodnotu. **Priorita stoupla:** oprava dočasných primárních klíčů
       (viz *testing-plan.md*) přidává u každého vložení jedno UPDATE kolečko a nejčastější
       insert je právě `RefreshToken` — po whitelistu extra zápis skoro zmizí.
-- [ ] **Index na `AuditLog.Timestamp`** — jinak bude i purge full scan.
-- [ ] **`auto_vacuum=INCREMENTAL`** + jednorázový `VACUUM` + periodický
-      `wal_checkpoint(TRUNCATE)`. (Pozor: `VACUUM` potřebuje dočasně ~2× velikost DB volného místa.)
-- [ ] **Kvóta na uploady.** Dnes limit 25 MB/soubor a **žádný** limit na počet ani celkový objem.
+- [x] **Index na `AuditLog.Timestamp`** — jinak bude i purge full scan.
+- [x] **`auto_vacuum=INCREMENTAL`** + periodický `wal_checkpoint(TRUNCATE)` / `incremental_vacuum` přes `DiskMaintenanceHostedService`.
+      Jednorázový plný `VACUUM` na produkční DB stále jako ops krok (potřebuje ~2× volného místa).
+- [x] **Kvóta na uploady.** Dnes limit 25 MB/soubor a **žádný** limit na počet ani celkový objem.
       Dokumenty se navíc neoptimalizují vůbec (`FileUploadService.cs:70-87` ukládá raw bajty).
       400 PDF × 25 MB = 10 GB = plný disk.
-- [ ] **`try/finally` v `DatabaseController.cs:100`** — záložní ZIP v `/tmp` se při chybě
+- [x] **`try/finally` v `DatabaseController.cs:100`** — záložní ZIP v `/tmp` se při chybě
       `ReadAllBytesAsync` nesmaže. Endpoint je navíc jen `[Authorize]`, ne `Roles = "Admin"`.
 
 ### Priorita 3 — úklid a hygiena
@@ -327,10 +330,9 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
       Vygenerovat nové klíče a předávat přes proměnné prostředí.
 - [ ] **`demizon.sqlite` je commitnutý** a `Demizon.Mvc.csproj:74-76` ho kopíruje do outputu
       s `CopyToOutputDirectory=Always` → je i v image. `git rm --cached`.
-- [ ] **`.dockerignore`** doplnit: `graft/`, `docs/`, `Demizon.Maui/`,
+- [x] **`.dockerignore`** doplnit: `graft/`, `docs/`, `Demizon.Maui/`,
       `**/appsettings.Local.json`, `**/*.sqlite*`.
-- [ ] **`Dockerfile:18`** — `dotnet build -o /app/build` je duplicitní, stage `publish`
-      si build dělá sám. Smazat.
+- [x] **`Dockerfile:18`** — duplicitní `dotnet build` odstraněn.
 - [ ] **Publish s `-r linux-x64`** — ušetří zbylých ~31 MB nativních knihoven SQLite
       pro ostatní platformy. Zvážit i `<PublishReadyToRun>true</PublishReadyToRun>`
       (rychlejší cold start na 1 vCPU; trimming ani AOT s EF Core + Blazor nejde).
