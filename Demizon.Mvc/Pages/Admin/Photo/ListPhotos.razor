@@ -4,6 +4,8 @@
 @using Demizon.Core.Services.FileUpload
 @using Demizon.Mvc.ViewModels
 @using Microsoft.EntityFrameworkCore
+@using Demizon.Common.Configuration
+@using Microsoft.Extensions.Options
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
@@ -12,6 +14,7 @@
 @inject IDanceService DanceService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject IOptionsSnapshot<UploadSettings> UploadOptions
 @attribute [Authorize(Roles = "Admin")]
 @layout AdminMainLayout
 
@@ -124,8 +127,6 @@
         _uploading = true;
         StateHasChanged();
 
-        // Deklarace jsou před try, aby průběžný výsledek přežil výjimku z pozdějšího
-        // insertu — jinak by se admin nedozvěděl ani o fotkách, které se uložit stihly.
         var uploaded = 0;
         var failures = new List<string>();
 
@@ -133,7 +134,7 @@
         {
             foreach (var file in files)
             {
-                await using var stream = file.OpenReadStream(25 * 1024 * 1024);
+                await using var stream = file.OpenReadStream(UploadOptions.Value.MaxFileBytes);
                 var result = await FileUploadService.UploadImageToDbAsync(new FileUploadRequest
                 {
                     Stream = stream,
@@ -159,9 +160,6 @@
                     ThumbnailData = result.ThumbnailData,
                     IsPublic = true
                 };
-                // FileService.CreateAsync spolkne každou výjimku a jen vrátí false, takže
-                // bez téhle kontroly by `uploaded` počítalo pokusy, ne skutečná uložení,
-                // a admin by dostal "Nahráno 3 foto", i kdyby se nic neuložilo.
                 if (await FileService.CreateAsync(entity))
                     uploaded++;
                 else
@@ -174,10 +172,6 @@
         }
         finally
         {
-            // Obnova seznamu taky patří do finally: když smyčku přerušila výjimka
-            // u pozdějšího souboru, ty dřívější už jsou uložené a mřížka by jinak
-            // zůstala zastaralá. Selhání obnovy se musí ohlásit — jinak by admin viděl
-            // "Nahráno 3 foto" nad nezměněnou mřížkou a přirozeně by nahrával znovu.
             if (uploaded > 0)
             {
                 try
@@ -191,10 +185,6 @@
                 }
             }
 
-            // Hlášení patří do finally: počítá se skutečně uložené, ne předané, a musí
-            // se objevit i když smyčku přerušila výjimka. Odmítnuté se slévají do jedné
-            // zprávy, protože MudBlazor má strop na počet zobrazených snackbarů
-            // (MaxDisplayedSnackbars) a zbytek by zahodil.
             if (uploaded > 0)
                 Snackbar.Add($"Nahráno {uploaded} foto.", Severity.Success);
 
@@ -230,8 +220,6 @@
             new DialogOptions { Position = DialogPosition.Center, CloseButton = false });
         if (confirm is true)
         {
-            // DeleteAsync výjimku spolkne a vrátí false — bez kontroly by se ohlásil
-            // zelený úspěch nad mřížkou, ve které fotka pořád je.
             var deleted = await FileService.DeleteAsync(id);
             await RefreshTable();
             Snackbar.Add(deleted ? "Fotografie smazána." : "Smazání se nezdařilo.",
