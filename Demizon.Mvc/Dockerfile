@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
@@ -15,7 +15,6 @@ COPY ["Demizon.Common/Demizon.Common.csproj", "Demizon.Common/"]
 RUN dotnet restore "Demizon.Mvc/Demizon.Mvc.csproj"
 COPY . .
 WORKDIR "/src/Demizon.Mvc"
-RUN dotnet build "Demizon.Mvc.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
