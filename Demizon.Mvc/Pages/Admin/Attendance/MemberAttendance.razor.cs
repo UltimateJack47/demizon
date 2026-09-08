@@ -370,12 +370,22 @@ public partial class MemberAttendance : ComponentBase
             var linked = false;
             if (model.Id != 0)
             {
-                var attendance = await AttendanceService.GetOneAsync(model.Id);
-                attendance.GoogleEventId = createdId;
-                // Návratovou hodnotu je nutné kontrolovat: služba výjimku spolkne
-                // a vrátí false, takže bez kontroly by událost zůstala v kalendáři
-                // bez odkazu z docházky.
-                linked = await AttendanceService.CreateOrUpdateAsync(attendance);
+                try
+                {
+                    var attendance = await AttendanceService.GetOneAsync(model.Id);
+                    attendance.GoogleEventId = createdId;
+                    // Návratovou hodnotu je nutné kontrolovat: služba výjimku spolkne
+                    // a vrátí false, takže bez kontroly by událost zůstala v kalendáři
+                    // bez odkazu z docházky.
+                    linked = await AttendanceService.CreateOrUpdateAsync(attendance);
+                }
+                catch
+                {
+                    // GetOneAsync hodí, když docházku mezitím někdo smazal. Výjimku
+                    // nesmíme pustit dál — úklid nesparovane události níž musí proběhnout,
+                    // jinak by v kalendáři zůstala natrvalo.
+                    linked = false;
+                }
             }
 
             if (linked)
