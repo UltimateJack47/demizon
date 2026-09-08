@@ -1,4 +1,5 @@
 using Demizon.Common.Configuration;
+using Demizon.Common;
 using Demizon.Core.Services.File;
 using Demizon.Core.Services.Storage;
 using Demizon.Tests.Integration.Infrastructure;
@@ -100,7 +101,12 @@ public class StorageQuotaServiceTests : IAsyncDisposable
         await using var db = _fixture.NewContext();
         var service = FileService(db, Tight(maxFileBytes: 10));
 
-        ResultAssert.Failed(await service.CreateAsync(TestData.StoredFile(fileSize: 11)));
+        var rejected = await service.CreateAsync(TestData.StoredFile(fileSize: 11));
+
+        // Rejected, ne Failure: uživatel s tím může něco udělat (smazat soubory),
+        // takže to controller mapuje na 4xx a text se mu zobrazí.
+        ResultAssert.Failed(rejected, ResultErrorKind.Rejected);
+        Assert.Contains("limit", rejected.Error!, StringComparison.OrdinalIgnoreCase);
 
         Assert.DoesNotContain(db.ChangeTracker.Entries<Dal.Entities.File>(),
             e => e.State == EntityState.Added);

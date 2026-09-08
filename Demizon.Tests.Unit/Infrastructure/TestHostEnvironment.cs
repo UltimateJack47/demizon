@@ -11,7 +11,15 @@ internal static class TestHostEnvironment
 {
     public const string JwtSecret = "test-jwt-secret-key-32chars-min!";
 
-    public static void Apply(string databasePath)
+    /// <param name="authPermitLimit">
+    /// Výchozích 10000 vypne rate limiter, aby se suite netrefila do 429.
+    /// Test, který 429 přímo zkoumá, si ho sníží.
+    /// </param>
+    /// <param name="maxTotalStorageBytes">
+    /// Null = nechat výchozí 2 GB. Test kvóty ho sníží, aby ji šlo přetéct
+    /// jedním malým obrázkem.
+    /// </param>
+    public static void Apply(string databasePath, int authPermitLimit = 10000, long? maxTotalStorageBytes = null)
     {
         Environment.SetEnvironmentVariable("ConnectionStrings__Default", $"Data Source={databasePath}");
         Environment.SetEnvironmentVariable("Jwt__SecretKey", JwtSecret);
@@ -19,8 +27,11 @@ internal static class TestHostEnvironment
         Environment.SetEnvironmentVariable("Vapid__PrivateKey", "test-vapid-private");
         Environment.SetEnvironmentVariable("Vapid__Subject", "mailto:test@demizon.test");
         // Bez zvednutého limitu by se suite trefila do HTTP 429 na /api/auth/token.
-        Environment.SetEnvironmentVariable("RateLimiting__AuthPermitLimit", "10000");
+        Environment.SetEnvironmentVariable("RateLimiting__AuthPermitLimit", authPermitLimit.ToString());
         Environment.SetEnvironmentVariable("AllowedHosts", "*");
+        Environment.SetEnvironmentVariable(
+            "Upload__MaxTotalStorageBytes",
+            maxTotalStorageBytes?.ToString());
         // Seed token se záměrně NEnastavuje přes env: je globální pro proces
         // a zapnul by endpoint i hostům, které ho mít zapnutý nemají.
         // Fixture, která ho potřebuje, ho vkládá přes PostConfigure.

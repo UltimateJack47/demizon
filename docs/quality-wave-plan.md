@@ -39,8 +39,8 @@ HTTP a prohlížeč, takže je na signaturách nezávislé — může jít kdyko
 | 2 | Result refactor: služby + volající + testy | ✅ hotovo |
 | 3 | E2E infrastruktura (Playwright) | ✅ hotovo |
 | 4 | E2E scénáře | ✅ hotovo |
-| 5 | Doplnit unit/integrační díry | ⏳ probíhá |
-| 6 | Vizuální QA MudBlazor 9.9 | ⬜ čeká |
+| 5 | Doplnit unit/integrační díry | ✅ hotovo |
+| 6 | Vizuální QA MudBlazor 9.9 | ⏳ probíhá |
 | 7 | Code review celé vlny | ⬜ čeká |
 
 ---
@@ -168,6 +168,37 @@ Priorita podle toho, co rozbití nejvíc bolí a co nižší vrstvy nevidí:
       v konzoli + žádný vodorovný přesah) + naběhnutí Blazor okruhu.
 - [x] `MudBlazorLayoutTests` (4): nulové rozměry interaktivních prvků,
       přetékání na 390 px u veřejných stránek i administrace.
+
+---
+
+## 3b. Doplněné díry v unit/integračních testech
+
+Vzato z TODO v [`testing-plan.md`](testing-plan.md), sekce „Testy, které záměrně
+nejsou“ — tyhle tři už tam nepatří:
+
+- [x] **HTTP 429 na `/api/auth/token`.** Ostatní testy mají limit zvednutý, aby
+      se do něj suite netrefila, takže ho nikdo neověřoval — a přitom chrání
+      proti hádání hesel. `TunedApiFactory` staví host s vlastním limitem;
+      druhý test hlídá, že vyčerpané okno neblokuje endpointy bez politiky
+      `auth` (`/health`).
+- [x] **Strop alokátoru ImageSharpu.** Chování bylo pokryté (test si strop
+      lokálně snižuje), ale to, že ho `AddCoreServices` vůbec nastaví, nepokrýval
+      nikdo — jeho odstranění by žádný test nezachytil. Konkrétní hodnotu
+      ImageSharp nezveřejňuje, takže se ověřuje záměna instance.
+- [x] **Kontrakt uploadu při plné kvótě** — 400 s důvodem a nic v databázi.
+
+> **Poučení k tomu poslednímu.** Napsal jsem ho jako regresní test k Result
+> refactoringu ve `FilesController` a spustil ho proti kódu bez opravy —
+> **prošel**. Kvóta se totiž kontroluje dvakrát: ve `FileUploadService` a pak
+> ještě ve `FileService.CreateAsync`. Přes HTTP se vždy uplatní ta první, protože
+> obě sčítají totéž, takže druhá je obrana do hloubky, na kterou se z endpointu
+> nedá dostat. Test tedy hlídá kontrakt endpointu, ne tu opravu; kontrolu
+> návratové hodnoty pokrývá až test na úrovni služby, kde se navíc ověřuje
+> `ResultErrorKind.Rejected` a že důvod nese text.
+>
+> Bez toho ověření by v dokumentaci zůstalo tvrzení, které neplatí.
+
+**273 testů v rychlé sadě** (112 unit + 163 integration) + 23 E2E.
 
 ---
 
