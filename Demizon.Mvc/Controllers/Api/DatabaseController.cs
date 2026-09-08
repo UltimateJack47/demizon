@@ -1,62 +1,84 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using CryptoHelper;
+using Demizon.Common.Configuration;
+using Demizon.Contracts.Auth;
 using Demizon.Dal;
 using Demizon.Dal.Entities;
-using CryptoHelper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Demizon.Mvc.Controllers.Api;
 
 /// <summary>
-/// Seed initialization and database file info. Volume backups live in Scaleway, not here.
+/// Jednorázový bootstrap prvního admina a info o souboru databáze.
+/// Zálohy volume řeší Scaleway, ne tento host.
 /// </summary>
 [ApiController]
 [Route("api/database")]
-public class DatabaseController(ILogger<DatabaseController> logger, DemizonContext dbContext) : ControllerBase
+public class DatabaseController(
+    ILogger<DatabaseController> logger,
+    DemizonContext dbContext,
+    IOptions<BootstrapSettings> bootstrapOptions) : ControllerBase
 {
     private const string DatabasePath = "/data/demizon.sqlite";
+    private const string SeedTokenHeader = "X-Seed-Token";
 
+    /// <summary>
+    /// Založí prvního admina. Trojitá pojistka: bez nakonfigurovaného
+    /// <c>Bootstrap:SeedToken</c> endpoint neexistuje (404), se špatným tokenem
+    /// vrací 401 a nad neprázdnou tabulkou členů 409. Po prvním úspěchu se tím
+    /// sám vypne — proto „jednorázový“.
+    /// </summary>
     [HttpPost("seed")]
     [AllowAnonymous]
-    public async Task<IActionResult> SeedDatabase()
+    [EnableRateLimiting("auth")]
+    public async Task<IActionResult> SeedAdmin([FromBody] SeedAdminRequest request)
     {
-        try
+        var expectedToken = bootstrapOptions.Value.SeedToken;
+        if (string.IsNullOrWhiteSpace(expectedToken))
         {
-            if (await dbContext.Members.AnyAsync())
-            {
-                return BadRequest("Database is not empty. Seed is only for initialization.");
-            }
-
-            var testMember = new Member
-            {
-                Name = "Admin",
-                Surname = "Test",
-                Email = "admin@demizon.local",
-                Login = "jack",
-                PasswordHash = PasswordHasher.HashPassword("admin123"),
-                Role = UserRole.Admin,
-                DeletedAt = null
-            };
-
-            dbContext.Members.Add(testMember);
-            await dbContext.SaveChangesAsync();
-
-            logger.LogInformation("Database seeded with test member");
-            return Ok(new
-            {
-                message = "Database seeded successfully",
-                testUser = new
-                {
-                    email = "admin@demizon.local",
-                    password = "admin123"
-                }
-            });
+            // Nenakonfigurováno = feature je vypnutá. 404 místo 403, aby se
+            // z odpovědi nedalo poznat, že tady vůbec něco takového je.
+            logger.LogWarning("Seed endpoint byl zavolán, ale Bootstrap:SeedToken není nastaven.");
+            return NotFound();
         }
-        catch (Exception ex)
+
+        if (!Request.Headers.TryGetValue(SeedTokenHeader, out var provided)
+            || !TokenMatches(provided.ToString(), expectedToken))
         {
-            logger.LogError(ex, "Database seeding failed");
-            return StatusCode(500, new { error = "Seeding failed", details = ex.Message });
+            logger.LogWarning("Seed endpoint: neplatný {Header}.", SeedTokenHeader);
+            return Unauthorized(new { error = $"Invalid {SeedTokenHeader}." });
         }
+
+        if (await dbContext.Members.IgnoreQueryFilters().AnyAsync())
+        {
+            // IgnoreQueryFilters: soft-smazaný člen taky drží login a hash,
+            // takže „prázdná databáze“ musí znamenat i žádný smazaný.
+            return Conflict(new { error = "Database already has members. Seed is for initialization only." });
+        }
+
+        var admin = new Member
+        {
+            Name = request.Name,
+            Surname = request.Surname,
+            Email = request.Email,
+            Login = request.Login,
+            PasswordHash = PasswordHasher.HashPassword(request.Password),
+            Role = UserRole.Admin,
+            DeletedAt = null
+        };
+
+        dbContext.Members.Add(admin);
+        await dbContext.SaveChangesAsync();
+
+        logger.LogInformation("První admin {Login} založen přes seed endpoint.", admin.Login);
+
+        // Heslo se v odpovědi nevrací — zná ho ten, kdo request poslal.
+        return Ok(new { id = admin.Id, login = admin.Login, role = admin.Role.ToString() });
     }
 
     [HttpGet("info")]
@@ -82,8 +104,18 @@ public class DatabaseController(ILogger<DatabaseController> logger, DemizonConte
         }
         catch (Exception ex)
         {
+            // Detail výjimky jde do logu, ne do odpovědi — nese cesty na disku.
             logger.LogError(ex, "Failed to get database info");
-            return StatusCode(500, new { error = "Failed to get info", details = ex.Message });
+            return StatusCode(500, new { error = "Failed to get info" });
         }
     }
+
+    /// <summary>
+    /// Srovnání v konstantním čase, aby se token nedal uhádat po znacích.
+    /// Rozdílná délka vrací false bez porovnávání.
+    /// </summary>
+    private static bool TokenMatches(string provided, string expected) =>
+        CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(provided),
+            Encoding.UTF8.GetBytes(expected));
 }

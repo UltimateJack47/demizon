@@ -87,6 +87,9 @@ builder.Services.AddCoreServices();
 builder.Services.AddMvcServices();
 builder.Services.AddAuthenticationServices(builder.Configuration, builder.Environment);
 
+// Bez validace záměrně: nenastavený SeedToken znamená vypnutý seed endpoint.
+builder.Services.AddOptions<BootstrapSettings>()
+    .BindConfiguration("Bootstrap");
 builder.Services.AddOptions<VapidSettings>()
     .BindConfiguration("Vapid")
     .ValidateDataAnnotations()

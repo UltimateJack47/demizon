@@ -17,15 +17,13 @@ namespace Demizon.Tests.Unit.Infrastructure;
 /// </summary>
 public sealed class AuthApiFactory : WebApplicationFactory<Program>
 {
-    public const string JwtSecret = "test-jwt-secret-key-32chars-min!";
+    public const string JwtSecret = TestHostEnvironment.JwtSecret;
     public const string StandardLogin = "clen";
     public const string StandardPassword = "spravne-heslo-1";
     public const string AdminLogin = "spravce";
     public const string AdminPassword = "spravce-heslo-1";
 
-    private readonly string _dbPath = Path.Combine(
-        Path.GetTempPath(),
-        $"demizon-auth-{Guid.NewGuid():N}.sqlite");
+    private readonly string _dbPath = TestHostEnvironment.NewDatabasePath("auth");
     private readonly object _seedGate = new();
     private bool _seeded;
 
@@ -34,13 +32,10 @@ public sealed class AuthApiFactory : WebApplicationFactory<Program>
 
     public AuthApiFactory()
     {
-        Environment.SetEnvironmentVariable("ConnectionStrings__Default", $"Data Source={_dbPath}");
-        Environment.SetEnvironmentVariable("Jwt__SecretKey", JwtSecret);
-        Environment.SetEnvironmentVariable("Vapid__PublicKey", "test-vapid-public");
-        Environment.SetEnvironmentVariable("Vapid__PrivateKey", "test-vapid-private");
-        Environment.SetEnvironmentVariable("Vapid__Subject", "mailto:test@demizon.test");
-        Environment.SetEnvironmentVariable("RateLimiting__AuthPermitLimit", "10000");
-        Environment.SetEnvironmentVariable("AllowedHosts", "*");
+        TestHostEnvironment.Apply(_dbPath);
+        // Host se staví hned, dokud env proměnné ukazují na _dbPath — viz
+        // komentář v TestHostEnvironment. Jinak by ho mohla přebít jiná fixture.
+        _ = Server;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -99,10 +94,6 @@ public sealed class AuthApiFactory : WebApplicationFactory<Program>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        foreach (var path in new[] { _dbPath, _dbPath + "-wal", _dbPath + "-shm" })
-        {
-            try { System.IO.File.Delete(path); }
-            catch (IOException) { /* still locked on some hosts; temp will GC */ }
-        }
+        TestHostEnvironment.DeleteDatabase(_dbPath);
     }
 }

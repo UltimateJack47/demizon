@@ -197,6 +197,3 @@ public class AuthApiTests : IAsyncLifetime
         return body;
     }
 }
-
-[CollectionDefinition("WebHost")]
-public sealed class WebHostCollection : ICollectionFixture<AuthApiFactory>;
