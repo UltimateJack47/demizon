@@ -5,7 +5,7 @@ riderModule.iml
 /_ReSharper.Caches/
 /.idea
 /Demizon.Mvc/appsettings.Local.json
-/Demizon.slnx.DotSettings.user
+*.DotSettings.user
 /Demizon.slnx.DotSettings
 /Demizon.Mvc/files
 
