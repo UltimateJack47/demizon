@@ -139,6 +139,17 @@ public class ModelAndMigrationsTests : IAsyncDisposable
     }
 
     [Fact]
+    public void AuditLog_ma_index_na_Timestamp()
+    {
+        using var db = _fixture.NewContext();
+        var entityType = db.Model.FindEntityType(typeof(AuditLog));
+
+        Assert.NotNull(entityType);
+        Assert.Contains(entityType.GetIndexes(),
+            i => i.Properties.Count == 1 && i.Properties[0].Name == nameof(AuditLog.Timestamp));
+    }
+
+    [Fact]
     public async Task Globalni_filtr_soft_delete_je_na_modelu_Member()
     {
         await using var db = _fixture.NewContext();

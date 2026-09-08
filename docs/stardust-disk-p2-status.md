@@ -1,6 +1,6 @@
 # Stardust Priority 2 — disk (status)
 
-**Updated:** 2026-09-05 (PT)
+**Updated:** 2026-09-08
 
 ## Done on `feat/stardust-disk-optimization`
 
@@ -11,7 +11,7 @@
 5. **Upload quotas** — `UploadSettings` MaxFileBytes 25MB, MaxTotalStorageBytes 2GB, MaxFileCount 2000; `StorageQuotaService` + gates in `FileService` / `FileUploadService`; UI: ListPhotos + MemberForm + Dance `Detail.razor` use `MaxFileBytes`.
 6. **DatabaseController** — Admin role + try/finally for `/tmp` ZIP.
 7. **Docker** — `.dockerignore` expanded; redundant `dotnet build` removed; `docker-entrypoint.sh` deleted.
-8. **Tests** — `RefreshToken_se_neaudituje` expects empty audit.
+8. **Tests** — audit whitelist (RefreshToken/File/DeviceToken/SentNotification), storage quotas, purge job, `auto_vacuum=INCREMENTAL` on new DB, `AuditLog.Timestamp` index.
 9. **Docs** — `docs/hosting-optimization-plan.md` Priority 2 checkboxes synced (2026-09-05).
 
 ## Leftover / follow-ups
@@ -20,6 +20,5 @@
 - Circuit RSS measurement (Priority 2 non-disk leftover from plan).
 - Priority 3 hygiene (dead code, VAPID rotation, sqlite in git, ReadyToRun, Railway leftovers, DataProtection keys, MudBlazor visual QA).
 - Deferred deploy decisions (domain/HTTPS/OAuth).
-- Run `dotnet test` locally (no clone/VM in this agent).
 
 See also: `docs/hosting-optimization-plan.md`.

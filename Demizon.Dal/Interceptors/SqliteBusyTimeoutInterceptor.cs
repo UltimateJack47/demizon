@@ -32,7 +32,7 @@ public class SqliteBusyTimeoutInterceptor : DbConnectionInterceptor
     /// one-time <c>VACUUM</c> rewrites the file. That VACUUM temporarily needs ~2× the
     /// DB size free on disk — do it offline / with enough headroom, e.g.:
     /// <code>sqlite3 /data/demizon.sqlite "PRAGMA auto_vacuum=INCREMENTAL; VACUUM;"</code>
-    /// After that, <c>PRAGMA incremental_vacuum(N)</c> (see DiskMaintenanceHostedService)
+    /// After that, <c>PRAGMA incremental_vacuum(N)</c> (see DiskMaintenanceService)
     /// can reclaim free pages without a full rewrite.
     /// </summary>
     private static readonly string PragmaBatch =

@@ -36,6 +36,7 @@ public static class CoreServicesRegistrationExtension
         services.AddTransient<IFileService, FileService>();
         services.AddTransient<IFileUploadService, FileUploadService>();
         services.AddScoped<IStorageQuotaService, StorageQuotaService>();
+        services.AddScoped<IDiskMaintenanceService, DiskMaintenanceService>();
         services.AddTransient<IVideoLinkService, VideoLinkService>();
         services.AddTransient<IDanceService, DanceService>();
         services.AddTransient<IAttendanceService, AttendanceService>();
