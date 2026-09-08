@@ -4,7 +4,14 @@ const fs = require('fs');
 const { pathToFileURL } = require('url');
 const { execFileSync } = require('child_process');
 const dir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-const BAKED = "C:\\Users\\Jack\\AppData\\Roaming\\npm\\node_modules\\@nanonets\\graft\\dist\\claude";
+// Cheapest candidate: the npm global prefix derived from the environment, so no
+// developer's home path is baked into the repo. Null when unknown; best() skips it.
+const BAKED = process.env.GRAFT_CLAUDE_DIR || (() => {
+  const prefix = process.platform === 'win32'
+    ? (process.env.APPDATA && path.join(process.env.APPDATA, 'npm'))
+    : path.join(path.dirname(process.execPath), '..', 'lib');
+  return prefix ? path.join(prefix, 'node_modules', '@nanonets', 'graft', 'dist', 'claude') : null;
+})();
 
 // The dist/claude dir of @nanonets/graft resolved from a base whose node_modules is searched.
 function fromPkg(base) {
