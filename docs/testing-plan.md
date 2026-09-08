@@ -19,7 +19,7 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 
 | Projekt | Co testuje | Rychlost |
 |---|---|---|
-| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result` | ~3 s / 76 testů |
+| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result`, JWT, HTTP auth přes `WebApplicationFactory` | ~10 s / 96 testů |
 | `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 155 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
@@ -52,7 +52,7 @@ dotnet test Demizon.Tests.Unit            # jen rychlá logika
 
 ## Nalezené chyby
 
-Tři chyby, které testy odhalily a které nešly vidět čtením kódu ani buildem.
+Chyby, které testy odhalily a které nešly vidět čtením kódu ani buildem.
 
 ### ✅ 1. Obrazový pipeline zužoval fotky na výšku a zvětšoval malé
 
@@ -97,6 +97,32 @@ Entita načtená z DB se proto auditovala jako `"MemberProxy"`, ale nově vlože
 `"Member"` — v audit tabulce se nedalo filtrovat podle typu.
 
 **Oprava:** `entry.Metadata.ClrType.Name` (typ z EF modelu, ne runtime typ instance).
+
+### ✅ 4. `TokenResponse.MemberId` se nikdy neplnilo
+
+Kontrakt má `MemberId`, Flutter i MAUI ho ukládají (`if (response.MemberId != 0)`),
+ale `AuthController.Token`/`Refresh` ho do odpovědi nepředávaly — vždy tedy 0.
+Mobilní klient po přihlášení neměl member id a admin-za-člena endpointy v Flutteru
+by šly s prázdným id.
+
+**Oprava:** do `TokenResponse` se předává `member.Id`. Hlídá `AuthApiTests`.
+
+### ✅ 5. Admin API endpointy vyžadovaly cookie místo JWT
+
+`EventsController` a `VideosController` mají na třídě `[Authorize(AuthenticationSchemes = JwtBearer)]`,
+ale mutující akce měly jen `[Authorize(Roles = "Admin")]`. Druhý atribut bere výchozí
+schéma (cookie). JWT admin z Flutteru by na DELETE/PUT dostal 401. Dva notify endpointy
+už JwtBearer měly — tyhle ne.
+
+**Oprava:** všechny admin akce na těch controllerech mají explicitně JwtBearer + Admin.
+Hlídá `AuthApiTests.Admin_endpoint_*`.
+
+### ✅ 6. Seed endpoint hashoval jiné heslo, než vracel
+
+`DatabaseController.SeedDatabase` hashoval `"testpass"`, ale v JSON odpovědi posílal
+`password = "admin123"`. První přihlášení po seedu by tedy nikdy neprošlo.
+
+**Oprava:** hashuje se `admin123`, stejně jako v odpovědi.
 
 ---
 
@@ -254,7 +280,7 @@ Zbylé tři nálezy kola 6:
 
 ## Pokrytí
 
-### `Demizon.Tests.Unit` (76)
+### `Demizon.Tests.Unit` (96)
 
 | Soubor | Co hlídá |
 |---|---|
@@ -263,6 +289,9 @@ Zbylé tři nálezy kola 6:
 | `ContractMappingExtensionsTests` | Hranice kontraktu — všechna pole DTO, lowercase stav docházky, filtrování neviditelných videí, neprosakování `PasswordHash` do profilu |
 | `AttendanceStatusContractTests` | `"yes"/"maybe"/"no"`, case-insensitivita, fallback na `No`, a hlavně že serializace a parsování jsou navzájem inverzní |
 | `ResultTests` | `Ok`/`Fail` semantika, `Ok(null)` jako platný úspěch |
+| `TokenServiceTests` | JWT nese login, roli a `PrimarySid`; validace odmítne cizí klíč, issuer i expirovaný token |
+| `ClaimsPrincipalExtensionsTests` | `GetMemberId` čte `PrimarySid` a bez claimu hodí |
+| `AuthApiTests` | HTTP login/refresh, soft-delete a externista, `TokenResponse.MemberId`, 401 bez JWT, 403/404 na admin endpointu, profil bez `passwordHash` |
 
 ### `Demizon.Tests.Integration` (155)
 
@@ -322,11 +351,12 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
       `IAttendanceService.CreateOrUpdateAsync` vrátit uloženou entitu (nebo klíč),
       což je změna kontraktu — proto mimo rozsah PR s optimalizací.
       Chce test na celý cyklus: vytvoření docházky → uložení ID → smazání události.
-- [ ] **CI workflow** — `dotnet test Demizon.Backend.slnf` na každý push.
-      Navázat na `build.yml` z *hosting-optimization-plan.md* (zatím nezaložený).
-- [ ] **Testy controllerů** přes `WebApplicationFactory` — autorizace endpointů
-      (`/api/database/info` je `Roles = "Admin"`; backup ZIP endpoint je pryč),
-      mapování status kódů, rate limiting na `/api/auth/token`.
+- [x] **CI workflow** — `.github/workflows/test.yml` spouští
+      `dotnet test Demizon.Backend.slnf` na push/PR. Docker build/deploy dál čeká
+      na rozhodnutí o registry (viz *hosting-optimization-plan.md*).
+- [x] **Testy auth controllerů** přes `WebApplicationFactory` (`AuthApiTests`).
+      Zbývá rate limiting na `/api/auth/token` (v test hostu je limit zvednutý,
+      aby se suite nevešla do 5 req/min) a zbylé admin endpointy mimo events.
 - [ ] **bUnit na Razor komponenty** — hlavně po updatu MudBlazoru 9.3 → 9.9,
       který build projde, ale vizuální změny nezachytí.
 - [ ] **`GoogleCalendarService`** — dnes netestovatelný, volá Google API přímo.
@@ -338,13 +368,10 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
       (24 Mpx → 69 MB RSS, 100 Mpx → 104 MB RSS). Automatizovat proti stropu 128 MB.
       Souvisí: strop alokátoru se nastavuje globálně v `AddCoreServices`, kterou unit
       testy nevolají, takže `AllocationLimitMegabytes = 128` zatím není pokrytý vůbec.
-- [ ] **Odlehčit referenci `Demizon.Tests.Unit → Demizon.Mvc`.** Je tam kvůli
-      `ContractMappingExtensions` a `ParseStatus`, ale táhne s sebou celý web host
-      včetně `appsettings.*.json` a `demizon.sqlite` do test outputu (`bin/` je
-      v gitignore, takže nic neuniká — jen je to zbytečná zátěž). Vyřeší se buď
-      přesunem těchto testů do budoucího `Demizon.Tests.Web`, nebo tím, že
-      `demizon.sqlite` přestane být commitnutý a kopírovaný (Priorita 3
-      v *hosting-optimization-plan.md*).
+- [ ] **Oddělit HTTP testy od čisté logiky.** `Demizon.Tests.Unit` teď referencuje
+      `Demizon.Mvc` kvůli `ParseStatus`, mapování *a* `WebApplicationFactory`.
+      Táhne to web host do outputu. Až bude `Demizon.Tests.Web`, `AuthApiTests`
+      sem patří; zbytek unitů by Mvc tahat nemusel.
 
 ## Konvence
 

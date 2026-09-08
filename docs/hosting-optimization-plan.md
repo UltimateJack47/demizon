@@ -204,8 +204,8 @@ ale s příštím major updatem by se to rozpadlo.
 ### ✅ 5. Priorita 1 — paměť (částečně)
 
 - [x] **Blazor Server circuity.** `Program.cs` — `AddServerSideBlazor` nakonfigurováno na
-      `DisconnectedCircuitMaxRetained = 10` a `DisconnectedCircuitRetentionPeriod = 1 min`
-      (default bylo 100 okruhů × 3 min). `DetailedErrors` jen ve vývoji.
+      `DisconnectedCircuitMaxRetained = 30` a `DisconnectedCircuitRetentionPeriod = 3 min`
+      (default bylo 100 okruhů × 3 min; před měřením 10 × 1 min). `DetailedErrors` jen ve vývoji.
 - [x] **Workstation GC** v `Demizon.Mvc.csproj` — `ServerGarbageCollection=false`,
       `ConcurrentGarbageCollection=false`.
 - [x] **SQLite pragmas** (předsunuto z Priority 2, protože nahrazuje zablokovaný
@@ -218,28 +218,33 @@ ale s příštím major updatem by se to rozpadlo.
 Dvě hodnoty z bodu 5 vypadají jako řešení, ale při bližším pohledu jimi nejsou.
 Obojí je kompromis nad paměťovým budgetem, ne chyba.
 
-> **Rozhodnutí:** obě hodnoty **zůstávají jak jsou**. U okruhů proto, že ladit je bez
-> měření by znamenalo vyměnit jeden odhad za druhý — viz nový úkol v Prioritě 2.
-> U WAL pragem proto, že `journal_size_limit` je neškodná pojistka a častější menší
-> checkpointy mají větší šanci proklouznout mezi čtenáři; jen se přestávají vydávat
-> za vyřešený problém.
+> **Rozhodnutí 2026-09-08:** okruhy **30 × 3 min**. WAL pragmy beze změny
+> (`journal_size_limit` je neškodná pojistka; častější menší checkpointy mají
+> větší šanci proklouznout mezi čtenáři, ale bez dalšího měření se s nimi nehýbe).
 
-**a) `DisconnectedCircuitMaxRetained = 10` je pravděpodobně příliš málo.**
+**a) `DisconnectedCircuitMaxRetained` naměřeno a zvednuto na 30 × 3 min.**
 Protože `_Host.cshtml` dává circuit i anonymnímu návštěvníkovi (viz blok níže), padají
-veřejné návštěvy a přihlášení adminové do **stejného** poolu. Pár náhodných návštěv
-veřejné stránky tedy vytlačí adminův odpojený okruh během sekund, a s retencí 1 minuta
-stačí, aby adminovi zhasla obrazovka telefonu nad rozepsaným formulářem docházky
-a po návratu dostal „reconnection failed“ a přišel o rozepsaná data.
+veřejné návštěvy a přihlášení adminové do **stejného** poolu. Původních 10 × 1 min
+vytlačilo adminův odpojený okruh během sekund.
 
-| Varianta | Paměť navíc (odhad 1–3 MB/okruh) | Riziko ztráty rozepsané práce |
+Naměřeno 2026-09-08 v `demizon-mvc:rss-test` s `--memory=768m`:
+
+| Stav | VmRSS |
+|---|---:|
+| po `/health` (žádný Blazor) | **159 MB** |
+| první GET `/` (studený Razor/JIT) | + ~9 MB |
+| další GET `/` (prerender, bez SignalR) | **+ ~0,7 MB** / request |
+
+Živý SignalR okruh s MudBlazorem je nad tou prerender hodnotou. I při 2 MB na okruh
+je 30 × 3 min ~60 MB — proti 768 MB limitu a 159 MB idle to sedí. Default 100 × 3 min
+by pořád byl zbytečně velkorysý. Skutečné řešení zůstává per-page render mode,
+který anonymní provoz z poolu odstraní úplně.
+
+| Varianta | Paměť navíc | Riziko ztráty rozepsané práce |
 |---|---:|---|
-| dnes: 10 × 1 min | ~10–30 MB | vysoké |
-| 30 × 1 min | ~30–90 MB | střední |
-| 30 × 3 min (default retence) | ~30–90 MB, drženo 3× dél | nízké |
-| default: 100 × 3 min | ~100–300 MB | nízké, ale na 1 GB nereálné |
-
-Odhad na okruh je nutné **naměřit**, ne hádat. Skutečné řešení je per-page render mode,
-který anonymní provoz z poolu odstraní úplně — do té doby je to volba mezi RAM a UX.
+| 10 × 1 min (před měřením) | ~7–20 MB | vysoké |
+| **dnes: 30 × 3 min** | ~20–60 MB | nízké |
+| default: 100 × 3 min | ~70–200 MB | nízké, ale na 1 GB zbytečné |
 
 **b) `wal_autocheckpoint=512` a `journal_size_limit=32 MB` spolu WAL neomezí.**
 Ověřeno na reálné DB: `page_size = 4096`, takže 512 stránek = **2 MB**. Autocheckpoint
@@ -297,13 +302,11 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
 > Aktualizace 2026-09-05: Priority 2 implementace v PR #5 (`feat/stardust-disk-optimization`).
 > Zůstává: naměření RSS okruhů; jednorázový ops `VACUUM` při nasazení.
 
-- [ ] **Naměřit skutečnou paměť na jeden odpojený Blazor okruh** a podle toho nastavit
-      `DisconnectedCircuitMaxRetained`. Dnešní hodnota 10 je zvolená konzervativně,
-      odhad 1–3 MB/okruh je nepodložený. Bez měření je volba mezi RAM a rizikem, že
-      admin přijde o rozepsaný formulář docházky, jen výměna jednoho odhadu za druhý.
-      Postup: v kontejneru s `--memory=768m` otevřít N okruhů, odpojit je a odečíst
-      RSS před a po. Skutečné řešení zůstává per-page render mode, který anonymní
-      provoz z poolu odstraní úplně.
+- [x] **Naměřit skutečnou paměť na jeden odpojený Blazor okruh** — 2026-09-08
+      v kontejneru `--memory=768m`. Idle VmRSS po `/health` 159 MB; prerender GET `/`
+      ~0,7 MB po zahřátí. Nastaveno `DisconnectedCircuitMaxRetained = 30` /
+      `DisconnectedCircuitRetentionPeriod = 3 min`. Per-page render mode (anonymní
+      provoz bez okruhu) zůstává architektonická změna, viz blok níž.
 - [x] **Purge job** pro `AuditLog` (retence 90 dní), `RefreshTokens` (revokované + expirované),
       `SentNotifications` (180 dní). Nejlépe do `UnifiedNotificationService.RunCheckAsync`,
       která už běží 1×/hod.
@@ -340,9 +343,19 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
       >
       > Zbývá 7 ze 42 endpointů v `Demizon.Maui/Services/IApiClient.cs` — neřešeno záměrně,
       > `Demizon.Maui` je nahrazován Flutter klientem a `.dockerignore` ho z image vylučuje.
-- [ ] **VAPID privátní klíč je commitnutý v gitu** (`appsettings.Production.json:17`).
-      Vygenerovat nové klíče a předávat přes proměnné prostředí. **Vyžaduje ruční krok** —
-      nové klíče musí vzniknout mimo repozitář a uložit se do secrets.
+- [ ] **VAPID klíče vygenerovat až při nasazení, mimo repozitář.** Dnes jsou
+      v `appsettings.Production.json:15-18` včetně privátního. Repozitář je privátní
+      a appka není v produkci, takže **o leak nejde** — ty klíče nikdy nic nechránily,
+      protože žádný prohlížeč na nich není přihlášený k odběru.
+      Nasazovací krok je tedy jednoduchý: vygenerovat nový pár, předat ho jako
+      `Vapid__PublicKey` / `Vapid__PrivateKey` / `Vapid__Subject` a ty ze
+      `appsettings.Production.json` vymazat. Historii kvůli nim není třeba přepisovat —
+      dnešní hodnoty se nikdy nedostanou do provozu.
+      > Proč vůbec mimo repo: VAPID privátní klíč je identita serveru vůči push službě.
+      > Kdo ho má, může posílat push notifikace tvým odběratelům. Jakmile jednou
+      > vznikne produkční pár, který si prohlížeče uloží, jeho rotace odhlásí všechny
+      > odběratele — proto se ten správný pár má vytvořit jednou, při nasazení, a od
+      > začátku žít v secrets, ne v souboru pod verzí.
 - [x] **`demizon.sqlite` odtrackován** (`git rm --cached`), přidán do `.gitignore` a z
       `Demizon.Mvc.csproj` odstraněn blok `CopyToOutputDirectory=Always`.
       Kopie do outputu byla čistá zátěž: lokálně jde `Data Source=demizon.sqlite` proti
@@ -380,9 +393,9 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
       `{"status":"Healthy","checks":[{"name":"database","status":"Healthy"}]}`, takže
       SQLite přes nativní knihovnu reálně jede; veřejná homepage vrátila HTTP 200
       (29,7 kB). `/data` obsahuje `demizon.sqlite` + WAL a adresář `keys/` s vygenerovaným
-      DataProtection klíčem. **RSS v klidu po jednom anonymním načtení stránky: 81 MB
-      z 768 MB.** To je zatím nejbližší reálné číslo k paměťovému budgetu, ale *není*
-      to měření okruhu — na to je pořád potřeba otevřít a odpojit N okruhů (viz Priorita 2).
+      DataProtection klíčem. **VmRSS po `/health`: 159 MB.** (docker stats na Windows
+      ukazuje nižší číslo — cgroup vs. procesový RSS; pro budget bereme VmRSS.)
+      Měření okruhu viz Priorita 2.
 
       **`PublishReadyToRun` záměrně nezapnuto.** Vrátil by 26 MB z ušetřených 32 (+87 %
       proti RID variantě), protože předkompiluje i EF Core, MudBlazor a ImageSharp, ne jen
@@ -393,6 +406,11 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
       Byl to mrtvý kód se zubem: aktivoval se jen v produkci při nastavené `DATABASE_URL`
       a tichým přepsáním `ConnectionStrings:Default` na Postgres syntaxi by shodil SQLite
       připojení. Probe `/data` zkrácen na 5 s, WAL retry na 3×1 s (2026-09-08).
+- [x] **Env proměnné po json souborech.** `Program.cs` po `AddJsonFile` volá
+      `AddEnvironmentVariables()`, jinak by `-e AllowedHosts` / `ConnectionStrings__Default`
+      z `docker run` přebily tři json soubory nahrané *po* výchozím host builderu.
+      Ověřeno: `http://127.0.0.1/health` proti `AllowedHosts=localhost` vrací 400;
+      `http://localhost/health` 200. Recept níž proto používá hostname z `-e`.
 - [x] **DataProtection klíče** — `PersistKeysToFileSystem` (`/data/keys` v produkci,
       `dp-keys/` lokálně, gitignore). Bez toho každý restart shodil auth cookies.
 - [ ] **Otestovat MudBlazor 9.9.0 vizuálně** — build projde, ale změny vzhledu build nezachytí.
@@ -473,14 +491,15 @@ vychází ~400 buildů měsíčně zdarma. Pro tenhle projekt bohatě stačí.
 
 **Navržený tvar:**
 
-1. **`build.yml`** — trigger `push` do `master`. Nejdřív `dotnet test Demizon.Backend.slnf`
-   (231 testů, ~6 s), pak Docker image do registry se dvěma tagy: `latest` a `sha-<commit>`.
-   Pozor: **`Demizon.slnx` v CI stavět nelze**, `Demizon.Maui` vyžaduje workload
-   `maui-android` — proto solution filter.
-2. **`deploy.yml`** — trigger `workflow_dispatch` (ruční spuštění) nebo `release`.
+1. **`test.yml`** — ✅ založeno. Trigger `push`/`pull_request` na `master`,
+   `dotnet test Demizon.Backend.slnf` (251 testů). **`Demizon.slnx` v CI stavět nelze**,
+   `Demizon.Maui` vyžaduje workload `maui-android` — proto solution filter.
+2. **`build.yml`** — ještě ne. Po testech Docker image do registry se dvěma tagy:
+   `latest` a `sha-<commit>`. Čeká na rozhodnutí o registry.
+3. **`deploy.yml`** — trigger `workflow_dispatch` (ruční spuštění) nebo `release`.
    Přes SSH na server udělá `docker pull` + restart kontejneru + `docker image prune -f`.
 
-Rozdělení na dva workflow je záměrné: build po každém pushi, nasazení jen když to chceš.
+Testy běží na každý push. Image a nasazení až po rozhodnutí o registry / doméně.
 
 **Registry:** dnes se používá Docker Hub (`jackeq/demizon-mvc`). Free plán tam dává
 1 privátní repozitář, což stačí. Alternativa GHCR (`ghcr.io`) je těsněji integrovaná
@@ -493,4 +512,4 @@ staré tagy.
 SSH klíč na server, VAPID klíče, Firebase service account, Google OAuth. Do image nepatří
 nic z toho — všechno se předá jako `-e` při `docker run`.
 
-⚠️ Zatím **nezaloženo**, čeká na rozhodnutí o doméně a registry.
+⚠️ `test.yml` běží. `build.yml` / `deploy.yml` čekají na rozhodnutí o doméně a registry.
