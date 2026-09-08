@@ -1,7 +1,7 @@
 # Stav po diskové optimalizaci a další vlna
 
 > **Živý dokument.** Průběžně aktualizovat při každé dokončené položce.
-> Založeno: 2026-09-08. Poslední aktualizace: 2026-09-08.
+> Založeno: 2026-09-08. Poslední aktualizace: 2026-09-09.
 >
 > Účel: předat kontext další session (Claude / kdokoli) — co je hotové, na co
 > nesahej, co zbývá a v jakém pořadí. Disková vlna na Scaleway Stardust je
@@ -43,7 +43,15 @@ Poslední prompt před pádem Claude session (limit):
 
 Před nimi poslední diskový commit: `077dff4 docs(disk): record image smoke test and the required Jwt__SecretKey`.
 
-Testy v okamžiku push: **96 unit + 155 integration = 251**, vše zelené.
+### Druhá vlna (2026-09-09) — vlna A a C z tohoto plánu
+
+```
+1e1f6c9 fix(security): gate the seed endpoint behind a bootstrap token
+b00b2f7 fix(attendance): stop orphaning Google Calendar events on new attendance
+89d1a44 test(dal): pin what the soft-delete filter does to required relations
+```
+
+Testy: **106 unit + 162 integration = 268**, vše zelené.
 CI: [`.github/workflows/test.yml`](../.github/workflows/test.yml) — `dotnet test Demizon.Backend.slnf` na push/PR.
 
 ---
@@ -157,14 +165,21 @@ Zablokované na vlastní průchod, ne na tuhle vlnu:
 
 ### A. Než poleze na veřejnou IP
 
-- [ ] **`POST /api/database/seed` vypnout nebo zamknout.** Je `[AllowAnonymous]`,
-      po úspěchu vrátí login `jack` / heslo `admin123`. Podmínka „jen prázdná DB“
-      nestačí: první request na čistý volume založí admina, kterého zná kdokoli
-      s portem. Buď smazat, nebo vázat na jednorázový env flag, který po seedu
-      zmizí. Popis, jak vznikne první admin (ručně / skript), patří k nasazení.
-- [ ] **Záloha `/data`.** Fotky jsou BLOB v SQLite, endpoint `GET /api/database/backup`
-      je pryč. Bez snapshotu volume na Scalewayu (ideálně i kopie pryč ze stroje)
-      je jeden mrtvý disk = konec dat. Napsat konkrétní job, ne větu „řeší infrastruktura“.
+- [x] **`POST /api/database/seed` zamčený** (`1e1f6c9`). Tři pojistky: bez
+      `Bootstrap__SeedToken` vrací 404, špatná hlavička `X-Seed-Token` 401
+      (porovnání v konstantním čase), jakýkoli existující člen včetně
+      soft-smazaného 409 — endpoint se tím po prvním úspěchu sám vypne.
+      Login i heslo se posílají v requestu, v kódu není žádné výchozí heslo a
+      v odpovědi se nevrací. Postup „jak vznikne první admin“ je
+      v [`hosting-optimization-plan.md`](hosting-optimization-plan.md).
+      Hlídá `SeedEndpointTests` (10 testů; bez pojistek padne 5 z nich).
+- [x] **Záloha `/data`** — [`ops/backup-demizon.sh`](../ops/backup-demizon.sh).
+      `sqlite3 ".backup"` (online backup API, konzistentní i za běhu — `cp` nad WAL
+      není), `integrity_check` nad kopií, gzip, `keys/` do samostatného archivu,
+      retence 3 dny lokálně (na 10 GB disku se s 2GB kvótou víc nevejde) a
+      `rclone copy` mimo stroj. Cron i postup obnovy včetně **smazání starého
+      WAL/SHM** jsou v hosting plánu. Ověřeno v Alpine kontejneru: záloha,
+      `integrity_check ok`, obnova s kompletními daty.
 - [ ] **VAPID klíče až při nasazení.** Vygenerovat nový pár, předat
       `Vapid__PublicKey` / `Vapid__PrivateKey` / `Vapid__Subject`, z
       `appsettings.Production.json` vymazat. Historii git kvůli nim nepřepisovat —
@@ -174,11 +189,15 @@ Zablokované na vlastní průchod, ne na tuhle vlnu:
       Recept je v hosting plánu.
 - [ ] **Jednorázový plný `VACUUM`** na produkční SQLite (chce ~2× volného místa).
       Periodický `incremental_vacuum` už běží.
-- [ ] **EF globální filtr `Member.DeletedAt` vs. required relace.** Varování při
-      startu: `Attendance`, `RefreshToken`, `DeviceToken`, `PushSubscription`.
-      INNER JOIN umí po soft-delete „ztratit“ řádky. Matching filtry nebo
-      optional navigace. (Stejný druh díry, jakou kdysi měl Include přes
-      smazanou entitu.)
+- [x] **EF globální filtr `Member.DeletedAt` vs. required relace** — prošetřeno
+      (`89d1a44`), **model se záměrně nemění**. `Include(a => a.Member)` opravdu
+      zahazuje docházku soft-smazaného člena, ale všechna čtyři místa to tak chtějí:
+      seznamy účastníků smazaného člena zobrazovat nemají a synchronizace kalendáře
+      mu do kalendáře psát nemá. Navíc všechna čtyři sahají na `a.Member.Neco` bez
+      kontroly na null, takže INNER JOIN je to, co je drží před `NullReferenceException`
+      — matching filtry nebo optional navigace by buď změnily obsah seznamů, nebo
+      zavedly NRE. `SoftDeleteRelationTests` chování zamyká: kdyby ho EF upgrade
+      přepnul na LEFT JOIN, test zčervená a ukáže na ta čtyři místa.
 
 `demizon.sqlite` je odtrackovaný, blob s hashi 3 členů v git historii zůstává.
 U privátního repa to nehoří; `git filter-repo` jen kdyby repo šlo ven.
@@ -212,13 +231,15 @@ Až tohle pojede:
 
 ### C. Backend díry, které ublíží až v provozu
 
-- [ ] **Osiřelé události v Google Calendaru u nové docházky.**
-      `MemberAttendance.razor.cs`: `model.Id = attendanceResult.Id` je no-op
-      (stejná instance), `ToEntity()` vyrábí novou entitu, klíč se do view modelu
-      nedostane. U create zůstane `model.Id == 0`, sync nenapíše Google event ID,
-      pozdější „nepřijdu“ událost nesmaže. Oprava: `CreateOrUpdateAsync` musí
-      vrátit uloženou entitu nebo klíč. Test: vytvořit → uložit ID → smazat.
-      Podrobnosti v [`testing-plan.md`](testing-plan.md).
+- [x] **Osiřelé události v Google Calendaru u nové docházky** (`b00b2f7`).
+      Změna kontraktu služby nebyla potřeba: na vložené cestě je předaná entita ta
+      trackovaná, takže jí EF po `SaveChanges` dopíše klíč — stačí ji podržet
+      v proměnné a klíč přenést do `model.Id`. Ve stejném průchodu se přestaly
+      zahazovat dvě návratové hodnoty: nepodaří-li se ID události k docházce
+      zapsat, událost se z kalendáře hned zruší (nedohledatelná = nesmazatelná),
+      a nepodaří-li se po smazání vyprázdnit `GoogleEventId`, uživatel dostane
+      varování. Testy: `CreateOrUpdateAsync_vyplni_Id_na_predane_entite`,
+      `Nova_dochazka_umi_prijmout_a_pozdeji_zahodit_GoogleEventId`.
 - [ ] **Zahazované `bool` z Core služeb.** 12 metod (`CreateAsync`/`DeleteAsync`
       v Dance, Event, File, Member, VideoLink + Attendance create/update/delete)
       vrací `bool`, služby tracker uklidí, **volající výsledek ignorují** a hlásí
@@ -262,10 +283,14 @@ v [`hosting-optimization-plan.md`](hosting-optimization-plan.md). Po env overlay
 
 ## Doporučené pořadí na další 2–3 týdny
 
-1. Zavřít seed endpoint a napsat, jak vznikne první admin. **(A)**
-2. Flutter: Firebase + notifikace, ověřit docházku na fyzickém telefonu. **(B)**
-3. Opravit Google Calendar ID u create docházky. **(C)**
-4. Až bude jasná doména — Caddy, secrets, první `docker run` se snapshotem volume. **(D)**
+1. ~~Zavřít seed endpoint a napsat, jak vznikne první admin.~~ **hotovo (A)**
+2. ~~Opravit Google Calendar ID u create docházky.~~ **hotovo (C)**
+3. **Flutter: Firebase + notifikace, ověřit docházku na fyzickém telefonu. (B)**
+   — teď nejvyšší priorita a jediná věc, která se bez telefonu a Firebase konzole
+   udělat nedá, takže na ni nikdo jiný nenaskočí.
+4. Zahazované `bool` z Core služeb → `Result` / `Result<T>`. **(C)** Zbývá 12 metod
+   a ~20 volajících; je to jediná zbylá systémová díra v backendu.
+5. Až bude jasná doména — Caddy, secrets, první `docker run` se snapshotem volume. **(D)**
 
 Nezačínej další diskovou optimalizaci ani per-page render mode.
 

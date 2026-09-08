@@ -21,8 +21,8 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 
 | Projekt | Co testuje | Rychlost |
 |---|---|---|
-| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result`, JWT, HTTP auth přes `WebApplicationFactory` | ~10 s / 96 testů |
-| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 155 testů |
+| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result`, JWT, HTTP auth a bootstrap přes `WebApplicationFactory` | ~10 s / 106 testů |
+| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace, soft delete napříč relacemi | ~3 s / 162 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
 
@@ -125,6 +125,42 @@ Hlídá `AuthApiTests.Admin_endpoint_*`.
 `password = "admin123"`. První přihlášení po seedu by tedy nikdy neprošlo.
 
 **Oprava:** hashuje se `admin123`, stejně jako v odpovědi.
+
+> **Nahrazeno 2026-09-09.** Endpoint už žádné zadrátované heslo nemá — login
+> i heslo přicházejí v requestu, v odpovědi se heslo nevrací a celý endpoint je
+> zamčený za `Bootstrap:SeedToken`. Tím ta chyba přestala existovat i jako
+> možnost. Viz `SeedEndpointTests` a *hosting-optimization-plan.md*, sekce
+> „Jak vznikne první admin“.
+
+
+### ✅ 4. `[property: Required]` na záznamu shodí endpoint v .NET 10
+
+Nový `SeedAdminRequest` je `record` s validačními atributy. Napsané byly jako
+`[property: Required]`, což je zvyk z verzí, kde DataAnnotations atributy na
+pozičních parametrech ignorovaly. .NET 10 přidal validaci záznamů a trvá na
+opačném zápisu — atribut musí sedět **na parametru** primárního konstruktoru:
+
+```
+System.InvalidOperationException: Record type 'SeedAdminRequest' has validation
+metadata defined on property 'Email' that will be ignored. 'Email' is a parameter
+in the record primary constructor and validation metadata must be associated with
+the constructor parameter.
+```
+
+Výjimka vzniká při stavbě metadat akce, tedy **před** spuštěním kódu, takže
+každý request na endpoint skončil 500 — včetně těch, které měly vrátit 400 nebo
+404. Deset nových testů padlo naráz se stejným výsledkem, což bylo přesně to
+vodítko: kdyby šlo o chybu v logice, každý test by padl jinak.
+
+> **Poučení k diagnostice:** v `Development` **není** zaregistrovaný žádný
+> exception handler ani `UseDeveloperExceptionPage`, takže `WebApplicationFactory`
+> vrátí 500 s prázdným tělem a nic se nezaloguje. Kdo hledá příčinu, ať appku
+> spustí naostro (`dotnet run`) a přečte konzoli. Pomůcka
+> `SeedEndpointTests.AssertStatusAsync` proto při neshodě přiloží tělo odpovědi —
+> „expected 401, actual 500“ bez těla je jen hádání.
+>
+> A pozor: `dotnet run` bere URL z `launchSettings.json`, takže
+> `ASPNETCORE_URLS` se ignoruje.
 
 ---
 
@@ -294,11 +330,13 @@ Zbylé tři nálezy kola 6:
 | `TokenServiceTests` | JWT nese login, roli a `PrimarySid`; validace odmítne cizí klíč, issuer i expirovaný token |
 | `ClaimsPrincipalExtensionsTests` | `GetMemberId` čte `PrimarySid` a bez claimu hodí |
 | `AuthApiTests` | HTTP login/refresh, soft-delete a externista, `TokenResponse.MemberId`, 401 bez JWT, 403/404 na admin endpointu, profil bez `passwordHash` |
+| `SeedEndpointTests` | Bootstrap prvního admina: 404 bez `Bootstrap:SeedToken`, 401 na špatný i zkrácený `X-Seed-Token`, 400 na krátké heslo, 409 nad neprázdnou databází **i nad soft-smazaným členem**, heslo se nevrací v odpovědi |
 
 ### `Demizon.Tests.Integration` (155)
 
 | Soubor | Co hlídá |
 |---|---|
+| `SoftDeleteRelationTests` | `Include(a => a.Member)` zahazuje docházku soft-smazaného člena (EF varování 10622), stejný dotaz bez `Include` ji vrátí, `IgnoreQueryFilters` ji vrátí i s `Include`; refresh token smazaného člena se zastaví až o krok dál |
 | `RefreshTokenServiceTests` | Raw token nikdy v DB, jednorázovost (replay ochrana), expirace, revokace, rotace při novém tokenu, rozlišení tokenů se shodným prefixem, FK kaskáda |
 | `AuditInterceptorTests` | `Added`/`Modified`/`Deleted`, neprosakování `PasswordHash`, whitelist (`RefreshToken`/`File`/`DeviceToken`/`SentNotification`), audit neauditující sám sebe, regresní testy k chybám 2 a 3, **selhání dopsání klíčů** (přes `FailAuditFixupInterceptor`) a to že `ExecuteUpdate` audit obchází |
 | `MemberServiceTests` | Soft delete přes globální filtr, historie docházky přežije smazání, `UpdateAsync` nepřepíše Google tokeny, Connect/Disconnect kalendáře |
@@ -346,19 +384,38 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
       no-op: `AttendanceForm` binduje přímo na předaný objekt a vrací tutéž
       instanci, takže `attendanceResult` **je** `model`. A `ToEntity()` vyrábí novou
       entitu, na kterou klíč přiřadí databáze — do view modelu se nikdy nedostane.
-      U nové docházky tedy `model.Id` zůstane 0, podmínka
+      U nové docházky tedy `model.Id` zůstalo 0, podmínka
       `if (createdId is not null && model.Id != 0)` v `SyncGoogleCalendarAsync`
-      neprojde a ID vytvořené události se nikam nezapíše. Pozdější přepnutí na
-      „nepřijdu“ ji pak nemá čím smazat. Oprava znamená nechat
-      `IAttendanceService.CreateOrUpdateAsync` vrátit uloženou entitu (nebo klíč),
-      což je změna kontraktu — proto mimo rozsah PR s optimalizací.
-      Chce test na celý cyklus: vytvoření docházky → uložení ID → smazání události.
+      neprošla a ID vytvořené události se nikam nezapsalo. Pozdější přepnutí na
+      „nepřijdu“ ji pak nemělo čím smazat.
+      > **Opraveno 2026-09-09** a bez změny kontraktu služby, kterou tenhle
+      > odstavec předpokládal. Na vložené cestě je předaná entita ta, kterou EF
+      > trackuje, takže jí po `SaveChanges` dopíše vygenerovaný klíč — stačilo ji
+      > podržet v proměnné (`var entity = attendanceResult.ToEntity()`) a klíč
+      > z ní přenést do `model.Id`. Hlídá
+      > `CreateOrUpdateAsync_vyplni_Id_na_predane_entite` (a sesterský test, že
+      > se klíč po neúspěchu **nenastaví**, protože volající se rozhoduje podle
+      > `Id != 0`), celý cyklus pak
+      > `Nova_dochazka_umi_prijmout_a_pozdeji_zahodit_GoogleEventId`.
+      > Ve stejném průchodu se přestaly zahazovat dvě návratové hodnoty: když
+      > se ID události nepodaří k docházce zapsat, událost se z kalendáře hned
+      > zruší (nedohledatelná událost = nesmazatelná událost), a když se po
+      > smazání nepodaří vyprázdnit `GoogleEventId`, uživatel o tom dostane
+      > varování — jinak by příští „přijdu“ ochrana proti duplikátům umlčela.
 - [x] **CI workflow** — `.github/workflows/test.yml` spouští
       `dotnet test Demizon.Backend.slnf` na push/PR. Docker build/deploy dál čeká
       na rozhodnutí o registry (viz *hosting-optimization-plan.md*).
-- [x] **Testy auth controllerů** přes `WebApplicationFactory` (`AuthApiTests`).
+- [x] **Testy auth controllerů** přes `WebApplicationFactory` (`AuthApiTests`)
+      a bootstrap endpointu (`SeedEndpointTests`).
       Zbývá rate limiting na `/api/auth/token` (v test hostu je limit zvednutý,
       aby se suite nevešla do 5 req/min) a zbylé admin endpointy mimo events.
+      > `WebHostCollection` teď serializuje **všechny** třídy nad
+      > `WebApplicationFactory` a obě fixture si staví host už v konstruktoru.
+      > Hosty se konfigurují proměnnými prostředí **procesu** (`Program.cs` čte
+      > connection string dřív než `ConfigureWebHost`), takže líně postavený host
+      > by se trefil do databáze té fixture, která env nastavila jako poslední.
+      > Seed token se proto nastavuje přes `PostConfigure`, ne přes env — je to
+      > per-host, ne per-proces.
 - [ ] **bUnit na Razor komponenty** — hlavně po updatu MudBlazoru 9.3 → 9.9,
       který build projde, ale vizuální změny nezachytí.
 - [ ] **`GoogleCalendarService`** — dnes netestovatelný, volá Google API přímo.
