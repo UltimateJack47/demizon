@@ -295,7 +295,16 @@ public partial class MemberAttendance : ComponentBase
                 // Calendarem a vznikla by tam reálná událost pro docházku, která se
                 // neuložila — a nešla by už smazat, protože ID události se ukládá
                 // k docházkovému řádku, který neexistuje.
-                if (!await AttendanceService.CreateOrUpdateAsync(attendanceResult.ToEntity()))
+                //
+                // Entita se drží v proměnné: na vložené cestě je to instance, kterou
+                // EF trackuje, takže jí po uložení dopíše vygenerovaný klíč (hlídá
+                // AttendanceAndEventServiceTests.CreateOrUpdateAsync_vyplni_Id_na_predane_entite).
+                // Dřív se sem psalo model.Id = attendanceResult.Id, což byl no-op —
+                // attendanceResult JE model a ToEntity() vyrábí jinou entitu, na kterou
+                // klíč přiřadila databáze. U nové docházky tak model.Id zůstalo nulové
+                // a ID vytvořené události se nemělo kam zapsat.
+                var entity = attendanceResult.ToEntity();
+                if (!await AttendanceService.CreateOrUpdateAsync(entity))
                 {
                     Snackbar.Add("Docházku se nepodařilo uložit.", Severity.Error);
                     await RefreshViewAsync();
@@ -304,15 +313,7 @@ public partial class MemberAttendance : ComponentBase
 
                 Snackbar.Add("Docházka uložena.", Severity.Success);
                 statusAfterSave = attendanceResult.Status;
-
-                // POZOR, známá chyba (viz docs/testing-plan.md): u NOVÉ docházky
-                // zůstane model.Id nulové, takže osiřelá událost v kalendáři vzniká
-                // i na úspěšné cestě. attendanceResult je tatáž instance jako model,
-                // takže tenhle řádek je no-op, a ToEntity() navíc vyrábí novou entitu,
-                // na kterou databáze klíč přiřadí — do view modelu se nikdy nedostane.
-                // Opravit znamená nechat službu klíč vrátit, což je změna kontraktu
-                // mimo rozsah tohoto PR.
-                model.Id = attendanceResult.Id;
+                model.Id = entity.Id;
             }
             await RefreshViewAsync();
         }
@@ -363,12 +364,37 @@ public partial class MemberAttendance : ComponentBase
                 eventDateTo,
                 title);
 
-            if (createdId is not null && model.Id != 0)
+            if (createdId is null)
+                return;
+
+            var linked = false;
+            if (model.Id != 0)
             {
                 var attendance = await AttendanceService.GetOneAsync(model.Id);
                 attendance.GoogleEventId = createdId;
-                await AttendanceService.CreateOrUpdateAsync(attendance);
+                // Návratovou hodnotu je nutné kontrolovat: služba výjimku spolkne
+                // a vrátí false, takže bez kontroly by událost zůstala v kalendáři
+                // bez odkazu z docházky.
+                linked = await AttendanceService.CreateOrUpdateAsync(attendance);
             }
+
+            if (linked)
+            {
+                // Do view modelu taky, jinak by druhé uložení ve stejném zobrazení
+                // prošlo ochranou proti duplikátům a vytvořilo událost podruhé.
+                model.GoogleEventId = createdId;
+                return;
+            }
+
+            // ID události se nemá kam uložit, takže bychom ji už nikdy nedohledali.
+            // Radši ji hned zrušit než nechat v kalendáři natrvalo.
+            await GoogleCalendarService.DeleteEventAsync(
+                member.GoogleRefreshToken,
+                member.GoogleCalendarId,
+                createdId);
+            Snackbar.Add(
+                "Událost v Google Calendaru se nepodařilo propojit s docházkou, byla proto zrušena.",
+                Severity.Warning);
         }
         else if (!string.IsNullOrEmpty(previousGoogleEventId))
         {
@@ -383,7 +409,19 @@ public partial class MemberAttendance : ComponentBase
                 {
                     var attendance = await AttendanceService.GetOneAsync(model.Id);
                     attendance.GoogleEventId = null;
-                    await AttendanceService.CreateOrUpdateAsync(attendance);
+                    if (await AttendanceService.CreateOrUpdateAsync(attendance))
+                    {
+                        model.GoogleEventId = null;
+                    }
+                    else
+                    {
+                        // Událost už v kalendáři není, ale docházka si její ID drží.
+                        // Příští „přijdu“ by kvůli ochraně proti duplikátům novou
+                        // událost nevytvořilo, takže o tom musí uživatel vědět.
+                        Snackbar.Add(
+                            "Událost byla z kalendáře smazána, ale docházku se nepodařilo aktualizovat.",
+                            Severity.Warning);
+                    }
                 }
                 catch
                 {

@@ -96,6 +96,86 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
         Assert.False(await Attendances(db).CreateOrUpdateAsync(orphan));
     }
 
+    /// <summary>
+    /// Na vložené cestě je předaná entita ta trackovaná, takže jí EF po uložení
+    /// dopíše vygenerovaný klíč. Na tom stojí oprava osiřelých událostí v Google
+    /// Calendaru: <c>MemberAttendance.razor.cs</c> potřebuje ID nové docházky,
+    /// aby k ní mohl zapsat ID vytvořené události. Kdyby služba někdy začala
+    /// kopírovat do jiné instance, tenhle test to zachytí — jinak by se to
+    /// projevilo až neodstranitelnou událostí v cizím kalendáři.
+    /// </summary>
+    [Fact]
+    public async Task CreateOrUpdateAsync_vyplni_Id_na_predane_entite()
+    {
+        await using var db = _fixture.NewContext();
+        var member = await TestData.SeedMemberAsync(db);
+        var attendance = TestData.RehearsalAttendance(member.Id, Day(5, 1), AttendanceStatus.Yes);
+        Assert.Equal(0, attendance.Id);
+
+        Assert.True(await Attendances(db).CreateOrUpdateAsync(attendance));
+
+        Assert.NotEqual(0, attendance.Id);
+        await using var verify = _fixture.NewContext();
+        var stored = Assert.Single(await verify.Attendances.ToListAsync());
+        Assert.Equal(stored.Id, attendance.Id);
+    }
+
+    [Fact]
+    public async Task CreateOrUpdateAsync_nepresene_Id_pri_neuspechu()
+    {
+        await using var db = _fixture.NewContext();
+        var orphan = TestData.RehearsalAttendance(memberId: 99999, Day(5, 1), AttendanceStatus.Yes);
+
+        Assert.False(await Attendances(db).CreateOrUpdateAsync(orphan));
+
+        // Volající se rozhoduje podle Id != 0, takže po selhání tam nesmí
+        // zůstat klíč, který v databázi nic neoznačuje.
+        Assert.Equal(0, orphan.Id);
+    }
+
+    /// <summary>
+    /// Celý cyklus, který plán požaduje k osiřelým událostem: nová docházka →
+    /// klíč → dopsání <c>GoogleEventId</c> → přepnutí na „nepřijdu“ ho umí najít
+    /// a smazat. Dřív zůstalo <c>model.Id</c> nulové, ID události se nikam
+    /// nezapsalo a událost v kalendáři už nešlo odstranit.
+    /// </summary>
+    [Fact]
+    public async Task Nova_dochazka_umi_prijmout_a_pozdeji_zahodit_GoogleEventId()
+    {
+        await using var seed = _fixture.NewContext();
+        var member = await TestData.SeedMemberAsync(seed);
+
+        await using var db = _fixture.NewContext();
+        var service = Attendances(db);
+        var created = TestData.RehearsalAttendance(member.Id, Day(5, 1), AttendanceStatus.Yes);
+        Assert.True(await service.CreateOrUpdateAsync(created));
+        var attendanceId = created.Id;
+        Assert.NotEqual(0, attendanceId);
+
+        // Zápis ID události k existujícímu řádku docházky.
+        await using var writeBack = _fixture.NewContext();
+        var loaded = await Attendances(writeBack).GetOneAsync(attendanceId);
+        loaded.GoogleEventId = "google-event-abc";
+        Assert.True(await Attendances(writeBack).CreateOrUpdateAsync(loaded));
+
+        await using var verify = _fixture.NewContext();
+        Assert.Equal("google-event-abc",
+            (await verify.Attendances.SingleAsync(a => a.Id == attendanceId)).GoogleEventId);
+
+        // Přepnutí na „nepřijdu“: událost se maže a ID se zahazuje.
+        await using var clear = _fixture.NewContext();
+        var toClear = await Attendances(clear).GetOneAsync(attendanceId);
+        Assert.Equal("google-event-abc", toClear.GoogleEventId);
+        toClear.Status = AttendanceStatus.No;
+        toClear.GoogleEventId = null;
+        Assert.True(await Attendances(clear).CreateOrUpdateAsync(toClear));
+
+        await using var final = _fixture.NewContext();
+        var stored = await final.Attendances.SingleAsync(a => a.Id == attendanceId);
+        Assert.Null(stored.GoogleEventId);
+        Assert.Equal(AttendanceStatus.No, stored.Status);
+    }
+
     [Fact]
     public async Task GetOneAsync_neexistujici_dochazky_hodi_EntityNotFoundException()
     {
