@@ -1,7 +1,7 @@
 # Testovací strategie
 
 > **Živý dokument.** Průběžně aktualizovat při každé dokončené položce.
-> Založeno: 2026-09-02. Poslední aktualizace: 2026-09-08.
+> Založeno: 2026-09-02. Poslední aktualizace: 2026-09-09.
 >
 > Co dělat dál po auth testech a diskové vlně: [`next-wave-plan.md`](next-wave-plan.md).
 
@@ -21,8 +21,9 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 
 | Projekt | Co testuje | Rychlost |
 |---|---|---|
-| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result`, JWT, HTTP auth a bootstrap přes `WebApplicationFactory` | ~10 s / 106 testů |
-| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace, soft delete napříč relacemi | ~3 s / 162 testů |
+| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result`, JWT, HTTP auth, bootstrap a limity přes `WebApplicationFactory` | ~10 s / 112 testů |
+| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace, soft delete napříč relacemi | ~3 s / 163 testů |
+| `Demizon.Tests.E2E` | Skutečný prohlížeč nad **běžící aplikací** — cookie přihlášení, Blazor okruh, layout MudBlazoru | ~75 s / 48 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
 
@@ -41,8 +42,21 @@ v in-memory chová jinak.
 ### Jak spouštět
 
 ```bash
-dotnet test Demizon.Backend.slnf          # oba projekty
+dotnet test Demizon.Backend.slnf          # unit + integrační (rychlá brána)
 dotnet test Demizon.Tests.Unit            # jen rychlá logika
+dotnet test Demizon.E2E.slnf              # E2E v prohlížeči (chce Chromium)
+```
+
+**E2E má vlastní filtr záměrně.** `Demizon.Backend.slnf` tak zůstává bez
+závislosti na prohlížeči — kdo chce jen vědět, že logika drží, nemusí stahovat
+150 MB Chromia. V CI jsou to dvě úlohy; ta E2E si Chromium doinstaluje
+(`playwright.ps1 install --with-deps chromium`) a nahraje screenshoty jako
+artefakt běhu.
+
+Lokálně jednorázově:
+
+```bash
+pwsh Demizon.Tests.E2E/bin/Release/net10.0/playwright.ps1 install chromium
 ```
 
 > ⚠️ **`dotnet test Demizon.slnx` neprojde.** `Demizon.Maui` vyžaduje workload
@@ -349,6 +363,32 @@ Zbylé tři nálezy kola 6:
 | `DiskMaintenanceServiceTests` | purge AuditLog 90 dní, revokované i expirované refresh tokeny, SentNotifications 180 dní; netýká se členů ani souborů |
 | `FileBlobLoadingTests` | `GetOneAsync` / seznamy nenačtou BLOBy; `UpdateAsync` nemaže Data; `GetContentAsync` vrací jen požadovaný sloupec |
 
+### `Demizon.Tests.E2E` (48)
+
+Host se spouští jako **samostatný proces** na reálném Kestrelu, ne přes
+`WebApplicationFactory` — `TestServer` nemá otevřený socket, takže se na něj
+prohlížeč nemá jak připojit.
+
+| Soubor | Co hlídá |
+|---|---|
+| `AuthFlowTests` | Cookie přihlášení, které `AuthApiTests` (JWT) nepokrývají: form post na `/ProcessLogin`, redirect, `HttpOnly` cookie, nepřihlášený admin obsah nevidí, odhlášení přístup zavře |
+| `PublicPageTests` | 6 veřejných rout × (vykreslení bez chyby v konzoli + žádný vodorovný přesah); naběhnutí Blazor okruhu |
+| `AdminWalkthroughTests` | 9 admin stránek × (desktop + mobil 390 px), popisky buněk tabulek na mobilu, přítomnost MudBlazor providerů, otevření a zavření dialogu |
+| `MudBlazorLayoutTests` | Nulové rozměry interaktivních prvků, přetékání na 390 px |
+
+**Proč chyby v konzoli jako assertion:** v `Development` není zaregistrovaný
+žádný exception handler, takže selhání renderu v Blazoru se nikde jinde
+neprojeví — server vrátí 500 s prázdným tělem, nebo stránka jen přestane
+reagovat.
+
+**Proč ne pixelové porovnávání:** fonty se renderují jinak na jiném stroji
+i po aktualizaci prohlížeče, takže by baseline padala z důvodů, které
+s aplikací nesouvisejí. Screenshoty se ukládají do `e2e-artifacts/` jako
+artefakt k prohlédnutí. Vyplatilo se: dva ze tří vizuálních nálezů této vlny
+našel až pohled na obrázek, ne assertion (viz `quality-wave-plan.md`).
+
+---
+
 ### Nejcennější jednotlivý test
 
 `ModelAndMigrationsTests.Model_odpovida_poslednimu_snapshotu_migraci` — ostatní testy
@@ -416,8 +456,10 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
       > by se trefil do databáze té fixture, která env nastavila jako poslední.
       > Seed token se proto nastavuje přes `PostConfigure`, ne přes env — je to
       > per-host, ne per-proces.
-- [ ] **bUnit na Razor komponenty** — hlavně po updatu MudBlazoru 9.3 → 9.9,
-      který build projde, ale vizuální změny nezachytí.
+- [ ] **bUnit na Razor komponenty.** Priorita klesla: `Demizon.Tests.E2E` teď
+      pokrývá layout, dialogy i interakci nad skutečným prohlížečem, tedy to,
+      proč byl bUnit na seznamu. Zbývá pro něj případ, kdy je potřeba testovat
+      jednu komponentu izolovaně s vnucenými parametry — na to je E2E hrubé.
 - [ ] **`GoogleCalendarService`** — dnes netestovatelný, volá Google API přímo.
       Chtěl by rozhraní, aby šel v testu nahradit dvojníkem.
 - [x] **Testy purge jobu** na `AuditLog` / `RefreshTokens` / `SentNotifications`
@@ -425,8 +467,9 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
       `FileUploadServiceQuotaTests`.
 - [ ] **Zátěžový test paměti** obrazového pipeline — dnes je ověřený jen ručně
       (24 Mpx → 69 MB RSS, 100 Mpx → 104 MB RSS). Automatizovat proti stropu 128 MB.
-      Souvisí: strop alokátoru se nastavuje globálně v `AddCoreServices`, kterou unit
-      testy nevolají, takže `AllocationLimitMegabytes = 128` zatím není pokrytý vůbec.
+      > To, že `AddCoreServices` strop **vůbec nastaví**, už pokryté je
+      > (`CoreRegistrationTests`). Chybí jen měření skutečného RSS, které chce
+      > vlastní proces — v testovacím hostu se neizoluje.
 - [ ] **Oddělit HTTP testy od čisté logiky.** `Demizon.Tests.Unit` teď referencuje
       `Demizon.Mvc` kvůli `ParseStatus`, mapování *a* `WebApplicationFactory`.
       Táhne to web host do outputu. Až bude `Demizon.Tests.Web`, `AuthApiTests`

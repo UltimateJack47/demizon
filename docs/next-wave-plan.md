@@ -270,14 +270,26 @@ Recept `docker run` (volume, `--memory=768m`, log-opt, `Jwt__SecretKey`) je
 v [`hosting-optimization-plan.md`](hosting-optimization-plan.md). Po env overlay
 `-e` opravdu vyhraje nad json.
 
-### E. Testy, které záměrně nejsou (nízká priorita)
+### E. Testy
 
-- [ ] bUnit na Razor (hlavně kvůli MudBlazoru).
+> **Zavřeno vlnou kvality 2026-09-09** — podrobnosti v
+> [`quality-wave-plan.md`](quality-wave-plan.md). Přidán projekt
+> `Demizon.Tests.E2E` (Playwright, 48 testů, vlastní filtr `Demizon.E2E.slnf`
+> a vlastní CI úloha). Celkem **323 testů**: 112 unit + 163 integration + 48 E2E.
+
+- [x] ~~bUnit na Razor~~ — priorita klesla, E2E pokrývá layout, dialogy
+      i interakci nad skutečným prohlížečem. Zbývá pro případ, kdy je potřeba
+      izolovaná komponenta s vnucenými parametry.
+- [x] HTTP 429 na `/api/auth/token` (`ApiLimitTests`).
+- [x] Strop alokátoru: že ho `AddCoreServices` nastaví, hlídá
+      `CoreRegistrationTests`. Chybí jen měření skutečného RSS, které chce
+      vlastní proces.
 - [ ] Dvojník nad `GoogleCalendarService` (dnes volá Google API přímo).
-- [ ] Zátěžový test ImageSharp proti stropu 128 MB (`AllocationLimitMegabytes`
-      se nastavuje v `AddCoreServices`, unit testy ji nevolají).
-- [ ] HTTP 429 na `/api/auth/token` — v test hostu je limit schválně zvednutý.
-- [ ] Oddělit `AuthApiTests` do `Demizon.Tests.Web`, ať unit projekt netahe Mvc.
+      **Zbývá** — a je to teď nejcennější zbylá díra v testech: kalendářová
+      cesta má nejvíc kompenzační logiky (rušení osiřelých událostí) a testuje
+      se jen nepřímo.
+- [ ] Oddělit `AuthApiTests` do `Demizon.Tests.Web`, ať unit projekt netahá Mvc.
+      Přibyly k nim `SeedEndpointTests` a `ApiLimitTests`, takže je toho víc.
 
 ---
 
