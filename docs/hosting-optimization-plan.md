@@ -17,6 +17,9 @@ Doména v `AllowedHosts` čeká na rozhodnutí o nasazení.
 **Aplikace zatím není v produkci.** Konkrétní parametry nasazení (doména, HTTPS,
 Google OAuth redirect) se rozhodnou později — viz sekce *Odložená rozhodnutí*.
 
+Další práce po uzavření diskové vlny (Flutter, seed endpoint, Google Calendar,
+ops při nasazení): [`next-wave-plan.md`](next-wave-plan.md).
+
 ---
 
 ## Diagnóza

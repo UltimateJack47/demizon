@@ -2,6 +2,8 @@
 
 > **Živý dokument.** Průběžně aktualizovat při každé dokončené položce.
 > Založeno: 2026-09-02. Poslední aktualizace: 2026-09-08.
+>
+> Co dělat dál po auth testech a diskové vlně: [`next-wave-plan.md`](next-wave-plan.md).
 
 ## Kontext
 

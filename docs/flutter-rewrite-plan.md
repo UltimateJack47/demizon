@@ -3,6 +3,8 @@
 > **Živý dokument.** Průběžně aktualizovat.
 > Poslední aktualizace: 2026-09-01 (build zelený).
 > Založeno: 2026-09-01. Větev: `feat/flutter-app`. Adresář: `demizon_flutter/`.
+>
+> Pořadí vůči backendu a nasazení: [`next-wave-plan.md`](next-wave-plan.md).
 
 ## Proč
 
