@@ -16,24 +16,69 @@ public class FileService(
 
     public async Task<Dal.Entities.File> GetOneAsync(int id)
     {
-        return await DemizonContext.Files.FindAsync(id) ?? throw new EntityNotFoundException($"File with id: {id} not found.");
+        var row = await DemizonContext.Files.AsNoTracking()
+            .Where(f => f.Id == id)
+            .Select(f => new
+            {
+                f.Id,
+                f.Path,
+                f.FileExtension,
+                f.ContentType,
+                f.FileSize,
+                f.IsPublic,
+                f.Kind,
+                f.MemberId,
+                f.DanceId,
+                HasData = f.Data != null
+            })
+            .FirstOrDefaultAsync()
+            ?? throw new EntityNotFoundException($"File with id: {id} not found.");
+
+        return new Dal.Entities.File
+        {
+            Id = row.Id,
+            Path = row.Path,
+            FileExtension = row.FileExtension,
+            ContentType = row.ContentType,
+            FileSize = row.FileSize,
+            IsPublic = row.IsPublic,
+            Kind = row.Kind,
+            MemberId = row.MemberId,
+            DanceId = row.DanceId,
+            HasStoredData = row.HasData
+        };
     }
-    
+
     public IQueryable<Dal.Entities.File> GetAll()
     {
         return DemizonContext.Files.AsQueryable();
     }
 
+    public async Task<byte[]?> GetContentAsync(int id, bool thumbnail = false)
+    {
+        var query = DemizonContext.Files.AsNoTracking().Where(f => f.Id == id);
+        if (thumbnail)
+            return await query.Select(f => f.ThumbnailData ?? f.Data).FirstOrDefaultAsync();
+        return await query.Select(f => f.Data).FirstOrDefaultAsync();
+    }
+
     public async Task UpdateAsync(int id, Dal.Entities.File updatedMember)
     {
-        var entity = await DemizonContext.Files.FindAsync(id);
-        if (entity is null)
-        {
+        // ExecuteUpdate so we never load or overwrite Data/ThumbnailData.
+        var affected = await DemizonContext.Files
+            .Where(f => f.Id == id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(f => f.Path, updatedMember.Path)
+                .SetProperty(f => f.FileExtension, updatedMember.FileExtension)
+                .SetProperty(f => f.ContentType, updatedMember.ContentType)
+                .SetProperty(f => f.FileSize, updatedMember.FileSize)
+                .SetProperty(f => f.IsPublic, updatedMember.IsPublic)
+                .SetProperty(f => f.Kind, updatedMember.Kind)
+                .SetProperty(f => f.MemberId, updatedMember.MemberId)
+                .SetProperty(f => f.DanceId, updatedMember.DanceId));
+
+        if (affected == 0)
             throw new EntityNotFoundException($"File with id: {id} not found.");
-        }
-        DemizonContext.Entry(entity).CurrentValues.SetValues(updatedMember);
-        DemizonContext.Entry(entity).State = EntityState.Modified;
-        await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
     public async Task<bool> CreateAsync(Dal.Entities.File file)
@@ -65,14 +110,9 @@ public class FileService(
     {
         try
         {
-            var entity = await DemizonContext.Files.FindAsync(id);
-            if (entity is null)
-            {
+            var affected = await DemizonContext.Files.Where(f => f.Id == id).ExecuteDeleteAsync();
+            if (affected == 0)
                 throw new EntityNotFoundException();
-            }
-
-            DemizonContext.Files.Remove(entity);
-            await DemizonContext.SaveChangesAsync();
             return true;
         }
         catch (Exception ex)

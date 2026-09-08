@@ -1,4 +1,3 @@
-using System.IO.Compression;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Demizon.Dal;
@@ -9,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Demizon.Mvc.Controllers.Api;
 
 /// <summary>
-/// Endpoint for database backup and seed initialization.
+/// Seed initialization and database file info. Volume backups live in Scaleway, not here.
 /// </summary>
 [ApiController]
 [Route("api/database")]
@@ -57,49 +56,6 @@ public class DatabaseController(ILogger<DatabaseController> logger, DemizonConte
         {
             logger.LogError(ex, "Database seeding failed");
             return StatusCode(500, new { error = "Seeding failed", details = ex.Message });
-        }
-    }
-
-    [HttpGet("backup")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DownloadBackup()
-    {
-        string? zipPath = null;
-        try
-        {
-            if (!System.IO.File.Exists(DatabasePath))
-            {
-                return NotFound("Database file not found");
-            }
-
-            zipPath = $"/tmp/demizon-backup-{DateTime.UtcNow:yyyy-MM-dd-HHmmss}.zip";
-            using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
-            {
-                zip.CreateEntryFromFile(DatabasePath, "demizon.sqlite");
-
-                var walPath = $"{DatabasePath}-wal";
-                var shmPath = $"{DatabasePath}-shm";
-                if (System.IO.File.Exists(walPath))
-                    zip.CreateEntryFromFile(walPath, "demizon.sqlite-wal");
-                if (System.IO.File.Exists(shmPath))
-                    zip.CreateEntryFromFile(shmPath, "demizon.sqlite-shm");
-            }
-
-            var fileBytes = await System.IO.File.ReadAllBytesAsync(zipPath);
-            return File(fileBytes, "application/zip", $"demizon-backup-{DateTime.UtcNow:yyyy-MM-dd-HHmmss}.zip");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Database backup failed");
-            return StatusCode(500, new { error = "Backup failed", details = ex.Message });
-        }
-        finally
-        {
-            if (zipPath is not null && System.IO.File.Exists(zipPath))
-            {
-                try { System.IO.File.Delete(zipPath); }
-                catch (Exception ex) { logger.LogWarning(ex, "Failed to delete temp backup zip {Path}", zipPath); }
-            }
         }
     }
 

@@ -71,9 +71,11 @@ public class DancesController(IDanceService danceService, IFileService fileServi
         var docs = await fileService.GetAll()
             .Where(f => f.DanceId == id && f.Kind == FileKind.Document)
             .OrderBy(f => f.Id)
+            .Select(f => new { f.Id, f.Path, f.ContentType, f.FileSize })
             .ToListAsync();
 
-        return Ok(docs.Select(f => f.ToDocumentDto()).ToList());
+        return Ok(docs.Select(f => new DanceDocumentDto(
+            f.Id, Path.GetFileName(f.Path), f.ContentType, f.FileSize)).ToList());
     }
 
     [HttpPost("{id:int}/documents")]

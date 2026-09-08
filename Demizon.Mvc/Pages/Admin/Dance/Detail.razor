@@ -302,17 +302,27 @@ else
     {
         var dance = await DanceService.GetAll()
             .Include(x => x.Videos)
-            .Include(x => x.Files)
             .FirstOrDefaultAsync(x => x.Id == Id);
         if (dance is null) return;
         Model = dance.ToViewModel();
         Model.Videos = dance.Videos.OrderByDescending(x => x.Year).Select(x => x.ToViewModel()).ToList();
-        Model.Files = dance.Files
-            .Where(f => f.Data != null)
+        Model.Files = await FileService.GetAll()
+            .Where(f => f.DanceId == Id && f.Data != null)
             .OrderBy(f => f.Kind)
             .ThenByDescending(f => f.Id)
-            .Select(f => f.ToViewModel())
-            .ToList();
+            .Select(f => new FileViewModel
+            {
+                Id = f.Id,
+                Path = f.Path,
+                FileExtension = f.FileExtension,
+                ContentType = f.ContentType,
+                FileSize = f.FileSize,
+                IsPublic = f.IsPublic,
+                Kind = f.Kind,
+                DanceId = f.DanceId,
+                HasDbData = true,
+            })
+            .ToListAsync();
         PageService.SetTitle(Model.Name);
     }
 

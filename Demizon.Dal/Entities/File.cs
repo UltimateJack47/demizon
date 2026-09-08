@@ -33,4 +33,11 @@ public class File
     public byte[]? ThumbnailData { get; set; }
 
     public FileKind Kind { get; set; } = FileKind.Image;
+
+    /// <summary>
+    /// True when the Data BLOB is present. Not a column — metadata queries set it
+    /// via <c>Data != null</c> without loading the bytes.
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public bool HasStoredData { get; set; }
 }

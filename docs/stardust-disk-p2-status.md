@@ -9,7 +9,7 @@
 3. **EF** — migration `20260905121900_AddAuditLogTimestampIndex` (+ Designer); `DemizonContext` / snapshot have `HasIndex(Timestamp)`.
 4. **SQLite** — `auto_vacuum=INCREMENTAL` in `SqliteBusyTimeoutInterceptor` (one-time `VACUUM` still an ops note).
 5. **Upload quotas** — `UploadSettings` MaxFileBytes 25MB, MaxTotalStorageBytes 2GB, MaxFileCount 2000; `StorageQuotaService` + gates in `FileService` / `FileUploadService`; UI: ListPhotos + MemberForm + Dance `Detail.razor` use `MaxFileBytes`.
-6. **DatabaseController** — Admin role + try/finally for `/tmp` ZIP.
+6. **DatabaseController** — `GET /api/database/backup` removed (Scaleway backs up the volume); `info` stays Admin-only.
 7. **Docker** — `.dockerignore` expanded; redundant `dotnet build` removed; `docker-entrypoint.sh` deleted.
 8. **Tests** — audit whitelist (RefreshToken/File/DeviceToken/SentNotification), storage quotas, purge job, `auto_vacuum=INCREMENTAL` on new DB, `AuditLog.Timestamp` index.
 9. **Docs** — `docs/hosting-optimization-plan.md` Priority 2 checkboxes synced (2026-09-05).
@@ -17,8 +17,8 @@
 ## Leftover / follow-ups
 
 - One-time `VACUUM` after enabling incremental auto_vacuum (ops note).
-- Circuit RSS measurement (Priority 2 non-disk leftover from plan).
-- Priority 3 hygiene (dead code, VAPID rotation, sqlite in git, ReadyToRun, Railway leftovers, DataProtection keys, MudBlazor visual QA).
+- Circuit RSS measurement (needs a running container).
+- Priority 3 remainder: dead code, VAPID rotation, sqlite in git, ReadyToRun, `DATABASE_URL` Postgres leftover, MudBlazor visual QA.
 - Deferred deploy decisions (domain/HTTPS/OAuth).
 
 See also: `docs/hosting-optimization-plan.md`.

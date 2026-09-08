@@ -42,7 +42,7 @@ Build na serveru to nebyl — na server jde jen `docker pull`. Skutečné pří�
 | 1 | **Magick.NET Q16** — 8 B/px, alokace mimo GC haldu, žádné `ResourceLimits` | ✅ **vyřešeno** (viz níže) |
 | 2 | Blazor Server circuity bez konfigurace — `ServerPrerendered` dává circuit **i anonymnímu návštěvníkovi**, default `DisconnectedCircuitMaxRetained = 100` × 3 min | ⚠️ **částečně** (retence snížena, viz ✅ 5; per-page render mode zablokovaný) |
 | 3 | Server GC zapnutý defaultně, bez heap limitu — nevrací paměť OS | ✅ **vyřešeno** (Workstation GC, viz ✅ 5) |
-| 4 | BLOBy v SQLite se načítají celé do paměti, bez streamování | ⬜ TODO |
+| 4 | BLOBy v SQLite se načítají celé do paměti, bez streamování | ✅ **vyřešeno** (seznamy jen metadata; `GetContentAsync` tahá jeden sloupec) |
 
 ---
 
@@ -167,7 +167,7 @@ Ověřeno, že limit nerozbíjí běžný provoz: 24 Mpx fotka projde na 69 MB R
 ### ✅ 6. Testovací infrastruktura a opravy, které z ní vypadly
 
 Solution neměla ani jeden testovací projekt. Přidané: `Demizon.Tests.Unit` (76 testů)
-a `Demizon.Tests.Integration` (150 testů), plus `Demizon.Backend.slnf`, protože
+a `Demizon.Tests.Integration` (155 testů), plus `Demizon.Backend.slnf`, protože
 `dotnet test Demizon.slnx` neprojde — `Demizon.Maui` chce workload `maui-android`.
 Podrobnosti a plán dalších vrstev: **`docs/testing-plan.md`**.
 
@@ -316,8 +316,8 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
 - [x] **Kvóta na uploady.** Dnes limit 25 MB/soubor a **žádný** limit na počet ani celkový objem.
       Dokumenty se navíc neoptimalizují vůbec (`FileUploadService.cs:70-87` ukládá raw bajty).
       400 PDF × 25 MB = 10 GB = plný disk.
-- [x] **`try/finally` v `DatabaseController.cs:100`** — záložní ZIP v `/tmp` se při chybě
-      `ReadAllBytesAsync` nesmaže. Endpoint je navíc jen `[Authorize]`, ne `Roles = "Admin"`.
+- [x] **`GET /api/database/backup` odstraněn** — zálohy DB řeší Scaleway infrastructure
+      tools, endpoint v appce zbytečně tahal celou SQLite (včetně fotek) do RAM/tmp.
 
 ### Priorita 3 — úklid a hygiena
 
@@ -336,11 +336,10 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
 - [ ] **Publish s `-r linux-x64`** — ušetří zbylých ~31 MB nativních knihoven SQLite
       pro ostatní platformy. Zvážit i `<PublishReadyToRun>true</PublishReadyToRun>`
       (rychlejší cold start na 1 vCPU; trimming ani AOT s EF Core + Blazor nejde).
-- [ ] **Railway zbytky v `Program.cs`:** probe smyčka `/data` (`:26-50`, až 60 s),
-      parsování `DATABASE_URL` pro Postgres (`:58-67`), retry WAL 15× po 3 s
-      (`DatabaseServiceConfigurationExtension.cs:50-51`, až 45 s). Worst-case cold start >100 s.
-- [ ] **DataProtection klíče se nepersistují** (`PersistKeysTo` nikde) → každý restart
-      invaliduje všechny auth cookies. `PersistKeysToFileSystem(new DirectoryInfo("/data/keys"))`.
+- [ ] **Railway zbytky v `Program.cs`:** parsování `DATABASE_URL` pro Postgres.
+      Probe `/data` zkrácen na 5 s, WAL retry na 3×1 s (2026-09-08).
+- [x] **DataProtection klíče** — `PersistKeysToFileSystem` (`/data/keys` v produkci,
+      `dp-keys/` lokálně, gitignore). Bez toho každý restart shodil auth cookies.
 - [ ] **Otestovat MudBlazor 9.9.0 vizuálně** — build projde, ale změny vzhledu build nezachytí.
 
 ---
@@ -409,7 +408,7 @@ vychází ~400 buildů měsíčně zdarma. Pro tenhle projekt bohatě stačí.
 **Navržený tvar:**
 
 1. **`build.yml`** — trigger `push` do `master`. Nejdřív `dotnet test Demizon.Backend.slnf`
-   (226 testů, ~6 s), pak Docker image do registry se dvěma tagy: `latest` a `sha-<commit>`.
+   (231 testů, ~6 s), pak Docker image do registry se dvěma tagy: `latest` a `sha-<commit>`.
    Pozor: **`Demizon.slnx` v CI stavět nelze**, `Demizon.Maui` vyžaduje workload
    `maui-android` — proto solution filter.
 2. **`deploy.yml`** — trigger `workflow_dispatch` (ruční spuštění) nebo `release`.

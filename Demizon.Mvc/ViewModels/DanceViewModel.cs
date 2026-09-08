@@ -34,8 +34,7 @@ public static class DanceMappingExtensions
         Description = entity.Description,
         InternalDescription = entity.InternalDescription,
         Lyrics = entity.Lyrics,
-        Videos = entity.Videos?.Select(v => v.ToViewModel()).ToList() ?? [],
-        Files = entity.Files?.Select(f => f.ToViewModel()).ToList() ?? [],
+        // Videos/Files záměrně ne: lazy load by stáhl SQLite BLOBy fotek do RAM.
     };
 
     public static Dance ToEntity(this DanceViewModel vm) => new()
