@@ -67,4 +67,16 @@ public static class TestData
         await db.SaveChangesAsync();
         return member;
     }
+
+    public static Dal.Entities.File StoredFile(
+        long fileSize = 1,
+        string path = "db-stored",
+        string extension = ".jpg",
+        string contentType = "image/jpeg") => new()
+    {
+        Path = path,
+        FileExtension = extension,
+        ContentType = contentType,
+        FileSize = fileSize
+    };
 }

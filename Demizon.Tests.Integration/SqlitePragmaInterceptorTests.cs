@@ -22,6 +22,7 @@ public sealed class SqlitePragmaInterceptorTests : IDisposable
     private const int ExpectedBusyTimeoutMs = 5000;
     private const int ExpectedJournalSizeLimitBytes = 32 * 1024 * 1024;
     private const int ExpectedWalAutoCheckpointPages = 512;
+    private const int ExpectedAutoVacuumIncremental = 2;
 
     private readonly string _databasePath = Path.Combine(
         Path.GetTempPath(), $"demizon-pragma-{Guid.NewGuid():N}.sqlite");
@@ -99,6 +100,22 @@ public sealed class SqlitePragmaInterceptorTests : IDisposable
         Assert.Equal(0, ReadPragma(db, "busy_timeout"));
         Assert.Equal(-1, ReadPragma(db, "journal_size_limit"));
         Assert.Equal(1000, ReadPragma(db, "wal_autocheckpoint"));
+        Assert.Equal(0, ReadPragma(db, "auto_vacuum"));
+    }
+
+    /// <summary>
+    /// <c>auto_vacuum</c> je database-level a musí se nastavit <b>než</b> vzniknou tabulky.
+    /// Interceptor běží na <c>ConnectionOpened</c>, takže u nové DB stihne INCREMENTAL
+    /// před <c>EnsureCreated</c>. Na existující DB s <c>NONE</c> to samo o sobě neudělá
+    /// nic — k tomu je ops <c>VACUUM</c>.
+    /// </summary>
+    [Fact]
+    public void Interceptor_nastavi_auto_vacuum_na_incremental_u_nove_db()
+    {
+        using var db = NewContext();
+        db.Database.EnsureCreated();
+
+        Assert.Equal(ExpectedAutoVacuumIncremental, ReadPragma(db, "auto_vacuum"));
     }
 
     /// <summary>

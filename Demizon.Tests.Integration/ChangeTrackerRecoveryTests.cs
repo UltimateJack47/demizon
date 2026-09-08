@@ -2,6 +2,7 @@ using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
 using Demizon.Core.Services.File;
 using Demizon.Core.Services.Member;
+using Demizon.Core.Services.Storage;
 using Demizon.Dal;
 using Demizon.Dal.Extensions;
 using Demizon.Dal.Entities;
@@ -30,6 +31,13 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
     private readonly DatabaseFixture _fixture = new(currentUserLogin: "admin");
 
     public ValueTask DisposeAsync() => _fixture.DisposeAsync();
+
+    /// <summary>
+    /// Kvótní brána v <see cref="FileService.CreateAsync"/> běží před zápisem.
+    /// Recovery testy potřebují, aby je pustila — testují selhání constraintu, ne kvóty.
+    /// </summary>
+    private static FileService NewFileService(DemizonContext db) =>
+        new(db, AllowAllStorageQuota.Instance, NullLogger<FileService>.Instance);
 
     /// <summary>Člen s <c>Name = null</c> narazí na NOT NULL, takže zápis spolehlivě selže.</summary>
     private static Member InvalidMember(string login)
@@ -77,7 +85,7 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
     public async Task Neuspesne_ulozeni_souboru_nezustane_v_change_trackeru()
     {
         await using var db = _fixture.NewContext();
-        var service = new FileService(db, NullLogger<FileService>.Instance);
+        var service = NewFileService(db);
 
         // Path je v modelu required.
         Assert.False(await service.CreateAsync(new Dal.Entities.File
@@ -101,7 +109,7 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
     public async Task Po_neuspesnem_ulozeni_souboru_se_ulozi_jen_ten_dalsi()
     {
         await using var db = _fixture.NewContext();
-        var service = new FileService(db, NullLogger<FileService>.Instance);
+        var service = NewFileService(db);
 
         Assert.False(await service.CreateAsync(new Dal.Entities.File
         {
@@ -422,4 +430,12 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         Assert.False((await verify.Events.SingleAsync(e => e.Id == ev.Id)).IsCancelled);
     }
 
+    private sealed class AllowAllStorageQuota : IStorageQuotaService
+    {
+        public static readonly AllowAllStorageQuota Instance = new();
+
+        public Task<(bool Allowed, string? Reason)> EnsureCanStoreAsync(
+            long additionalBytes, CancellationToken cancellationToken = default)
+            => Task.FromResult((true, (string?)null));
+    }
 }

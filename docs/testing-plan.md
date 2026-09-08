@@ -1,7 +1,7 @@
 # Testovací strategie
 
 > **Živý dokument.** Průběžně aktualizovat při každé dokončené položce.
-> Založeno: 2026-09-02. Poslední aktualizace: 2026-09-02.
+> Založeno: 2026-09-02. Poslední aktualizace: 2026-09-08.
 
 ## Kontext
 
@@ -19,8 +19,8 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 
 | Projekt | Co testuje | Rychlost |
 |---|---|---|
-| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result` | ~3 s / 72 testů |
-| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 133 testů |
+| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result` | ~3 s / 76 testů |
+| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 150 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
 
@@ -254,27 +254,30 @@ Zbylé tři nálezy kola 6:
 
 ## Pokrytí
 
-### `Demizon.Tests.Unit` (72)
+### `Demizon.Tests.Unit` (76)
 
 | Soubor | Co hlídá |
 |---|---|
 | `FileUploadServiceImageTests` | Strop šířky 1200 / náhled 200 / žádný upscale, EXIF rotace do pixelů i do rozměrů, výstup vždy JPEG bez metadat, dokumenty se ukládají beze změny |
+| `FileUploadServiceQuotaTests` | `MaxFileBytes` odmítne dokument i obrázek před dekódováním; odmítnutí z `IStorageQuotaService` se propíše do `ErrorMessage` |
 | `ContractMappingExtensionsTests` | Hranice kontraktu — všechna pole DTO, lowercase stav docházky, filtrování neviditelných videí, neprosakování `PasswordHash` do profilu |
 | `AttendanceStatusContractTests` | `"yes"/"maybe"/"no"`, case-insensitivita, fallback na `No`, a hlavně že serializace a parsování jsou navzájem inverzní |
 | `ResultTests` | `Ok`/`Fail` semantika, `Ok(null)` jako platný úspěch |
 
-### `Demizon.Tests.Integration` (133)
+### `Demizon.Tests.Integration` (150)
 
 | Soubor | Co hlídá |
 |---|---|
 | `RefreshTokenServiceTests` | Raw token nikdy v DB, jednorázovost (replay ochrana), expirace, revokace, rotace při novém tokenu, rozlišení tokenů se shodným prefixem, FK kaskáda |
-| `AuditInterceptorTests` | `Added`/`Modified`/`Deleted`, neprosakování `PasswordHash` a `TokenHash`, audit neauditující sám sebe, regresní testy k chybám 2 a 3, **selhání dopsání klíčů** (přes `FailAuditFixupInterceptor`) a to že `ExecuteUpdate` audit obchází |
+| `AuditInterceptorTests` | `Added`/`Modified`/`Deleted`, neprosakování `PasswordHash`, whitelist (`RefreshToken`/`File`/`DeviceToken`/`SentNotification`), audit neauditující sám sebe, regresní testy k chybám 2 a 3, **selhání dopsání klíčů** (přes `FailAuditFixupInterceptor`) a to že `ExecuteUpdate` audit obchází |
 | `MemberServiceTests` | Soft delete přes globální filtr, historie docházky přežije smazání, `UpdateAsync` nepřepíše Google tokeny, Connect/Disconnect kalendáře |
 | `AttendanceReportServiceTests` | Zkoušky (`EventId == null`) vs. akce, distinct dat vs. počet řádků, `Maybe` se nepočítá jako účast, filtr `IsAttendanceVisible`, ochrana proti dělení nulou |
 | `AttendanceAndEventServiceTests` | Vložení vs. přepis podle `Id`, `LastUpdated` nastavuje služba, nesrovnalost v chování `DeleteAsync` mezi službami |
 | `ChangeTrackerRecoveryTests` | Služby po neúspěšném zápisu uklidí change tracker, takže vrácené `false` skutečně znamená „neuložilo se“ a další pokus projde |
 | `ModelAndMigrationsTests` | **Model odpovídá snapshotu migrací**, všechny migrace projdou od nuly, enumy jako text, unique index, kaskáda, seed data |
-| `SqlitePragmaInterceptorTests` | `busy_timeout` / `journal_size_limit` / `wal_autocheckpoint` se skutečně propíšou, a to na **každé** nové spojení |
+| `SqlitePragmaInterceptorTests` | `busy_timeout` / `journal_size_limit` / `wal_autocheckpoint` / `auto_vacuum=INCREMENTAL` se skutečně propíšou, a to na **každé** nové spojení |
+| `StorageQuotaServiceTests` | per-file / count / total-bytes kvóty; `FileService.CreateAsync` při odmítnutí nic neuloží |
+| `DiskMaintenanceServiceTests` | purge AuditLog 90 dní, revokované i expirované refresh tokeny, SentNotifications 180 dní; netýká se členů ani souborů |
 
 ### Nejcennější jednotlivý test
 
@@ -327,8 +330,9 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
       který build projde, ale vizuální změny nezachytí.
 - [ ] **`GoogleCalendarService`** — dnes netestovatelný, volá Google API přímo.
       Chtěl by rozhraní, aby šel v testu nahradit dvojníkem.
-- [ ] **Testy purge jobu** na `AuditLog` / `RefreshTokens` / `SentNotifications`,
-      až vznikne (Priorita 2 v *hosting-optimization-plan.md*).
+- [x] **Testy purge jobu** na `AuditLog` / `RefreshTokens` / `SentNotifications`
+      (`DiskMaintenanceServiceTests`). Kvóty: `StorageQuotaServiceTests` +
+      `FileUploadServiceQuotaTests`.
 - [ ] **Zátěžový test paměti** obrazového pipeline — dnes je ověřený jen ručně
       (24 Mpx → 69 MB RSS, 100 Mpx → 104 MB RSS). Automatizovat proti stropu 128 MB.
       Souvisí: strop alokátoru se nastavuje globálně v `AddCoreServices`, kterou unit

@@ -148,6 +148,48 @@ public class AuditInterceptorTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task File_se_neaudituje()
+    {
+        await using var db = _fixture.NewContext();
+        db.Files.Add(TestData.StoredFile());
+        await db.SaveChangesAsync();
+
+        Assert.Empty(await ReadAuditAsync(nameof(Dal.Entities.File)));
+    }
+
+    [Fact]
+    public async Task DeviceToken_se_neaudituje()
+    {
+        await using var seed = _fixture.NewContext();
+        var member = await TestData.SeedMemberAsync(seed);
+
+        await using var db = _fixture.NewContext();
+        db.DeviceTokens.Add(new DeviceToken
+        {
+            MemberId = member.Id,
+            Token = "fcm-token-xyz",
+            Platform = DevicePlatform.Android
+        });
+        await db.SaveChangesAsync();
+
+        Assert.Empty(await ReadAuditAsync(nameof(DeviceToken)));
+    }
+
+    [Fact]
+    public async Task SentNotification_se_neaudituje()
+    {
+        await using var db = _fixture.NewContext();
+        db.SentNotifications.Add(new SentNotification
+        {
+            NotificationType = NotificationType.NewEvent,
+            SentAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+
+        Assert.Empty(await ReadAuditAsync(nameof(SentNotification)));
+    }
+
+    [Fact]
     public async Task Audit_pri_zmene_hesla_neprozradi_ani_stary_hash()
     {
         await using var seed = _fixture.NewContext();
