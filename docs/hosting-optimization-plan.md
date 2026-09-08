@@ -9,8 +9,10 @@ Cíl je hostovat `Demizon.Mvc` (Blazor Server + API v jednom hostu) na vlastním
 **Scaleway Stardust1-S: 1 vCPU, 1 GB RAM, 10 GB disk**, a napojit na něj mobilní klienta.
 
 Předchozí pokus o nasazení skončil zaplněním disku a kolapsem serveru. Aplikace byla
-původně psaná pro **Railway** a nese si po něm konfiguraci (`/data` volume, parsování
-`DATABASE_URL` pro Postgres, doménu v `AllowedHosts`).
+původně psaná pro **Railway** a nesla si po něm konfiguraci (`/data` volume, parsování
+`DATABASE_URL` pro Postgres, doménu v `AllowedHosts`). Parsování `DATABASE_URL` je
+odstraněné (Priorita 3), `/data` zůstává — na Scalewayu je to namountovaný volume.
+Doména v `AllowedHosts` čeká na rozhodnutí o nasazení.
 
 **Aplikace zatím není v produkci.** Konkrétní parametry nasazení (doména, HTTPS,
 Google OAuth redirect) se rozhodnou později — viz sekce *Odložená rozhodnutí*.
@@ -321,23 +323,63 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
 
 ### Priorita 3 — úklid a hygiena
 
-- [ ] **Mrtvý kód:** `UploadImageAsync` + `IFileUploadService.UploadImageAsync` (nula volajících),
-      `UploadSettings.Resize` (po odstranění `ResizeAndCreate` už nikdo nečte),
-      `AttendanceReminderBackgroundService.cs` a `NotificationHostedService.cs` (nikde neregistrované),
-      `docker-entrypoint.sh` (Dockerfile ho nekopíruje, logika je duplikovaná v `Program.cs:26-49`),
-      7 ze 42 endpointů v `Demizon.Maui/Services/IApiClient.cs`.
+- [x] **Mrtvý kód odstraněn:** `UploadImageAsync` + jeho deklarace v `IFileUploadService`
+      (filesystémová varianta uploadu, nula volajících — všechna tři místa v UI i oba API
+      endpointy jdou přes `UploadImageToDbAsync` / `UploadDocumentToDbAsync`),
+      `UploadSettings.Resize` i celá třída `ResizeSettings`, `UploadSettings.ImagesDirectory`
+      (čteno jen zrušenou metodou) a `UploadSettings.AllowedFileExtensions`,
+      `AttendanceReminderBackgroundService.cs` a `NotificationHostedService.cs`
+      (nikde neregistrované — jediné dvě `AddHostedService` v repu jsou
+      `UnifiedNotificationService` a `DiskMaintenanceHostedService`),
+      `docker-entrypoint.sh`.
+      > `AllowedFileExtensions` nebyl bezpečnostní kontrolou, kterou by odstranění vypnulo:
+      > sekce `Upload` v appsettings **neexistuje** v žádném prostředí, takže to pole bylo
+      > vždy prázdný `List`. Přípony se reálně validují v `DancesController` proti vlastní
+      > konstantě `AllowedDocumentExtensions`; u obrázků je kontrolou samotné dekódování
+      > ImageSharpem a re-enkód na JPEG, takže nevalidní vstup neprojde.
+      >
+      > Zbývá 7 ze 42 endpointů v `Demizon.Maui/Services/IApiClient.cs` — neřešeno záměrně,
+      > `Demizon.Maui` je nahrazován Flutter klientem a `.dockerignore` ho z image vylučuje.
 - [ ] **VAPID privátní klíč je commitnutý v gitu** (`appsettings.Production.json:17`).
-      Vygenerovat nové klíče a předávat přes proměnné prostředí.
-- [ ] **`demizon.sqlite` je commitnutý** a `Demizon.Mvc.csproj:74-76` ho kopíruje do outputu
-      s `CopyToOutputDirectory=Always` → je i v image. `git rm --cached`.
+      Vygenerovat nové klíče a předávat přes proměnné prostředí. **Vyžaduje ruční krok** —
+      nové klíče musí vzniknout mimo repozitář a uložit se do secrets.
+- [x] **`demizon.sqlite` odtrackován** (`git rm --cached`), přidán do `.gitignore` a z
+      `Demizon.Mvc.csproj` odstraněn blok `CopyToOutputDirectory=Always`.
+      Kopie do outputu byla čistá zátěž: lokálně jde `Data Source=demizon.sqlite` proti
+      pracovnímu adresáři projektu (`Program.cs` má `SetBasePath(Directory.GetCurrentDirectory())`),
+      ne proti `bin/`, a v produkci je cesta absolutní (`/data/demizon.sqlite`). Ta kopie
+      tedy nikdy nikoho neobsluhovala — jen vezla 450 kB dev databáze do image, včetně
+      3 záznamů členů s hashi hesel.
+      > ⚠️ `git rm --cached` soubor **nemaže z historie**. Blob v ní zůstává dohledatelný;
+      > pokud je to problém, chce to `git filter-repo` / BFG a force push — samostatné
+      > rozhodnutí, ne součást téhle branche. Stejná úvaha platí pro VAPID klíč výše.
 - [x] **`.dockerignore`** doplnit: `graft/`, `docs/`, `Demizon.Maui/`,
       `**/appsettings.Local.json`, `**/*.sqlite*`.
 - [x] **`Dockerfile:18`** — duplicitní `dotnet build` odstraněn.
-- [ ] **Publish s `-r linux-x64`** — ušetří zbylých ~31 MB nativních knihoven SQLite
-      pro ostatní platformy. Zvážit i `<PublishReadyToRun>true</PublishReadyToRun>`
-      (rychlejší cold start na 1 vCPU; trimming ani AOT s EF Core + Blazor nejde).
-- [ ] **Railway zbytky v `Program.cs`:** parsování `DATABASE_URL` pro Postgres.
-      Probe `/data` zkrácen na 5 s, WAL retry na 3×1 s (2026-09-08).
+- [x] **Publish s `-r linux-x64`** — `Dockerfile` publikuje s
+      `-r linux-x64 --self-contained false`. Naměřeno na skutečném publish outputu:
+
+      | Varianta | Velikost | Souborů |
+      |---|---:|---:|
+      | `dotnet publish` (bez RID) | 62 MB | 143 |
+      | `-r linux-x64 --self-contained false` | **30 MB** | 120 |
+      | totéž + `PublishReadyToRun=true` | 56 MB | 120 |
+
+      Zmizel celý adresář `runtimes/` — 22 kopií `libe_sqlite3` pro cíle jako `linux-mips64`,
+      `linux-musl-s390x` nebo `maccatalyst-arm64`. Ta jediná potřebná (`libe_sqlite3.so`)
+      se zkopírovala naplocho do rootu publish outputu, takže SQLite dál funguje.
+      `dotnet restore` v Dockerfile dostal `-r linux-x64` taky, jinak by publish restore
+      opakoval a rozbil cache vrstvy.
+
+      **`PublishReadyToRun` záměrně nezapnuto.** Vrátil by 26 MB z ušetřených 32 (+87 %
+      proti RID variantě), protože předkompiluje i EF Core, MudBlazor a ImageSharp, ne jen
+      vlastní kód. Na 10 GB disku, který je tady tvrdý limit, je to špatný obchod za
+      rychlejší cold start; k přehodnocení, kdyby se startovací čas na 1 vCPU ukázal jako
+      reálný problém. Trimming ani AOT s EF Core + Blazor nejde.
+- [x] **Railway zbytky v `Program.cs`** — parsování `DATABASE_URL` pro Postgres odstraněno.
+      Byl to mrtvý kód se zubem: aktivoval se jen v produkci při nastavené `DATABASE_URL`
+      a tichým přepsáním `ConnectionStrings:Default` na Postgres syntaxi by shodil SQLite
+      připojení. Probe `/data` zkrácen na 5 s, WAL retry na 3×1 s (2026-09-08).
 - [x] **DataProtection klíče** — `PersistKeysToFileSystem` (`/data/keys` v produkci,
       `dp-keys/` lokálně, gitignore). Bez toho každý restart shodil auth cookies.
 - [ ] **Otestovat MudBlazor 9.9.0 vizuálně** — build projde, ale změny vzhledu build nezachytí.
