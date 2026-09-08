@@ -78,6 +78,10 @@
 
 ### R1.5 NotificationHostedService – chybí global try-catch
 
+> ⛔ **Bezpředmětné (2026-09-08).** `NotificationHostedService.cs` byl smazán jako mrtvý
+> kód — nikdy nebyl registrovaný. Nástupce `UnifiedNotificationService` má vlastní
+> ošetření chyb. Ponecháno jako záznam review.
+
 **Problém:** `ExecuteAsync` nemá outer try-catch. Neočekávaná výjimka ukončí celý BackgroundService bez možnosti recovery.
 
 **Soubory:**
@@ -427,6 +431,8 @@ builder.Services.AddOptions<JwtSettings>()
 ---
 
 ### R3.7 NotificationHostedService – N+1 optimalizace
+
+> ⛔ **Bezpředmětné (2026-09-08).** Soubor smazán, viz R1.5.
 
 **Problém:** `eventService.GetAll().ToList()` materializuje všechny eventy do paměti, pak filtruje v C#.
 
@@ -818,7 +824,7 @@ R1 (kritické opravy)           ← Týden 1
   └→ R1.2 Birthdate naming
   └→ R1.3 Profile async
   └→ R1.4 Attendance init
-  └→ R1.5 NotificationHostedService try-catch
+  └→ R1.5 NotificationHostedService try-catch (bezpředmětné – soubor smazán)
   └→ R1.6 push-notifications.js try-catch
   └→ R1.7 DanceNumber validace
   └→ R1.8 DefaultConnectionString removal

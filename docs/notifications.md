@@ -65,8 +65,12 @@ Příklad: akce zadána 20 dní před konáním → milník 60d i 30d se přesko
 | `Demizon.Dal/Entities/SentNotification.cs` | Entita pro sledování odeslaných notifikací (deduplication) |
 | `Demizon.Dal/Entities/Event.cs` | Pole `CreatedAt` pro detekci nových akcí |
 | `Demizon.Mvc/Services/FcmService.cs` | FCM odesílání (Firebase) |
-| `Demizon.Mvc/Services/Notification/NotificationHostedService.cs` | **Starý service** – neregistrován, ponechán pro referenci |
-| `Demizon.Mvc/Services/AttendanceReminderBackgroundService.cs` | **Starý service** – neregistrován, ponechán pro referenci |
+| `Demizon.Mvc/Services/Notification/WebPushSender.cs` | Web Push odesílání (VAPID, `PushSubscriptions`) |
+
+> Staré neregistrované service `NotificationHostedService.cs` a
+> `AttendanceReminderBackgroundService.cs` byly **smazány** (2026-09-08, branch
+> `feat/stardust-disk-optimization`) — obojí nahradil `UnifiedNotificationService`.
+> Historii jejich návrhu drží `docs/implementation-plan.md`.
 
 ### SentNotification entita
 ```
