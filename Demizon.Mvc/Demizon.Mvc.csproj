@@ -79,10 +79,4 @@
         </EmbeddedResource>
     </ItemGroup>
 
-    <ItemGroup>
-        <None Update="demizon.sqlite">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
-
 </Project>
