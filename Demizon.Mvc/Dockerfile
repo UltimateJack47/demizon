@@ -12,13 +12,18 @@ COPY ["Demizon.Mvc/Demizon.Mvc.csproj", "Demizon.Mvc/"]
 COPY ["Demizon.Core/Demizon.Core.csproj", "Demizon.Core/"]
 COPY ["Demizon.Dal/Demizon.Dal.csproj", "Demizon.Dal/"]
 COPY ["Demizon.Common/Demizon.Common.csproj", "Demizon.Common/"]
-RUN dotnet restore "Demizon.Mvc/Demizon.Mvc.csproj"
+RUN dotnet restore "Demizon.Mvc/Demizon.Mvc.csproj" -r linux-x64
 COPY . .
 WORKDIR "/src/Demizon.Mvc"
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "Demizon.Mvc.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+# -r linux-x64 vyhodí adresář runtimes/ s 22 kopiemi libe_sqlite3 pro platformy,
+# na kterých tenhle image nikdy nepoběží: 62 MB -> 30 MB.
+# ReadyToRun záměrně nezapnuto — přidal by 26 MB zpět (viz hosting-optimization-plan.md).
+RUN dotnet publish "Demizon.Mvc.csproj" -c $BUILD_CONFIGURATION \
+    -r linux-x64 --self-contained false \
+    -o /app/publish -p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
