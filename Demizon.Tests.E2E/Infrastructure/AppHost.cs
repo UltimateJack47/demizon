@@ -135,6 +135,30 @@ public sealed class AppHost : IAsyncDisposable
         db.Members.AddRange(
             NewMember(AdminLogin, AdminPassword, UserRole.Admin),
             NewMember(MemberLogin, MemberPassword));
+
+        // Po jednom řádku do každé tabulky administrace. Prázdná tabulka totiž
+        // nic neověří — kontrola popisků buněk by na ní jen tiše prošla — a na
+        // screenshotech by nebylo vidět, jak řádek na telefonu vypadá.
+        var dance = new Dance { Name = "Testovací tanec", Region = "Morava", IsVisible = true };
+        db.Dances.Add(dance);
+
+        db.Events.Add(new Event
+        {
+            Name = "Testovací vystoupení",
+            DateFrom = new DateTime(2026, 6, 1, 18, 0, 0, DateTimeKind.Utc),
+            DateTo = new DateTime(2026, 6, 1, 21, 0, 0, DateTimeKind.Utc),
+            Place = "Kulturní dům",
+            IsPublic = true,
+        });
+
+        db.VideoLinks.Add(new VideoLink
+        {
+            Name = "Testovací video",
+            Url = "https://www.youtube.com/watch?v=test",
+            Year = 2026,
+            IsVisible = true,
+        });
+
         db.SaveChanges();
     }
 
@@ -149,6 +173,9 @@ public sealed class AppHost : IAsyncDisposable
         Gender = Gender.Male,
         IsVisible = true,
         IsAttendanceVisible = true,
+        // Vyplněné, aby na screenshotu nebyly poloviční buňky prázdné.
+        IsDancer = true,
+        MemberSince = new DateTime(2020, 9, 1, 0, 0, 0, DateTimeKind.Utc),
     };
 
     /// <summary>Kontext nad tou samou databází, se kterou jede běžící host.</summary>

@@ -91,28 +91,28 @@
     </HeaderContent>
 
     <RowTemplate Context="member">
-        <MudTd>@member.Name</MudTd>
-        <MudTd>@member.Surname</MudTd>
-        <MudTd>@member.Login</MudTd>
-        <MudTd>@member.Email</MudTd>
-        <MudTd>@member.MemberSince?.ToShortDateString()</MudTd>
-        <MudTd>
+        <MudTd DataLabel="Jméno">@member.Name</MudTd>
+        <MudTd DataLabel="Příjmení">@member.Surname</MudTd>
+        <MudTd DataLabel="Login">@member.Login</MudTd>
+        <MudTd DataLabel="E-mail">@member.Email</MudTd>
+        <MudTd DataLabel="Členem od">@member.MemberSince?.ToShortDateString()</MudTd>
+        <MudTd DataLabel="Veřejné">
             <MudIcon Icon="@(member.IsVisible ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
                      Color="@(member.IsVisible ? Color.Success : Color.Error)"/>
         </MudTd>
-        <MudTd>
+        <MudTd DataLabel="Docházka">
             <MudIcon Icon="@(member.IsAttendanceVisible ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
                      Color="@(member.IsAttendanceVisible ? Color.Success : Color.Error)"
                      title="@(member.IsAttendanceVisible ? "Zobrazuje se v docházce" : "Skryto v docházce")"/>
         </MudTd>
-        <MudTd>
+        <MudTd DataLabel="Externista">
             @if (member.IsExternal)
             {
                 <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text"
                          Icon="@Icons.Material.Filled.PersonOff" title="Externista">ext</MudChip>
             }
         </MudTd>
-        <MudTd>
+        <MudTd DataLabel="Role">
             <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Style="flex-wrap: wrap;">
                 @if (member.IsDancer)
                 {
@@ -124,7 +124,7 @@
                 }
             </MudStack>
         </MudTd>
-        <MudTd>
+        <MudTd DataLabel="Akce">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Style="white-space: nowrap;">
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility" OnClick="() => NavigateToDetail(member.Id)" title="Detail"/>
                 @if (member.Id == LoggedUser.Id || LoggedUser.Role == UserRole.Admin)

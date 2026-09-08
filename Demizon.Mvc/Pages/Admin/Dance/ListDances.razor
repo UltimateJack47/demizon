@@ -32,18 +32,18 @@
         <MudTh Style="width: 120px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="dance">
-        <MudTd>@dance.Name</MudTd>
-        <MudTd>
+        <MudTd DataLabel="Název">@dance.Name</MudTd>
+        <MudTd DataLabel="Region">
             @if (!string.IsNullOrWhiteSpace(dance.Region))
             {
                 <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@dance.Region</MudChip>
             }
         </MudTd>
-        <MudTd>
+        <MudTd DataLabel="Veřejné">
             <MudIcon Icon="@(dance.IsVisible ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
                      Color="@(dance.IsVisible ? Color.Success : Color.Error)"/>
         </MudTd>
-        <MudTd>
+        <MudTd DataLabel="Akce">
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility" OnClick="() => NavigateToDetail(dance.Id)" title="Detail"/>
             <AuthorizeView Roles="Admin">
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(dance)"/>

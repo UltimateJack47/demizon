@@ -52,12 +52,11 @@ public class PublicPageTests(E2EFixture fixture) : E2ETestBase(fixture)
     {
         await Page.GotoAsync(route, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
-        var overflow = await Page.EvaluateAsync<int>(
-            "() => document.documentElement.scrollWidth - document.documentElement.clientWidth");
+        var (overflow, culprits) = await MeasureOverflowAsync(Page);
 
         // Malá tolerance na zaokrouhlení šířek a scrollbar.
         Assert.True(overflow <= 2,
-            $"{route} přetéká vodorovně o {overflow} px (name: {name})");
+            $"{route} přetéká vodorovně o {overflow} px. Viníci: {string.Join(" | ", culprits)}");
     }
 
     [Fact]

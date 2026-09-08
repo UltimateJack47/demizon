@@ -40,8 +40,8 @@ HTTP a prohlížeč, takže je na signaturách nezávislé — může jít kdyko
 | 3 | E2E infrastruktura (Playwright) | ✅ hotovo |
 | 4 | E2E scénáře | ✅ hotovo |
 | 5 | Doplnit unit/integrační díry | ✅ hotovo |
-| 6 | Vizuální QA MudBlazor 9.9 | ⏳ probíhá |
-| 7 | Code review celé vlny | ⬜ čeká |
+| 6 | Vizuální QA MudBlazor 9.9 | ✅ hotovo (kromě Claude in Chrome) |
+| 7 | Code review celé vlny | ⏳ probíhá |
 
 ---
 
@@ -216,7 +216,38 @@ assertion. Místo toho:
       > `Element.checkVisibility()`, které bere v potaz i předky.
 - [x] **Screenshoty jako artefakt** — desktop i 390 px, ukládají se do
       `e2e-artifacts/` a CI je vystavuje jako artefakt běhu.
-- [ ] **Claude in Chrome** na ruční proklikání administrace nad běžící appkou.
+- [ ] **Claude in Chrome** — v této session **nedostupné**: rozšíření je
+      nainstalované, ale nástroje prohlížeče nejsou pro session povolené
+      (`/chrome`, nebo restart Claude Code a jednorázové potvrzení).
+      Ruční proklikání tedy zbývá; automatizovaná část i prohlídka screenshotů
+      proběhly.
+
+### Průchod administrací (`AdminWalkthroughTests`)
+
+9 stránek administrace × (desktop kontroly + mobil 390 px), plus kontrola
+MudBlazor providerů a otevření/zavření dialogu. **48 E2E testů celkem.**
+
+### Nalezené vizuální chyby
+
+| # | Nález | Stav |
+|---|---|---|
+| 1 | `/Admin/Members` přetékal na 390 px o 9 px — toolbar tabulky nese vyhledávání, tři filtry, refresh i „Vytvořit“ v jedné nezabalitelné řádce | ✅ opraveno v `site.css` (`.mud-table-toolbar { flex-wrap: wrap; height: auto }`), řeší celou třídu pro všechny admin tabulky |
+| 2 | **Žádná** admin tabulka neměla `DataLabel`, takže na telefonu se buňky naskládaly pod sebe bez popisků a nešlo poznat, co je co | ✅ doplněno 31 popisků v 5 tabulkách + test `Bunky_tabulky_maji_na_mobilu_popisek` |
+| 3 | Datum v administraci se vypisuje anglicky („1. June 2026“) | ⬜ **neopraveno záměrně** — viz níže |
+
+**K bodu 3.** `Program.cs` má `supportedCultures = ["en-US", "cs-CZ"]` a
+`SetDefaultCulture(supportedCultures[0])`, takže návštěvník **bez culture cookie**
+dostane en-US. Administrace má být podle strategie česky (viz paměť projektu:
+CZ/EN jen pro veřejné stránky, admin zůstává český), takže je to rozpor. Změna
+výchozí kultury ale ovlivní i veřejné stránky, kde je dvojjazyčnost záměr —
+to je produktové rozhodnutí, ne úklid. Možnosti: přehodit výchozí kulturu na
+`cs-CZ`, nebo ji vynutit jen v `AdminMainLayout`.
+
+> **Poučení k metodě.** Nález 1 našla strukturální kontrola, nález 2 a 3 až
+> **pohled na screenshot**. Stránka nepřetékala, prvky měly rozměry, konzole
+> mlčela — a tabulka členů byla na telefonu přesto nečitelná. Automatizace
+> a lidské oko tu nejsou náhrady, ale doplňky: první hlídá regrese, druhé
+> najde to, co nikdo neumí předem vyjádřit jako assertion.
 
 ---
 

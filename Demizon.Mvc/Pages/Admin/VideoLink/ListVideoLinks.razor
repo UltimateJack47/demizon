@@ -35,14 +35,14 @@
         <MudTh Style="width: 40px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="videoLink">
-        <MudTd>@videoLink.Name</MudTd>
-        <MudTd>@videoLink.Year</MudTd>
-        <MudTd>@videoLink.Url</MudTd>
-        <MudTd>
+        <MudTd DataLabel="Název">@videoLink.Name</MudTd>
+        <MudTd DataLabel="Rok">@videoLink.Year</MudTd>
+        <MudTd DataLabel="URL">@videoLink.Url</MudTd>
+        <MudTd DataLabel="Veřejné">
             <MudIcon Icon="@(videoLink.IsVisible ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
                      Color="@(videoLink.IsVisible ? Color.Success : Color.Error)"/>
         </MudTd>
-        <MudTd>
+        <MudTd DataLabel="Akce">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Style="white-space: nowrap;">
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility" OnClick="() => NavigateToDetail(videoLink.Id)" title="Detail"/>
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(videoLink)"/>

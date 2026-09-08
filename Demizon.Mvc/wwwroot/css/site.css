@@ -473,3 +473,18 @@ a, .btn-link {
     overflow: hidden !important;
 }
 
+
+/* ─── Toolbar tabulek v administraci ───
+   MudToolBar je flex row bez zabalení a s fixní výškou. Na úzkém displeji
+   se do něj obsah nevejde: E2E test našel na /Admin/Members tlačítko
+   "Vytvořit" 9 px za pravým okrajem viewportu (390 px), protože toolbar
+   nese vyhledávání, tři přepínače filtrů, refresh i to tlačítko v jedné
+   řádce. Zabalení řeší celou třídu problému pro všechny admin tabulky;
+   výška musí být auto, jinak by se zabalený řádek uřízl.
+   Na desktopu se nic nemění — tam je místa dost a nic se nezabalí. */
+.mud-table-toolbar {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+    height: auto;
+    min-height: 64px;
+}

@@ -34,8 +34,8 @@
         <MudTh Style="width: 80px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="upcomingEvent">
-        <MudTd>@upcomingEvent.Name</MudTd>
-        <MudTd>
+        <MudTd DataLabel="Název">@upcomingEvent.Name</MudTd>
+        <MudTd DataLabel="Datum">
             @if (upcomingEvent.DateFrom.Date != upcomingEvent.DateTo.Date)
             {
                 @($"{upcomingEvent.DateFrom:d. MMMM yyyy} – {upcomingEvent.DateTo:d. MMMM yyyy}")
@@ -45,8 +45,8 @@
                 @upcomingEvent.DateFrom.ToString("d. MMMM yyyy")
             }
         </MudTd>
-        <MudTd>@upcomingEvent.Place</MudTd>
-        <MudTd>
+        <MudTd DataLabel="Místo">@upcomingEvent.Place</MudTd>
+        <MudTd DataLabel="Veřejné">
             <MudIcon Icon="@(upcomingEvent.IsPublic ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
                      Color="@(upcomingEvent.IsPublic ? Color.Success : Color.Error)"/>
             @if (upcomingEvent.IsCancelled)
@@ -54,7 +54,7 @@
                 <MudChip T="string" Color="Color.Error" Size="Size.Small" Icon="@Icons.Material.Filled.Cancel" Class="ml-1">Zrušena</MudChip>
             }
         </MudTd>
-        <MudTd>
+        <MudTd DataLabel="Akce">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Style="white-space: nowrap;">
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility" OnClick="() => NavigateToDetail(upcomingEvent.Id)" title="Detail"/>
             <AuthorizeView Roles="Admin">

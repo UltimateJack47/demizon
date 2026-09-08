@@ -50,17 +50,17 @@ public class MudBlazorLayoutTests(E2EFixture fixture) : E2ETestBase(fixture)
         await using var mobile = await Fixture.NewContextAsync(390, 844);
         var page = await mobile.NewPageAsync();
 
-        foreach (var route in new[] { "/", "/Dances", "/Photos" })
+        foreach (var (route, name) in new[] { ("/", "index"), ("/Dances", "dances"), ("/Photos", "photos") })
         {
             await page.GotoAsync(route, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
 
-            var overflow = await page.EvaluateAsync<int>(
-                "() => document.documentElement.scrollWidth - document.documentElement.clientWidth");
-            Assert.True(overflow <= 2, $"{route} přetéká na 390 px o {overflow} px");
+            var (overflow, culprits) = await MeasureOverflowAsync(page);
+            Assert.True(overflow <= 2,
+                $"{route} přetéká na 390 px o {overflow} px. Viníci: {string.Join(" | ", culprits)}");
 
             await page.ScreenshotAsync(new PageScreenshotOptions
             {
-                Path = Path.Combine(Fixture.ArtifactDirectory, $"mobile-{route.Trim('/').Replace('/', '-')}.png"),
+                Path = Path.Combine(Fixture.ArtifactDirectory, $"mobile-{name}.png"),
                 FullPage = true,
             });
         }
@@ -91,9 +91,9 @@ public class MudBlazorLayoutTests(E2EFixture fixture) : E2ETestBase(fixture)
         await page.ClickAsync("button[type='submit']");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        var overflow = await page.EvaluateAsync<int>(
-            "() => document.documentElement.scrollWidth - document.documentElement.clientWidth");
-        Assert.True(overflow <= 2, $"Administrace přetéká na 390 px o {overflow} px");
+        var (overflow, culprits) = await MeasureOverflowAsync(page);
+        Assert.True(overflow <= 2,
+            $"Administrace přetéká na 390 px o {overflow} px. Viníci: {string.Join(" | ", culprits)}");
 
         await page.ScreenshotAsync(new PageScreenshotOptions
         {

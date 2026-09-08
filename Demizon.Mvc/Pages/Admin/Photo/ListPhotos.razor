@@ -53,7 +53,7 @@
         <MudTh Style="width: 80px"></MudTh>
     </HeaderContent>
     <RowTemplate Context="photo">
-        <MudTd>
+        <MudTd DataLabel="Náhled">
             @if (photo.HasDbData)
             {
                 <img src="/api/files/@photo.Id/image?size=thumb" alt="thumb" style="width:60px; height:60px; object-fit:cover; border-radius:4px;"/>
@@ -63,10 +63,10 @@
                 <img src="@photo.Path" alt="thumb" style="width:60px; height:60px; object-fit:cover; border-radius:4px;"/>
             }
         </MudTd>
-        <MudTd>@photo.Id</MudTd>
-        <MudTd>@photo.ContentType</MudTd>
-        <MudTd>@FormatSize(photo.FileSize)</MudTd>
-        <MudTd>
+        <MudTd DataLabel="ID">@photo.Id</MudTd>
+        <MudTd DataLabel="Typ">@photo.ContentType</MudTd>
+        <MudTd DataLabel="Velikost">@FormatSize(photo.FileSize)</MudTd>
+        <MudTd DataLabel="Tanec">
             <MudSelect T="int?" Value="@photo.DanceId" ValueChanged="@(val => AssignDance(photo, val))"
                        Placeholder="–" Dense="true" Margin="Margin.Dense" Variant="Variant.Text">
                 <MudSelectItem T="int?" Value="@((int?)null)">–</MudSelectItem>
@@ -76,11 +76,11 @@
                 }
             </MudSelect>
         </MudTd>
-        <MudTd>
+        <MudTd DataLabel="Veřejné">
             <MudSwitch T="bool" Value="@photo.IsPublic" ValueChanged="@(val => TogglePublic(photo, val))"
                        Color="Color.Success"/>
         </MudTd>
-        <MudTd>
+        <MudTd DataLabel="Akce">
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
                            Color="Color.Error" OnClick="() => DeletePhoto(photo.Id)"/>
         </MudTd>

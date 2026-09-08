@@ -75,6 +75,37 @@ public abstract class E2ETestBase : IAsyncLifetime
     protected Task LoginAsMemberAsync() => LoginAsync(AppHost.MemberLogin, AppHost.MemberPassword);
 
     /// <summary>
+    /// Vodorovný přesah stránky v px a k tomu prvky, které za něj mohou.
+    /// Bez pojmenování viníka je „přetéká o 9 px“ nezjistitelné — u tabulky
+    /// s desítkami buněk se ručně hledá dlouho.
+    /// </summary>
+    protected static async Task<(int Overflow, string[] Culprits)> MeasureOverflowAsync(IPage page)
+    {
+        var overflow = await page.EvaluateAsync<int>(
+            "() => document.documentElement.scrollWidth - document.documentElement.clientWidth");
+
+        if (overflow <= 2) return (overflow, []);
+
+        var culprits = await page.EvaluateAsync<string[]>("""
+            () => {
+                const limit = document.documentElement.clientWidth;
+                return Array.from(document.querySelectorAll('*'))
+                    .filter(el => el.checkVisibility({ checkVisibilityCSS: true }))
+                    .map(el => ({ el, rect: el.getBoundingClientRect() }))
+                    .filter(x => x.rect.right > limit + 2 && x.rect.width > 0)
+                    .sort((a, b) => b.rect.right - a.rect.right)
+                    .slice(0, 6)
+                    .map(x => {
+                        const cls = (x.el.className || '').toString().trim().split(/\s+/).slice(0, 3).join('.');
+                        return `${x.el.tagName}${cls ? '.' + cls : ''} right=${Math.round(x.rect.right)} w=${Math.round(x.rect.width)}`;
+                    });
+            }
+            """);
+
+        return (overflow, culprits);
+    }
+
+    /// <summary>
     /// Screenshot jako artefakt, ne jako assertion. Pixelové porovnávání je
     /// napříč stroji křehké (fonty), takže se tady jen ukládá k prohlédnutí
     /// a k porovnání při příštím upgradu MudBlazoru.
