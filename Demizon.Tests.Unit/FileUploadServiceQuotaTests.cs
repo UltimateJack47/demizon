@@ -1,4 +1,4 @@
-using Demizon.Common.Configuration;
+﻿using Demizon.Common.Configuration;
 using Demizon.Core.Services.FileUpload;
 using Demizon.Core.Services.Storage;
 using Demizon.Tests.Unit.Fakes;
@@ -17,9 +17,6 @@ public class FileUploadServiceQuotaTests
         IStorageQuotaService? quota = null) =>
         new(new StubOptionsSnapshot<UploadSettings>(new UploadSettings
         {
-            ImagesDirectory = "files/images",
-            AllowedFileExtensions = [".jpg", ".jpeg", ".png", ".pdf"],
-            Resize = new Dictionary<string, ResizeSettings>(),
             MaxFileBytes = maxFileBytes
         }), quota);
 

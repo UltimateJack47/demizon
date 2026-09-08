@@ -28,7 +28,7 @@
 
 ## Notifications and external integrations
 - FCM mobile push: `Demizon.Mvc/Services/FcmService.cs`, device tokens in `DeviceTokens` table, endpoints in `Controllers/Api/NotificationsController.cs`.
-- Web Push (browser): `NotificationHostedService` uses VAPID settings and `PushSubscriptions`.
+- Web Push (browser): `Services/Notification/WebPushSender.cs` uses VAPID settings and `PushSubscriptions`; it is driven by `UnifiedNotificationService` (the only registered notification hosted service).
 - Google Calendar sync is triggered by attendance updates (`AttendancesController`) and OAuth endpoints (`/google/connect`, `/google/callback`) in `Program.cs`.
 
 ## Configuration, secrets, and local setup

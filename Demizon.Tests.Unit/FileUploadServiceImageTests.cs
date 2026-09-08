@@ -1,4 +1,4 @@
-using Demizon.Common.Configuration;
+﻿using Demizon.Common.Configuration;
 using Demizon.Core.Services.FileUpload;
 using Demizon.Tests.Unit.Fakes;
 using SixLabors.ImageSharp;
@@ -24,12 +24,7 @@ public class FileUploadServiceImageTests
     private const int ThumbnailWidth = 200;
 
     private static FileUploadService CreateService() =>
-        new(new StubOptionsSnapshot<UploadSettings>(new UploadSettings
-        {
-            ImagesDirectory = "files/images",
-            AllowedFileExtensions = [".jpg", ".jpeg", ".png", ".pdf"],
-            Resize = new Dictionary<string, ResizeSettings>()
-        }));
+        new(new StubOptionsSnapshot<UploadSettings>(new UploadSettings()));
 
     private static async Task<FileUploadResult> UploadImageAsync(byte[] bytes, string extension = ".jpg",
         string contentType = "image/jpeg")

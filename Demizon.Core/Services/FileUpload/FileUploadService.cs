@@ -1,4 +1,4 @@
-using Demizon.Common.Configuration;
+﻿using Demizon.Common.Configuration;
 using Demizon.Core.Services.Storage;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,34 +21,6 @@ public class FileUploadService(
     private const int JpegQuality = 80;
 
     private UploadSettings UploadSettings { get; } = uploadSettings.Value;
-
-    public async Task<FileUploadResult> UploadImageAsync(FileUploadRequest fileRequest,
-        bool createResizedImages = false, string? uploadSessionIdentifier = null)
-    {
-        string documentRoot = Environment.CurrentDirectory;
-
-        uploadSessionIdentifier ??= Guid.NewGuid().ToString();
-        string fileRelPathDir = $"{UploadSettings.ImagesDirectory}/{uploadSessionIdentifier}/";
-        Directory.CreateDirectory(documentRoot + "/" + fileRelPathDir);
-
-        string fileName = Guid.NewGuid() + fileRequest.FileExtension;
-        Uri fileUri = new Uri(documentRoot + "/" + fileRelPathDir + fileName);
-
-        await using (var stream = new FileStream(fileUri.AbsolutePath, FileMode.Create))
-        {
-            await fileRequest.Stream.CopyToAsync(stream);
-        }
-
-        return new FileUploadResult
-        {
-            FileExtension = fileRequest.FileExtension,
-            FileName = Path.GetFileNameWithoutExtension(fileName),
-            RelativePath = fileRelPathDir + fileName,
-            ContentType = fileRequest.ContentType,
-            FileSize = fileRequest.FileSize,
-            IsSuccessful = true
-        };
-    }
 
     public async Task<FileUploadResult> UploadImageToDbAsync(FileUploadRequest fileRequest)
     {
