@@ -8,6 +8,7 @@ riderModule.iml
 *.DotSettings.user
 /Demizon.slnx.DotSettings
 /Demizon.Mvc/files
+/Demizon.Mvc/dp-keys/
 
 # Firebase secrets — copy FirebaseConfig.template.cs → FirebaseConfig.cs and fill in values
 /Demizon.Maui/Platforms/Android/FirebaseConfig.cs

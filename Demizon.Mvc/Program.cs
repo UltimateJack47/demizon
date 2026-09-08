@@ -13,6 +13,7 @@ using Demizon.Mvc.Services;
 using Demizon.Mvc.Services.Authentication;
 using Demizon.Mvc.Services.Extensions;
 using Demizon.Mvc.Services.Notification;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Localization;
@@ -22,11 +23,12 @@ using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Railway volume mount: počkat až bude /data dostupné a writable
+// /data volume: on Scaleway it's ready immediately. A few retries cover a slow mount
+// without the Railway-era 60s worst-case stall.
 if (builder.Environment.IsProduction())
 {
     var dataDir = "/data";
-    var maxWait = 60;
+    const int maxWait = 5;
     for (int i = 0; i < maxWait; i++)
     {
         try
@@ -102,6 +104,13 @@ builder.Services.AddNotifications();
 builder.Services.AddHostedService<UnifiedNotificationService>();
 
 builder.Services.AddDatabase(defaultConnectionString);
+
+var dataProtectionKeys = builder.Environment.IsProduction()
+    ? "/data/keys"
+    : Path.Combine(builder.Environment.ContentRootPath, "dp-keys");
+Directory.CreateDirectory(dataProtectionKeys);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeys));
 
 builder.Services.AddControllers();
 builder.Services.AddSingleton<FcmService>();

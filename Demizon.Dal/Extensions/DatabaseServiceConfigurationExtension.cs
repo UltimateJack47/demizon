@@ -41,14 +41,13 @@ public static class DatabaseServiceConfigurationExtension
     }
 
     /// <summary>
-    /// Aktivuje WAL mode pro SQLite s retry logikou (čeká na volume mount).
-    /// Railway volumes se mountují během startu — retry zajistí, že se DB otevře.
+    /// Aktivuje WAL mode pro SQLite. Pár retry pokrývá pomalý volume mount.
     /// </summary>
     public static void EnableWalMode(this IServiceProvider services)
     {
         var logger = services.GetService<ILoggerFactory>()?.CreateLogger("DatabaseServiceConfiguration");
-        int maxRetries = 15;
-        int delayMs = 3000; // 3 sekundy mezi pokusy (Railway volume mount timing)
+        int maxRetries = 3;
+        int delayMs = 1000;
 
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {

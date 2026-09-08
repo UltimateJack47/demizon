@@ -29,7 +29,7 @@ public class FilesController(IFileService fileService) : ControllerBase
             if (!file.IsPublic && !User.Identity?.IsAuthenticated == true)
                 return NotFound();
 
-            byte[]? data = size == "thumb" ? file.ThumbnailData ?? file.Data : file.Data;
+            var data = await fileService.GetContentAsync(id, thumbnail: size == "thumb");
             if (data == null || data.Length == 0)
                 return NotFound();
 
@@ -61,11 +61,15 @@ public class FilesController(IFileService fileService) : ControllerBase
         try
         {
             var file = await fileService.GetOneAsync(id);
-            if (file.Kind != FileKind.Document || file.Data is null || file.Data.Length == 0)
+            if (file.Kind != FileKind.Document)
+                return NotFound();
+
+            var data = await fileService.GetContentAsync(id);
+            if (data is null || data.Length == 0)
                 return NotFound();
 
             var fileName = System.IO.Path.GetFileName(file.Path);
-            return File(file.Data, file.ContentType, fileName);
+            return File(data, file.ContentType, fileName);
         }
         catch (Common.Exceptions.EntityNotFoundException)
         {

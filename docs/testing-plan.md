@@ -20,7 +20,7 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 | Projekt | Co testuje | Rychlost |
 |---|---|---|
 | `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result` | ~3 s / 76 testů |
-| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 150 testů |
+| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace | ~3 s / 155 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
 
@@ -264,7 +264,7 @@ Zbylé tři nálezy kola 6:
 | `AttendanceStatusContractTests` | `"yes"/"maybe"/"no"`, case-insensitivita, fallback na `No`, a hlavně že serializace a parsování jsou navzájem inverzní |
 | `ResultTests` | `Ok`/`Fail` semantika, `Ok(null)` jako platný úspěch |
 
-### `Demizon.Tests.Integration` (150)
+### `Demizon.Tests.Integration` (155)
 
 | Soubor | Co hlídá |
 |---|---|
@@ -278,6 +278,7 @@ Zbylé tři nálezy kola 6:
 | `SqlitePragmaInterceptorTests` | `busy_timeout` / `journal_size_limit` / `wal_autocheckpoint` / `auto_vacuum=INCREMENTAL` se skutečně propíšou, a to na **každé** nové spojení |
 | `StorageQuotaServiceTests` | per-file / count / total-bytes kvóty; `FileService.CreateAsync` při odmítnutí nic neuloží |
 | `DiskMaintenanceServiceTests` | purge AuditLog 90 dní, revokované i expirované refresh tokeny, SentNotifications 180 dní; netýká se členů ani souborů |
+| `FileBlobLoadingTests` | `GetOneAsync` / seznamy nenačtou BLOBy; `UpdateAsync` nemaže Data; `GetContentAsync` vrací jen požadovaný sloupec |
 
 ### Nejcennější jednotlivý test
 
@@ -324,7 +325,7 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
 - [ ] **CI workflow** — `dotnet test Demizon.Backend.slnf` na každý push.
       Navázat na `build.yml` z *hosting-optimization-plan.md* (zatím nezaložený).
 - [ ] **Testy controllerů** přes `WebApplicationFactory` — autorizace endpointů
-      (`DatabaseController` je dnes jen `[Authorize]`, ne `Roles = "Admin"`),
+      (`/api/database/info` je `Roles = "Admin"`; backup ZIP endpoint je pryč),
       mapování status kódů, rate limiting na `/api/auth/token`.
 - [ ] **bUnit na Razor komponenty** — hlavně po updatu MudBlazoru 9.3 → 9.9,
       který build projde, ale vizuální změny nezachytí.

@@ -1,5 +1,6 @@
 @page "/Dances"
 @using Demizon.Core.Services.Dance
+@using Demizon.Core.Services.File
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Public.Components
 @using Demizon.Mvc.ViewModels
@@ -101,6 +102,7 @@ else
 @code {
 
     [Inject] private IDanceService DanceService { get; set; } = null!;
+    [Inject] private IFileService FileService { get; set; } = null!;
 
     private List<DanceViewModel> VisibleDances { get; set; } = [];
 
@@ -110,10 +112,33 @@ else
         var dances = await DanceService.GetAll()
             .Where(x => x.IsVisible)
             .Include(x => x.Videos)
-            .Include(x => x.Files)
             .OrderBy(x => x.Name)
             .ToListAsync();
-        VisibleDances = dances.Select(x => x.ToViewModel()).ToList();
+
+        var photos = await FileService.GetAll()
+            .Where(f => f.IsPublic && f.Kind == FileKind.Image && f.DanceId != null)
+            .Select(f => new FileViewModel
+            {
+                Id = f.Id,
+                Path = f.Path,
+                FileExtension = f.FileExtension,
+                ContentType = f.ContentType,
+                FileSize = f.FileSize,
+                IsPublic = f.IsPublic,
+                Kind = f.Kind,
+                DanceId = f.DanceId,
+                HasDbData = f.Data != null,
+            })
+            .ToListAsync();
+        var photosByDance = photos.ToLookup(f => f.DanceId);
+
+        VisibleDances = dances.Select(d =>
+        {
+            var vm = d.ToViewModel();
+            vm.Videos = d.Videos.Select(v => v.ToViewModel()).ToList();
+            vm.Files = photosByDance[d.Id].ToList();
+            return vm;
+        }).ToList();
     }
 
     private async Task OpenGallery(DanceViewModel dance, List<FileViewModel> photos, int startIndex)

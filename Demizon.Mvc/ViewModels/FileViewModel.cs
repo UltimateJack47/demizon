@@ -42,7 +42,7 @@ public static class FileMappingExtensions
         MemberId = entity.MemberId,
         DanceId = entity.DanceId,
         IsPublic = entity.IsPublic,
-        HasDbData = entity.Data != null,
+        HasDbData = entity.HasStoredData || entity.Data != null,
         Kind = entity.Kind,
     };
 
