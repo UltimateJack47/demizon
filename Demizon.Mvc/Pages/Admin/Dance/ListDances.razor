@@ -70,7 +70,12 @@
         var resultMessage = await DialogService.ShowMessageBoxAsync("Smazat položku?", "", "Ano", "Zrušit", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
-            await DanceService.DeleteAsync(id);
+            // Dřív se výsledek zahodil a mřížka se jen obnovila, takže neúspěšné
+            // smazání vypadalo jako úspěch — jen tam ten řádek pořád byl.
+            var deleted = await DanceService.DeleteAsync(id);
+            if (!deleted.IsSuccess)
+                Snackbar.Add(deleted.Error ?? "Smazání se nezdařilo.", Severity.Error);
+
             await RefreshTable();
         }
     }
@@ -105,7 +110,13 @@
                 }
                 else
                 {
-                    await DanceService.CreateAsync(danceResult!.ToEntity());
+                    var created = await DanceService.CreateAsync(danceResult!.ToEntity());
+                    if (!created.IsSuccess)
+                    {
+                        Snackbar.Add(created.Error ?? "Tanec se nepodařilo vytvořit.", Severity.Error);
+                        return;
+                    }
+
                     Snackbar.Add("Tanec byl vytvořen.", Severity.Success);
                 }
 

@@ -1,4 +1,5 @@
 using Demizon.Common.Exceptions;
+using Demizon.Common;
 using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
 using Demizon.Dal;
@@ -34,7 +35,7 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
         var saved = await Attendances(db).CreateOrUpdateAsync(
             TestData.RehearsalAttendance(member.Id, Day(5, 1), AttendanceStatus.Yes));
 
-        Assert.True(saved);
+        ResultAssert.Ok(saved);
         await using var verify = _fixture.NewContext();
         Assert.Single(await verify.Attendances.ToListAsync());
     }
@@ -93,7 +94,7 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
         // MemberId ukazuje nikam — musí selhat na FK, ale služba chybu jen zaloguje.
         var orphan = TestData.RehearsalAttendance(memberId: 99999, Day(5, 1), AttendanceStatus.Yes);
 
-        Assert.False(await Attendances(db).CreateOrUpdateAsync(orphan));
+        ResultAssert.Failed(await Attendances(db).CreateOrUpdateAsync(orphan));
     }
 
     /// <summary>
@@ -112,7 +113,7 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
         var attendance = TestData.RehearsalAttendance(member.Id, Day(5, 1), AttendanceStatus.Yes);
         Assert.Equal(0, attendance.Id);
 
-        Assert.True(await Attendances(db).CreateOrUpdateAsync(attendance));
+        ResultAssert.Ok(await Attendances(db).CreateOrUpdateAsync(attendance));
 
         Assert.NotEqual(0, attendance.Id);
         await using var verify = _fixture.NewContext();
@@ -126,7 +127,7 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
         await using var db = _fixture.NewContext();
         var orphan = TestData.RehearsalAttendance(memberId: 99999, Day(5, 1), AttendanceStatus.Yes);
 
-        Assert.False(await Attendances(db).CreateOrUpdateAsync(orphan));
+        ResultAssert.Failed(await Attendances(db).CreateOrUpdateAsync(orphan));
 
         // Volající se rozhoduje podle Id != 0, takže po selhání tam nesmí
         // zůstat klíč, který v databázi nic neoznačuje.
@@ -148,7 +149,7 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
         await using var db = _fixture.NewContext();
         var service = Attendances(db);
         var created = TestData.RehearsalAttendance(member.Id, Day(5, 1), AttendanceStatus.Yes);
-        Assert.True(await service.CreateOrUpdateAsync(created));
+        ResultAssert.Ok(await service.CreateOrUpdateAsync(created));
         var attendanceId = created.Id;
         Assert.NotEqual(0, attendanceId);
 
@@ -156,7 +157,7 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
         await using var writeBack = _fixture.NewContext();
         var loaded = await Attendances(writeBack).GetOneAsync(attendanceId);
         loaded.GoogleEventId = "google-event-abc";
-        Assert.True(await Attendances(writeBack).CreateOrUpdateAsync(loaded));
+        ResultAssert.Ok(await Attendances(writeBack).CreateOrUpdateAsync(loaded));
 
         await using var verify = _fixture.NewContext();
         Assert.Equal("google-event-abc",
@@ -168,7 +169,7 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
         Assert.Equal("google-event-abc", toClear.GoogleEventId);
         toClear.Status = AttendanceStatus.No;
         toClear.GoogleEventId = null;
-        Assert.True(await Attendances(clear).CreateOrUpdateAsync(toClear));
+        ResultAssert.Ok(await Attendances(clear).CreateOrUpdateAsync(toClear));
 
         await using var final = _fixture.NewContext();
         var stored = await final.Attendances.SingleAsync(a => a.Id == attendanceId);
@@ -194,7 +195,7 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
         await seed.SaveChangesAsync();
 
         await using var db = _fixture.NewContext();
-        Assert.True(await Attendances(db).DeleteAsync(attendance.Id));
+        ResultAssert.Ok(await Attendances(db).DeleteAsync(attendance.Id));
 
         await using var verify = _fixture.NewContext();
         Assert.Empty(await verify.Attendances.ToListAsync());
@@ -205,7 +206,7 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
     {
         await using var db = _fixture.NewContext();
 
-        Assert.False(await Attendances(db).DeleteAsync(4242));
+        ResultAssert.Failed(await Attendances(db).DeleteAsync(4242));
     }
 
     [Fact]
@@ -266,7 +267,7 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
     {
         await using var db = _fixture.NewContext();
 
-        Assert.True(await Events(db).CreateAsync(TestData.Event("Hody")));
+        ResultAssert.Ok(await Events(db).CreateAsync(TestData.Event("Hody")));
 
         await using var verify = _fixture.NewContext();
         Assert.Equal("Hody", (await verify.Events.SingleAsync()).Name);
@@ -358,17 +359,33 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
     }
 
     /// <summary>
-    /// Odlišné chování od <c>AttendanceService.DeleteAsync</c>, které vrací <c>false</c>:
-    /// <c>EventService.DeleteAsync</c> na neexistující akci <b>hodí výjimku</b>, protože
-    /// kontrola běží před try blokem. Test tu nesrovnalost pojmenovává, aby ji volající
-    /// nemusel hádat.
+    /// Dřív se tady chování rozcházelo: <c>AttendanceService.DeleteAsync</c> vracela
+    /// <c>false</c>, ale <c>EventService.DeleteAsync</c> na neexistující akci
+    /// <b>hodila výjimku</b>, protože kontrola běžela před try blokem. Volající to
+    /// musel vědět u každé služby zvlášť.
+    /// <para>
+    /// S <c>Result</c> je to sjednocené: chybějící řádek je <c>NotFound</c>, ne
+    /// výjimka. Controller z toho udělá HTTP 404, aniž by rozebíral text chyby.
+    /// </para>
     /// </summary>
     [Fact]
-    public async Task DeleteAsync_neexistujici_akce_hodi_EntityNotFoundException()
+    public async Task DeleteAsync_neexistujici_akce_vrati_NotFound()
     {
         await using var db = _fixture.NewContext();
 
-        await Assert.ThrowsAsync<EntityNotFoundException>(() => Events(db).DeleteAsync(4242));
+        ResultAssert.Failed(await Events(db).DeleteAsync(4242), ResultErrorKind.NotFound);
+    }
+
+    /// <summary>
+    /// Stejná otázka u ostatních služeb — smyslem je, aby se odpověď nelišila
+    /// podle toho, na kterou službu se volající zeptá.
+    /// </summary>
+    [Fact]
+    public async Task DeleteAsync_neexistujici_dochazky_vrati_taky_NotFound()
+    {
+        await using var db = _fixture.NewContext();
+
+        ResultAssert.Failed(await Attendances(db).DeleteAsync(4242), ResultErrorKind.NotFound);
     }
 
     [Fact]
@@ -380,7 +397,7 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
         await seed.SaveChangesAsync();
 
         await using var db = _fixture.NewContext();
-        Assert.True(await Events(db).DeleteAsync(ev.Id));
+        ResultAssert.Ok(await Events(db).DeleteAsync(ev.Id));
 
         await using var verify = _fixture.NewContext();
         Assert.Empty(await verify.Events.ToListAsync());

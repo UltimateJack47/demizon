@@ -4,6 +4,7 @@ using Demizon.Mvc.Mapping;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Demizon.Mvc.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Mvc.Controllers.Api;
@@ -57,9 +58,9 @@ public class VideosController(IVideoLinkService videoLinkService) : ControllerBa
             DanceId = request.DanceId,
         };
 
-        var success = await videoLinkService.CreateAsync(entity);
-        if (!success)
-            return StatusCode(500, new { error = "Failed to create video." });
+        var created = await videoLinkService.CreateAsync(entity);
+        if (!created.IsSuccess)
+            return created.ToErrorResponse();
 
         return CreatedAtAction(nameof(GetOne), new { id = entity.Id }, entity.ToDto());
     }
@@ -98,7 +99,8 @@ public class VideosController(IVideoLinkService videoLinkService) : ControllerBa
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        var success = await videoLinkService.DeleteAsync(id);
-        return success ? NoContent() : NotFound();
+        var deleted = await videoLinkService.DeleteAsync(id);
+        // Dřív se každé selhání hlásilo jako 404, včetně chyby zápisu.
+        return deleted.IsSuccess ? NoContent() : deleted.ToErrorResponse();
     }
 }

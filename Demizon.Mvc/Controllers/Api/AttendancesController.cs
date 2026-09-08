@@ -73,6 +73,9 @@ public class AttendancesController(
         // Google Calendar sync — pouze PŘED uložením do DB
         var member = await memberService.GetOneAsync(memberId);
         var gcalWarning = (string?)null;
+        // Jen událost vytvořená v tomhle requestu se dá bezpečně vrátit zpět,
+        // když se docházka neuloží. Už existující se rušit nesmí.
+        var createdGoogleEventId = (string?)null;
         if (!string.IsNullOrEmpty(member.GoogleRefreshToken) && !string.IsNullOrEmpty(member.GoogleCalendarId))
         {
             try
@@ -89,6 +92,7 @@ public class AttendancesController(
                         if (googleEventId is not null)
                         {
                             attendance.GoogleEventId = googleEventId;
+                            createdGoogleEventId = googleEventId;
                         }
                         else
                         {
@@ -118,7 +122,14 @@ public class AttendancesController(
         }
 
         // TEPRVE POTOM ulož do DB (s GoogleEventId buď vyplněným nebo null)
-        await attendanceService.CreateOrUpdateAsync(attendance);
+        var saved = await attendanceService.CreateOrUpdateAsync(attendance);
+        if (!saved.IsSuccess)
+        {
+            // Dřív se tady výsledek zahodil a akce vrátila 200 s DTO, takže
+            // klient ukázal docházku jako uloženou, i když v databázi nebyla.
+            await RollbackCalendarEventAsync(member, createdGoogleEventId);
+            return saved.ToErrorResponse();
+        }
 
         if (gcalWarning is not null)
             Response.Headers.Append("X-GCal-Warning", gcalWarning);
@@ -159,6 +170,7 @@ public class AttendancesController(
         // Google Calendar sync pro zkoušky
         var member = await memberService.GetOneAsync(memberId);
         var gcalWarning = (string?)null;
+        var createdGoogleEventId = (string?)null;
         if (!string.IsNullOrEmpty(member.GoogleRefreshToken) && !string.IsNullOrEmpty(member.GoogleCalendarId))
         {
             try
@@ -173,6 +185,7 @@ public class AttendancesController(
                         if (googleEventId is not null)
                         {
                             attendance.GoogleEventId = googleEventId;
+                            createdGoogleEventId = googleEventId;
                         }
                     }
                 }
@@ -191,7 +204,12 @@ public class AttendancesController(
             }
         }
 
-        await attendanceService.CreateOrUpdateAsync(attendance);
+        var saved = await attendanceService.CreateOrUpdateAsync(attendance);
+        if (!saved.IsSuccess)
+        {
+            await RollbackCalendarEventAsync(member, createdGoogleEventId);
+            return saved.ToErrorResponse();
+        }
 
         if (gcalWarning is not null)
             Response.Headers.Append("X-GCal-Warning", gcalWarning);
@@ -251,10 +269,13 @@ public class AttendancesController(
         attendance.Comment = request.Comment;
         attendance.ActivityRole = activityRole;
 
-        // Google Calendar sync for the target member
+        // Google Calendar sync for the target member.
+        // member je deklarovaný před try, aby ho měl k dispozici i rollback níž.
+        Dal.Entities.Member? member = null;
+        var createdGoogleEventId = (string?)null;
         try
         {
-            var member = await memberService.GetOneAsync(memberId);
+            member = await memberService.GetOneAsync(memberId);
             if (!string.IsNullOrEmpty(member.GoogleRefreshToken) && !string.IsNullOrEmpty(member.GoogleCalendarId))
             {
                 if (attendance.Status == AttendanceStatus.Yes)
@@ -266,6 +287,7 @@ public class AttendancesController(
                         if (googleEventId is not null)
                         {
                             attendance.GoogleEventId = googleEventId;
+                            createdGoogleEventId = googleEventId;
                         }
                     }
                 }
@@ -287,7 +309,13 @@ public class AttendancesController(
             logger.LogWarning(ex, "Google Calendar sync selhal pro člena {MemberId}, akce {EventId}.", memberId, eventId);
         }
 
-        await attendanceService.CreateOrUpdateAsync(attendance);
+        var saved = await attendanceService.CreateOrUpdateAsync(attendance);
+        if (!saved.IsSuccess)
+        {
+            await RollbackCalendarEventAsync(member, createdGoogleEventId);
+            return saved.ToErrorResponse();
+        }
+
         return Ok(attendance.ToDto());
     }
 
@@ -330,7 +358,10 @@ public class AttendancesController(
         attendance.Status = ParseStatus(request.Status);
         attendance.Comment = request.Comment;
 
-        await attendanceService.CreateOrUpdateAsync(attendance);
+        var saved = await attendanceService.CreateOrUpdateAsync(attendance);
+        if (!saved.IsSuccess)
+            return saved.ToErrorResponse();
+
         return Ok(attendance.ToDto());
     }
 
@@ -374,7 +405,10 @@ public class AttendancesController(
             // Google Calendar sync failure must not block deletion
         }
 
-        await attendanceService.DeleteAsync(att.Id);
+        var deleted = await attendanceService.DeleteAsync(att.Id);
+        if (!deleted.IsSuccess)
+            return deleted.ToErrorResponse();
+
         return NoContent();
     }
 
@@ -406,7 +440,10 @@ public class AttendancesController(
             // Google Calendar sync failure must not block deletion
         }
 
-        await attendanceService.DeleteAsync(att.Id);
+        var deleted = await attendanceService.DeleteAsync(att.Id);
+        if (!deleted.IsSuccess)
+            return deleted.ToErrorResponse();
+
         return NoContent();
     }
 
@@ -461,6 +498,38 @@ public class AttendancesController(
         }).ToList();
 
         return Ok(new MonthlyAttendanceTableDto(columns, memberRows));
+    }
+
+    /// <summary>
+    /// Zruší událost v kalendáři, kterou tenhle request právě vytvořil, když se
+    /// docházka neuložila. Bez toho by v kalendáři zůstala událost, na kterou už
+    /// z databáze nic neukazuje — a nešla by smazat ani pozdějším přepnutím na
+    /// „nepřijdu“, protože její ID se nemá kde vzít.
+    /// </summary>
+    private async Task RollbackCalendarEventAsync(Dal.Entities.Member? member, string? createdGoogleEventId)
+    {
+        if (createdGoogleEventId is null
+            || member is null
+            || string.IsNullOrEmpty(member.GoogleRefreshToken)
+            || string.IsNullOrEmpty(member.GoogleCalendarId))
+        {
+            return;
+        }
+
+        try
+        {
+            await googleCalendarService.DeleteEventAsync(
+                member.GoogleRefreshToken, member.GoogleCalendarId, createdGoogleEventId);
+            logger.LogInformation(
+                "Docházka se neuložila, zrušena právě vytvořená GCal událost {GoogleEventId}.",
+                createdGoogleEventId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Docházka se neuložila a osiřelou GCal událost {GoogleEventId} se nepodařilo zrušit.",
+                createdGoogleEventId);
+        }
     }
 
     internal static AttendanceStatus ParseStatus(string? status) => status?.ToLowerInvariant() switch

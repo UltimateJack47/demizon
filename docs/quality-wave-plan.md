@@ -36,8 +36,8 @@ HTTP a prohlížeč, takže je na signaturách nezávislé — může jít kdyko
 | # | Krok | Stav |
 |---|---|---|
 | 1 | Plán (tento dokument) | ✅ hotovo |
-| 2 | Result refactor: služby + volající + testy | ⏳ probíhá |
-| 3 | E2E infrastruktura (Playwright) | ⬜ čeká |
+| 2 | Result refactor: služby + volající + testy | ✅ hotovo |
+| 3 | E2E infrastruktura (Playwright) | ⏳ probíhá |
 | 4 | E2E scénáře | ⬜ čeká |
 | 5 | Doplnit unit/integrační díry | ⬜ čeká |
 | 6 | Vizuální QA MudBlazor 9.9 | ⬜ čeká |
@@ -95,14 +95,30 @@ ne typ.
 
 ### Stav
 
-- [ ] `Result` doplnit o to, co refactor potřebuje (viz Postup)
-- [ ] `AttendanceService` (+ 4 controller volání, `MemberAttendance.razor.cs`)
-- [ ] `DanceService`, `EventService`, `FileService`, `MemberService`, `VideoLinkService`
-- [ ] Razor stránky: `ListDances`, `ListEvents`, `ListMembers`, `ListPhotos`,
-      `ListVideoLinks`, `Dance/Detail`, `MemberForm`
-- [ ] Controllery: `Attendances`, `Dances`, `Events`, `Files`, `Videos`, `Auth`
-- [ ] `AuthenticationService`
-- [ ] Testy přepsané na nový kontrakt
+- [x] `Result` doplněn o `ResultErrorKind` (`Failure` / `NotFound` / `Rejected`).
+      Bez toho by controller nerozlišil 404 od 500 a musel by hádat z textu.
+- [x] Všech 6 služeb: `CreateAsync`/`CreateOrUpdateAsync` → `Result<int>` s klíčem,
+      `DeleteAsync` → `Result`. Sjednoceno i to, že chybějící řádek je `NotFound`,
+      ne výjimka — `EventService.DeleteAsync` se dřív chovala jinak než ostatní.
+- [x] Controllery + `ResultHttpExtensions.ToErrorResponse()` jako jedno místo
+      pro mapování na HTTP kód.
+- [x] Razor stránky: chybové texty jdou do `Snackbar` z `Result.Error`.
+- [x] Testy přepsané, `ResultAssert` vypisuje `Error` při selhání.
+- [x] `AuthenticationService` / `AuthController` — bez změny, používají
+      `RefreshTokenService`, který do vzoru nepatří.
+
+**269 testů zelených** (106 unit + 163 integration).
+
+### Co se při tom našlo
+
+| Místo | Co se dělo |
+|---|---|
+| `AttendancesController` (4 akce) | `await CreateOrUpdateAsync(...)` bez kontroly a pak `Ok(dto)` — mobil ukázal docházku jako uloženou, i když nebyla |
+| `FilesController`, `DancesController` upload | odmítnutí kvótou skončilo jako HTTP 200 s DTO souboru, který v DB není |
+| `ListEvents.RemoveEvent` | `Events.RemoveAll(...)` bez ohledu na výsledek — řádek zmizel z mřížky, v DB zůstal |
+| `ListDances`, `ListMembers`, `ListVideoLinks` | smazání i vytvoření bez kontroly, mřížka se jen obnovila |
+| `FileService` kvóta | důvod zamítnutí se zahazoval; teď jde jako `Rejected` až do UI |
+| `AttendancesController` GCal | událost se zakládá před uložením → při neúspěchu osiřela; nově se ruší |
 
 ---
 

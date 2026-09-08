@@ -119,7 +119,13 @@
                 }
                 else
                 {
-                    await EventService.CreateAsync(memberResult!.ToEntity());
+                    var created = await EventService.CreateAsync(memberResult!.ToEntity());
+                    if (!created.IsSuccess)
+                    {
+                        Snackbar.Add(created.Error ?? "Událost se nepodařilo vytvořit.", Severity.Error);
+                        return;
+                    }
+
                     Snackbar.Add("Událost byla vytvořena.", Severity.Success);
                 }
 
@@ -142,7 +148,16 @@
         var result = await DialogService.ShowMessageBoxAsync("Smazat položku?", "", "Ano", "Zrušit");
         if (result.HasValue && result.Value)
         {
-            await EventService.DeleteAsync(id);
+            // Řádek se z mřížky odebírá teprve po úspěchu. Dřív zmizel z obrazovky
+            // vždy, takže po neúspěšném smazání se akce jen "ztratila" z výpisu
+            // a vrátila se až po dalším načtení stránky.
+            var deleted = await EventService.DeleteAsync(id);
+            if (!deleted.IsSuccess)
+            {
+                Snackbar.Add(deleted.Error ?? "Smazání akce se nezdařilo.", Severity.Error);
+                return;
+            }
+
             Events.RemoveAll(x => x.Id == id);
         }
     }

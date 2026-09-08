@@ -55,7 +55,7 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         await using var db = _fixture.NewContext();
         var service = new MemberService(db, NullLogger<MemberService>.Instance);
 
-        Assert.False(await service.CreateAsync(InvalidMember("vadny")));
+        ResultAssert.Failed(await service.CreateAsync(InvalidMember("vadny")));
 
         Assert.DoesNotContain(db.ChangeTracker.Entries<Member>(), e => e.State == EntityState.Added);
     }
@@ -71,8 +71,8 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         await using var db = _fixture.NewContext();
         var service = new MemberService(db, NullLogger<MemberService>.Instance);
 
-        Assert.False(await service.CreateAsync(InvalidMember("vadny")));
-        Assert.True(await service.CreateAsync(TestData.Member(login: "opraveny")));
+        ResultAssert.Failed(await service.CreateAsync(InvalidMember("vadny")));
+        ResultAssert.Ok(await service.CreateAsync(TestData.Member(login: "opraveny")));
 
         await using var verify = _fixture.NewContext();
         var stored = Assert.Single(await verify.Members.ToListAsync());
@@ -88,7 +88,7 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         var service = NewFileService(db);
 
         // Path je v modelu required.
-        Assert.False(await service.CreateAsync(new Dal.Entities.File
+        ResultAssert.Failed(await service.CreateAsync(new Dal.Entities.File
         {
             Path = null!,
             FileExtension = ".jpg",
@@ -111,14 +111,14 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         await using var db = _fixture.NewContext();
         var service = NewFileService(db);
 
-        Assert.False(await service.CreateAsync(new Dal.Entities.File
+        ResultAssert.Failed(await service.CreateAsync(new Dal.Entities.File
         {
             Path = null!,
             FileExtension = ".jpg",
             ContentType = "image/jpeg",
             FileSize = 1
         }));
-        Assert.True(await service.CreateAsync(new Dal.Entities.File
+        ResultAssert.Ok(await service.CreateAsync(new Dal.Entities.File
         {
             Path = "db-stored",
             FileExtension = ".jpg",
@@ -142,8 +142,8 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         var invalid = TestData.Event();
         invalid.Name = null!;
 
-        Assert.False(await service.CreateAsync(invalid));
-        Assert.True(await service.CreateAsync(TestData.Event("Platná akce")));
+        ResultAssert.Failed(await service.CreateAsync(invalid));
+        ResultAssert.Ok(await service.CreateAsync(TestData.Event("Platná akce")));
 
         await using var verify = _fixture.NewContext();
         var stored = Assert.Single(await verify.Events.ToListAsync());
@@ -163,9 +163,9 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         var day = new DateTime(2026, 5, 1, 18, 0, 0, DateTimeKind.Utc);
 
         // MemberId ukazuje nikam — porušení FK.
-        Assert.False(await service.CreateOrUpdateAsync(
+        ResultAssert.Failed(await service.CreateOrUpdateAsync(
             TestData.RehearsalAttendance(memberId: 99999, day, AttendanceStatus.Yes)));
-        Assert.True(await service.CreateOrUpdateAsync(
+        ResultAssert.Ok(await service.CreateOrUpdateAsync(
             TestData.RehearsalAttendance(member.Id, day, AttendanceStatus.Yes)));
 
         await using var verify = _fixture.NewContext();
@@ -196,7 +196,7 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
             FileSize = 10
         });
 
-        Assert.False(await service.CreateAsync(member));
+        ResultAssert.Failed(await service.CreateAsync(member));
 
         Assert.DoesNotContain(db.ChangeTracker.Entries(), e => e.State != EntityState.Unchanged);
     }
@@ -216,8 +216,8 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
             FileSize = 10
         });
 
-        Assert.False(await service.CreateAsync(invalid));
-        Assert.True(await service.CreateAsync(TestData.Member(login: "opraveny")));
+        ResultAssert.Failed(await service.CreateAsync(invalid));
+        ResultAssert.Ok(await service.CreateAsync(TestData.Member(login: "opraveny")));
 
         await using var verify = _fixture.NewContext();
         Assert.Single(await verify.Members.ToListAsync());
@@ -244,7 +244,7 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
 
         // Stejné Id, ale MemberId ukazuje nikam — update projde přes SetValues
         // na načtenou entitu a selže až na FK.
-        Assert.False(await service.CreateOrUpdateAsync(new Attendance
+        ResultAssert.Failed(await service.CreateOrUpdateAsync(new Attendance
         {
             Id = attendance.Id,
             MemberId = 99999,
@@ -272,7 +272,7 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         await using var db = _fixture.NewContext();
         var service = new MemberService(db, NullLogger<MemberService>.Instance);
 
-        Assert.False(await service.CreateAsync(InvalidMember("vadny")));
+        ResultAssert.Failed(await service.CreateAsync(InvalidMember("vadny")));
 
         Assert.DoesNotContain(db.ChangeTracker.Entries<AuditLog>(), e => e.State == EntityState.Added);
     }
@@ -283,8 +283,8 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         await using var db = _fixture.NewContext();
         var service = new MemberService(db, NullLogger<MemberService>.Instance);
 
-        Assert.False(await service.CreateAsync(InvalidMember("vadny")));
-        Assert.True(await service.CreateAsync(TestData.Member(login: "opraveny")));
+        ResultAssert.Failed(await service.CreateAsync(InvalidMember("vadny")));
+        ResultAssert.Ok(await service.CreateAsync(TestData.Member(login: "opraveny")));
 
         await using var verify = _fixture.NewContext();
         var audits = await verify.AuditLogs.Where(a => a.EntityType == nameof(Member)).ToListAsync();
@@ -399,7 +399,7 @@ public class ChangeTrackerRecoveryTests : IAsyncDisposable
         await Assert.ThrowsAnyAsync<Exception>(() => members.UpdateAsync(member.Id, invalid));
 
         // Úplně jiná entita, úplně jiná služba, stejný kontext.
-        Assert.True(await events.CreateAsync(TestData.Event("Akce po neúspěchu")));
+        ResultAssert.Ok(await events.CreateAsync(TestData.Event("Akce po neúspěchu")));
 
         await using var verify = _fixture.NewContext();
         var stored = Assert.Single(await verify.Events.ToListAsync());

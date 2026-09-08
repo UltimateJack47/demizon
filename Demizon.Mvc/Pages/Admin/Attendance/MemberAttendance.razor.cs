@@ -277,13 +277,17 @@ public partial class MemberAttendance : ComponentBase
             var attendanceResult = result.Data as AttendanceViewModel;
             if (attendanceResult is null)
             {
-                // Služby výjimku spolykají a vrátí false, takže catch níž se neuplatní —
-                // návratovou hodnotu je nutné kontrolovat.
-                if (model.Id != 0 && !await AttendanceService.DeleteAsync(model.Id))
+                // Služby výjimku spolykají a vrátí neúspěch, takže catch níž se
+                // neuplatní — návratovou hodnotu je nutné kontrolovat.
+                if (model.Id != 0)
                 {
-                    Snackbar.Add("Docházku se nepodařilo resetovat.", Severity.Error);
-                    await RefreshViewAsync();
-                    return;
+                    var reset = await AttendanceService.DeleteAsync(model.Id);
+                    if (!reset.IsSuccess)
+                    {
+                        Snackbar.Add(reset.Error ?? "Docházku se nepodařilo resetovat.", Severity.Error);
+                        await RefreshViewAsync();
+                        return;
+                    }
                 }
 
                 Snackbar.Add("Docházka resetována.", Severity.Info);
@@ -296,24 +300,22 @@ public partial class MemberAttendance : ComponentBase
                 // neuložila — a nešla by už smazat, protože ID události se ukládá
                 // k docházkovému řádku, který neexistuje.
                 //
-                // Entita se drží v proměnné: na vložené cestě je to instance, kterou
-                // EF trackuje, takže jí po uložení dopíše vygenerovaný klíč (hlídá
-                // AttendanceAndEventServiceTests.CreateOrUpdateAsync_vyplni_Id_na_predane_entite).
-                // Dřív se sem psalo model.Id = attendanceResult.Id, což byl no-op —
-                // attendanceResult JE model a ToEntity() vyrábí jinou entitu, na kterou
-                // klíč přiřadila databáze. U nové docházky tak model.Id zůstalo nulové
-                // a ID vytvořené události se nemělo kam zapsat.
-                var entity = attendanceResult.ToEntity();
-                if (!await AttendanceService.CreateOrUpdateAsync(entity))
+                // Klíč bere volající z Result.Value. Dřív se sem psalo
+                // model.Id = attendanceResult.Id, což byl no-op: attendanceResult JE
+                // model a ToEntity() vyrábí jinou entitu, na kterou klíč přiřadila
+                // databáze. U nové docházky tak model.Id zůstalo nulové a ID
+                // vytvořené události se nemělo kam zapsat.
+                var saved = await AttendanceService.CreateOrUpdateAsync(attendanceResult.ToEntity());
+                if (!saved.IsSuccess)
                 {
-                    Snackbar.Add("Docházku se nepodařilo uložit.", Severity.Error);
+                    Snackbar.Add(saved.Error ?? "Docházku se nepodařilo uložit.", Severity.Error);
                     await RefreshViewAsync();
                     return;
                 }
 
                 Snackbar.Add("Docházka uložena.", Severity.Success);
                 statusAfterSave = attendanceResult.Status;
-                model.Id = entity.Id;
+                model.Id = saved.Value;
             }
             await RefreshViewAsync();
         }
@@ -375,9 +377,9 @@ public partial class MemberAttendance : ComponentBase
                     var attendance = await AttendanceService.GetOneAsync(model.Id);
                     attendance.GoogleEventId = createdId;
                     // Návratovou hodnotu je nutné kontrolovat: služba výjimku spolkne
-                    // a vrátí false, takže bez kontroly by událost zůstala v kalendáři
-                    // bez odkazu z docházky.
-                    linked = await AttendanceService.CreateOrUpdateAsync(attendance);
+                    // a vrátí neúspěch, takže bez kontroly by událost zůstala
+                    // v kalendáři bez odkazu z docházky.
+                    linked = (await AttendanceService.CreateOrUpdateAsync(attendance)).IsSuccess;
                 }
                 catch
                 {
@@ -419,7 +421,7 @@ public partial class MemberAttendance : ComponentBase
                 {
                     var attendance = await AttendanceService.GetOneAsync(model.Id);
                     attendance.GoogleEventId = null;
-                    if (await AttendanceService.CreateOrUpdateAsync(attendance))
+                    if ((await AttendanceService.CreateOrUpdateAsync(attendance)).IsSuccess)
                     {
                         model.GoogleEventId = null;
                     }

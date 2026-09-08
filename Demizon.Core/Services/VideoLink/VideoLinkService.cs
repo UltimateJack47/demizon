@@ -14,7 +14,7 @@ public class VideoLinkService(DemizonContext demizonContext, ILogger<VideoLinkSe
     {
         return await DemizonContext.VideoLinks.FindAsync(id) ?? throw new EntityNotFoundException($"VideoLink with id: {id} not found.");
     }
-    
+
     public IQueryable<Dal.Entities.VideoLink> GetAll()
     {
         return DemizonContext.VideoLinks.AsQueryable();
@@ -32,13 +32,13 @@ public class VideoLinkService(DemizonContext demizonContext, ILogger<VideoLinkSe
         await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
-    public async Task<bool> CreateAsync(Dal.Entities.VideoLink file)
+    public async Task<Common.Result<int>> CreateAsync(Dal.Entities.VideoLink file)
     {
         try
         {
             await DemizonContext.AddAsync(file);
             await DemizonContext.SaveChangesAsync();
-            return true;
+            return Common.Result<int>.Ok(file.Id);
         }
         catch (Exception ex)
         {
@@ -47,23 +47,23 @@ public class VideoLinkService(DemizonContext demizonContext, ILogger<VideoLinkSe
             // takže vrácené false by nic nezaručovalo.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process VideoLink operation.");
-            return false;
+            return Common.Result<int>.Fail("Odkaz na video se nepodařilo uložit.");
         }
     }
-    
-    public async Task<bool> DeleteAsync(int id)
+
+    public async Task<Common.Result> DeleteAsync(int id)
     {
+        var entity = await DemizonContext.VideoLinks.FindAsync(id);
+        if (entity is null)
+        {
+            return Common.Result.NotFound("Odkaz na video nebyl nalezen.");
+        }
+
         try
         {
-            var entity = await DemizonContext.VideoLinks.FindAsync(id);
-            if (entity is null)
-            {
-                throw new EntityNotFoundException();
-            }
-            
             DemizonContext.VideoLinks.Remove(entity);
             await DemizonContext.SaveChangesAsync();
-            return true;
+            return Common.Result.Ok();
         }
         catch (Exception ex)
         {
@@ -71,7 +71,7 @@ public class VideoLinkService(DemizonContext demizonContext, ILogger<VideoLinkSe
             // při příštím uložení v tomtéž okruhu.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process VideoLink operation.");
-            return false;
+            return Common.Result.Fail("Odkaz na video se nepodařilo smazat.");
         }
     }
 }

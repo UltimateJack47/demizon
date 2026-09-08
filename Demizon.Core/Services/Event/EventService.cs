@@ -14,7 +14,7 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
     {
         return await DemizonContext.Events.FindAsync(id) ?? throw new EntityNotFoundException($"Event with id: {id} not found.");
     }
-    
+
     public IQueryable<Dal.Entities.Event> GetAll()
     {
         return DemizonContext.Events.AsQueryable();
@@ -32,13 +32,13 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
         await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
-    public async Task<bool> CreateAsync(Dal.Entities.Event newEvent)
+    public async Task<Common.Result<int>> CreateAsync(Dal.Entities.Event newEvent)
     {
         try
         {
             await DemizonContext.AddAsync(newEvent);
             await DemizonContext.SaveChangesAsync();
-            return true;
+            return Common.Result<int>.Ok(newEvent.Id);
         }
         catch (Exception ex)
         {
@@ -47,23 +47,26 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
             // takže vrácené false by nic nezaručovalo.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Event operation.");
-            return false;
+            return Common.Result<int>.Fail("Akci se nepodařilo uložit.");
         }
     }
-    
-    public async Task<bool> DeleteAsync(int id)
+
+    public async Task<Common.Result> DeleteAsync(int id)
     {
         var entity = await DemizonContext.Events.FindAsync(id);
         if (entity is null)
         {
-            throw new EntityNotFoundException($"Event with id: {id} not found.");
+            // Dřív se tady výjimka pouštěla dál, takže EventService.DeleteAsync
+            // se chovala jinak než ostatní služby (viz testing-plan.md).
+            // S Result je nenalezení prostý neúspěch s textem.
+            return Common.Result.NotFound($"Akce s id {id} nebyla nalezena.");
         }
 
         try
         {
             DemizonContext.Events.Remove(entity);
             await DemizonContext.SaveChangesAsync();
-            return true;
+            return Common.Result.Ok();
         }
         catch (Exception ex)
         {
@@ -71,7 +74,7 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
             // při příštím uložení v tomtéž okruhu.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to delete Event {EventId}.", id);
-            return false;
+            return Common.Result.Fail("Akci se nepodařilo smazat.");
         }
     }
 

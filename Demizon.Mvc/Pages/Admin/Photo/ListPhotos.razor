@@ -160,10 +160,11 @@
                     ThumbnailData = result.ThumbnailData,
                     IsPublic = true
                 };
-                if (await FileService.CreateAsync(entity))
+                var stored = await FileService.CreateAsync(entity);
+                if (stored.IsSuccess)
                     uploaded++;
                 else
-                    failures.Add($"{file.Name}: uložení do databáze se nezdařilo");
+                    failures.Add($"{file.Name}: {stored.Error}");
             }
         }
         catch (Exception)
@@ -222,8 +223,9 @@
         {
             var deleted = await FileService.DeleteAsync(id);
             await RefreshTable();
-            Snackbar.Add(deleted ? "Fotografie smazána." : "Smazání se nezdařilo.",
-                deleted ? Severity.Success : Severity.Error);
+            Snackbar.Add(
+                deleted.IsSuccess ? "Fotografie smazána." : deleted.Error ?? "Smazání se nezdařilo.",
+                deleted.IsSuccess ? Severity.Success : Severity.Error);
         }
     }
 

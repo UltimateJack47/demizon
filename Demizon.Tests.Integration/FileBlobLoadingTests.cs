@@ -71,7 +71,7 @@ public class FileBlobLoadingTests : IAsyncDisposable
         var id = await SeedPhotoAsync();
 
         await using var db = _fixture.NewContext();
-        Assert.True(await Service(db).DeleteAsync(id));
+        ResultAssert.Ok(await Service(db).DeleteAsync(id));
 
         await using var verify = _fixture.NewContext();
         Assert.Empty(await verify.Files.ToListAsync());

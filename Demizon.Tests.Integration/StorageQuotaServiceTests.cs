@@ -100,7 +100,7 @@ public class StorageQuotaServiceTests : IAsyncDisposable
         await using var db = _fixture.NewContext();
         var service = FileService(db, Tight(maxFileBytes: 10));
 
-        Assert.False(await service.CreateAsync(TestData.StoredFile(fileSize: 11)));
+        ResultAssert.Failed(await service.CreateAsync(TestData.StoredFile(fileSize: 11)));
 
         Assert.DoesNotContain(db.ChangeTracker.Entries<Dal.Entities.File>(),
             e => e.State == EntityState.Added);
@@ -114,7 +114,7 @@ public class StorageQuotaServiceTests : IAsyncDisposable
         await using var db = _fixture.NewContext();
         var service = FileService(db, Tight(maxFileBytes: 100));
 
-        Assert.True(await service.CreateAsync(TestData.StoredFile(fileSize: 10, path: "ok")));
+        ResultAssert.Ok(await service.CreateAsync(TestData.StoredFile(fileSize: 10, path: "ok")));
 
         await using var verify = _fixture.NewContext();
         Assert.Equal("ok", (await verify.Files.SingleAsync()).Path);

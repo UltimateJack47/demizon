@@ -189,7 +189,10 @@
         var resultMessage = await DialogService.ShowMessageBoxAsync("Smazat položku?", "", "Ano", "Zrušit", null, new DialogOptions() {Position = DialogPosition.Center, CloseButton = false});
         if (resultMessage.HasValue && resultMessage.Value)
         {
-            await MemberService.DeleteAsync(id);
+            var deleted = await MemberService.DeleteAsync(id);
+            if (!deleted.IsSuccess)
+                Snackbar.Add(deleted.Error ?? "Smazání se nezdařilo.", Severity.Error);
+
             await RefreshTable();
         }
     }

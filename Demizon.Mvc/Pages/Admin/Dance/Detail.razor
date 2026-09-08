@@ -358,10 +358,12 @@ else
             var data = result.Data as VideoLinkViewModel;
             try
             {
-                // CreateAsync výjimku spolkne a vrátí false, takže catch níž se neuplatní.
-                if (!await VideoLinkService.CreateAsync(data!.ToEntity()))
+                // CreateAsync výjimku spolkne a vrátí neúspěch, takže catch níž
+                // se neuplatní.
+                var created = await VideoLinkService.CreateAsync(data!.ToEntity());
+                if (!created.IsSuccess)
                 {
-                    Snackbar.Add("Video se nepodařilo přidat.", Severity.Error);
+                    Snackbar.Add(created.Error ?? "Video se nepodařilo přidat.", Severity.Error);
                     return;
                 }
 
@@ -455,12 +457,14 @@ else
                     DanceId = Id,
                     Kind = FileKind.Image
                 };
-                // FileService.CreateAsync spolkne každou výjimku a jen vrátí false, takže
-                // bez téhle kontroly by `uploaded` počítalo pokusy, ne skutečná uložení.
-                if (await FileService.CreateAsync(entity))
+                // FileService.CreateAsync spolkne každou výjimku a jen vrátí neúspěch,
+                // takže bez téhle kontroly by `uploaded` počítalo pokusy, ne skutečná
+                // uložení. Text chyby nese i důvod zamítnutí kvótou.
+                var stored = await FileService.CreateAsync(entity);
+                if (stored.IsSuccess)
                     uploaded++;
                 else
-                    failures.Add($"{file.Name}: uložení do databáze se nezdařilo");
+                    failures.Add($"{file.Name}: {stored.Error}");
             }
         }
         catch
@@ -530,8 +534,9 @@ else
             // zelený úspěch nad mřížkou, ve které záznam pořád je.
             var deleted = await FileService.DeleteAsync(id);
             await LoadDance();
-            Snackbar.Add(deleted ? "Fotografie smazána." : "Smazání se nezdařilo.",
-                deleted ? Severity.Success : Severity.Error);
+            Snackbar.Add(
+                deleted.IsSuccess ? "Fotografie smazána." : deleted.Error ?? "Smazání se nezdařilo.",
+                deleted.IsSuccess ? Severity.Success : Severity.Error);
         }
     }
 
@@ -594,11 +599,12 @@ else
                 };
 
                 // Viz fotky výše: návratovou hodnotu je nutné kontrolovat, protože
-                // služba výjimku spolkne a vrátí false.
-                if (await FileService.CreateAsync(entity))
+                // služba výjimku spolkne a vrátí neúspěch.
+                var stored = await FileService.CreateAsync(entity);
+                if (stored.IsSuccess)
                     uploaded++;
                 else
-                    failures.Add($"{file.Name}: uložení do databáze se nezdařilo");
+                    failures.Add($"{file.Name}: {stored.Error}");
             }
 
         }
@@ -647,8 +653,9 @@ else
             // zelený úspěch nad mřížkou, ve které záznam pořád je.
             var deleted = await FileService.DeleteAsync(id);
             await LoadDance();
-            Snackbar.Add(deleted ? "Dokument smazán." : "Smazání se nezdařilo.",
-                deleted ? Severity.Success : Severity.Error);
+            Snackbar.Add(
+                deleted.IsSuccess ? "Dokument smazán." : deleted.Error ?? "Smazání se nezdařilo.",
+                deleted.IsSuccess ? Severity.Success : Severity.Error);
         }
     }
 

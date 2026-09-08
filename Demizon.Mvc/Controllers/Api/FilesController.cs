@@ -5,6 +5,7 @@ using Demizon.Dal.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Demizon.Mvc.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Mvc.Controllers.Api;
@@ -127,7 +128,12 @@ public class GalleryController(IFileService fileService, IFileUploadService file
             IsPublic = true
         };
 
-        await fileService.CreateAsync(entity);
+        // Kvóta na úložiště se zamítá právě tady. Bez kontroly dostal klient 200
+        // a fotku, která se neuložila — přesně to, na co si kvóta byla určená.
+        var stored = await fileService.CreateAsync(entity);
+        if (!stored.IsSuccess)
+            return stored.ToErrorResponse();
+
         return Ok(new { entity.Id });
     }
 }

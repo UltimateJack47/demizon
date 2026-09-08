@@ -30,7 +30,7 @@ public class MemberServiceTests : IAsyncDisposable
 
         var deleted = await CreateService(db).DeleteAsync(member.Id);
 
-        Assert.True(deleted);
+        ResultAssert.Ok(deleted);
 
         await using var verify = _fixture.NewContext();
         var stillThere = await verify.Members.IgnoreQueryFilters()
@@ -70,7 +70,7 @@ public class MemberServiceTests : IAsyncDisposable
     {
         await using var db = _fixture.NewContext();
 
-        Assert.False(await CreateService(db).DeleteAsync(999));
+        ResultAssert.Failed(await CreateService(db).DeleteAsync(999));
     }
 
     [Fact]
@@ -213,7 +213,7 @@ public class MemberServiceTests : IAsyncDisposable
 
         var created = await CreateService(db).CreateAsync(TestData.Member(login: "novy"));
 
-        Assert.True(created);
+        ResultAssert.Ok(created);
         await using var verify = _fixture.NewContext();
         Assert.NotNull(await verify.Members.SingleOrDefaultAsync(m => m.Login == "novy"));
     }
@@ -226,6 +226,6 @@ public class MemberServiceTests : IAsyncDisposable
         var invalid = TestData.Member();
         invalid.Name = null!;
 
-        Assert.False(await CreateService(db).CreateAsync(invalid));
+        ResultAssert.Failed(await CreateService(db).CreateAsync(invalid));
     }
 }

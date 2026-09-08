@@ -21,7 +21,7 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
         return DemizonContext.Attendances.AsQueryable();
     }
 
-    public async Task<bool> CreateOrUpdateAsync(Dal.Entities.Attendance attendance)
+    public async Task<Common.Result<int>> CreateOrUpdateAsync(Dal.Entities.Attendance attendance)
     {
         attendance.LastUpdated = DateTime.Now;
         try
@@ -45,7 +45,10 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
             }
 
             await DemizonContext.SaveChangesAsync();
-            return true;
+            // Klíč vrací služba sama, takže volající nemusí spoléhat na to, že mu
+            // ho EF dopsal do předané entity (na tom stála oprava osiřelých
+            // událostí v Google Calendaru).
+            return Common.Result<int>.Ok(attendance.Id);
         }
         catch (Exception ex)
         {
@@ -54,23 +57,23 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
             // zápis přehrál při příštím nesouvisejícím SaveChanges v tomtéž okruhu.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Attendance operation.");
-            return false;
+            return Common.Result<int>.Fail("Docházku se nepodařilo uložit.");
         }
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<Common.Result> DeleteAsync(int id)
     {
+        var entity = await DemizonContext.Attendances.FindAsync(id);
+        if (entity is null)
+        {
+            return Common.Result.NotFound("Docházka nebyla nalezena.");
+        }
+
         try
         {
-            var entity = await DemizonContext.Attendances.FindAsync(id);
-            if (entity is null)
-            {
-                throw new EntityNotFoundException();
-            }
-
             DemizonContext.Attendances.Remove(entity);
             await DemizonContext.SaveChangesAsync();
-            return true;
+            return Common.Result.Ok();
         }
         catch (Exception ex)
         {
@@ -78,7 +81,7 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
             // při příštím uložení v tomtéž okruhu.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Attendance operation.");
-            return false;
+            return Common.Result.Fail("Docházku se nepodařilo smazat.");
         }
     }
 

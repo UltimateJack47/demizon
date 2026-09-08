@@ -81,7 +81,7 @@ public class FileService(
             throw new EntityNotFoundException($"File with id: {id} not found.");
     }
 
-    public async Task<bool> CreateAsync(Dal.Entities.File file)
+    public async Task<Common.Result<int>> CreateAsync(Dal.Entities.File file)
     {
         try
         {
@@ -91,35 +91,38 @@ public class FileService(
             if (!allowed)
             {
                 logger.LogWarning("Upload rejected by storage quota: {Reason}", reason);
-                return false;
+                // Důvod zamítnutí se dřív zahodil a volající hlásil obecnou chybu
+                // (nebo dokonce úspěch). Kvóta je přitom to jediné, co uživatel
+                // může sám vyřešit, takže text musí projít až k němu.
+                return Common.Result<int>.Rejected(reason ?? "Úložiště je plné.");
             }
 
             await DemizonContext.AddAsync(file);
             await DemizonContext.SaveChangesAsync();
-            return true;
+            return Common.Result<int>.Ok(file.Id);
         }
         catch (Exception ex)
         {
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process File operation.");
-            return false;
+            return Common.Result<int>.Fail("Soubor se nepodařilo uložit.");
         }
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<Common.Result> DeleteAsync(int id)
     {
         try
         {
             var affected = await DemizonContext.Files.Where(f => f.Id == id).ExecuteDeleteAsync();
             if (affected == 0)
-                throw new EntityNotFoundException();
-            return true;
+                return Common.Result.NotFound("Soubor nebyl nalezen.");
+            return Common.Result.Ok();
         }
         catch (Exception ex)
         {
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process File operation.");
-            return false;
+            return Common.Result.Fail("Soubor se nepodařilo smazat.");
         }
     }
 }

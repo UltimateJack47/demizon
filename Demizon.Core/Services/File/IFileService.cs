@@ -11,6 +11,7 @@ public interface IFileService
     Task<byte[]?> GetContentAsync(int id, bool thumbnail = false);
 
     Task UpdateAsync(int id, Dal.Entities.File updatedMember);
-    Task<bool> CreateAsync(Dal.Entities.File file);
-    Task<bool> DeleteAsync(int id);
+    /// <summary>Uloží novou entitu. <c>Value</c> je vygenerovaný klíč.</summary>
+    Task<Common.Result<int>> CreateAsync(Dal.Entities.File file);
+    Task<Common.Result> DeleteAsync(int id);
 }

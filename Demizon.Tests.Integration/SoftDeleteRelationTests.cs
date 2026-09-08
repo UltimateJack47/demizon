@@ -35,7 +35,7 @@ public class SoftDeleteRelationTests : IAsyncDisposable
         await db.SaveChangesAsync();
 
         await using var delete = _fixture.NewContext();
-        Assert.True(await new MemberService(delete, NullLogger<MemberService>.Instance)
+        ResultAssert.Ok(await new MemberService(delete, NullLogger<MemberService>.Instance)
             .DeleteAsync(member.Id));
         return member.Id;
     }
@@ -114,7 +114,7 @@ public class SoftDeleteRelationTests : IAsyncDisposable
             .CreateAsync(member.Id, expirationDays: 30);
 
         await using var delete = _fixture.NewContext();
-        Assert.True(await new MemberService(delete, NullLogger<MemberService>.Instance)
+        ResultAssert.Ok(await new MemberService(delete, NullLogger<MemberService>.Instance)
             .DeleteAsync(member.Id));
 
         await using var verify = _fixture.NewContext();

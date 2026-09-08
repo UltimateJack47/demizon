@@ -47,13 +47,13 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
-    public async Task<bool> CreateAsync(Dal.Entities.Member member)
+    public async Task<Common.Result<int>> CreateAsync(Dal.Entities.Member member)
     {
         try
         {
             await DemizonContext.AddAsync(member);
             await DemizonContext.SaveChangesAsync();
-            return true;
+            return Common.Result<int>.Ok(member.Id);
         }
         catch (Exception ex)
         {
@@ -62,7 +62,7 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
             // takže vrácené false by nic nezaručovalo.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Member operation.");
-            return false;
+            return Common.Result<int>.Fail("Člena se nepodařilo uložit.");
         }
     }
 
@@ -88,20 +88,20 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<Common.Result> DeleteAsync(int id)
     {
+        var entity = await DemizonContext.Members.FindAsync(id);
+        if (entity is null)
+        {
+            return Common.Result.NotFound("Člen nebyl nalezen.");
+        }
+
         try
         {
-            var entity = await DemizonContext.Members.FindAsync(id);
-            if (entity is null)
-            {
-                throw new EntityNotFoundException();
-            }
-
             // Soft delete – data pro historii docházky zůstanou, global query filter skryje člena
             entity.DeletedAt = DateTime.UtcNow;
             await DemizonContext.SaveChangesAsync();
-            return true;
+            return Common.Result.Ok();
         }
         catch (Exception ex)
         {
@@ -109,7 +109,7 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
             // v paměti, aby další čtení z tohoto kontextu člena nevydalo smazaného.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Member operation.");
-            return false;
+            return Common.Result.Fail("Člena se nepodařilo smazat.");
         }
     }
 }

@@ -14,7 +14,7 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
     {
         return await DemizonContext.Dances.FindAsync(id) ?? throw new EntityNotFoundException($"Dance with id: {id} not found.");
     }
-    
+
     public IQueryable<Dal.Entities.Dance> GetAll()
     {
         return DemizonContext.Dances.AsQueryable();
@@ -32,13 +32,13 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
         await DemizonContext.SaveChangesWithRecoveryAsync();
     }
 
-    public async Task<bool> CreateAsync(Dal.Entities.Dance dance)
+    public async Task<Common.Result<int>> CreateAsync(Dal.Entities.Dance dance)
     {
         try
         {
             await DemizonContext.AddAsync(dance);
             await DemizonContext.SaveChangesAsync();
-            return true;
+            return Common.Result<int>.Ok(dance.Id);
         }
         catch (Exception ex)
         {
@@ -47,23 +47,24 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
             // takže vrácené false by nic nezaručovalo.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Dance operation.");
-            return false;
+            return Common.Result<int>.Fail("Tanec se nepodařilo uložit.");
         }
     }
-    
-    public async Task<bool> DeleteAsync(int id)
+
+    public async Task<Common.Result> DeleteAsync(int id)
     {
+        var entity = await DemizonContext.Dances.FindAsync(id);
+        if (entity is null)
+        {
+            // Chybějící řádek není výjimečná situace, jen odpověď „není co mazat".
+            return Common.Result.NotFound("Tanec nebyl nalezen.");
+        }
+
         try
         {
-            var entity = await DemizonContext.Dances.FindAsync(id);
-            if (entity is null)
-            {
-                throw new EntityNotFoundException();
-            }
-            
             DemizonContext.Dances.Remove(entity);
             await DemizonContext.SaveChangesAsync();
-            return true;
+            return Common.Result.Ok();
         }
         catch (Exception ex)
         {
@@ -71,7 +72,7 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
             // při příštím uložení v tomtéž okruhu.
             DemizonContext.DiscardPendingChanges();
             logger.LogError(ex, "Failed to process Dance operation.");
-            return false;
+            return Common.Result.Fail("Tanec se nepodařilo smazat.");
         }
     }
 }

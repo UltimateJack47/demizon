@@ -8,6 +8,7 @@ using Demizon.Mvc.Mapping;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Demizon.Mvc.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Demizon.Mvc.Controllers.Api;
@@ -128,7 +129,12 @@ public class DancesController(IDanceService danceService, IFileService fileServi
             Kind = FileKind.Document
         };
 
-        await fileService.CreateAsync(entity);
+        // Dřív se výsledek zahodil, takže odmítnutí kvótou skončilo jako 200
+        // s DTO dokumentu, který v databázi nebyl.
+        var stored = await fileService.CreateAsync(entity);
+        if (!stored.IsSuccess)
+            return stored.ToErrorResponse();
+
         return Ok(entity.ToDocumentDto());
     }
 
@@ -142,7 +148,10 @@ public class DancesController(IDanceService danceService, IFileService fileServi
             if (file.DanceId != id || file.Kind != FileKind.Document)
                 return NotFound();
 
-            await fileService.DeleteAsync(fileId);
+            var deleted = await fileService.DeleteAsync(fileId);
+            if (!deleted.IsSuccess)
+                return deleted.ToErrorResponse();
+
             return NoContent();
         }
         catch (Common.Exceptions.EntityNotFoundException)

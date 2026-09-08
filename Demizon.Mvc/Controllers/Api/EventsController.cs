@@ -140,9 +140,9 @@ public class EventsController(
             Recurrence = recurrence,
         };
 
-        var success = await eventService.CreateAsync(ev);
-        if (!success)
-            return StatusCode(500, new { error = "Failed to create event." });
+        var created = await eventService.CreateAsync(ev);
+        if (!created.IsSuccess)
+            return created.ToErrorResponse();
 
         return CreatedAtAction(nameof(GetOne), new { id = ev.Id }, ev.ToDto());
     }
@@ -224,8 +224,8 @@ public class EventsController(
             await CleanupGoogleCalendarForEventAsync(id);
             await DeleteAttendancesForEventAsync(id);
 
-            var success = await eventService.DeleteAsync(id);
-            return success ? NoContent() : StatusCode(500, new { error = "Smazání akce selhalo." });
+            var deleted = await eventService.DeleteAsync(id);
+            return deleted.IsSuccess ? NoContent() : deleted.ToErrorResponse();
         }
         catch (Common.Exceptions.EntityNotFoundException)
         {
