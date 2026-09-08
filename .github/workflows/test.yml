@@ -7,7 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  # Rychlá brána: unit + integrační testy, žádná externí závislost.
+  backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,3 +17,27 @@ jobs:
           dotnet-version: "10.0.x"
       - name: Test backend
         run: dotnet test Demizon.Backend.slnf --configuration Release
+
+  # E2E má vlastní úlohu, protože potřebuje Chromium (~150 MB) a spouští
+  # aplikaci jako proces. Kdyby jelo ve stejné úloze, prodloužilo by i běh,
+  # ve kterém stačí vědět, že logika drží.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Build
+        run: dotnet build Demizon.E2E.slnf --configuration Release
+      - name: Install Chromium
+        run: pwsh Demizon.Tests.E2E/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+      - name: Test E2E
+        run: dotnet test Demizon.E2E.slnf --configuration Release --no-build
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: Demizon.Tests.E2E/bin/Release/net10.0/e2e-artifacts/
+          if-no-files-found: ignore

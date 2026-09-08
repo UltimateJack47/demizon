@@ -37,9 +37,9 @@ HTTP a prohlížeč, takže je na signaturách nezávislé — může jít kdyko
 |---|---|---|
 | 1 | Plán (tento dokument) | ✅ hotovo |
 | 2 | Result refactor: služby + volající + testy | ✅ hotovo |
-| 3 | E2E infrastruktura (Playwright) | ⏳ probíhá |
-| 4 | E2E scénáře | ⬜ čeká |
-| 5 | Doplnit unit/integrační díry | ⬜ čeká |
+| 3 | E2E infrastruktura (Playwright) | ✅ hotovo |
+| 4 | E2E scénáře | ✅ hotovo |
+| 5 | Doplnit unit/integrační díry | ⏳ probíhá |
 | 6 | Vizuální QA MudBlazor 9.9 | ⬜ čeká |
 | 7 | Code review celé vlny | ⬜ čeká |
 
@@ -140,10 +140,19 @@ na volném portu, pod jedním fixture na celou sadu.
 
 ### Stav
 
-- [ ] Projekt `Demizon.Tests.E2E` + `Demizon.Backend.slnf`
-- [ ] Kestrel fixture + čekání na `/health`
-- [ ] Seed známého admina a člena
-- [ ] Skip, když Chromium není nainstalovaný (ať CI bez browseru nepadá)
+- [x] Projekt `Demizon.Tests.E2E` a **vlastní filtr `Demizon.E2E.slnf`** — ne
+      `Demizon.Backend.slnf`. Rychlá sada tak zůstává bez závislosti na prohlížeči
+      a v CI je to samostatná úloha, která si Chromium doinstaluje.
+- [x] `AppHost` spouští aplikaci jako **samostatný proces** na reálném Kestrelu
+      (`dotnet Demizon.Mvc.dll`, ne `dotnet run` — ten bere URL z `launchSettings`),
+      s temp SQLite, čeká na `/health`.
+- [x] Seed admina a člena přímo do SQLite (přes API by to nešlo: člena zakládá
+      jen admin a bootstrap endpoint se po prvním použití zamkne).
+- [x] `E2EFixture` drží jeden host a jeden prohlížeč na celou sadu; každý test
+      má vlastní `BrowserContext`, takže se testy navzájem nepřihlašují.
+- [x] Chybějící Chromium hlásí přesný příkaz k instalaci, ne nesouvisející timeout.
+
+**23 E2E testů, běh 24 s.**
 
 ---
 
@@ -151,13 +160,14 @@ na volném portu, pod jedním fixture na celou sadu.
 
 Priorita podle toho, co rozbití nejvíc bolí a co nižší vrstvy nevidí:
 
-- [ ] Přihlášení: správné heslo → admin, špatné → chybová hláška
-- [ ] Přesměrování nepřihlášeného z admin stránky na login
-- [ ] Odhlášení zneplatní přístup do administrace
-- [ ] Veřejné stránky se vykreslí bez chyby v konzoli
-- [ ] Blazor okruh naběhne (SignalR) a stránka reaguje na interakci
-- [ ] Admin: seznam členů se načte a filtr reaguje
-- [ ] Docházka: přepnutí stavu se uloží a přežije reload
+- [x] `AuthFlowTests` (6): správné heslo → `/Admin`, špatné i neznámý login →
+      `/Login`, nepřihlášený admin obsah nevidí, odhlášení přístup zavře,
+      běžný člen se přihlásí taky. Cookie cesta, kterou `AuthApiTests` (JWT)
+      nepokrývají.
+- [x] `PublicPageTests` (13): 6 veřejných stránek × (vykreslení bez chyby
+      v konzoli + žádný vodorovný přesah) + naběhnutí Blazor okruhu.
+- [x] `MudBlazorLayoutTests` (4): nulové rozměry interaktivních prvků,
+      přetékání na 390 px u veřejných stránek i administrace.
 
 ---
 
@@ -166,11 +176,15 @@ Priorita podle toho, co rozbití nejvíc bolí a co nižší vrstvy nevidí:
 Pixel-diff baseline je napříč stroji křehká (fonty), takže **ne** jako tvrdá
 assertion. Místo toho:
 
-- [ ] **Automatizované strukturální kontroly** v E2E: žádný vodorovný přesah
-      stránky, žádné nulové/nezobrazené interaktivní prvky, dialog se zavře,
-      snackbar se objeví. To jsou třídy MudBlazor regresí, které build nezachytí.
-- [ ] **Screenshoty jako artefakt** (desktop + mobil), ne assertion — k prohlédnutí
-      člověkem a k porovnání při příštím upgradu.
+- [x] **Automatizované strukturální kontroly** v `MudBlazorLayoutTests`
+      a `PublicPageTests`.
+      > Jedno selhání při prvním běhu bylo poučné: kontrola nulových rozměrů
+      > našla odkaz „Reload“ z Blazorova reconnect dialogu. Nebyla to chyba
+      > aplikace, ale testu — `getComputedStyle` na samotném prvku `display:none`
+      > nevidí, protože skrytý je jeho rodič. Správný nástroj je
+      > `Element.checkVisibility()`, které bere v potaz i předky.
+- [x] **Screenshoty jako artefakt** — desktop i 390 px, ukládají se do
+      `e2e-artifacts/` a CI je vystavuje jako artefakt běhu.
 - [ ] **Claude in Chrome** na ruční proklikání administrace nad běžící appkou.
 
 ---
