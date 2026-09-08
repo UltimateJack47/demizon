@@ -47,3 +47,6 @@ demizon_flutter/**/google-services.json
 # jako změněný; odtrackován v témže commitu.)
 /.claude/settings.local.json
 /.claude/settings.json.bak-*
+
+# lokální dev SQLite databáze — nepatří do gitu ani do image
+/Demizon.Mvc/demizon.sqlite
