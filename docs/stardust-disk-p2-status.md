@@ -50,8 +50,10 @@
 - Jednorázový plný `VACUUM` na produkční DB po zapnutí `auto_vacuum=INCREMENTAL`
   (ops krok, potřebuje ~2× volného místa):
   `sqlite3 /data/demizon.sqlite "PRAGMA auto_vacuum=INCREMENTAL; VACUUM;"`
-- Docker image build s novým `-r linux-x64` publish neověřen lokálně (Docker Desktop
-  neběžel); samotný `dotnet publish` příkaz prošel a `libe_sqlite3.so` v outputu je.
+- ~~Docker image build neověřen~~ — **ověřeno 2026-09-08**: image 261 MB (z 509 MB),
+  kontejner s `--memory=768m` vrací `/health` `Healthy` včetně database checku,
+  homepage HTTP 200, `/data/keys` se plní, RSS v klidu 81 MB. Povinná proměnná
+  `Jwt__SecretKey` doplněna do `docker run` receptu v plánu.
 
 **Vyžaduje ruční rozhodnutí:**
 - VAPID privátní klíč commitnutý v `appsettings.Production.json` — vygenerovat nové

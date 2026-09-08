@@ -371,6 +371,19 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
       `dotnet restore` v Dockerfile dostal `-r linux-x64` taky, jinak by publish restore
       opakoval a rozbil cache vrstvy.
 
+      **Ověřeno na hotovém image (2026-09-08):** `docker build` prošel, výsledný image
+      **261 MB** proti 509 MB předchozího (−248 MB, −49 %; většinu z toho udělala už
+      náhrada Magick.NET → ImageSharp, `-r linux-x64` přidalo zbytek). V kontejneru
+      `/app/runtimes` neexistuje, `libe_sqlite3.so` (1,4 MB) leží v `/app` a
+      `/app/demizon.sqlite` tam po odtrackování dev DB **není**. Kontejner spuštěný
+      s `--memory=768m` odpověděl na `/health`
+      `{"status":"Healthy","checks":[{"name":"database","status":"Healthy"}]}`, takže
+      SQLite přes nativní knihovnu reálně jede; veřejná homepage vrátila HTTP 200
+      (29,7 kB). `/data` obsahuje `demizon.sqlite` + WAL a adresář `keys/` s vygenerovaným
+      DataProtection klíčem. **RSS v klidu po jednom anonymním načtení stránky: 81 MB
+      z 768 MB.** To je zatím nejbližší reálné číslo k paměťovému budgetu, ale *není*
+      to měření okruhu — na to je pořád potřeba otevřít a odpojit N okruhů (viz Priorita 2).
+
       **`PublishReadyToRun` záměrně nezapnuto.** Vrátil by 26 MB z ušetřených 32 (+87 %
       proti RID variantě), protože předkompiluje i EF Core, MudBlazor a ImageSharp, ne jen
       vlastní kód. Na 10 GB disku, který je tady tvrdý limit, je to špatný obchod za
@@ -417,6 +430,7 @@ docker run -d --name demizon --restart unless-stopped \
   -v demizon-data:/data \
   -e ASPNETCORE_URLS="http://+:8080" \
   -e AllowedHosts="<domena>" \
+  -e Jwt__SecretKey="<nahodny retezec, min. 32 znaku>" \
   --memory=768m --memory-swap=768m \
   --log-opt max-size=10m --log-opt max-file=3 \
   <image>:latest
@@ -431,6 +445,16 @@ Na co si dát pozor:
   do iptables a obchází tím UFW; bez prefixu je port otevřený do internetu.
 - **`--memory=768m`** je lepší páka než `DOTNET_GCHeapHardLimit` — .NET čte cgroup limit
   a sám si nastaví heap hard limit na ~75 % z něj.
+- **`Jwt__SecretKey` je povinná, jinak kontejner nenastartuje.** Ověřeno smoke testem:
+  bez ní `ValidateOnStart` shodí start s `OptionsValidationException: DataAnnotation
+  validation failed for 'JwtSettings' members: 'SecretKey'`. Sekce `Jwt` není v žádném
+  `appsettings.json`, což je správně (je to tajemství), ale recept ji musí předat.
+  Dvojité podtržítko je oddělovač sekcí — `Jwt__SecretKey` = `Jwt:SecretKey`.
+  `Issuer` a `Audience` mají v `JwtSettings` výchozí hodnoty, takže je předávat netřeba;
+  s jedinou `Jwt__SecretKey` naběhne appka do `Healthy`. Firebase je volitelná (bez ní
+  jen varování a vypnuté FCM push). `Vapid__*` a `GoogleCalendar__RedirectUri` jsou
+  povinné, ale dnes jsou v `appsettings.Production.json` — až se VAPID klíče přesunou
+  do secrets (Priorita 3), přidají se sem taky.
 
 Na hostiteli ještě `/etc/docker/daemon.json`:
 ```json
