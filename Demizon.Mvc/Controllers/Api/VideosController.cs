@@ -38,7 +38,7 @@ public class VideosController(IVideoLinkService videoLinkService) : ControllerBa
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     public async Task<ActionResult<VideoLinkDto>> Create([FromBody] CreateVideoLinkRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -65,7 +65,7 @@ public class VideosController(IVideoLinkService videoLinkService) : ControllerBa
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     public async Task<IActionResult> Update(int id, [FromBody] CreateVideoLinkRequest request)
     {
         try
@@ -95,7 +95,7 @@ public class VideosController(IVideoLinkService videoLinkService) : ControllerBa
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var success = await videoLinkService.DeleteAsync(id);

@@ -56,7 +56,11 @@ builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.Local.json", true, true)
     .AddJsonFile("appsettings.json", true, true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
+    // Docker `-e` a test host musí vyhrát nad appsettings.*.json. CreateBuilder
+    // env proměnné už načetl, ale tři AddJsonFile výše by je jinak přebily —
+    // AllowedHosts / ConnectionStrings z compose by se ignorovaly.
+    .AddEnvironmentVariables();
 
 var defaultConnectionString = builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
@@ -68,11 +72,13 @@ builder.Services.AddOptions<UploadSettings>()
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor(options =>
 {
-    // Výchozí hodnoty jsou 100 odpojených okruhů držených 3 minuty. Každý okruh
-    // nese scoped služby MudBlazoru a načtená DTO, takže na 1GB stroji je to
-    // desítky až stovky MB odpadu. Pro velikost tohoto souboru stačí zlomek.
-    options.DisconnectedCircuitMaxRetained = 10;
-    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(1);
+    // Naměřeno 2026-09-08 v kontejneru --memory=768m (viz hosting-optimization-plan.md):
+    // VmRSS po /health je 159 MB. GET / bez SignalR přidá po zahřátí ~0,7 MB na request
+    // (první stránka ~9 MB JIT). Živý okruh s MudBlazorem je nad tím — i při 2 MB
+    // je 30 × 3 min ~60 MB, zlomek 768 MB limitu. Původních 10 × 1 min vytlačovalo
+    // adminův odpojený okruh, protože _Host.cshtml dává okruh i anonymní návštěvě.
+    options.DisconnectedCircuitMaxRetained = 30;
+    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(3);
     options.DetailedErrors = builder.Environment.IsDevelopment();
 });
 builder.Services.AddMudServices();
@@ -114,9 +120,10 @@ builder.Services.AddHealthChecks()
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    var authPermitLimit = builder.Configuration.GetValue("RateLimiting:AuthPermitLimit", 5);
     options.AddFixedWindowLimiter("auth", o =>
     {
-        o.PermitLimit = 5;
+        o.PermitLimit = authPermitLimit;
         o.Window = TimeSpan.FromMinutes(1);
         o.QueueLimit = 0;
     });
@@ -343,3 +350,5 @@ app.ApplyDbMigrations();
 FcmService.Initialize(app.Configuration, app.Logger);
 
 app.Run();
+
+public partial class Program;

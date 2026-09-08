@@ -170,7 +170,7 @@ public class EventsController(
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateEventRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -212,7 +212,7 @@ public class EventsController(
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         try
@@ -234,7 +234,7 @@ public class EventsController(
     }
 
     [HttpPatch("{id:int}/cancel")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     public async Task<IActionResult> ToggleCancelled(int id)
     {
         try
@@ -250,7 +250,7 @@ public class EventsController(
     }
 
     [HttpPatch("{id:int}/public")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     public async Task<IActionResult> TogglePublic(int id)
     {
         try
