@@ -22,6 +22,7 @@ namespace Demizon.Tests.Unit;
 /// ověřuje záměna instance, ne číslo.
 /// </para>
 /// </remarks>
+[Collection("ImageSharpGlobals")]
 public class CoreRegistrationTests
 {
     [Fact]

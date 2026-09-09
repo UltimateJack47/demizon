@@ -104,33 +104,26 @@ public class AdminWalkthroughTests(E2EFixture fixture) : E2ETestBase(fixture)
         await Page.GotoAsync("/Admin/Members", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await Page.WaitForSelectorAsync(".mud-table, main", new PageWaitForSelectorOptions { Timeout = 20_000 });
 
-        var addButton = Page.Locator("button:has(.mud-icon-root)").First;
-        if (await addButton.CountAsync() == 0)
-            return;
+        // Cíleně podle textu. Dřív tu bylo button:has(.mud-icon-root).First,
+        // což je přepínač navigačního šuplíku z AdminMainLayout — dialog se
+        // nikdy neotevřel, timeout spolkl `catch` a test procházel naprázdno.
+        // Chybějící MudDialogProvider, tedy přesně ta regrese, kterou má
+        // hlídat, by ho nerozbila.
+        await Page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Vytvořit" })
+            .ClickAsync();
 
-        await addButton.ClickAsync();
-
-        var dialog = Page.Locator(".mud-dialog");
-        try
+        var dialog = Page.Locator(".mud-dialog").First;
+        await dialog.WaitForAsync(new LocatorWaitForOptions
         {
-            await dialog.First.WaitForAsync(new LocatorWaitForOptions
-            {
-                State = WaitForSelectorState.Visible,
-                Timeout = 5_000,
-            });
-        }
-        catch (TimeoutException)
-        {
-            // První ikonové tlačítko nemusí být "přidat" — to není chyba
-            // aplikace, takže se test v takovém případě nevyjadřuje.
-            return;
-        }
+            State = WaitForSelectorState.Visible,
+            Timeout = 10_000,
+        });
 
         await Page.Keyboard.PressAsync("Escape");
-        await dialog.First.WaitForAsync(new LocatorWaitForOptions
+        await dialog.WaitForAsync(new LocatorWaitForOptions
         {
             State = WaitForSelectorState.Hidden,
-            Timeout = 5_000,
+            Timeout = 10_000,
         });
 
         Assert.Empty(RelevantConsoleErrors);
@@ -196,6 +189,7 @@ public class AdminWalkthroughTests(E2EFixture fixture) : E2ETestBase(fixture)
         "/Admin/Dances",
         "/Admin/Videos",
         "/Admin/Photos",
+        "/Admin/AttendanceStats",
     ];
 
     private static Task<string[]> ZeroSizedInteractiveAsync(IPage page) =>

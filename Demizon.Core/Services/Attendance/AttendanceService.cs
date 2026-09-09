@@ -85,6 +85,36 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
         }
     }
 
+    /// <summary>
+    /// Cílený UPDATE přes <c>ExecuteUpdateAsync</c>, tedy mimo change tracker.
+    /// To je tady podstatné: volá se právě ve chvíli, kdy uložení selhalo
+    /// a tracker se zahodil, takže běžná cesta by neměla o co se opřít.
+    /// </summary>
+    /// <remarks>
+    /// <c>ExecuteUpdate</c> obchází auditní interceptor (viz testing-plan.md).
+    /// U <c>GoogleEventId</c> to nevadí — je to technický odkaz do cizího
+    /// kalendáře, ne údaj, jehož změnu by někdo dohledával.
+    /// </remarks>
+    public async Task<Common.Result> ClearGoogleEventIdAsync(int id)
+    {
+        try
+        {
+            var affected = await DemizonContext.Attendances
+                .Where(a => a.Id == id)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(a => a.GoogleEventId, (string?)null));
+
+            return affected == 0
+                ? Common.Result.NotFound("Docházka nebyla nalezena.")
+                : Common.Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            DemizonContext.DiscardPendingChanges();
+            logger.LogError(ex, "Failed to clear GoogleEventId for attendance {AttendanceId}.", id);
+            return Common.Result.Fail("ID události se nepodařilo z docházky odstranit.");
+        }
+    }
+
     public async Task<List<Dal.Entities.Attendance>> GetMemberAttendancesAsync(int memberId, DateTime dateFrom,
         DateTime dateTo)
     {

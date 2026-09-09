@@ -486,5 +486,8 @@ a, .btn-link {
     flex-wrap: wrap;
     row-gap: 0.25rem;
     height: auto;
-    min-height: 64px;
+    /* Ne 64px: MudBlazor drží výšku v --mud-internal-toolbar-height, která je
+       u Dense="true" (ListPhotos, AttendanceStats) a v mobilním landscape 48 px.
+       Zadrátovaná hodnota by dense tabulky zvedla o 16 px. */
+    min-height: var(--mud-internal-toolbar-height);
 }

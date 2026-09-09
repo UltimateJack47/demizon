@@ -209,6 +209,45 @@ public class AttendanceAndEventServiceTests : IAsyncDisposable
         ResultAssert.Failed(await Attendances(db).DeleteAsync(4242));
     }
 
+    /// <summary>
+    /// Dorovnání po neúspěšném uložení: událost už v kalendáři není, ale
+    /// docházka si drží její ID. Nová událost se zakládá jen při prázdném
+    /// <c>GoogleEventId</c>, takže bez vynulování by příští „přijdu“ mlčky
+    /// žádnou nevytvořilo — a to natrvalo.
+    /// </summary>
+    /// <remarks>
+    /// Jde záměrně přes <c>ExecuteUpdateAsync</c>, tedy mimo change tracker:
+    /// volá se právě ve chvíli, kdy uložení selhalo a tracker se zahodil.
+    /// </remarks>
+    [Fact]
+    public async Task ClearGoogleEventIdAsync_vynuluje_ID_i_bez_change_trackeru()
+    {
+        await using var seed = _fixture.NewContext();
+        var member = await TestData.SeedMemberAsync(seed);
+        var attendance = TestData.RehearsalAttendance(member.Id, Day(5, 1), AttendanceStatus.Yes);
+        attendance.GoogleEventId = "google-event-ktera-uz-neexistuje";
+        seed.Attendances.Add(attendance);
+        await seed.SaveChangesAsync();
+
+        await using var db = _fixture.NewContext();
+        ResultAssert.Ok(await Attendances(db).ClearGoogleEventIdAsync(attendance.Id));
+
+        await using var verify = _fixture.NewContext();
+        Assert.Null((await verify.Attendances.SingleAsync(a => a.Id == attendance.Id)).GoogleEventId);
+    }
+
+    [Fact]
+    public async Task ClearGoogleEventIdAsync_neexistujici_dochazky_vrati_NotFound()
+    {
+        await using var db = _fixture.NewContext();
+
+        // Volající (MemberAttendance.razor.cs) tenhle stav bere jako v pořádku —
+        // docházka byla mezitím resetovaná, takže není co dorovnávat.
+        ResultAssert.Failed(
+            await Attendances(db).ClearGoogleEventIdAsync(4242),
+            ResultErrorKind.NotFound);
+    }
+
     [Fact]
     public async Task GetMemberAttendancesAsync_filtruje_podle_clena_i_obdobi()
     {

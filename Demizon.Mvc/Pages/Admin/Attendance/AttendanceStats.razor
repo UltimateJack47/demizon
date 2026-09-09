@@ -69,8 +69,8 @@ else
             <MudTh>Docházka z akcí</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd>@context.FullName</MudTd>
-            <MudTd Style="text-align:center">@context.AttendedRehearsals / @context.TotalRehearsals</MudTd>
+            <MudTd DataLabel="Člen">@context.FullName</MudTd>
+            <MudTd DataLabel="Zkoušky" Style="text-align:center">@context.AttendedRehearsals / @context.TotalRehearsals</MudTd>
             <MudTd>
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                     <MudProgressLinear Value="@context.RehearsalRate" Color="@GetColor(context.RehearsalRate)"
@@ -78,7 +78,7 @@ else
                     <MudText Typo="Typo.body2">@context.RehearsalRate %</MudText>
                 </MudStack>
             </MudTd>
-            <MudTd Style="text-align:center">@context.AttendedActions / @context.TotalActions</MudTd>
+            <MudTd DataLabel="Akce" Style="text-align:center">@context.AttendedActions / @context.TotalActions</MudTd>
             <MudTd>
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                     <MudProgressLinear Value="@context.ActionRate" Color="@GetColor(context.ActionRate)"

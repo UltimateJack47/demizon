@@ -18,6 +18,7 @@ namespace Demizon.Tests.Unit;
 /// faktoru 1.0, takže čtverec 1200×1200 fotky na výšku zúžil (3000×4000 → 900×1200,
 /// 1000×5000 → 240×1200) a malé fotky naopak zvětšil (800×600 → 1200×900).
 /// </remarks>
+[Collection("ImageSharpGlobals")]
 public class FileUploadServiceImageTests
 {
     private const int MaxImageWidth = 1200;

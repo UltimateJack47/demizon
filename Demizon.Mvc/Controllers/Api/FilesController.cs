@@ -98,10 +98,10 @@ public class GalleryController(IFileService fileService, IFileUploadService file
         // ("The file field is required.") a sem vůbec nedojde. Sjednotit i to by
         // znamenalo lokalizovat ProblemDetails globálně, což je vlastní úkol.
         if (file.Length == 0)
-            return BadRequest("Nahraný soubor je prázdný.");
+            return BadRequest(new { error = "Nahraný soubor je prázdný." });
 
         if (!file.ContentType.StartsWith("image/"))
-            return BadRequest("Nahrát lze jen obrázek.");
+            return BadRequest(new { error = "Nahrát lze jen obrázek." });
 
         await using var stream = file.OpenReadStream();
         var result = await fileUploadService.UploadImageToDbAsync(new FileUploadRequest
@@ -115,7 +115,7 @@ public class GalleryController(IFileService fileService, IFileUploadService file
 
         // Neúspěch tady znamená nedekódovatelný nebo příliš velký obrázek — chyba klienta.
         if (!result.IsSuccessful)
-            return BadRequest(result.ErrorMessage ?? "Nahrání se nezdařilo.");
+            return BadRequest(new { error = result.ErrorMessage ?? "Nahrání se nezdařilo." });
 
         var entity = new Dal.Entities.File
         {

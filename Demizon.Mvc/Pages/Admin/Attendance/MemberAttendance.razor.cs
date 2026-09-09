@@ -1,4 +1,5 @@
 using System.Globalization;
+using Demizon.Common;
 using System.Security.Claims;
 using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
@@ -417,27 +418,21 @@ public partial class MemberAttendance : ComponentBase
 
             if (model.Id != 0)
             {
-                try
+                // Cílený UPDATE mimo change tracker. Událost už v kalendáři není,
+                // takže docházka nesmí zůstat s jejím ID: nová událost se zakládá
+                // jen při prázdném GoogleEventId, takže by příští „přijdu“ mlčky
+                // žádnou nevytvořilo — a to natrvalo.
+                var cleared = await AttendanceService.ClearGoogleEventIdAsync(model.Id);
+                if (cleared.IsSuccess)
                 {
-                    var attendance = await AttendanceService.GetOneAsync(model.Id);
-                    attendance.GoogleEventId = null;
-                    if ((await AttendanceService.CreateOrUpdateAsync(attendance)).IsSuccess)
-                    {
-                        model.GoogleEventId = null;
-                    }
-                    else
-                    {
-                        // Událost už v kalendáři není, ale docházka si její ID drží.
-                        // Příští „přijdu“ by kvůli ochraně proti duplikátům novou
-                        // událost nevytvořilo, takže o tom musí uživatel vědět.
-                        Snackbar.Add(
-                            "Událost byla z kalendáře smazána, ale docházku se nepodařilo aktualizovat.",
-                            Severity.Warning);
-                    }
+                    model.GoogleEventId = null;
                 }
-                catch
+                else if (cleared.ErrorKind != ResultErrorKind.NotFound)
                 {
-                    // Záznam docházky byl smazán (reset) – ignorujeme
+                    // NotFound = docházka byla mezitím resetovaná, což je v pořádku.
+                    Snackbar.Add(
+                        "Událost byla z kalendáře smazána, ale docházku se nepodařilo aktualizovat.",
+                        Severity.Warning);
                 }
             }
         }

@@ -6,17 +6,23 @@ namespace Demizon.Common;
 /// </summary>
 public enum ResultErrorKind
 {
+    /// <summary>
+    /// Operace uspěla, žádná chyba. Výchozí hodnota záměrně: úspěšný výsledek
+    /// nesmí nést druh chyby, který by se dal omylem přeložit na HTTP kód.
+    /// </summary>
+    None = 0,
+
     /// <summary>Operace se nepovedla na naší straně (výjimka, zápis do DB). → HTTP 500.</summary>
-    Failure = 0,
+    Failure = 1,
 
     /// <summary>Entita neexistuje. → HTTP 404.</summary>
-    NotFound = 1,
+    NotFound = 2,
 
     /// <summary>
     /// Odmítnuto pravidlem, se kterým uživatel může něco udělat — kvóta, limit
     /// velikosti, validace. → HTTP 4xx, a text se mu má zobrazit.
     /// </summary>
-    Rejected = 2,
+    Rejected = 3,
 }
 
 /// <summary>
@@ -43,7 +49,7 @@ public sealed class Result<T>
         ErrorKind = errorKind;
     }
 
-    public static Result<T> Ok(T value) => new(true, value, null, ResultErrorKind.Failure);
+    public static Result<T> Ok(T value) => new(true, value, null, ResultErrorKind.None);
 
     public static Result<T> Fail(string error, ResultErrorKind kind = ResultErrorKind.Failure) =>
         new(false, default, error, kind);
@@ -69,7 +75,7 @@ public sealed class Result
         ErrorKind = errorKind;
     }
 
-    public static Result Ok() => new(true, null, ResultErrorKind.Failure);
+    public static Result Ok() => new(true, null, ResultErrorKind.None);
 
     public static Result Fail(string error, ResultErrorKind kind = ResultErrorKind.Failure) =>
         new(false, error, kind);

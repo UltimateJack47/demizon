@@ -1,8 +1,11 @@
 using Demizon.Common;
+using Demizon.Common.Configuration;
 using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Dance;
 using Demizon.Core.Services.Event;
+using Demizon.Core.Services.File;
 using Demizon.Core.Services.Member;
+using Demizon.Core.Services.Storage;
 using Demizon.Core.Services.VideoLink;
 using Demizon.Dal;
 using Demizon.Tests.Integration.Infrastructure;
@@ -43,12 +46,18 @@ public class ServiceExceptionContractTests : IAsyncDisposable
         return db;
     }
 
+    /// <summary>Výchozí kvóty — testům tady jde o výjimky, ne o limity.</summary>
+    private static FileService FileServiceFor(DemizonContext db) =>
+        new(db,
+            new StorageQuotaService(db, new StubOptionsSnapshot<UploadSettings>(new UploadSettings())),
+            NullLogger<FileService>.Instance);
+
     [Fact]
     public async Task DeleteAsync_nad_nepouzitelnym_kontextem_nevyhodi_vyjimku()
     {
         var db = await DisposedContextAsync();
 
-        // Každá z těch pěti služeb dřív držela vyhledání entity mimo try.
+        // Pět z nich dřív drželo vyhledání entity mimo try.
         var results = new[]
         {
             await new DanceService(db, NullLogger<DanceService>.Instance).DeleteAsync(1),
@@ -56,6 +65,9 @@ public class ServiceExceptionContractTests : IAsyncDisposable
             await new MemberService(db, NullLogger<MemberService>.Instance).DeleteAsync(1),
             await new VideoLinkService(db, NullLogger<VideoLinkService>.Instance).DeleteAsync(1),
             await new AttendanceService(db, NullLogger<AttendanceService>.Instance).DeleteAsync(1),
+            // FileService je jediná postavená na ExecuteDeleteAsync, takže jde
+            // skrz zotavení jinou cestou než ostatní.
+            await FileServiceFor(db).DeleteAsync(1),
         };
 
         Assert.All(results, r =>
@@ -74,9 +86,11 @@ public class ServiceExceptionContractTests : IAsyncDisposable
             .CreateAsync(new Dal.Entities.Dance { Name = "x" });
         var member = await new MemberService(db, NullLogger<MemberService>.Instance)
             .CreateAsync(TestData.Member(login: "novy"));
+        var file = await FileServiceFor(db).CreateAsync(TestData.StoredFile());
 
         ResultAssert.Failed(dance);
         ResultAssert.Failed(member);
+        ResultAssert.Failed(file);
     }
 
     [Fact]
@@ -119,6 +133,9 @@ public class ServiceExceptionContractTests : IAsyncDisposable
             ResultErrorKind.NotFound);
         ResultAssert.Failed(
             await new AttendanceService(db, NullLogger<AttendanceService>.Instance).DeleteAsync(9999),
+            ResultErrorKind.NotFound);
+        ResultAssert.Failed(
+            await FileServiceFor(db).DeleteAsync(9999),
             ResultErrorKind.NotFound);
     }
 }
