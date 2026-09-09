@@ -63,14 +63,14 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
 
     public async Task<Common.Result> DeleteAsync(int id)
     {
-        var entity = await DemizonContext.Attendances.FindAsync(id);
-        if (entity is null)
-        {
-            return Common.Result.NotFound("Docházka nebyla nalezena.");
-        }
-
         try
         {
+            var entity = await DemizonContext.Attendances.FindAsync(id);
+            if (entity is null)
+            {
+                return Common.Result.NotFound("Docházka nebyla nalezena.");
+            }
+
             DemizonContext.Attendances.Remove(entity);
             await DemizonContext.SaveChangesAsync();
             return Common.Result.Ok();

@@ -53,17 +53,17 @@ public class EventService(DemizonContext demizonContext, ILogger<EventService> l
 
     public async Task<Common.Result> DeleteAsync(int id)
     {
-        var entity = await DemizonContext.Events.FindAsync(id);
-        if (entity is null)
-        {
-            // Dřív se tady výjimka pouštěla dál, takže EventService.DeleteAsync
-            // se chovala jinak než ostatní služby (viz testing-plan.md).
-            // S Result je nenalezení prostý neúspěch s textem.
-            return Common.Result.NotFound($"Akce s id {id} nebyla nalezena.");
-        }
-
         try
         {
+            var entity = await DemizonContext.Events.FindAsync(id);
+            if (entity is null)
+            {
+                // Dřív se tady výjimka pouštěla dál, takže EventService.DeleteAsync
+                // se chovala jinak než ostatní služby (viz testing-plan.md).
+                // S Result je nenalezení prostý neúspěch s textem.
+                return Common.Result.NotFound($"Akce s id {id} nebyla nalezena.");
+            }
+
             DemizonContext.Events.Remove(entity);
             await DemizonContext.SaveChangesAsync();
             return Common.Result.Ok();

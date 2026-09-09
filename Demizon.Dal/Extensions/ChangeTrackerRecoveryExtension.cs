@@ -45,7 +45,33 @@ public static class ChangeTrackerRecoveryExtension
     /// rozpracované v momentě selhání <em>je</em> ta selhaná operace.
     /// </para>
     /// </remarks>
+    /// <remarks>
+    /// <b>Proč try/catch v záchranné pomůcce.</b> Přístup k
+    /// <c>ChangeTracker</c> na zavřeném kontextu vyhodí
+    /// <see cref="ObjectDisposedException"/>. Volající to používají uvnitř
+    /// <c>catch</c> bloku, takže by tím zotavení samo hodilo novou výjimku
+    /// a zmařilo kontrakt „služba nikdy nevyhodí, vrátí neúspěch“ — v Blazor
+    /// Serveru je kontext scoped na celý okruh, takže pozdě dorazivší uložení
+    /// po zavřeném okruhu je reálný scénář. Když kontext zmizel, zmizel s ním
+    /// i tracker a není co zahazovat.
+    /// <para>
+    /// Chytá se <b>jen</b> <c>ObjectDisposedException</c>. Cokoli jiného
+    /// propadne dál, aby se skutečné chyby v zotavení neschovaly.
+    /// </para>
+    /// </remarks>
     public static void DiscardPendingChanges(this DemizonContext context)
+    {
+        try
+        {
+            DiscardCore(context);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Kontext je pryč, tracker s ním. Není co uklízet.
+        }
+    }
+
+    private static void DiscardCore(DemizonContext context)
     {
         // ToList: stav se v cyklu mění, takže se nedá iterovat živá kolekce.
         foreach (var entry in context.ChangeTracker.Entries().ToList())

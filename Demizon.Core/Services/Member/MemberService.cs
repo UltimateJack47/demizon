@@ -90,14 +90,14 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
 
     public async Task<Common.Result> DeleteAsync(int id)
     {
-        var entity = await DemizonContext.Members.FindAsync(id);
-        if (entity is null)
-        {
-            return Common.Result.NotFound("Člen nebyl nalezen.");
-        }
-
         try
         {
+            var entity = await DemizonContext.Members.FindAsync(id);
+            if (entity is null)
+            {
+                return Common.Result.NotFound("Člen nebyl nalezen.");
+            }
+
             // Soft delete – data pro historii docházky zůstanou, global query filter skryje člena
             entity.DeletedAt = DateTime.UtcNow;
             await DemizonContext.SaveChangesAsync();

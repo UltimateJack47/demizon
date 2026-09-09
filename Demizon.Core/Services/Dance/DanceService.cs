@@ -53,15 +53,17 @@ public class DanceService(DemizonContext demizonContext, ILogger<DanceService> l
 
     public async Task<Common.Result> DeleteAsync(int id)
     {
-        var entity = await DemizonContext.Dances.FindAsync(id);
-        if (entity is null)
-        {
-            // Chybějící řádek není výjimečná situace, jen odpověď „není co mazat".
-            return Common.Result.NotFound("Tanec nebyl nalezen.");
-        }
-
         try
         {
+            var entity = await DemizonContext.Dances.FindAsync(id);
+            if (entity is null)
+            {
+                // Chybějící řádek není výjimečná situace, jen odpověď „není co
+                // mazat". Vyhledání ale musí zůstat v try: volající kolem služby
+                // try/catch nemá a spoléhá na to, že chybu spolkne a vrátí neúspěch.
+                return Common.Result.NotFound("Tanec nebyl nalezen.");
+            }
+
             DemizonContext.Dances.Remove(entity);
             await DemizonContext.SaveChangesAsync();
             return Common.Result.Ok();

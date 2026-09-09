@@ -53,14 +53,14 @@ public class VideoLinkService(DemizonContext demizonContext, ILogger<VideoLinkSe
 
     public async Task<Common.Result> DeleteAsync(int id)
     {
-        var entity = await DemizonContext.VideoLinks.FindAsync(id);
-        if (entity is null)
-        {
-            return Common.Result.NotFound("Odkaz na video nebyl nalezen.");
-        }
-
         try
         {
+            var entity = await DemizonContext.VideoLinks.FindAsync(id);
+            if (entity is null)
+            {
+                return Common.Result.NotFound("Odkaz na video nebyl nalezen.");
+            }
+
             DemizonContext.VideoLinks.Remove(entity);
             await DemizonContext.SaveChangesAsync();
             return Common.Result.Ok();
