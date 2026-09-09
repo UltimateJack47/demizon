@@ -3,8 +3,8 @@
 
 > ⚠️ **ARCHIV.** Tenhle dokument popisuje stav nebo plán, který **už neplatí**.
 > Nechává se kvůli kontextu — proč něco vypadá, jak vypadá. Aktuální stav
-> a plán je v [`../next-wave-plan.md`](../next-wave-plan.md), rozcestník
-> v [`../README.md`](../README.md).
+> a plán je v [`STATUS.md`](../../../STATUS.md), rozcestník
+> v [`docs/README.md`](../../../README.md).
 
 > Vytvořeno: 10.4.2026 na základě code review commitu `6f190e5` (60 souborů, ~3800 řádků).
 > Review provedeno ve 4 paralelních auditech: backend, security, frontend, architektura.

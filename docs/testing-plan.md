@@ -4,9 +4,9 @@
 > Založeno: 2026-09-02. Poslední aktualizace: 2026-09-09.
 >
 > Rozcestník dokumentace: [`README.md`](README.md). Dopředný plán:
-> [`next-wave-plan.md`](next-wave-plan.md).
+> [`STATUS.md`](STATUS.md).
 >
-> Co dělat dál po auth testech a diskové vlně: [`next-wave-plan.md`](next-wave-plan.md).
+> Co dělat dál po auth testech a diskové vlně: [`STATUS.md`](STATUS.md).
 
 ## Kontext
 
@@ -106,7 +106,7 @@ v `SavedChangesAsync`, kdy už ho databáze přiřadila.
 
 > **Cena:** u uložení, které něco vkládá, přidává jedno UPDATE kolečko.
 > Nejčastější insert je dnes `RefreshToken` (každé přihlášení i obnova tokenu) —
-> a ten má podle *hosting-optimization-plan.md* z auditu úplně vypadnout
+> a ten má podle *disk-optimalizace* z auditu úplně vypadnout
 > (whitelist entit, Priorita 2). Po té změně bude extra zápis vzácný.
 
 ### ✅ 3. Audit log měl pro tutéž entitu dva různé názvy typu
@@ -146,7 +146,7 @@ Hlídá `AuthApiTests.Admin_endpoint_*`.
 > **Nahrazeno 2026-09-09.** Endpoint už žádné zadrátované heslo nemá — login
 > i heslo přicházejí v requestu, v odpovědi se heslo nevrací a celý endpoint je
 > zamčený za `Bootstrap:SeedToken`. Tím ta chyba přestala existovat i jako
-> možnost. Viz `SeedEndpointTests` a *hosting-optimization-plan.md*, sekce
+> možnost. Viz `SeedEndpointTests` a *disk-optimalizace*, sekce
 > „Jak vznikne první admin“.
 
 
@@ -395,7 +395,7 @@ reagovat.
 i po aktualizaci prohlížeče, takže by baseline padala z důvodů, které
 s aplikací nesouvisejí. Screenshoty se ukládají do `e2e-artifacts/` jako
 artefakt k prohlédnutí. Vyplatilo se: dva ze tří vizuálních nálezů této vlny
-našel až pohled na obrázek, ne assertion (viz `waves/2026-09-quality.md`).
+našel až pohled na obrázek, ne assertion (viz `features/kvalita-result-testy/review.md`).
 
 ---
 
@@ -454,7 +454,7 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
       > varování — jinak by příští „přijdu“ ochrana proti duplikátům umlčela.
 - [x] **CI workflow** — `.github/workflows/test.yml` spouští
       `dotnet test Demizon.Backend.slnf` na push/PR. Docker build/deploy dál čeká
-      na rozhodnutí o registry (viz *hosting-optimization-plan.md*).
+      na rozhodnutí o registry (viz *nasazeni.md*).
 - [x] **Testy auth controllerů** přes `WebApplicationFactory` (`AuthApiTests`)
       a bootstrap endpointu (`SeedEndpointTests`).
       Zbývá rate limiting na `/api/auth/token` (v test hostu je limit zvednutý,

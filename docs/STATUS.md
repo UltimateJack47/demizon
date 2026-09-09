@@ -4,8 +4,10 @@
 > Založeno: 2026-09-08. Poslední aktualizace: 2026-09-09.
 >
 > Účel: předat kontext další session (Claude / kdokoli) — co je hotové, na co
-> nesahat, co zbývá a v jakém pořadí. Rozcestník po ostatní dokumentaci je
-> [`README.md`](README.md).
+> nesahat, co zbývá a v jakém pořadí.
+>
+> **Tohle je jediný dopředný plán.** Featury v [`features/`](features/) říkají,
+> co se stalo v nich; „co teď“ je jen tady. Rozcestník: [`README.md`](README.md).
 
 **Větev:** `master` (= `origin/master`). **Host:** `Demizon.Mvc` (Blazor Server + API).
 **Aplikace zatím není v produkci.**
@@ -21,15 +23,15 @@ nekopírují se sem, aby nezastaraly na dvou místech.
 
 ---
 
-## Uzavřené vlny
+## Uzavřené featury
 
 Podrobnosti, zdůvodnění a naměřená čísla jsou v záznamech; tady jen co to
 znamená pro další práci.
 
-| Vlna | Záznam | Co z toho platí |
+| Feature | Záznam | Co z toho platí |
 |---|---|---|
-| Disková optimalizace pro Stardust | [`hosting-optimization-plan.md`](hosting-optimization-plan.md) | ImageSharp, kvóty, purge, WAL, RID publish, odtrackovaná dev DB, DataProtection klíče, env overlay, 30 × 3 min okruhy |
-| Kvalita: Result, testy, vizuální QA | [`waves/2026-09-quality.md`](waves/2026-09-quality.md) | Result kontrakt napříč službami, E2E sada, validace formulářů, 13 opravených chyb |
+| Disková optimalizace pro Stardust | [`disk-optimalizace`](features/disk-optimalizace/README.md) | ImageSharp, kvóty, purge, WAL, RID publish, odtrackovaná dev DB, DataProtection klíče, env overlay, 30 × 3 min okruhy |
+| Kvalita: Result, testy, vizuální QA | [`features/kvalita-result-testy/`](features/kvalita-result-testy/README.md) | Result kontrakt napříč službami, E2E sada, validace formulářů, 13 opravených chyb |
 
 ### Na co nesahat — je hotové
 
@@ -78,7 +80,7 @@ znamená pro další práci.
 dostání klienta do rukou. Je to zároveň jediná část, která se bez telefonu
 a Firebase konzole udělat nedá.
 
-Podrobný seznam je v [`flutter-rewrite-plan.md`](flutter-rewrite-plan.md);
+Podrobný seznam je v [`flutter-prepis/`](features/flutter-prepis/README.md);
 tady pořadí podle dopadu:
 
 - [ ] `flutterfire configure` → `lib/firebase_options.dart` + `google-services.json`
@@ -142,7 +144,7 @@ Odložená rozhodnutí z hosting plánu, plus CI image:
 
 Recept `docker run` (volume, `--memory=768m`, log-opt, `Jwt__SecretKey`,
 `Bootstrap__SeedToken`) a postup bootstrapu prvního admina jsou
-v [`hosting-optimization-plan.md`](hosting-optimization-plan.md).
+v [`disk-optimalizace`](features/disk-optimalizace/README.md).
 
 ---
 

@@ -1,16 +1,26 @@
 # AGENTS.md
 
-> **Where the plan lives:** [`docs/README.md`](docs/README.md) is the index of
-> all documentation; [`docs/next-wave-plan.md`](docs/next-wave-plan.md) is the
-> single forward-looking plan (what is done, what is left, in what order).
-> Most other files under `docs/` are records of finished work — do not read
-> them as TODO lists.
+> **Where the plan lives:** [`docs/STATUS.md`](docs/STATUS.md) is the single
+> forward-looking plan — what is done, what is left, in what order. Start there.
+> [`docs/README.md`](docs/README.md) indexes everything else.
+>
+> Documentation is organised per body of work: `docs/features/<name>/README.md`
+> records a feature's brief, status and what was done, with `pruzkum.md` /
+> `review.md` alongside it only when there is enough to warrant a separate file.
+> Cross-cutting documents stay at the root of `docs/` (`testing-plan.md`,
+> `nasazeni.md`, `notifications.md`) because they apply across features.
+> A feature whose state no longer holds moves to `docs/features/archiv/`.
+>
+> **Records of finished work are not TODO lists.** Anything under a closed
+> feature or `archiv/` describes what happened and why, including what was
+> deliberately *not* done — read that before "fixing" something that is
+> intentional.
 
 ## Scope and current source of truth
 - Work primarily in `Demizon.Mvc` (Blazor Server + API in one host); this is the only web host in `Demizon.slnx`.
 - `Demizon.Api` contains a parallel standalone API host (same domain concepts/controllers), useful for API-only runs but not part of the solution file.
 - Shared layers: `Demizon.Contracts` (DTOs), `Demizon.Core` (business services), `Demizon.Dal` (EF Core + SQLite), `Demizon.Common` (settings/exceptions/helpers).
-- Mobile client: `demizon_flutter/` is the one being built; `Demizon.Maui` is the predecessor it replaces and is kept as the reference for behaviour still to be ported (notifications, navigation). See `docs/flutter-rewrite-plan.md`.
+- Mobile client: `demizon_flutter/` is the one being built; `Demizon.Maui` is the predecessor it replaces and is kept as the reference for behaviour still to be ported (notifications, navigation). See `docs/features/flutter-prepis/`.
 - Tests: `Demizon.Tests.Unit` (fast logic + HTTP via `WebApplicationFactory`), `Demizon.Tests.Integration` (real SQLite), `Demizon.Tests.E2E` (Playwright against the running app).
 
 ## Architecture map (how data flows)
@@ -55,7 +65,7 @@
 ## Configuration, secrets, and local setup
 - MVC config load order is `appsettings.Local.json` -> `appsettings.json` -> `appsettings.{Environment}.json` -> **environment variables** (see `Program.cs`). The trailing `AddEnvironmentVariables()` matters: without it the re-added json files sit after the defaults and silently win over `-e` from Docker.
 - `Jwt__SecretKey` has no value in any `appsettings.json` and is required — the host will not start without it.
-- The first admin is created through `POST /api/database/seed`, which is gated behind `Bootstrap__SeedToken` and refuses to run once any member exists. Procedure in `docs/hosting-optimization-plan.md`.
+- The first admin is created through `POST /api/database/seed`, which is gated behind `Bootstrap__SeedToken` and refuses to run once any member exists. Procedure in `docs/nasazeni.md`.
 - Use `Demizon.Mvc/appsettings.Local.json.example` as template; real local file is gitignored (`.gitignore`).
 - MAUI Android expects local secret files: `Platforms/Android/FirebaseConfig.cs` and `google-services.json` (both gitignored; template provided).
 

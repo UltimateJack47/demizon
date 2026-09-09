@@ -72,7 +72,7 @@ builder.Services.AddOptions<UploadSettings>()
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor(options =>
 {
-    // Naměřeno 2026-09-08 v kontejneru --memory=768m (viz hosting-optimization-plan.md):
+    // Naměřeno 2026-09-08 v kontejneru --memory=768m (viz docs/features/disk-optimalizace/README.md):
     // VmRSS po /health je 159 MB. GET / bez SignalR přidá po zahřátí ~0,7 MB na request
     // (první stránka ~9 MB JIT). Živý okruh s MudBlazorem je nad tím — i při 2 MB
     // je 30 × 3 min ~60 MB, zlomek 768 MB limitu. Původních 10 × 1 min vytlačovalo

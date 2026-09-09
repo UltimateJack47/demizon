@@ -3,8 +3,8 @@
 
 > ⚠️ **ARCHIV.** Tenhle dokument popisuje stav nebo plán, který **už neplatí**.
 > Nechává se kvůli kontextu — proč něco vypadá, jak vypadá. Aktuální stav
-> a plán je v [`../next-wave-plan.md`](../next-wave-plan.md), rozcestník
-> v [`../README.md`](../README.md).
+> a plán je v [`STATUS.md`](../../../STATUS.md), rozcestník
+> v [`docs/README.md`](../../../README.md).
 
 **Date Created**: 2026-04-15  
 **Project**: Demizon Mobile App (MAUI)  
@@ -350,9 +350,9 @@ Demizon.Maui/Converters/
 ## 📖 Reference Documents
 
 ### In `/docs/` Folder
-- `MAUI_Enhancement_Plan.md` - Full implementation plan (8 phases)
-- `MAUI_Technical_Specification.md` - Code-level specifications
-- `IMPLEMENTATION_SUMMARY.md` - This document
+- `features/archiv/maui-klient/MAUI_Enhancement_Plan.md` - Full implementation plan (8 phases)
+- `features/archiv/maui-klient/MAUI_Technical_Specification.md` - Code-level specifications
+- `souhrn-etapy/` - This document
 
 ### In Codebase
 - MVC Attendance: `Demizon.Mvc\Pages\Admin\Attendance\`
@@ -421,5 +421,5 @@ If during implementation you encounter:
 ---
 
 **For detailed implementation guidance, see:**
-- 📘 `MAUI_Enhancement_Plan.md` - Full plan with 8 phases
-- 💻 `MAUI_Technical_Specification.md` - Code specifications and examples
+- 📘 `features/archiv/maui-klient/MAUI_Enhancement_Plan.md` - Full plan with 8 phases
+- 💻 `features/archiv/maui-klient/MAUI_Technical_Specification.md` - Code specifications and examples

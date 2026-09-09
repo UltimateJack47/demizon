@@ -4,7 +4,7 @@
 > Poslední aktualizace: 2026-09-01 (build zelený).
 > Založeno: 2026-09-01. Větev: `feat/flutter-app`. Adresář: `demizon_flutter/`.
 >
-> Pořadí vůči backendu a nasazení: [`next-wave-plan.md`](next-wave-plan.md).
+> Pořadí vůči backendu a nasazení: [`STATUS.md`](../../STATUS.md).
 
 ## Proč
 
@@ -44,7 +44,7 @@ ale controllery bez source-genu jsou upovídanější.
 **1:1 přepis.** Stejné obrazovky, stejné chování, stejné české texty.
 Ne redesign. Backend se nemění — API kontrakt zůstává.
 
-Závazné konvence jsou v [`../demizon_flutter/ARCHITECTURE.md`](../demizon_flutter/ARCHITECTURE.md).
+Závazné konvence jsou v [`../demizon_flutter/ARCHITECTURE.md`](../../../demizon_flutter/ARCHITECTURE.md).
 
 ## Technologické mapování
 

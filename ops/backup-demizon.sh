@@ -9,7 +9,7 @@
 # kontejner není potřeba zastavovat.
 #
 # Spouští se na hostiteli (image je runtime-only a `sqlite3` v něm není).
-# Viz docs/hosting-optimization-plan.md, sekce „Záloha /data“.
+# Viz docs/nasazeni.md, sekce „Záloha /data“.
 #
 set -euo pipefail
 
