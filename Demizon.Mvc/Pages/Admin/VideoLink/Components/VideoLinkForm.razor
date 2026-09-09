@@ -9,6 +9,7 @@
     </TitleContent>
 
     <DialogContent>
+        <MudForm @ref="_form" Model="Model">
         <MudGrid Spacing="2">
             <MudItem xs="12" sm="8">
                 <MudTextField @bind-Value="Model.Name" Label="Název"
@@ -16,8 +17,10 @@
                               Variant="Variant.Outlined" Margin="Margin.Dense"/>
             </MudItem>
             <MudItem xs="12" sm="4">
-                <MudTextField @bind-Value="Model.Year" Label="Rok"
-                              Required="true" RequiredError="Rok je povinný!"
+                @* Year je int, takže Required nic neznamená — nula je taky
+                   hodnota. Rozsah naopak zachytí prázdné i nesmyslné pole. *@
+                <MudTextField @bind-Value="Model.Year" Label="Rok" T="int"
+                              Validation="@(new Func<int, string?>(ValidateYear))"
                               Variant="Variant.Outlined" Margin="Margin.Dense"/>
             </MudItem>
             <MudItem xs="12">
@@ -41,6 +44,7 @@
                 <MudCheckBox @bind-Value="Model.IsInternal" Label="Interní (jen pro členy)" Color="Color.Warning"/>
             </MudItem>
         </MudGrid>
+        </MudForm>
     </DialogContent>
 
     <DialogActions>
@@ -67,6 +71,24 @@
             .ToListAsync();
     }
 
+    private MudForm _form = null!;
+
+    private static string? ValidateYear(int year) =>
+        year is >= 1900 and <= 2100 ? null : "Zadej rok mezi 1900 a 2100.";
+
     private void Cancel() => MudDialog.Cancel();
-    private void ClickedOk() => MudDialog.Close(DialogResult.Ok(Model));
+
+    /// <summary>
+    /// Zavře dialog jen s validním modelem. Bez toho by <c>Required="true"</c>
+    /// na polích jen vykreslilo hvězdičku a chybovou hlášku — zavření
+    /// neblokuje nic (viz EventForm, kde to končilo výjimkou v ToEntity()).
+    /// </summary>
+    private async Task ClickedOk()
+    {
+        await _form.Validate();
+        if (!_form.IsValid)
+            return;
+
+        MudDialog.Close(DialogResult.Ok(Model));
+    }
 }

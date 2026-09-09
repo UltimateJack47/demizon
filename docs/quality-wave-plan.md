@@ -225,7 +225,22 @@ assertion. Místo toho:
 |---|---|---|
 | 4 | **Formulář akce šel uložit bez termínu.** `ClickedOk` zavíral dialog bez jakékoli validace — `Required="true"` na poli jen vykreslí hvězdičku, nic neblokuje — a `EventViewModel.ToEntity()` pak spadlo na `Date.Start!.Value`. Uživatel viděl obecné „Něco se pokazilo.“ | ✅ opraveno: `MudForm` + validace v `ClickedOk`, `Required` na `MudDateRangePicker`; hlídá `Akci_nejde_ulozit_bez_terminu` (padá bez opravy) |
 | 5 | Ten `catch` výjimku **spolkl bez zalogování**, takže v logu nezůstala stopa a nebylo co dohledat | ✅ `Logger.LogError` na obou místech v `ListEvents` |
-| 6 | **Žádný formulář nepoužívá `MudForm`** (`AttendanceForm`, `DanceForm`, `EventForm`, `MemberForm`, `VideoLinkForm`), takže ani jeden nevaliduje před zavřením | ⬜ **zbývá** — spadnout umí jen akce (jen `EventViewModel` má `!.Value`), u ostatních to znamená prázdné hodnoty. Viz „Zbývá“ níž |
+| 6 | **Žádný formulář nepoužíval `MudForm`**, takže ani jeden nevalidoval před zavřením | ✅ opraveno u všech, které mají co validovat: `EventForm`, `DanceForm`, `VideoLinkForm`, `MemberForm`. Hlídá `Formular_nejde_ulozit_s_nevyplnenymi_povinnymi_poli` (4 případy; bez validace padnou právě ty tři nové) |
+
+**K bodu 6 dvě rozhodnutí, která nejsou mechanická:**
+
+- **`AttendanceForm` zůstává bez `MudForm` záměrně** — nemá povinné pole.
+  Radio group má vždy hodnotu, role i poznámka jsou nepovinné, takže by to
+  byl jen ceremoniál.
+- **`Required` na `VideoLinkForm.Year` nic neznamenalo** — `Year` je `int`
+  a nula je taky hodnota, takže povinnost nešla porušit ani splnit. Nahrazeno
+  rozsahovou kontrolou 1900–2100, která prázdné i nesmyslné pole zachytí.
+- `MemberForm` si své ruční kontroly (shoda hesel, formát e-mailu) drží dál —
+  `Required` je nepokrývá.
+
+Při té příležitosti smazán `DanceNumberForm.razor`: 84 bajtů obsahující jediný
+komentář „Removed – DanceNumber concept has been replaced by standalone Dance
+entities“, nula referencí.
 
 **Ověřeno jako funkční** (ne nález): datum v administraci je česky
 (`Září 2026`, `01.01.2026`), dialogy se otevírají i zavírají, MudBlazor

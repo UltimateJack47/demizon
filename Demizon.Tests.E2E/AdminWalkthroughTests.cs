@@ -194,20 +194,29 @@ public class AdminWalkthroughTests(E2EFixture fixture) : E2ETestBase(fixture)
     ];
 
     /// <summary>
-    /// Formulář akce nesmí jít zavřít bez termínu.
+    /// Dialogový formulář nesmí jít zavřít s nevyplněnými povinnými polími.
     /// </summary>
     /// <remarks>
     /// Nalezeno ručním proklikáním: <c>ClickedOk</c> zavíral dialog bez jakékoli
-    /// validace (<c>Required="true"</c> na poli jen vykreslí hvězdičku, nic
-    /// neblokuje) a <c>EventViewModel.ToEntity()</c> pak spadlo na
-    /// <c>Date.Start!.Value</c>. Uživatel viděl obecné „Něco se pokazilo.“
-    /// a v logu po tom nezůstala stopa, protože to <c>catch</c> spolkl.
+    /// validace. <c>Required="true"</c> na poli jen vykreslí hvězdičku a chybu —
+    /// zavření neblokuje nic, protože k tomu je potřeba <c>MudForm</c>. U akce
+    /// to končilo výjimkou (<c>EventViewModel.ToEntity()</c> dělá
+    /// <c>Date.Start!.Value</c>) a uživatel viděl obecné „Něco se pokazilo.“;
+    /// u ostatních by se uložily prázdné hodnoty.
+    /// <para>
+    /// <c>AttendanceForm</c> tu chybí záměrně — nemá povinné pole. Radio má vždy
+    /// hodnotu, role i poznámka jsou nepovinné, takže validovat není co.
+    /// </para>
     /// </remarks>
-    [Fact]
-    public async Task Akci_nejde_ulozit_bez_terminu()
+    [Theory]
+    [InlineData("/Admin/Events", "Termín je povinný!")]
+    [InlineData("/Admin/Dances", "Název je povinný!")]
+    [InlineData("/Admin/Videos", "Název je povinný!")]
+    [InlineData("/Admin/Members", "Jméno je povinné!")]
+    public async Task Formular_nejde_ulozit_s_nevyplnenymi_povinnymi_poli(string route, string expectedError)
     {
         await LoginAsAdminAsync();
-        await Page.GotoAsync("/Admin/Events", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GotoAsync(route, new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         await Page.WaitForSelectorAsync("main, .mud-main-content",
             new PageWaitForSelectorOptions { Timeout = 20_000 });
 
@@ -223,13 +232,12 @@ public class AdminWalkthroughTests(E2EFixture fixture) : E2ETestBase(fixture)
             Timeout = 10_000,
         });
 
-        await dialog.GetByLabel("Název").FillAsync("Akce bez termínu");
         await dialog.GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Vytvořit" })
             .ClickAsync();
 
         // Dialog musí zůstat otevřený a pole hlásit chybu.
         await Expect(dialog).ToBeVisibleAsync();
-        await Expect(dialog).ToContainTextAsync("Termín je povinný!");
+        await Expect(dialog).ToContainTextAsync(expectedError);
 
         // A hlavně žádné zavádějící „Něco se pokazilo.“
         var body = await Page.InnerTextAsync("body");

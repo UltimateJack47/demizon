@@ -5,6 +5,7 @@
     </TitleContent>
 
     <DialogContent>
+        <MudForm @ref="_form" Model="Model">
         <MudGrid Spacing="2">
             <MudItem xs="12">
                 <MudTextField @bind-Value="Model.Name" Label="Název"
@@ -35,6 +36,7 @@
                 <MudCheckBox @bind-Value="Model.IsVisible" Label="Veřejné" Color="Color.Primary"/>
             </MudItem>
         </MudGrid>
+        </MudForm>
     </DialogContent>
 
     <DialogActions>
@@ -51,6 +53,21 @@
     [Parameter] public DanceViewModel Model { get; set; } = new();
     [Parameter] public bool IsUpdate { get; set; }
 
+    private MudForm _form = null!;
+
     private void Cancel() => MudDialog.Cancel();
-    private void ClickedOk() => MudDialog.Close(DialogResult.Ok(Model));
+
+    /// <summary>
+    /// Zavře dialog jen s validním modelem. Bez toho by <c>Required="true"</c>
+    /// na polích jen vykreslilo hvězdičku a chybovou hlášku — zavření
+    /// neblokuje nic (viz EventForm, kde to končilo výjimkou v ToEntity()).
+    /// </summary>
+    private async Task ClickedOk()
+    {
+        await _form.Validate();
+        if (!_form.IsValid)
+            return;
+
+        MudDialog.Close(DialogResult.Ok(Model));
+    }
 }

@@ -15,6 +15,7 @@
     </TitleContent>
 
     <DialogContent>
+        <MudForm @ref="_form" Model="Model">
         <MudGrid Spacing="2">
             <MudItem xs="12" sm="6">
                 <MudTextField @bind-Value="Model.Name" T="string" Label="Jméno" Required="true" RequiredError="Jméno je povinné!"
@@ -127,6 +128,7 @@
                 </MudItem>
             }
         </MudGrid>
+        </MudForm>
     </DialogContent>
 
     <DialogActions>
@@ -170,8 +172,23 @@
         LoggedUser = MemberService.GetOneByLogin(loggedUserLogin)!.ToViewModel();
     }
 
+    private MudForm _form = null!;
+
+    /// <summary>
+    /// Zavře dialog jen s validním modelem. Bez toho by <c>Required="true"</c>
+    /// na polích jen vykreslilo hvězdičku a chybovou hlášku — zavření
+    /// neblokuje nic (viz EventForm, kde to končilo výjimkou v ToEntity()).
+    /// </summary>
+    /// <remarks>
+    /// Ruční kontroly níž zůstávají: shodu hesel ani formát e-mailu
+    /// <c>Required</c> nepokrývá.
+    /// </remarks>
     private async Task ClickedOk()
     {
+        await _form.Validate();
+        if (!_form.IsValid)
+            return;
+
         if (!string.IsNullOrEmpty(Model.Password) && Model.Password != _passwordConfirm)
         {
             Snackbar.Add("Hesla se neshodují.", Severity.Error);
