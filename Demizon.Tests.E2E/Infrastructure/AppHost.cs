@@ -27,7 +27,15 @@ public sealed class AppHost : IAsyncDisposable
 
     private readonly string _dbPath;
     private Process? _process;
-    private readonly List<string> _output = [];
+
+    /// <summary>
+    /// Poslední řádky výstupu hosta, jen pro diagnostiku při selhání startu.
+    /// Kruhová fronta záměrně: v Development host loguje každý EF dotaz, takže
+    /// za 48 testů by neomezený seznam držel desetitisíce řádků v paměti.
+    /// </summary>
+    private readonly Queue<string> _output = new();
+
+    private const int OutputLinesKept = 200;
 
     public string BaseUrl { get; }
 
@@ -76,8 +84,8 @@ public sealed class AppHost : IAsyncDisposable
         _process = Process.Start(startInfo)
             ?? throw new InvalidOperationException("Nepodařilo se spustit hosta.");
 
-        _process.OutputDataReceived += (_, e) => { if (e.Data is not null) lock (_output) _output.Add(e.Data); };
-        _process.ErrorDataReceived += (_, e) => { if (e.Data is not null) lock (_output) _output.Add(e.Data); };
+        _process.OutputDataReceived += (_, e) => Remember(e.Data);
+        _process.ErrorDataReceived += (_, e) => Remember(e.Data);
         _process.BeginOutputReadLine();
         _process.BeginErrorReadLine();
 
@@ -187,9 +195,19 @@ public sealed class AppHost : IAsyncDisposable
         return new DemizonContext(options);
     }
 
+    private void Remember(string? line)
+    {
+        if (line is null) return;
+        lock (_output)
+        {
+            _output.Enqueue(line);
+            while (_output.Count > OutputLinesKept) _output.Dequeue();
+        }
+    }
+
     public string Output()
     {
-        lock (_output) return string.Join(Environment.NewLine, _output.TakeLast(60));
+        lock (_output) return string.Join(Environment.NewLine, _output);
     }
 
     public async ValueTask DisposeAsync()
