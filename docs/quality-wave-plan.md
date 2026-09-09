@@ -253,9 +253,47 @@ to je produktové rozhodnutí, ne úklid. Možnosti: přehodit výchozí kulturu
 
 ## 5. Code review
 
-Nad celým diffem vlny, se zaměřením na: zapomenuté ignorované `Result`, chybové
-texty, flaky E2E (čekání na stav místo `sleep`), a jestli testy skutečně chytají
-regresi (spustit proti kódu bez opravy).
+Dvě kola: vlastní revize a nezávislá přes `/code-review`.
+
+### Vlastní revize — 3 nálezy, všechny opravené
+
+**1. Porušený kontrakt „služba nikdy nevyhodí výjimku“** (moje regrese).
+Abych odlišil „nenalezeno“ od chyby zápisu, vytáhl jsem v `DeleteAsync`
+vyhledání entity **mimo** `try` — v pěti službách. Volající (Razor stránky
+i controllery) kolem těch volání `try/catch` nemají, protože se spoléhají na to,
+že chyba přijde jako návratová hodnota. Výjimka při čtení (`SQLITE_BUSY` není
+na jednom vCPU s WAL hypotéza) by prolétla do Blazor okruhu a uživateli by
+zhasla stránka. Vyhledání je zpátky v `try`, nenalezení zůstává hodnotou.
+
+**2. Záchranná pomůcka sama vyhazovala výjimku** (starší latentní chyba, kterou
+odhalil až test k nálezu 1). `DiscardPendingChanges` sahá na
+`context.ChangeTracker`, což na zavřeném kontextu hodí
+`ObjectDisposedException` — a volající ji používají **uvnitř** `catch` bloku,
+takže zotavení hodilo novou výjimku a kontrakt zmařilo bez ohledu na nález 1.
+V Blazor Serveru je kontext scoped na celý okruh, takže uložení dorazivší po
+zavřeném okruhu je reálný scénář. Chytá se **jen** `ObjectDisposedException`
+(kontext je pryč → tracker s ním → není co uklízet), cokoli jiného propadne dál.
+
+**3. Neomezený buffer výstupu v E2E hostu.** Sbíral se jen pro diagnostiku
+selhání startu, ale v Development loguje host každý EF dotaz — za 48 testů
+desetitisíce řádků v paměti. Kruhová fronta na 200 řádků.
+
+`ServiceExceptionContractTests` hlídá 1 i 2 (běh služeb nad zavřeným
+kontextem) a k tomu to, že `CreateOrUpdateAsync` po neúspěchu nechá `Value`
+na nule — volající se rozhoduje podle `Id != 0`. **Tři testy padaly před
+opravou.**
+
+> **Poučení.** Nález 1 je přesně ta chyba, na kterou je vlastní revize dobrá:
+> šlo o *úmyslné* zlepšení (odlišit 404 od 500), které mimoděk porušilo
+> nevyslovený kontrakt. A nález 2 se ukázal jen proto, že jsem k nálezu 1
+> napsal test — bez něj bych opravil symptom a hlubší chybu nechal ležet.
+
+### Nezávislá revize
+
+Sledovat: zapomenuté ignorované `Result`, chybové texty, flaky E2E (čekání na
+stav místo `sleep`), a jestli testy skutečně chytají regresi.
+
+> První pokus spadl na limitu session; puštěno znovu.
 
 ---
 
