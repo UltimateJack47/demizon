@@ -40,7 +40,7 @@ HTTP a prohlížeč, takže je na signaturách nezávislé — může jít kdyko
 | 3 | E2E infrastruktura (Playwright) | ✅ hotovo |
 | 4 | E2E scénáře | ✅ hotovo |
 | 5 | Doplnit unit/integrační díry | ✅ hotovo |
-| 6 | Vizuální QA MudBlazor 9.9 | ✅ hotovo (kromě Claude in Chrome) |
+| 6 | Vizuální QA MudBlazor 9.9 | ✅ hotovo včetně ručního proklikání |
 | 7 | Code review celé vlny | ✅ hotovo |
 
 ---
@@ -216,11 +216,30 @@ assertion. Místo toho:
       > `Element.checkVisibility()`, které bere v potaz i předky.
 - [x] **Screenshoty jako artefakt** — desktop i 390 px, ukládají se do
       `e2e-artifacts/` a CI je vystavuje jako artefakt běhu.
-- [ ] **Claude in Chrome** — v této session **nedostupné**: rozšíření je
-      nainstalované, ale nástroje prohlížeče nejsou pro session povolené
-      (`/chrome`, nebo restart Claude Code a jednorázové potvrzení).
-      Ruční proklikání tedy zbývá; automatizovaná část i prohlídka screenshotů
-      proběhly.
+- [x] **Claude in Chrome** — proklikáno 2026-09-09 nad běžící aplikací
+      (přihlášení, členové, akce, tance, statistiky, profil, docházka, dialogy).
+
+### Nálezy z ručního proklikání
+
+| # | Nález | Stav |
+|---|---|---|
+| 4 | **Formulář akce šel uložit bez termínu.** `ClickedOk` zavíral dialog bez jakékoli validace — `Required="true"` na poli jen vykreslí hvězdičku, nic neblokuje — a `EventViewModel.ToEntity()` pak spadlo na `Date.Start!.Value`. Uživatel viděl obecné „Něco se pokazilo.“ | ✅ opraveno: `MudForm` + validace v `ClickedOk`, `Required` na `MudDateRangePicker`; hlídá `Akci_nejde_ulozit_bez_terminu` (padá bez opravy) |
+| 5 | Ten `catch` výjimku **spolkl bez zalogování**, takže v logu nezůstala stopa a nebylo co dohledat | ✅ `Logger.LogError` na obou místech v `ListEvents` |
+| 6 | **Žádný formulář nepoužívá `MudForm`** (`AttendanceForm`, `DanceForm`, `EventForm`, `MemberForm`, `VideoLinkForm`), takže ani jeden nevaliduje před zavřením | ⬜ **zbývá** — spadnout umí jen akce (jen `EventViewModel` má `!.Value`), u ostatních to znamená prázdné hodnoty. Viz „Zbývá“ níž |
+
+**Ověřeno jako funkční** (ne nález): datum v administraci je česky
+(`Září 2026`, `01.01.2026`), dialogy se otevírají i zavírají, MudBlazor
+providery na stránce jsou (snackbar se ale jmenuje
+`mud-snackbar-location-top-right`, ne `mud-snackbar-provider` — moje původní
+E2E assertion na názvy tříd byla proto příliš slabá), a celý průchod
+„vytvořit tanec“ funguje včetně `Result` → snackbar „Tanec byl vytvořen.“
+→ obnovení mřížky. Tím je Result refactor ověřený i v reálném UI.
+
+> **Falešný poplach, který stojí za zapsání.** Klik na „Vytvořit“ přes
+> `computer left_click` s `ref` dialog neotevřel a chvíli to vypadalo na
+> chybějící `MudDialogProvider`. Ověření v DOMu ukázalo, že providery tam jsou
+> a dialog se po programovém `element.click()` otevře — nedorazil tedy klik,
+> ne aplikace. Bez toho ověření bych nahlásil neexistující chybu.
 
 ### Průchod administrací (`AdminWalkthroughTests`)
 

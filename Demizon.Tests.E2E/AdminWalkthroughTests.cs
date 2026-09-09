@@ -1,5 +1,6 @@
 using Demizon.Tests.E2E.Infrastructure;
 using Microsoft.Playwright;
+using static Microsoft.Playwright.Assertions;
 
 namespace Demizon.Tests.E2E;
 
@@ -191,6 +192,49 @@ public class AdminWalkthroughTests(E2EFixture fixture) : E2ETestBase(fixture)
         "/Admin/Photos",
         "/Admin/AttendanceStats",
     ];
+
+    /// <summary>
+    /// Formulář akce nesmí jít zavřít bez termínu.
+    /// </summary>
+    /// <remarks>
+    /// Nalezeno ručním proklikáním: <c>ClickedOk</c> zavíral dialog bez jakékoli
+    /// validace (<c>Required="true"</c> na poli jen vykreslí hvězdičku, nic
+    /// neblokuje) a <c>EventViewModel.ToEntity()</c> pak spadlo na
+    /// <c>Date.Start!.Value</c>. Uživatel viděl obecné „Něco se pokazilo.“
+    /// a v logu po tom nezůstala stopa, protože to <c>catch</c> spolkl.
+    /// </remarks>
+    [Fact]
+    public async Task Akci_nejde_ulozit_bez_terminu()
+    {
+        await LoginAsAdminAsync();
+        await Page.GotoAsync("/Admin/Events", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.WaitForSelectorAsync("main, .mud-main-content",
+            new PageWaitForSelectorOptions { Timeout = 20_000 });
+
+        // Tlačítko v toolbaru tabulky, ne to v dialogu (obě se jmenují stejně).
+        await Page.Locator(".mud-table-toolbar")
+            .GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Vytvořit" })
+            .ClickAsync();
+
+        var dialog = Page.Locator(".mud-dialog").First;
+        await dialog.WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible,
+            Timeout = 10_000,
+        });
+
+        await dialog.GetByLabel("Název").FillAsync("Akce bez termínu");
+        await dialog.GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Vytvořit" })
+            .ClickAsync();
+
+        // Dialog musí zůstat otevřený a pole hlásit chybu.
+        await Expect(dialog).ToBeVisibleAsync();
+        await Expect(dialog).ToContainTextAsync("Termín je povinný!");
+
+        // A hlavně žádné zavádějící „Něco se pokazilo.“
+        var body = await Page.InnerTextAsync("body");
+        Assert.DoesNotContain("Něco se pokazilo", body);
+    }
 
     private static Task<string[]> ZeroSizedInteractiveAsync(IPage page) =>
         page.EvaluateAsync<string[]>("""

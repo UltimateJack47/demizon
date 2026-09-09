@@ -11,6 +11,7 @@
 @inject IEventService EventService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject ILogger<ListEvents> Logger
 @attribute [Authorize(Roles = "Admin, Standard")]
 
 <MudTable @ref="EventsGrid" T="EventViewModel" Items="Events" Hover="true" Striped="true" FixedHeader="true" Height="900px"
@@ -131,8 +132,13 @@
 
                 await RefreshTable();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                // Zalogovat, ne jen spolknout: tenhle catch dřív schoval
+                // InvalidOperationException z EventViewModel.ToEntity()
+                // (prázdný termín → Date.Start!.Value) a v logu po tom
+                // nezůstala ani stopa, takže se to nedalo dohledat.
+                Logger.LogError(ex, "Uložení akce z formuláře selhalo.");
                 Snackbar.Add("Něco se pokazilo.", Severity.Error);
             }
         }
@@ -174,8 +180,13 @@
                 Snackbar.Add(isCancelled ? "Událost byla zrušena." : "Událost byla reaktivována.", Severity.Success);
                 await RefreshTable();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                // Zalogovat, ne jen spolknout: tenhle catch dřív schoval
+                // InvalidOperationException z EventViewModel.ToEntity()
+                // (prázdný termín → Date.Start!.Value) a v logu po tom
+                // nezůstala ani stopa, takže se to nedalo dohledat.
+                Logger.LogError(ex, "Uložení akce z formuláře selhalo.");
                 Snackbar.Add("Něco se pokazilo.", Severity.Error);
             }
         }

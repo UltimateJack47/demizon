@@ -5,14 +5,21 @@
     </TitleContent>
 
     <DialogContent>
+        @* MudForm kvůli tomu, aby ClickedOk mohl zavření odmítnout. Samotné
+           Required="true" na poli jen vykreslí hvězdičku a chybu — nic neblokuje. *@
+        <MudForm @ref="_form" Model="EventModel">
         <MudGrid Spacing="2">
             <MudItem xs="12">
                 <MudTextField @bind-Value="EventModel.Name" Label="Název"
                               Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" RequiredError="Název je povinný!"/>
             </MudItem>
             <MudItem xs="12">
+                @* Bez Required šel formulář zavřít bez termínu a ToEntity() pak
+                   spadlo na Date.Start!.Value — uživatel viděl jen „Něco se
+                   pokazilo.“ *@
                 <MudDateRangePicker @bind-DateRange="EventModel.Date" Label="Kdy"
-                                    Variant="Variant.Outlined" Margin="Margin.Dense" Editable="true"/>
+                                    Variant="Variant.Outlined" Margin="Margin.Dense" Editable="true"
+                                    Required="true" RequiredError="Termín je povinný!"/>
             </MudItem>
             <MudItem xs="12">
                 <MudTextField @bind-Value="EventModel.Place" Label="Místo"
@@ -31,6 +38,7 @@
                 </MudGrid>
             </MudItem>
         </MudGrid>
+        </MudForm>
     </DialogContent>
 
     <DialogActions>
@@ -47,6 +55,22 @@
     [Parameter] public EventViewModel EventModel { get; set; } = new();
     [Parameter] public bool IsUpdate { get; set; }
 
+    private MudForm _form = null!;
+
     private void Cancel() => MudDialog.Cancel();
-    private void ClickedOk() => MudDialog.Close(DialogResult.Ok(EventModel));
+
+    /// <summary>
+    /// Zavře dialog jen s validním modelem. Bez téhle kontroly šla akce uložit
+    /// bez termínu a <c>EventViewModel.ToEntity()</c> pak spadlo na
+    /// <c>Date.Start!.Value</c> — volající to spolkl a uživateli ukázal
+    /// obecné „Něco se pokazilo.“.
+    /// </summary>
+    private async Task ClickedOk()
+    {
+        await _form.Validate();
+        if (!_form.IsValid)
+            return;
+
+        MudDialog.Close(DialogResult.Ok(EventModel));
+    }
 }
