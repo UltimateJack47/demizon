@@ -1,7 +1,7 @@
 # Přepis mobilní aplikace z .NET MAUI do Flutteru
 
 > **Živý dokument.** Průběžně aktualizovat.
-> Poslední aktualizace: 2026-09-09 (notifikační stack + DateTime query).
+> Poslední aktualizace: 2026-09-09 (checklist na telefon + Firebase).
 > Založeno: 2026-09-01. Větev: `feat/flutter-app`. Adresář: `demizon_flutter/`.
 >
 > Pořadí vůči backendu a nasazení: [`STATUS.md`](../../STATUS.md).
@@ -202,23 +202,49 @@ a aplikace pokračuje. To je zatím v pořádku; notifikace stejně nejsou dopsa
   nasadit jako update, ne jako druhá aplikace vedle stávající.
 - `android:label="Demižón"` (výchozí `demizon` z generátoru nahrazeno).
 
+## Až budeš mít Firebase a telefon
+
+Odloženo 2026-09-09. Kód notifikací, DateTime a duálního režimu je hotový;
+bez konzole a zařízení dál nejde. Až bude čas, jdi shora dolů.
+
+1. [ ] **`flutterfire configure`** (stejný Firebase projekt, jehož service
+       account poleze do kontejneru jako `FIREBASE_CREDENTIAL_JSON` — viz
+       [`nasazeni.md`](../../nasazeni.md)):
+       ```
+       cd demizon_flutter
+       dart pub global activate flutterfire_cli
+       flutterfire configure --platforms=android,ios --out=lib/firebase_options.dart
+       ```
+       `google-services.json` patří do `android/app/` (`applicationId` je
+       `com.demizon.administrace`, shodné s MAUI). `lib/firebase_options.dart`
+       je gitignorovaný, stejně jako nativní config.
+2. [ ] **Ikony a splash** ze `Demizon.Maui/Resources/AppIcon/` a
+       `demizon_flutter/assets/images/demizon_logo.jpg`:
+       `flutter_launcher_icons` + `flutter_native_splash`, pak
+       `dart run flutter_launcher_icons` a `dart run flutter_native_splash:create`.
+3. [ ] **Fyzický telefon** proti živému API:
+       ```
+       flutter run --dart-define=DEMIZON_API_BASE_URL=https://<domena>
+       ```
+       Proklik: přihlášení, docházka (včetně křížové tabulky a swipe měsíce),
+       dual režim akce/zkouška, ťuknutí na notifikaci (cold / background /
+       foreground), auth refresh po 5 min / 401.
+4. [ ] Až tohle pojede: vyhodit `Demizon.Maui` z `Demizon.slnx`. Ne dřív —
+       MAUI je pořád zdroj pravdy o chování.
+
+Offline cache se záměrně nedělá (MAUI ji neměla).
+
 ## TODO
 
 ### Nutné před prvním spuštěním
 
 - [x] ~~Nainstalovat Flutter SDK, `flutter pub get`, `build_runner`, `flutter analyze`~~
 - [x] ~~`flutter create --platforms=android,ios .`~~ — hotovo, 73 souborů
-- [ ] `flutterfire configure` → `lib/firebase_options.dart`; přenést
-      `google-services.json` z `Demizon.Maui/Platforms/Android/`
 - [x] ~~Zkopírovat `assets/images/demizon_logo.jpg`~~ — hotovo, včetně `.svg` varianty
-- [ ] Ikony a splash (`flutter_launcher_icons`, `flutter_native_splash`)
-      ze `Demizon.Maui/Resources/AppIcon/`
 - [x] ~~`applicationId` na `com.demizon.administrace`~~ — hotovo
 - [x] ~~Spustit na zařízení~~ — běží na emulátoru Pixel 9 / API 36
-- [ ] Ověřit na **fyzickém telefonu** a proti běžícímu backendu (přihlášení,
-      docházka, notifikace). Zatím ověřena jen přihlašovací obrazovka a chybová
-      cesta přihlášení — dál se bez platných údajů a dostupného API nedostaneme.
-      **Odloženo na později** (2026-09-09) — stejně jako `flutterfire configure`.
+- [ ] Firebase, ikony, fyzický telefon — **odloženo**, postup nahoře
+      v *Až budeš mít Firebase a telefon*.
 
 ### Zbývá dopsat
 

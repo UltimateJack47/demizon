@@ -9,7 +9,7 @@
 | **vědět, co se dělá dál** | [`STATUS.md`](STATUS.md) — stav projektu a jediný dopředný plán |
 | pochopit architekturu a kontrakty | [`../AGENTS.md`](../AGENTS.md) |
 | psát nebo spouštět testy | [`testing-plan.md`](testing-plan.md) |
-| nasadit to na server | [`nasazeni.md`](nasazeni.md) |
+| nasadit to na server | [`nasazeni.md`](nasazeni.md) — checklist od domény po CI |
 | dělat na mobilní appce | [`features/flutter-prepis/`](features/flutter-prepis/README.md) |
 | rozumět notifikacím | [`notifications.md`](notifications.md) |
 | vědět, **proč** je něco jak je | složka té feature ve `features/` |

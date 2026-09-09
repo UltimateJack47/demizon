@@ -1,7 +1,7 @@
 # Stav projektu a plán další práce
 
 > **Živý dokument a vstupní bod.** Průběžně aktualizovat při každé dokončené položce.
-> Založeno: 2026-09-08. Poslední aktualizace: 2026-09-09 (Flutter kód hotový, telefon odložený).
+> Založeno: 2026-09-08. Poslední aktualizace: 2026-09-09 (nasazení nachystané v nasazeni.md).
 >
 > Účel: předat kontext další session (Claude / kdokoli) — co je hotové, na co
 > nesahat, co zbývá a v jakém pořadí.
@@ -67,10 +67,10 @@ znamená pro další práci.
 - [ ] **VAPID klíče vygenerovat až při nasazení**, mimo repozitář, a předat přes
       `Vapid__*`. Dnešní hodnoty v `appsettings.Production.json` jsou navíc jen
       slepené GUIDy, ne platné P-256 klíče — takže web push zatím nikdy nefungoval.
-      Historii kvůli nim není třeba přepisovat.
+      Historii kvůli nim není třeba přepisovat. Příkaz v [`nasazeni.md`](nasazeni.md).
 - [ ] **Jednorázový plný `VACUUM`** na produkční SQLite po zapnutí
       `auto_vacuum=INCREMENTAL` (chce ~2× volného místa). Periodický
-      `incremental_vacuum` už běží.
+      `incremental_vacuum` už běží. Příkaz v [`nasazeni.md`](nasazeni.md).
 
 ---
 
@@ -137,7 +137,9 @@ Až tohle pojede:
 
 ## D. Nasazení (až bude doména)
 
-Odložená rozhodnutí z hosting plánu, plus CI image:
+**Postup shora dolů je v [`nasazeni.md`](nasazeni.md)** (VAPID, Firebase env,
+`VACUUM`, Caddy, seed, cron, CI). Tady jen co zbývá, ať STATUS zůstane
+krátký:
 
 - [ ] Doména. Dnes `AllowedHosts` v `appsettings.Production.json` i
       `GoogleCalendar.RedirectUri` míří na Railway — na Scalewayu by každý request
@@ -149,12 +151,9 @@ Odložená rozhodnutí z hosting plánu, plus CI image:
 - [ ] `build.yml` — po testech image `latest` + `sha-<commit>`.
 - [ ] `deploy.yml` — `workflow_dispatch` / release, SSH `docker pull` + restart + prune.
 - [ ] Na hostiteli `/etc/docker/daemon.json` s rotací logů.
-- [ ] Firebase credentials do kontejneru, jinak FCM jen zaloguje warning a mlčí.
+- [ ] Firebase credentials do kontejneru (`FIREBASE_CREDENTIAL_JSON`), jinak FCM
+      jen zaloguje warning a mlčí.
 - [ ] Naplánovat cron na `ops/backup-demizon.sh` a **vyzkoušet obnovu**, ne jen záloh.
-
-Recept `docker run` (volume, `--memory=768m`, log-opt, `Jwt__SecretKey`,
-`Bootstrap__SeedToken`) a postup bootstrapu prvního admina jsou
-v [`disk-optimalizace`](features/disk-optimalizace/README.md).
 
 ---
 
@@ -176,13 +175,11 @@ Podrobnosti, konvence a co která sada hlídá: [`testing-plan.md`](testing-plan
 
 ## Doporučené pořadí
 
-1. **Flutter na telefonu. (B)** Odloženo — chce Firebase konzoli a fyzické
-   zařízení. Až bude čas: `flutterfire configure`, ikony/splash, ověřit
-   docházku a notifikace.
-2. **Až bude jasná doména — Caddy, secrets, první `docker run` se snapshotem
-   volume a vyzkoušenou obnovou. (D)** Tohle je další věc, která hoří,
-   jakmile bude kam nasadit. Bez domény na to nesahej.
-3. Před veřejnou IP dotáhnout VAPID a jednorázový `VACUUM`. **(A)**
+1. **Flutter na telefonu. (B)** Odloženo. Postup:
+   [`flutter-prepis`](features/flutter-prepis/README.md) → *Až budeš mít Firebase a telefon*.
+2. **Až bude jasná doména. (D + A)** Postup shora dolů:
+   [`nasazeni.md`](nasazeni.md) → *Až budeš nasazovat*. Caddy, secrets, seed,
+   VAPID, `VACUUM`, cron záloh + vyzkoušená obnova, CI.
 
 Bez telefonu a bez domény **není co nutně dopsat v kódu.** Položky v E
 (oddělit HTTP testy, zátěž paměti, bUnit) a test `GoogleCalendarService`

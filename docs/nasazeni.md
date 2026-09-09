@@ -7,15 +7,46 @@
 > [`features/disk-optimalizace/`](features/disk-optimalizace/README.md).
 >
 > **Aplikace zatím není v produkci.** Stav a priority: [`STATUS.md`](STATUS.md).
+> Flutter na telefonu: [`features/flutter-prepis/`](features/flutter-prepis/README.md).
 
-## Odložená rozhodnutí
+## Až budeš nasazovat — pořadí
 
-Appka není v produkci, tyto věci se rozhodnou později:
+Nic z toho nehoří, dokud není doména. Až bude, jdi shora dolů. Recepty
+jsou v sekcích pod tím.
+
+1. [ ] **Doména.** Dnes `AllowedHosts` v `appsettings.Production.json` i
+       `GoogleCalendar.RedirectUri` míří na Railway — na Scalewayu by každý
+       request skončil HTTP 400. (Základní `appsettings.json` už `demizon.cz`
+       obsahuje.) DNS A/AAAA na IP Stardustu.
+2. [ ] **HTTPS přes Caddy** (Let's Encrypt). Kestrel jen HTTP na localhost.
+       Ne `dotnet dev-certs`.
+3. [ ] **Google OAuth redirect URI** 1:1 s Google Cloud Console
+       (`https://<domena>/google/callback`).
+4. [ ] **Tajemství** mimo repo, předat jako `-e` při `docker run`:
+       `Jwt__SecretKey`, `Vapid__*`, `FIREBASE_CREDENTIAL_JSON`,
+       jednorázově `Bootstrap__SeedToken`.
+5. [ ] **První `docker run`** (volume, `--memory=768m`, log-opt) + seed
+       prvního admina + **restart bez seed tokenu**.
+6. [ ] **Jednorázový `VACUUM`** na produkční SQLite (chce ~2× volného místa).
+7. [ ] **Cron** na `ops/backup-demizon.sh` a **vyzkoušet obnovu**, ne jen záloh.
+8. [ ] **`/etc/docker/daemon.json`** s rotací logů.
+9. [ ] **Registry + CI:** `build.yml` (`latest` + `sha-<commit>`), `deploy.yml`
+       (`workflow_dispatch` / release, SSH `docker pull` + restart + prune).
+       Zůstat u Docker Hubu (`jackeq/demizon-mvc`) nebo GHCR.
+
+Dokud bod 1 není, body 2–9 nedělej. Flutter (`flutterfire`, ikony, telefon)
+je jiná větev — viz flutter-prepis, sekce *Až budeš mít Firebase a telefon*.
+
+---
+
+## Doména, HTTPS, OAuth
 
 - [ ] **Doména a HTTPS.** Dnes `appsettings.Production.json:8` má
       `AllowedHosts: "demizon-production.up.railway.app;localhost"` — na Scalewayu by
       **každý request skončil HTTP 400**, protože hlavička `Host` v seznamu není.
       Stejně tak `GoogleCalendar.RedirectUri` (`:13`) míří na Railway.
+      Při `docker run` přebij `AllowedHosts` a `GoogleCalendar__RedirectUri`
+      na ostrou doménu (env overlay v `Program.cs` sedí až za json soubory).
 - [ ] **HTTPS řešit reverzní proxy**, ne `dotnet dev-certs` (dev certifikát prohlížeč
       na veřejné doméně odmítne). Caddy stačí takto:
       ```
@@ -40,6 +71,11 @@ docker run -d --name demizon --restart unless-stopped \
   -e ASPNETCORE_URLS="http://+:8080" \
   -e AllowedHosts="<domena>" \
   -e Jwt__SecretKey="<nahodny retezec, min. 32 znaku>" \
+  -e GoogleCalendar__RedirectUri="https://<domena>/google/callback" \
+  -e Vapid__PublicKey="<public>" \
+  -e Vapid__PrivateKey="<private>" \
+  -e Vapid__Subject="mailto:info@demizon.cz" \
+  -e FIREBASE_CREDENTIAL_JSON='<json>' \
   --memory=768m --memory-swap=768m \
   --log-opt max-size=10m --log-opt max-file=3 \
   <image>:latest
@@ -198,3 +234,61 @@ SSH klíč na server, VAPID klíče, Firebase service account, Google OAuth. Do 
 nic z toho — všechno se předá jako `-e` při `docker run`.
 
 ⚠️ `test.yml` běží. `build.yml` / `deploy.yml` čekají na rozhodnutí o doméně a registry.
+
+---
+
+## VAPID klíče (web push)
+
+Hodnoty v `appsettings.Production.json` jsou slepené GUIDy, ne platné P-256
+klíče — web push proto **zatím nikdy nefungoval**. Historii kvůli nim
+není třeba přepisovat. Vygenerovat **až při nasazení**, mimo repo:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Předat kontejneru (a vymazat je z `appsettings.Production.json`):
+
+```
+-e Vapid__PublicKey="<public>"
+-e Vapid__PrivateKey="<private>"
+-e Vapid__Subject="mailto:info@demizon.cz"
+```
+
+Kdo má privátní klíč, může posílat push odběratelům. Rotace později odhlásí
+všechny prohlížeče — tenhle pár vznikne jednou.
+
+---
+
+## Firebase v kontejneru (FCM)
+
+Bez credentials `FcmService` jen zaloguje warning a mlčí. Inicializace čte
+nejdřív env, pak soubor (`FcmService.Initialize`):
+
+```
+-e FIREBASE_CREDENTIAL_JSON='<celý JSON service account>'
+```
+
+Fallback: `Firebase:CredentialFile` na cestu uvnitř kontejneru. Do image
+soubor nepatří — buď env, nebo volume. Stejný Firebase projekt, který
+později použije `flutterfire configure` na telefonu.
+
+---
+
+## Jednorázový `VACUUM`
+
+`auto_vacuum=INCREMENTAL` na už existující databázi (vznikla s `NONE`)
+**nic neudělá**, dokud soubor jednou nepřepíšeš. Periodický
+`incremental_vacuum` v `DiskMaintenanceService` už běží, ale uvolní místo
+až po tomhle kroku. Chce ~2× velikosti DB volného místa. Appku zastav:
+
+```bash
+docker stop demizon
+DATA=/var/lib/docker/volumes/demizon-data/_data
+sqlite3 "$DATA/demizon.sqlite" "PRAGMA auto_vacuum=INCREMENTAL; VACUUM;"
+docker start demizon
+```
+
+Nová prázdná DB z migrace tohle nepotřebuje — interceptor nastaví
+`INCREMENTAL` před vznikem tabulek. Tenhle krok je jen pro soubor, který
+už data má.

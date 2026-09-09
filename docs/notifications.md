@@ -114,7 +114,9 @@ Nastavení v `appsettings.json` pod klíčem `Vapid`:
 ```
 
 ### FCM
-Firebase konfiguraci zajišťuje `FcmService` – podporuje jak environment variable (`FIREBASE_CONFIG`), tak soubor `firebase-config.json`.
+Firebase konfiguraci zajišťuje `FcmService` – nejdřív env
+`FIREBASE_CREDENTIAL_JSON` (celý JSON service account), fallback soubor
+`Firebase:CredentialFile`. Postup pro kontejner je v [`nasazeni.md`](nasazeni.md).
 
 ### Perioda
 Service se spouští každou hodinu (`PeriodicTimer(TimeSpan.FromHours(1))`).
