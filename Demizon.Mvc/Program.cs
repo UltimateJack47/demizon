@@ -194,13 +194,13 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 
-// Position of localization culture switching is crucial between UseStaticFiles and UseRouting 
+// Position of localization culture switching is crucial between UseStaticFiles and UseRouting
 var supportedCultures = new[] {"en-US", "cs-CZ"};
 var localizationOptions = new RequestLocalizationOptions()
     .SetDefaultCulture(supportedCultures[0])
     .AddSupportedCultures(supportedCultures)
     .AddSupportedUICultures(supportedCultures);
-// Cookie provider first (manual user choice), then Slovak-to-Czech remap, then Accept-Language header (auto-detect browser locale)
+// Cookie provider first (manual user choice), then Czech/Slovak remap, then Accept-Language header (auto-detect browser locale)
 localizationOptions.RequestCultureProviders = new List<IRequestCultureProvider>
 {
     new CookieRequestCultureProvider(),
@@ -210,13 +210,29 @@ localizationOptions.RequestCultureProviders = new List<IRequestCultureProvider>
         if (string.IsNullOrWhiteSpace(header))
             return Task.FromResult<ProviderCultureResult?>(null);
 
-        var prefersSlovak = header
+        var languages = header
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(part => part.Split(';')[0].Trim())
-            .Any(lang => lang.StartsWith("sk", StringComparison.OrdinalIgnoreCase));
+            .ToList();
+
+        // Slovenština se mapuje na češtinu — slovenskou verzi nemáme a je
+        // blíž než angličtina.
+        //
+        // Bare "cs" se mapuje taky, a to je ta podstatnější polovina:
+        // podporované kultury jsou en-US a cs-CZ, takže neutrální "cs" se
+        // s ničím nespáruje a spadne na výchozí angličtinu. Fallback na
+        // rodičovskou kulturu jde opačným směrem (cs-CZ → cs), ne z neutrální
+        // na konkrétní. A "cs" posílá například Firefox nastavený na češtinu,
+        // takže by čeští uživatelé Firefoxu dostali anglické rozhraní.
+        // Přidat "cs" mezi podporované kultury by nestačilo: resource soubor
+        // existuje jen jako DemizonLocales.cs-cz.resx, takže by texty
+        // spadly na neutrální (anglický) resx a česky by byla jen data.
+        var prefersCzechOrSlovak = languages.Any(lang =>
+            lang.StartsWith("sk", StringComparison.OrdinalIgnoreCase)
+            || lang.Equals("cs", StringComparison.OrdinalIgnoreCase));
 
         return Task.FromResult<ProviderCultureResult?>(
-            prefersSlovak ? new ProviderCultureResult("cs-CZ", "cs-CZ") : null);
+            prefersCzechOrSlovak ? new ProviderCultureResult("cs-CZ", "cs-CZ") : null);
     }),
     new AcceptLanguageHeaderRequestCultureProvider()
 };

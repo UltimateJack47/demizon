@@ -50,6 +50,21 @@ public sealed class E2EFixture : IAsyncLifetime
             ViewportSize = new ViewportSize { Width = width, Height = height },
             BaseURL = App.BaseUrl,
             Locale = "cs-CZ",
+            // Locale sám nastaví navigator.language, ale hlavička se přidává
+            // ručně, aby prerenderované stránky přišly česky jako u skutečného
+            // prohlížeče.
+            //
+            // POZOR: na obsah dorenderovaný Blazor okruhem to nemá vliv. Kulturu
+            // okruhu určuje request, kterým se okruh naváže — WebSocket handshake
+            // na /_blazor — a na ten se ExtraHTTPHeaders nevztahuje. Proto se
+            // v téhle sadě nedá spolehlivě testovat lokalizace obsahu tabulek;
+            // vyjednávání kultury hlídá HttpLocalizationTests na HTTP úrovni.
+            // (Skutečný prohlížeč Accept-Language na handshake posílá, takže
+            // uživatel vidí česky i po připojení okruhu — ověřeno v Chromu.)
+            ExtraHTTPHeaders = new Dictionary<string, string>
+            {
+                ["Accept-Language"] = "cs-CZ,cs;q=0.9,en;q=0.8",
+            },
         });
 
     public async Task DisposeAsync()
