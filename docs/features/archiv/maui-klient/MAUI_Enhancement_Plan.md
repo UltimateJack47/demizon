@@ -5,6 +5,8 @@
 > (viz [`features/flutter-prepis/`](../../flutter-prepis/README.md)).
 > Tenhle dokument je **zdroj pravdy o chování, které se má přepsat**, ne popis
 > aktuálního stavu. Rozcestník: [`docs/README.md`](../../../README.md).
+>
+> Cesty na `Demizon.Api/` jsou historické — API žije v `Demizon.Mvc`.
 
 **Created:** 2026-04-15  
 **Status:** ✅ Implemented  

@@ -5,6 +5,9 @@
 > (viz [`features/flutter-prepis/`](../../flutter-prepis/README.md)).
 > Tenhle dokument je **zdroj pravdy o chování, které se má přepsat**, ne popis
 > aktuálního stavu. Rozcestník: [`docs/README.md`](../../../README.md).
+>
+> `Demizon.Api` se později sjednotil do `Demizon.Mvc` (`71d9916`). Plán níž
+> říká, proč ten host vznikl — ne že má znovu existovat.
 
 **Stav:** 🔄 Fáze 3+4 dokončeny, Fáze 5 scaffolding hotov  
 **Poslední aktualizace:** 2026-04-13

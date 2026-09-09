@@ -5,6 +5,8 @@
 > Nechává se kvůli kontextu — proč něco vypadá, jak vypadá. Aktuální stav
 > a plán je v [`STATUS.md`](../../../STATUS.md), rozcestník
 > v [`docs/README.md`](../../../README.md).
+>
+> Cesty na `Demizon.Api/` jsou historické — API žije v `Demizon.Mvc`.
 
 **Date Created**: 2026-04-15  
 **Project**: Demizon Mobile App (MAUI)  

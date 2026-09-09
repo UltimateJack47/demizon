@@ -17,10 +17,9 @@
 > intentional.
 
 ## Scope and current source of truth
-- Work primarily in `Demizon.Mvc` (Blazor Server + API in one host); this is the only web host in `Demizon.slnx`.
-- `Demizon.Api` contains a parallel standalone API host (same domain concepts/controllers), useful for API-only runs but not part of the solution file.
+- Work primarily in `Demizon.Mvc` (Blazor Server + API in one host); this is the only web host. Flutter talks to it. There is no `Demizon.Api` project any more (removed in `71d9916`).
 - Shared layers: `Demizon.Contracts` (DTOs), `Demizon.Core` (business services), `Demizon.Dal` (EF Core + SQLite), `Demizon.Common` (settings/exceptions/helpers).
-- Mobile client: `demizon_flutter/` is the one being built; `Demizon.Maui` is the predecessor it replaces and is kept as the reference for behaviour still to be ported (notifications, navigation). See `docs/features/flutter-prepis/`.
+- Mobile client: `demizon_flutter/` is the one being built; `Demizon.Maui` is the predecessor it replaces and is kept as the reference for behaviour still to be ported. See `docs/features/flutter-prepis/`.
 - Tests: `Demizon.Tests.Unit` (fast logic + HTTP via `WebApplicationFactory`), `Demizon.Tests.Integration` (real SQLite), `Demizon.Tests.E2E` (Playwright against the running app).
 
 ## Architecture map (how data flows)
@@ -28,7 +27,7 @@
 - Controllers in `Demizon.Mvc/Controllers/Api/*` call Core services, then map entities to DTOs via `Demizon.Mvc/Mapping/ContractMappingExtensions.cs`.
 - Core DI is centralized in `Demizon.Core/Extensions/CoreServicesRegistrationExtension.cs`; add service registrations there.
 - Persistence is centralized in `Demizon.Dal/DemizonContext.cs` + `Demizon.Dal/Extensions/DatabaseServiceConfigurationExtension.cs`.
-- MAUI consumes API contracts via Refit interface `Demizon.Maui/Services/IApiClient.cs`.
+- Flutter consumes API contracts via dio + retrofit (`demizon_flutter/lib/api/api_client.dart`). MAUI's Refit `IApiClient.cs` is the behaviour reference until Flutter is verified on a phone.
 
 ## Project-specific patterns you must follow
 - **Core write operations return `Result` / `Result<T>`, never `bool`.** `CreateAsync` and
@@ -49,13 +48,13 @@
 - Rehearsals are modeled as attendance rows with `EventId == null` and Friday date semantics (see `EventsController.GetByMonth`, `AttendancesController` rehearsal endpoints).
 - Member soft delete is implemented by EF global query filter (`Member.DeletedAt == null`) in `DemizonContext`; avoid bypassing with raw SQL unless intentional.
 - Audit logging is automatic through `AuditSaveChangesInterceptor`; `ICurrentUserAccessor` is expected to be available in web hosts.
-- SQLite concurrency is intentional: app startup calls `EnableWalMode()` to support multi-process access (Mvc + Api).
+- SQLite concurrency is intentional: app startup calls `EnableWalMode()` so the host and `sqlite3` backup can share the same file.
 
 ## Auth and client integration details
 - MVC host uses cookie auth as default (Blazor) and JWT bearer for `/api/*` (`MvcAuthenticationServicesRegistrationExtension.cs`).
 - JWT member id is stored in `ClaimTypes.PrimarySid`; use `User.GetMemberId()` extension.
-- MAUI token lifecycle: `TokenStorage` + `AuthHandler` + `TokenRefreshHelper`; refresh happens proactively and on 401.
-- MAUI navigation rules are strict: constants in `Demizon.Maui/AppRoutes.cs`, detail routes must be flat names (no `/`).
+- Flutter token lifecycle: `TokenStorage` + `AuthInterceptor` (proactive refresh 5 min before expiry, fallback on 401). MAUI equivalent is the reference in `Demizon.Maui` (`TokenStorage` + `AuthHandler` + `TokenRefreshHelper`).
+- MAUI navigation rules (still the behaviour source for anything not yet verified on the phone): constants in `Demizon.Maui/AppRoutes.cs`, detail routes must be flat names (no `/`). Flutter uses hierarchical `go_router` paths in `demizon_flutter/lib/core/routes.dart`.
 
 ## Notifications and external integrations
 - FCM mobile push: `Demizon.Mvc/Services/FcmService.cs`, device tokens in `DeviceTokens` table, endpoints in `Controllers/Api/NotificationsController.cs`.
@@ -81,7 +80,6 @@
   E2E is a separate filter on purpose, so the fast gate does not pull a 150 MB browser. CI runs them
   as two jobs (`.github/workflows/test.yml`).
 - Run primary host (UI + API): `dotnet run --project Demizon.Mvc/Demizon.Mvc.csproj` (ports from `Demizon.Mvc/Properties/launchSettings.json`).
-- Run standalone API host if needed: `dotnet run --project Demizon.Api/Demizon.Api.csproj`.
 - EF migrations: use MVC as startup host, e.g. `dotnet ef migrations add <Name> --project Demizon.Dal --startup-project Demizon.Mvc`.
 
 ## Environment traps worth knowing (each cost a debugging session)

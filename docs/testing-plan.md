@@ -1,7 +1,7 @@
 # Testovací strategie
 
 > **Živý dokument.** Průběžně aktualizovat při každé dokončené položce.
-> Založeno: 2026-09-02. Poslední aktualizace: 2026-09-09.
+> Založeno: 2026-09-02. Poslední aktualizace: 2026-09-09 (Flutter testy 26).
 >
 > Rozcestník dokumentace: [`README.md`](README.md). Dopředný plán:
 > [`STATUS.md`](STATUS.md).
@@ -27,6 +27,7 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 | `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result`, JWT; a přes `WebApplicationFactory` i HTTP auth, bootstrap, limity, lokalizace a kompenzace kalendáře | ~10 s / 126 testů |
 | `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace, soft delete napříč relacemi, kontrakt „služba nevyhodí výjimku“ | ~3 s / 169 testů |
 | `Demizon.Tests.E2E` | Skutečný prohlížeč nad **běžící aplikací** — cookie přihlášení, Blazor okruh, layout MudBlazoru, validace dialogových formulářů | ~85 s / 53 testů |
+| `demizon_flutter/test` | Kontrakt mobilního klienta s API (statusy, data, deep-link z notifikace). Není v `Demizon.Backend.slnf` — spouští se `flutter test` v `demizon_flutter/` | ~1 s / 26 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
 

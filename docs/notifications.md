@@ -1,11 +1,14 @@
 # Notifikační systém – Demizon
 
+> Poslední aktualizace: 2026-09-09. Mobilní kanál je Flutter, ne MAUI.
+
 ## Přehled
 
 Notifikace jsou plně automatické. Odesílají se pomocí `UnifiedNotificationService` (background hosted service v `Demizon.Mvc`), který každou hodinu zkontroluje podmínky a odešle notifikace oběma kanály:
 
 - **Web Push** (VAPID) – do prohlížeče na desktopu/mobilu
-- **FCM** (Firebase Cloud Messaging) – nativní mobilní push přes MAUI app
+- **FCM** (Firebase Cloud Messaging) – nativní mobilní push přes Flutter app
+  (`demizon_flutter/`; MAUI byla předchůdce)
 
 Každý kanál je nezávislý. Povolení notifikací v prohlížeči nespojuje ani neruší mobilní notifikace a naopak.
 
@@ -123,10 +126,13 @@ Po startu aplikace proběhne první kontrola s 30sekundovým zpožděním.
 
 Push notifikace jsou dva zcela samostatné systémy:
 - **Web Push**: subscription je uložena v `PushSubscriptions` tabulce (koncový bod prohlížeče)
-- **FCM**: device token je uložen v `DeviceTokens` tabulce (zařízení s MAUI appkou)
+- **FCM**: device token je uložen v `DeviceTokens` tabulce (zařízení s Flutter
+  appkou; dřív MAUI)
 
 Uživatel může mít aktivní oba, jen jeden, nebo žádný. Nemají vliv na sebe navzájem.
-Admin může v profilu vidět stav web push subscriptions. Mobilní device tokeny spravuje MAUI app automaticky při přihlášení.
+Admin může v profilu vidět stav web push subscriptions. Mobilní device tokeny
+spravuje Flutter app (přepínač v profilu + sync po přihlášení). Bez
+`google-services.json` se FCM na klientovi tiše přeskočí.
 
 ---
 

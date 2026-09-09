@@ -1,7 +1,7 @@
 # Stav projektu a plán další práce
 
 > **Živý dokument a vstupní bod.** Průběžně aktualizovat při každé dokončené položce.
-> Založeno: 2026-09-08. Poslední aktualizace: 2026-09-09.
+> Založeno: 2026-09-08. Poslední aktualizace: 2026-09-09 (Flutter kód hotový, telefon odložený).
 >
 > Účel: předat kontext další session (Claude / kdokoli) — co je hotové, na co
 > nesahat, co zbývá a v jakém pořadí.
@@ -76,32 +76,39 @@ znamená pro další práci.
 
 ## B. Flutter — hlavní produktová práce
 
-**Teď nejvyšší priorita.** Backend pro mobil v zásadě existuje; děravé je
-dostání klienta do rukou. Je to zároveň jediná část, která se bez telefonu
-a Firebase konzole udělat nedá.
+**Kód, který šel dopsat bez telefonu, je hotový.** Zbývá dostat klienta
+do rukou — to bez Firebase konzole a fyzického telefonu nejde.
+**Odloženo na později** (2026-09-09).
 
-Podrobný seznam je v [`flutter-prepis/`](features/flutter-prepis/README.md);
-tady pořadí podle dopadu:
+Podrobný seznam je v [`flutter-prepis/`](features/flutter-prepis/README.md).
+
+### Hotové v kódu
+
+- [x] **Notifikační stack.** Cold / background / foreground + pending replay
+      po loginu, reset po odhlášení, foreground přes lokální notifikace
+      na kanálu `demizon_channel`. Bez `google-services.json` se FCM tiše
+      přeskočí. Zamčeno v `test/notification_navigation_test.dart`.
+- [x] DateTime na drátě u zkoušek (`?date=`) — interceptor posílá
+      `yyyy-MM-dd`, ne ISO instant. Zamčeno v `test/contract_test.dart`.
+- [x] Duální režim akce / zkouška — `EventDetailArgs.fromRoute` a
+      `MemberAttendanceTarget.isRehearsal`. Zamčeno testy.
+- [x] Auth refresh 5 min + 401 — kód je v `auth_interceptor.dart`.
+- [x] Křížová tabulka — zamrzlý sloupec jmen i gesture aréna jsou v kódu.
+
+### Čeká na člověka (Firebase konzole + telefon)
 
 - [ ] `flutterfire configure` → `lib/firebase_options.dart` + `google-services.json`
 - [ ] Ikony a splash (`flutter_launcher_icons`, `flutter_native_splash`)
-- [ ] Běh na **fyzickém telefonu** proti živému API. Na emulátoru je ověřený
-      jen login a chybová cesta přihlášení.
-- [ ] **Notifikační stack:** FCM registrace tokenu, foreground lokální notifikace,
-      deep-linky (cold / background / foreground). V MAUI to byla nejkřehčí část;
-      ve Flutteru chybí. Zdroje: `NotificationNavigationService.cs`,
-      `NotificationSyncService.cs`, `MainActivity.cs`.
-- [ ] DateTime na drátě u zkoušek (`?date=`) — UTC vs. lokální pátek.
-- [ ] Auth refresh: 5 min před expirací + fallback na 401.
-- [ ] Křížová tabulka docházky (zamrzlý sloupec jmen, swipe vs. vnitřní scroll).
-- [ ] Duální režim akce / zkouška na detailu a v editaci.
+      ze `Demizon.Maui/Resources/AppIcon/` + `demizon_flutter/assets/images/demizon_logo.jpg`
+- [ ] Běh na **fyzickém telefonu** proti živému API (přihlášení, docházka,
+      ťuknutí na notifikaci, auth refresh, swipe v tabulce). Na emulátoru
+      je ověřený jen login a chybová cesta přihlášení.
 
 Až tohle pojede:
 
 - [ ] Vyhodit `Demizon.Maui` z `Demizon.slnx` (blokuje `dotnet test` bez filtru;
-      z image ho už `.dockerignore` vylučuje).
-- [ ] Pohlídat drift `Demizon.Api` — paralelní host **není** v slnx, stejné
-      koncepty/controllery, může se tiše rozejet s Mvc.
+      z image ho už `.dockerignore` vylučuje). Ne dřív, než Flutter nahradí
+      chování na telefonu — MAUI je pořád zdroj pravdy.
 - [ ] Offline cache — MAUI ji neměla, není regrese, jen vylepšení k zvážení.
 
 ---
@@ -115,9 +122,12 @@ Až tohle pojede:
       všech 35 volajících kontroluje výsledek.
 - [x] **Vizuální kontrola MudBlazoru 9.9** — automatizovaná část v E2E,
       ruční proklikání hotové, tři nálezy opravené.
-- [ ] **`Demizon.Api` drift.** Paralelní host není v solution ani v CI, takže
-      se s `Demizon.Mvc` může tiše rozejít. Buď ho do CI přidat, nebo — pokud
-      ho Flutter nepotřebuje — smazat. Rozhodnutí, ne úkol.
+- [x] **Automatické FCM připomínky zkoušky nesly `data: null`.** Tap na
+      notifikaci proto nemohl otevřít detail. Teď posílají `rehearsalDate`
+      stejně jako ruční připomínka.
+- [x] **`Demizon.Api`.** Paralelní host je pryč (`71d9916`). Jediný web host
+      je `Demizon.Mvc`. Flutter i Blazor jedou proti němu. Není co dávat do CI
+      ani co mazat.
 - [ ] **`GoogleCalendarService` sám testovaný není.** Kompenzační logiku
       volajících pokrývá dvojník (`GoogleCalendarCompensationTests`), ale
       vlastní překlad na Google API se testuje jen nepřímo. Nízká priorita:
@@ -166,14 +176,20 @@ Podrobnosti, konvence a co která sada hlídá: [`testing-plan.md`](testing-plan
 
 ## Doporučené pořadí
 
-1. **Flutter: Firebase + notifikace, ověřit docházku na fyzickém telefonu. (B)**
-   Jediná věc, kterou nikdo jiný neudělá.
-2. Rozhodnout o `Demizon.Api` — do CI, nebo smazat. **(C)**
-3. Až bude jasná doména — Caddy, secrets, první `docker run` se snapshotem
-   volume a **vyzkoušenou obnovou**. **(D)**
-4. Před veřejnou IP dotáhnout VAPID a jednorázový `VACUUM`. **(A)**
+1. **Flutter na telefonu. (B)** Odloženo — chce Firebase konzoli a fyzické
+   zařízení. Až bude čas: `flutterfire configure`, ikony/splash, ověřit
+   docházku a notifikace.
+2. **Až bude jasná doména — Caddy, secrets, první `docker run` se snapshotem
+   volume a vyzkoušenou obnovou. (D)** Tohle je další věc, která hoří,
+   jakmile bude kam nasadit. Bez domény na to nesahej.
+3. Před veřejnou IP dotáhnout VAPID a jednorázový `VACUUM`. **(A)**
+
+Bez telefonu a bez domény **není co nutně dopsat v kódu.** Položky v E
+(oddělit HTTP testy, zátěž paměti, bUnit) a test `GoogleCalendarService`
+jsou úklid s nízkou prioritou — nedělej je místo nasazení.
 
 Nezačínej další diskovou optimalizaci ani per-page render mode.
+Nevyhazuj `Demizon.Maui` ze slnx, dokud Flutter nepojede na telefonu.
 
 ---
 
@@ -185,6 +201,8 @@ dotnet test Demizon.E2E.slnf         # E2E v prohlížeči (chce Chromium)
 dotnet run --project Demizon.Mvc/Demizon.Mvc.csproj
 # EF: startup host je Mvc
 dotnet ef migrations add <Name> --project Demizon.Dal --startup-project Demizon.Mvc
+# Flutter (v demizon_flutter/; *.g.dart jsou gitignorované)
+flutter pub get && dart run build_runner build && flutter analyze && flutter test
 ```
 
 Chování aplikace, kontrakty a pasti prostředí: [`../AGENTS.md`](../AGENTS.md).

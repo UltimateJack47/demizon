@@ -50,7 +50,7 @@ soubor vypadá jako chybějící práce — což je horší než žádný.
 
 | Feature | Stav |
 |---|---|
-| [`features/flutter-prepis/`](features/flutter-prepis/README.md) | 🔨 probíhá — přepis mobilního klienta z MAUI do Flutteru. **Nejvyšší priorita.** |
+| [`features/flutter-prepis/`](features/flutter-prepis/README.md) | 🔨 probíhá — kód bez telefonu je hotový; zbývá Firebase + fyzické zařízení (**odloženo**). |
 
 ## Uzavřené featury
 
@@ -64,7 +64,9 @@ Záznamy hotové práce — zdůvodnění, naměřená čísla, poučení. **Nej
 ## Archiv
 
 Stav, který už neplatí, nebo plány, které byly nahrazené. Nechává se kvůli
-kontextu — proč něco vypadá, jak vypadá.
+kontextu — proč něco vypadá, jak vypadá. Cesty na `Demizon.Api/` uvnitř
+jsou historické: ten host se sjednotil do `Demizon.Mvc` (`71d9916`)
+a v solution už není.
 
 | Složka | Poznámka |
 |---|---|
