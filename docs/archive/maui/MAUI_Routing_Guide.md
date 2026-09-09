@@ -1,5 +1,11 @@
 # Demizon MAUI — Routing & Navigation Guide
 
+
+> ⚠️ **ARCHIV — MAUI klient.** Mobilní klient se přepisuje do Flutteru
+> (viz [`../../flutter-rewrite-plan.md`](../../flutter-rewrite-plan.md)).
+> Tenhle dokument je **zdroj pravdy o chování, které se má přepsat**, ne popis
+> aktuálního stavu. Rozcestník: [`../../README.md`](../../README.md).
+
 **Datum**: 2026-04-16
 **Stav**: Best-practice referenční dokument (v2 — opravený routing pattern)
 **Účel**: Definuje pravidla a vzory navigace v MAUI aplikaci.

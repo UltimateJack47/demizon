@@ -1,5 +1,11 @@
 # Plán oprav a vylepšení – mobilní aplikace + MVC
 
+
+> ⚠️ **ARCHIV — MAUI klient.** Mobilní klient se přepisuje do Flutteru
+> (viz [`../../flutter-rewrite-plan.md`](../../flutter-rewrite-plan.md)).
+> Tenhle dokument je **zdroj pravdy o chování, které se má přepsat**, ne popis
+> aktuálního stavu. Rozcestník: [`../../README.md`](../../README.md).
+
 > Vytvořeno: 2026-04-23  
 > Aktualizováno: 2026-04-23 (iterace 3 – oprava crash, NavBar, swipe, status bar)  
 > Stav: ✅ Tři iterace dokončeny – čeká se na testování

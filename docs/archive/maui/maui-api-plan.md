@@ -1,5 +1,11 @@
 # Demizon — Implementační plán: Api + Maui
 
+
+> ⚠️ **ARCHIV — MAUI klient.** Mobilní klient se přepisuje do Flutteru
+> (viz [`../../flutter-rewrite-plan.md`](../../flutter-rewrite-plan.md)).
+> Tenhle dokument je **zdroj pravdy o chování, které se má přepsat**, ne popis
+> aktuálního stavu. Rozcestník: [`../../README.md`](../../README.md).
+
 **Stav:** 🔄 Fáze 3+4 dokončeny, Fáze 5 scaffolding hotov  
 **Poslední aktualizace:** 2026-04-13
 

@@ -1,5 +1,11 @@
 # Plán oprav Demizon.Maui aplikace
 
+
+> ⚠️ **ARCHIV — MAUI klient.** Mobilní klient se přepisuje do Flutteru
+> (viz [`../../flutter-rewrite-plan.md`](../../flutter-rewrite-plan.md)).
+> Tenhle dokument je **zdroj pravdy o chování, které se má přepsat**, ne popis
+> aktuálního stavu. Rozcestník: [`../../README.md`](../../README.md).
+
 ## Problematika
 
 Uživatel hlásí čtyři hlavní problémy v mobilní MAUI aplikaci:

@@ -1,5 +1,11 @@
 # Demizon MAUI App Enhancement - Implementation Summary
 
+
+> ⚠️ **ARCHIV.** Tenhle dokument popisuje stav nebo plán, který **už neplatí**.
+> Nechává se kvůli kontextu — proč něco vypadá, jak vypadá. Aktuální stav
+> a plán je v [`../next-wave-plan.md`](../next-wave-plan.md), rozcestník
+> v [`../README.md`](../README.md).
+
 **Date Created**: 2026-04-15  
 **Project**: Demizon Mobile App (MAUI)  
 **Feature**: Attendance Tracking + UI Redesign  

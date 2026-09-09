@@ -1,5 +1,11 @@
 # Implementační plán – Demizon Web App
 
+
+> ⚠️ **ARCHIV.** Tenhle dokument popisuje stav nebo plán, který **už neplatí**.
+> Nechává se kvůli kontextu — proč něco vypadá, jak vypadá. Aktuální stav
+> a plán je v [`../next-wave-plan.md`](../next-wave-plan.md), rozcestník
+> v [`../README.md`](../README.md).
+
 > Aplikace slouží jako veřejná prezentace FS Demižón ze Strážnice + interní správa souboru pro členy.
 >
 > **Stack:** .NET 10, Blazor Server, MudBlazor 9, SQLite, Entity Framework Core 10

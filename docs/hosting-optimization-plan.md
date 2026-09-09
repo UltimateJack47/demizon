@@ -302,8 +302,17 @@ odpojených okruhů (výše) to zmírňuje, neodstraňuje.
 
 ### Priorita 2 — disk
 
-> Aktualizace 2026-09-05: Priority 2 implementace v PR #5 (`feat/stardust-disk-optimization`).
-> Zůstává: naměření RSS okruhů; jednorázový ops `VACUUM` při nasazení.
+> **Uzavřeno 2026-09-08** (`feat/stardust-disk-optimization`, mergnuto do `master`).
+> Samostatný status dokument (`stardust-disk-p2-status.md`) byl sloučen sem, aby
+> stav a plán nežily na dvou místech.
+>
+> Ověřeno na hotovém image: 261 MB proti 509 MB, `/health` hlásí
+> `database: Healthy`, `/data` drží databázi, WAL i DataProtection klíče,
+> RSS v klidu 81 MB z 768 MB.
+>
+> **Z Priority 2 zbývá jen jeden ops krok:** jednorázový plný `VACUUM` při
+> nasazení (níž). Naměření RSS okruhů je hotové — ~1,8 MB na okruh, viz
+> „Ladění, které vyplynulo z code review“.
 
 - [x] **Naměřit skutečnou paměť na jeden odpojený Blazor okruh** — 2026-09-08
       v kontejneru `--memory=768m`. Idle VmRSS po `/health` 159 MB; prerender GET `/`

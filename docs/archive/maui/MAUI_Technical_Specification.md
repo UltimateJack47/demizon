@@ -1,4 +1,10 @@
 # Demizon MAUI - Technical Specification
+
+> ⚠️ **ARCHIV — MAUI klient.** Mobilní klient se přepisuje do Flutteru
+> (viz [`../../flutter-rewrite-plan.md`](../../flutter-rewrite-plan.md)).
+> Tenhle dokument je **zdroj pravdy o chování, které se má přepsat**, ne popis
+> aktuálního stavu. Rozcestník: [`../../README.md`](../../README.md).
+
 ## Attendance Feature Implementation Details
 
 **Document**: Technical Specification  

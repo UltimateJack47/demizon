@@ -3,6 +3,9 @@
 > **Živý dokument.** Průběžně aktualizovat při každé dokončené položce.
 > Založeno: 2026-09-02. Poslední aktualizace: 2026-09-09.
 >
+> Rozcestník dokumentace: [`README.md`](README.md). Dopředný plán:
+> [`next-wave-plan.md`](next-wave-plan.md).
+>
 > Co dělat dál po auth testech a diskové vlně: [`next-wave-plan.md`](next-wave-plan.md).
 
 ## Kontext
@@ -21,9 +24,9 @@ neprosakování hashů do auditu a jednorázovost refresh tokenů.
 
 | Projekt | Co testuje | Rychlost |
 |---|---|---|
-| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result`, JWT, HTTP auth, bootstrap a limity přes `WebApplicationFactory` | ~10 s / 112 testů |
-| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace, soft delete napříč relacemi | ~3 s / 163 testů |
-| `Demizon.Tests.E2E` | Skutečný prohlížeč nad **běžící aplikací** — cookie přihlášení, Blazor okruh, layout MudBlazoru | ~75 s / 48 testů |
+| `Demizon.Tests.Unit` | Čistá logika bez I/O — mapování na DTO, kontrakt docházky, obrazový pipeline, `Result`, JWT; a přes `WebApplicationFactory` i HTTP auth, bootstrap, limity, lokalizace a kompenzace kalendáře | ~10 s / 126 testů |
+| `Demizon.Tests.Integration` | Chování nad **skutečnou SQLite** — služby, interceptory, EF model, migrace, soft delete napříč relacemi, kontrakt „služba nevyhodí výjimku“ | ~3 s / 169 testů |
+| `Demizon.Tests.E2E` | Skutečný prohlížeč nad **běžící aplikací** — cookie přihlášení, Blazor okruh, layout MudBlazoru, validace dialogových formulářů | ~85 s / 53 testů |
 
 ### Proč skutečná SQLite a ne EF InMemory
 
@@ -234,7 +237,9 @@ chybou, takže než začneš hledat příčinu v kódu, vyplatí se smazat `obj/
 Kolo 4 našlo, že celá logika „počítej skutečně uložené, ne předané“ stála na
 `uploaded++` **za** voláním `FileService.CreateAsync(entity)`, jehož návratovou
 hodnotu nikdo nekontroloval. A ta služba — jako 11 dalších metod v 6 službách —
-**spolkne každou výjimku, zaloguje ji a vrátí `false`**:
+**spolkne každou výjimku, zaloguje ji a vrátí neúspěch**. Tehdy to bylo
+`bool`; dnes je to `Result` (viz níž) — vzor „služba spolkne, volající se
+musí zeptat“ ale zůstává:
 
 ```csharp
 public async Task<bool> CreateAsync(File file)
@@ -344,12 +349,17 @@ Zbylé tři nálezy kola 6:
 | `TokenServiceTests` | JWT nese login, roli a `PrimarySid`; validace odmítne cizí klíč, issuer i expirovaný token |
 | `ClaimsPrincipalExtensionsTests` | `GetMemberId` čte `PrimarySid` a bez claimu hodí |
 | `AuthApiTests` | HTTP login/refresh, soft-delete a externista, `TokenResponse.MemberId`, 401 bez JWT, 403/404 na admin endpointu, profil bez `passwordHash` |
+| `HttpLocalizationTests` | Vyjednávání jazyka podle `Accept-Language`: `cs-CZ` i bare `cs` dostanou češtinu, `sk-SK` se remapuje, ostatní angličtinu. Chytilo, že bare `cs` (posílá ho Firefox) padalo na výchozí angličtinu |
+| `GoogleCalendarCompensationTests` | Kompenzace mezi kalendářem a databází přes dvojníka: vytvořená událost se po selhaném uložení ruší, ID smazané se z databáze nuluje, a příští „přijdu“ pak událost znovu vytvoří |
+| `ApiLimitTests` | HTTP 429 na `/api/auth/token` a že vyčerpané okno neblokuje endpointy bez politiky `auth`; kontrakt uploadu při plné kvótě |
+| `CoreRegistrationTests` | `AddCoreServices` nastaví globální strop alokátoru ImageSharpu a zaregistruje služby, které host používá |
 | `SeedEndpointTests` | Bootstrap prvního admina: 404 bez `Bootstrap:SeedToken`, 401 na špatný i zkrácený `X-Seed-Token`, 400 na krátké heslo, 409 nad neprázdnou databází **i nad soft-smazaným členem**, heslo se nevrací v odpovědi |
 
 ### `Demizon.Tests.Integration` (155)
 
 | Soubor | Co hlídá |
 |---|---|
+| `ServiceExceptionContractTests` | Kontrakt „`CreateAsync`/`DeleteAsync` nikdy nevyhodí výjimku, vždy vrátí `Result`“ — spouští služby nad zavřeným kontextem. Vzniklo z regrese: vyhledání entity vytažené mimo `try` |
 | `SoftDeleteRelationTests` | `Include(a => a.Member)` zahazuje docházku soft-smazaného člena (EF varování 10622), stejný dotaz bez `Include` ji vrátí, `IgnoreQueryFilters` ji vrátí i s `Include`; refresh token smazaného člena se zastaví až o krok dál |
 | `RefreshTokenServiceTests` | Raw token nikdy v DB, jednorázovost (replay ochrana), expirace, revokace, rotace při novém tokenu, rozlišení tokenů se shodným prefixem, FK kaskáda |
 | `AuditInterceptorTests` | `Added`/`Modified`/`Deleted`, neprosakování `PasswordHash`, whitelist (`RefreshToken`/`File`/`DeviceToken`/`SentNotification`), audit neauditující sám sebe, regresní testy k chybám 2 a 3, **selhání dopsání klíčů** (přes `FailAuditFixupInterceptor`) a to že `ExecuteUpdate` audit obchází |
@@ -373,7 +383,7 @@ prohlížeč nemá jak připojit.
 |---|---|
 | `AuthFlowTests` | Cookie přihlášení, které `AuthApiTests` (JWT) nepokrývají: form post na `/ProcessLogin`, redirect, `HttpOnly` cookie, nepřihlášený admin obsah nevidí, odhlášení přístup zavře |
 | `PublicPageTests` | 6 veřejných rout × (vykreslení bez chyby v konzoli + žádný vodorovný přesah); naběhnutí Blazor okruhu |
-| `AdminWalkthroughTests` | 9 admin stránek × (desktop + mobil 390 px), popisky buněk tabulek na mobilu, přítomnost MudBlazor providerů, otevření a zavření dialogu |
+| `AdminWalkthroughTests` | 9 admin stránek × (desktop + mobil 390 px), popisky buněk tabulek na mobilu, přítomnost MudBlazor providerů, otevření a zavření dialogu, **validace všech čtyř dialogových formulářů** |
 | `MudBlazorLayoutTests` | Nulové rozměry interaktivních prvků, přetékání na 390 px |
 
 **Proč chyby v konzoli jako assertion:** v `Development` není zaregistrovaný
@@ -385,7 +395,7 @@ reagovat.
 i po aktualizaci prohlížeče, takže by baseline padala z důvodů, které
 s aplikací nesouvisejí. Screenshoty se ukládají do `e2e-artifacts/` jako
 artefakt k prohlédnutí. Vyplatilo se: dva ze tří vizuálních nálezů této vlny
-našel až pohled na obrázek, ne assertion (viz `quality-wave-plan.md`).
+našel až pohled na obrázek, ne assertion (viz `waves/2026-09-quality.md`).
 
 ---
 
@@ -474,6 +484,21 @@ i všemi ostatními testy a rozbije se až při nasazení. Tenhle test ji zachyt
       `Demizon.Mvc` kvůli `ParseStatus`, mapování *a* `WebApplicationFactory`.
       Táhne to web host do outputu. Až bude `Demizon.Tests.Web`, `AuthApiTests`
       sem patří; zbytek unitů by Mvc tahat nemusel.
+
+## Kontrakt `Result` a co z něj plyne pro testy
+
+Zápisové operace v `Demizon.Core` vracejí `Result` / `Result<int>`, ne `bool`.
+Pro testy to znamená tři věci:
+
+- **`ResultAssert.Ok` / `.Failed` místo `Assert.True/False`.** Holý
+  `Assert.True(r.IsSuccess)` při selhání vypíše „Expected: True“ a zahodí
+  `Error` — tedy jedinou informaci, která říká proč.
+- **U neúspěchu se kontroluje i `ErrorKind`**, když na něm něco stojí:
+  `NotFound` mapuje controller na 404, `Rejected` na 4xx s textem pro
+  uživatele. `ResultAssert.Failed(result, ResultErrorKind.NotFound)`.
+- **Kompilátor zahození výsledku nenahlásí** (C# nemá `[[nodiscard]]`, CA1806
+  se vztahuje jen na `[Pure]` metody). Že volající výsledek kontrolují, musí
+  hlídat testy a review — proto ty testy míří na **volající**, ne jen na služby.
 
 ## Konvence
 

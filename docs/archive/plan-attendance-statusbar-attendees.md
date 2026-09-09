@@ -1,5 +1,11 @@
 # Plán: Editace docházky, status bar, seznam účastníků na detailu akce
 
+
+> ⚠️ **ARCHIV.** Tenhle dokument popisuje stav nebo plán, který **už neplatí**.
+> Nechává se kvůli kontextu — proč něco vypadá, jak vypadá. Aktuální stav
+> a plán je v [`../next-wave-plan.md`](../next-wave-plan.md), rozcestník
+> v [`../README.md`](../README.md).
+
 ## Kontext
 
 Aktuální stav má několik problémů:

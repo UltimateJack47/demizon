@@ -1,5 +1,11 @@
 # Plan: "Nevím" (Maybe) Attendance Status Feature
 
+
+> ⚠️ **ARCHIV.** Tenhle dokument popisuje stav nebo plán, který **už neplatí**.
+> Nechává se kvůli kontextu — proč něco vypadá, jak vypadá. Aktuální stav
+> a plán je v [`../next-wave-plan.md`](../next-wave-plan.md), rozcestník
+> v [`../README.md`](../README.md).
+
 ## Context
 Members currently can only mark attendance as Yes or No. The request is to add a third "Maybe/Nevím" state that:
 - Visually signals "I saw the event but haven't decided yet"

@@ -1,14 +1,19 @@
 # Vlna kvality: Result refactor, automatizované testy, vizuální QA
 
+
+> ✅ **UZAVŘENÁ VLNA.** Záznam hotové práce — zdůvodnění, naměřená čísla
+> a poučení. **Není to seznam úkolů.** Aktuální stav a plán je
+> v [`../next-wave-plan.md`](../next-wave-plan.md).
+
 > **Živý dokument.** Průběžně aktualizovat při každé dokončené položce.
 > Založeno: 2026-09-09. Poslední aktualizace: 2026-09-09.
 >
 > Účel: plán a **průběžný stav** této vlny, aby ji šlo dokončit i po přerušení
 > session. Každý krok má stav, takže navazující session pozná, kde se zastavit.
 
-Předchůdci: [`next-wave-plan.md`](next-wave-plan.md) (co bylo hotové před touto
-vlnou), [`testing-plan.md`](testing-plan.md) (konvence testů, nalezené chyby),
-[`hosting-optimization-plan.md`](hosting-optimization-plan.md) (nasazení).
+Předchůdci: [`next-wave-plan.md`](../next-wave-plan.md) (co bylo hotové před touto
+vlnou), [`testing-plan.md`](../testing-plan.md) (konvence testů, nalezené chyby),
+[`hosting-optimization-plan.md`](../hosting-optimization-plan.md) (nasazení).
 
 **Výchozí stav:** `master` na `2770d60`, **268 testů zelených**
 (106 unit + 162 integration), CI přes `.github/workflows/test.yml`.
@@ -173,7 +178,7 @@ Priorita podle toho, co rozbití nejvíc bolí a co nižší vrstvy nevidí:
 
 ## 3b. Doplněné díry v unit/integračních testech
 
-Vzato z TODO v [`testing-plan.md`](testing-plan.md), sekce „Testy, které záměrně
+Vzato z TODO v [`testing-plan.md`](../testing-plan.md), sekce „Testy, které záměrně
 nejsou“ — tyhle tři už tam nepatří:
 
 - [x] **HTTP 429 na `/api/auth/token`.** Ostatní testy mají limit zvednutý, aby
