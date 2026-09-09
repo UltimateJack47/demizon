@@ -119,10 +119,6 @@ String eventDetailPath(int eventId) => AppRoutes.eventDetailFor(eventId);
 /// Detail zkoušky. Zkouška nemá `id`, nese ji datum — proto `id = 0`
 /// plus query parametr, přesně jak to dělalo MAUI
 /// (`EventDetailViewModel.IsRehearsal => EventId == 0 && RehearsalDateString != null`).
-///
-// TODO(verify): sladit s obrazovkou detailu akce, až vznikne — očekává se, že
-// route `/events/:id` přečte `rehearsalDate` z query a při `id == 0` se
-// přepne do režimu zkoušky.
 String rehearsalDetailPath(DateTime date) =>
     '${AppRoutes.eventDetailFor(0)}?rehearsalDate=${_isoDate.format(date)}';
 

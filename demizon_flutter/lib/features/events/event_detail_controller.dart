@@ -39,6 +39,16 @@ class EventDetailArgs {
 
   bool get isRehearsal => eventId == null && rehearsalDate != null;
 
+  /// Složení z routeru: `/events/0?rehearsalDate=…` má `eventId == 0`,
+  /// ale režim zkoušky pozná až vyplněné datum — stejně jako
+  /// `EventDetailViewModel.IsRehearsal`.
+  factory EventDetailArgs.fromRoute({int? eventId, DateTime? rehearsalDate}) {
+    if (rehearsalDate != null && (eventId == null || eventId == 0)) {
+      return EventDetailArgs(rehearsalDate: rehearsalDate);
+    }
+    return EventDetailArgs(eventId: eventId);
+  }
+
   @override
   bool operator ==(Object other) =>
       other is EventDetailArgs &&

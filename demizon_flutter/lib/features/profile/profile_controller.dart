@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:demizon/core/auth/auth_controller.dart';
+import 'package:demizon/core/notifications/device_registration.dart';
 import 'package:demizon/core/providers.dart';
 import 'package:demizon/models/models.dart';
 import 'package:dio/dio.dart';
@@ -8,15 +9,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-/// Klíč v `SharedPreferences` — stejný, jaký používalo MAUI
-/// (`Preferences.Default.Get("notifications_enabled", false)`).
-const _notificationsPrefKey = 'notifications_enabled';
-
-/// Platforma posílaná na server při registraci zařízení.
-// TODO(verify): MAUI bylo jen pro Android a posílalo natvrdo "android".
-// Až se přidá iOS build, ověř, co server očekává (`RegisterDeviceRequest`).
-const _devicePlatform = 'android';
 
 /// Verze aplikace. MAUI ji četlo z `AppInfo.Current.VersionString`.
 // TODO(verify): ekvivalent je `package_info_plus`, který zatím není v
@@ -101,12 +93,13 @@ class ProfileController extends AsyncNotifier<ProfileState> {
     // jinak by přepínač tvrdil "zapnuto" u aplikace bez povolení
     // (`ProfileViewModel.cs:50-57`).
     final prefs = await SharedPreferences.getInstance();
-    final savedPref = prefs.getBool(_notificationsPrefKey) ?? false;
+    final savedPref = prefs.getBool(kNotificationsPrefKey) ?? false;
     final granted = await Permission.notification.isGranted;
 
     // Protějšek `NotificationSyncService.SyncAsync` — v MAUI se pouštěl
-    // bez čekání (`_ = syncService.SyncAsync()`).
-    unawaited(_syncDeviceRegistration(savedPref: savedPref, granted: granted));
+    // bez čekání (`_ = syncService.SyncAsync()`). Tady stejně, plus ještě
+    // jednou z MainShell po přihlášení; registrace na serveru je idempotentní.
+    unawaited(syncDeviceRegistration(ref.read(apiClientProvider)));
 
     return ProfileState(
       login: login ?? '—',
@@ -114,36 +107,6 @@ class ProfileController extends AsyncNotifier<ProfileState> {
       googleCalendarConnected: await tokenStorage.gcalConnected,
       notificationsEnabled: savedPref && granted,
     );
-  }
-
-  /// Přepis `NotificationSyncService.SyncAsync`: srovná stav na serveru
-  /// s tím, co uživatel skutečně povolil v systému.
-  Future<void> _syncDeviceRegistration({
-    required bool savedPref,
-    required bool granted,
-  }) async {
-    try {
-      final api = ref.read(apiClientProvider);
-      final token = await FirebaseMessaging.instance.getToken();
-      if (token == null || token.isEmpty) return;
-
-      final request = RegisterDeviceRequest(
-        token: token,
-        platform: _devicePlatform,
-      );
-
-      if (savedPref && !granted) {
-        // Oprávnění bylo mezitím odebráno — zruš registraci na serveru.
-        await api.unregisterDevice(request);
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool(_notificationsPrefKey, false);
-      } else if (savedPref && granted) {
-        // Obnov registraci (FCM token se může měnit).
-        await api.registerDevice(request);
-      }
-    } catch (_) {
-      // Synchronizace je best-effort; MAUI chybu jen logovalo.
-    }
   }
 
   /// Přepis `HandleNotificationToggleAsync` (`ProfileViewModel.cs:76-134`).
@@ -203,7 +166,7 @@ class ProfileController extends AsyncNotifier<ProfileState> {
       final api = ref.read(apiClientProvider);
       final request = RegisterDeviceRequest(
         token: fcmToken,
-        platform: _devicePlatform,
+        platform: kDevicePlatform,
       );
 
       if (enable) {
@@ -213,7 +176,7 @@ class ProfileController extends AsyncNotifier<ProfileState> {
       }
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_notificationsPrefKey, enable);
+      await prefs.setBool(kNotificationsPrefKey, enable);
 
       state = AsyncData(
         state.requireValue.copyWith(isTogglingNotifications: false),
@@ -257,9 +220,8 @@ class ProfileController extends AsyncNotifier<ProfileState> {
 
   /// Přepis `LogoutAsync` (`ProfileViewModel.cs:166`).
   ///
-  /// MAUI navíc volalo `NotificationNavigationService.Reset()` — obdoba
-  /// (zahození čekajícího deep linku z notifikace) patří do notifikační
-  /// vrstvy, ne sem.
+  /// `NotificationNavigationService.Reset()` volá `AuthController.logout`,
+  /// ať se resetuje i při vypršení session, nejen z téhle obrazovky.
   ///
   /// Po odhlášení přesměruje na přihlášení router podle stavu session
   /// (`core/router.dart` + `authControllerProvider`), ne tato metoda.

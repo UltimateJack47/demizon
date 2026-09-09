@@ -61,6 +61,27 @@ String formatShortDate(DateTime value) =>
 String formatApiDate(DateTime value) =>
     DateFormat('yyyy-MM-dd').format(value);
 
+/// Query parametr, který má na drátě být kalendářní den.
+///
+/// Dio by na `DateTime` zavolalo `toString()` (`2026-08-31 00:00:00.000`);
+/// retrofit občas `toIso8601String()` (`2026-08-31T00:00:00.000` nebo s `Z`).
+/// ASP.NET `[FromQuery] DateTime` u zkoušek bere `.Date` — instant v UTC
+/// by pátek v CEST posunul. Proto vždy jen `yyyy-MM-dd`.
+///
+/// U stringu se bere prefix data, ne `DateTime.parse`: `…T22:00:00Z` by
+/// jinak v CEST skočilo na následující den.
+Object? encodeQueryValue(Object? value) {
+  if (value is DateTime) return formatApiDate(value);
+  if (value is Iterable && value is! String) {
+    return value.map(encodeQueryValue).toList();
+  }
+  if (value is String && value.contains('T') && value.length >= 10) {
+    final date = value.substring(0, 10);
+    if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(date)) return date;
+  }
+  return value;
+}
+
 /// -------------------------------------------------------------- Role
 
 /// Popisky role pro výběr v UI. Převzato z `EventDetailViewModel.RoleOptions`.

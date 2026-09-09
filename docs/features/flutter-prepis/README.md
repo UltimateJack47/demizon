@@ -1,7 +1,7 @@
 # Přepis mobilní aplikace z .NET MAUI do Flutteru
 
 > **Živý dokument.** Průběžně aktualizovat.
-> Poslední aktualizace: 2026-09-01 (build zelený).
+> Poslední aktualizace: 2026-09-09 (notifikační stack + DateTime query).
 > Založeno: 2026-09-01. Větev: `feat/flutter-app`. Adresář: `demizon_flutter/`.
 >
 > Pořadí vůči backendu a nasazení: [`STATUS.md`](../../STATUS.md).
@@ -137,7 +137,7 @@ Flutter **3.47.2 / Dart 3.13.2** doinstalován 2026-09-01. Stav:
 | `flutter pub get` | OK |
 | `dart run build_runner build` | **42 vygenerovaných souborů** |
 | `flutter analyze` | **No issues found!** |
-| `flutter test` | **14 testů prošlo** |
+| `flutter test` | **26 testů prošlo** (2026-09-09; bylo 14) |
 | `flutter build apk --debug` | **APK postaveno** (159 MB debug) |
 | **spuštěno na emulátoru** | **Pixel 9 / API 36 — aplikace běží** |
 
@@ -159,10 +159,15 @@ našel jen **3 nálezy** na 61 souborech a žádnou skutečnou chybu. Zásluhu n
 
 ### Testy
 
-`test/contract_test.dart` — 8 testů na kontrakt mezi aplikací a API. Cílí na věci,
-které kompilátor nehlídá a přepis je mohl tiše rozbít: statusy docházky
-(`yes`/`maybe`/`no`), obousměrné mapování rolí, formát data pro endpointy zkoušek
-(`yyyy-MM-dd`) a tvar URL souborů.
+`flutter test` — **26 testů** (2026-09-09):
+
+- `test/contract_test.dart` — kontrakt s API, který kompilátor nehlídá: statusy
+  docházky (`yes`/`maybe`/`no`), mapování rolí, `yyyy-MM-dd` na drátě u zkoušek,
+  duální režim akce/zkouška, tvar URL souborů.
+- `test/auth_state_test.dart` — `isRestoring` vs. přihlašování (router nesmí
+  zahodit login obrazovku).
+- `test/notification_navigation_test.dart` — parse payloadu, pending replay
+  po loginu, reset po odhlášení.
 
 ### Ověřeno za běhu na emulátoru
 
@@ -213,23 +218,35 @@ a aplikace pokračuje. To je zatím v pořádku; notifikace stejně nejsou dopsa
 - [ ] Ověřit na **fyzickém telefonu** a proti běžícímu backendu (přihlášení,
       docházka, notifikace). Zatím ověřena jen přihlašovací obrazovka a chybová
       cesta přihlášení — dál se bez platných údajů a dostupného API nedostaneme.
+      **Odloženo na později** (2026-09-09) — stejně jako `flutterfire configure`.
 
 ### Zbývá dopsat
 
-- [ ] Notifikační stack: FCM registrace tokenu, lokální notifikace pro foreground
-      zprávy, deep-linky z notifikace. Zdroje: `NotificationNavigationService.cs` (114 ř.),
-      `NotificationSyncService.cs` (47 ř.), `MainActivity.cs:79-140`.
-      V MAUI to byla nejkřehčí část — tři různé kódové cesty (cold start / background /
-      foreground) s vlastním `lock` gate a „pending replay" mechanikou. Ve Flutteru to
-      pokrývá `firebase_messaging` (`getInitialMessage()`, `onMessageOpenedApp`,
-      `onMessage`) + `flutter_local_notifications`.
+- [x] **Notifikační stack** (2026-09-09). Přepis `NotificationNavigationService`,
+      `NotificationSyncService` a `MainActivity` (kanál, foreground zobrazení, tap).
+      Soubory: `lib/core/notifications/`. Tři cesty:
+      cold start (`getInitialMessage` + pending replay po loginu),
+      background (`onMessageOpenedApp`),
+      foreground (`onMessage` → lokální notifikace na kanálu `demizon_channel`).
+      Reset po odhlášení i po vypršení session. Bez `google-services.json` se FCM
+      tiše přeskočí. Zamčeno v `test/notification_navigation_test.dart`.
+      Android: `INTERNET` v main manifestu (release by jinak neměl síť),
+      `POST_NOTIFICATIONS`, `ic_notification`, default channel/icon/color.
+      Backend: automatické připomínky zkoušky teď posílají `rehearsalDate`
+      (dřív `data: null`, tap neměl kam vést).
 - [ ] Offline cache — MAUI ji neměla vůbec (každá stránka volá API v `OnAppearing`).
       Není to regrese, ale je to zjevné vylepšení k zvážení.
 
 ### Ověřit proti běžící aplikaci
 
-- [ ] Formát `DateTime` na drátě, hlavně u endpointů zkoušek (`?date=`)
+- [x] Formát `DateTime` na drátě u zkoušek (`?date=`) — interceptor ořezává
+      ISO instant z retrofitu (`toIso8601String`) na `yyyy-MM-dd`. Jinak by
+      UTC pátek v CEST skočil na sobotu. Zamčeno v `test/contract_test.dart`.
+      Na telefonu ověřit, že GET/PUT rehearsal sedí na ten pátek.
 - [ ] Auth flow: proaktivní refresh 5 min před expirací i fallback na 401
+      (kód je hotový, zbývá živé API)
 - [ ] Křížová tabulka docházky — zamrzlý sloupec jmen + horizontální scroll,
       a že swipe mezi měsíci nekoliduje s vnitřním scrollem
-- [ ] Duální režim akce/zkouška na detailu a v editaci docházky člena
+- [x] Duální režim akce/zkouška — `EventDetailArgs.fromRoute` bere
+      `/events/0?rehearsalDate=` jako zkoušku, `MemberAttendanceTarget` taky.
+      Zamčeno testy. Na telefonu ověřit otevření z notifikace i z tabulky.

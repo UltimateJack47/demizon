@@ -33,11 +33,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   bool _commentLoaded = false;
   bool _isBusy = false;
 
-  late final EventDetailArgs _args =
-      (widget.rehearsalDate != null &&
-              (widget.eventId == null || widget.eventId == 0))
-          ? EventDetailArgs(rehearsalDate: widget.rehearsalDate)
-          : EventDetailArgs(eventId: widget.eventId);
+  late final EventDetailArgs _args = EventDetailArgs.fromRoute(
+    eventId: widget.eventId,
+    rehearsalDate: widget.rehearsalDate,
+  );
 
   @override
   void dispose() {

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/models.dart';
+import '../notifications/notification_navigation.dart';
 import '../providers.dart';
 import 'token_storage.dart';
 
@@ -102,6 +103,7 @@ class AuthController extends AsyncNotifier<AuthState> {
   Future<AuthState> build() async {
     // Refresh v interceptoru selhal → session končí i tady.
     final subscription = ref.watch(sessionExpiredProvider).stream.listen((_) {
+      ref.read(notificationNavigationProvider).reset();
       state = const AsyncData(Unauthenticated());
     });
     ref.onDispose(subscription.cancel);
@@ -161,6 +163,9 @@ class AuthController extends AsyncNotifier<AuthState> {
   /// Odhlášení — protějšek `ProfileViewModel.LogoutAsync()`.
   /// Navigaci na přihlášení řeší router podle stavu, ne tato metoda.
   Future<void> logout() async {
+    // MAUI volalo `NotificationNavigationService.Reset()` tady, ať se po
+    // dalším přihlášení neotevře deep-link z předchozí session.
+    ref.read(notificationNavigationProvider).reset();
     await _tokens.clear();
     state = const AsyncData(Unauthenticated());
   }

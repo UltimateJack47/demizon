@@ -7,6 +7,7 @@ import '../api/api_client.dart';
 import 'api_config.dart';
 import 'auth/auth_interceptor.dart';
 import 'auth/token_storage.dart';
+import 'formatting.dart';
 
 /// Kořenové providery infrastruktury — protějšek registrací v
 /// `Demizon.Maui/MauiProgram.cs` (`AddRefitClient` + `AddTransient<AuthHandler>`
@@ -81,20 +82,13 @@ BaseOptions _baseOptions() => BaseOptions(
       headers: const {'Accept': 'application/json'},
     );
 
-/// Dio by na `DateTime` v query parametrech zavolalo `toString()`
-/// (`2026-08-31 00:00:00.000`). Refit posílal ISO 8601 round-trip, takže se
-/// hodnoty převádějí na stejný tvar.
-///
-/// TODO(verify): až bude vygenerovaný `api_client.g.dart`, zkontrolovat, jestli
-/// retrofit_generator náhodou `DateTime` nepřevádí sám — pak je tenhle
-/// interceptor bez efektu (hodnota už je `String`), ne však škodlivý.
+/// Query `DateTime` jde jako kalendářní den (`yyyy-MM-dd`), ne jako ISO
+/// instant. Retrofit občas převede hodnotu na string dřív, než sem dorazí —
+/// `encodeQueryValue` zvládne obojí. Viz `TODO` ve STATUS k UTC vs. pátek.
 final _dateTimeQueryInterceptor = InterceptorsWrapper(
   onRequest: (options, handler) {
     options.queryParameters = options.queryParameters.map(
-      (key, value) => MapEntry(
-        key,
-        value is DateTime ? value.toIso8601String() : value,
-      ),
+      (key, value) => MapEntry(key, encodeQueryValue(value)),
     );
     handler.next(options);
   },

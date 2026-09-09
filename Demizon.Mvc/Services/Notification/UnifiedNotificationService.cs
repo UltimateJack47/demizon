@@ -284,8 +284,12 @@ public sealed class UnifiedNotificationService(
 
                     var title = "Nevyplněná docházka na zkoušku";
                     var body = $"Zkouška {friday:d.M.yyyy} – nezapomeň vyplnit docházku!";
+                    var data = new Dictionary<string, string>
+                    {
+                        ["rehearsalDate"] = friday.ToString("yyyy-MM-dd"),
+                    };
 
-                    await sender.SendToMemberAsync(memberId, title, body, null, ct);
+                    await sender.SendToMemberAsync(memberId, title, body, data, ct);
 
                     db.SentNotifications.Add(new SentNotification
                     {

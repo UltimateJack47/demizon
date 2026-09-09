@@ -19,8 +19,8 @@ part 'api_client.g.dart';
 ///
 /// Pozor na `DateTime` v query parametrech: Dio by na hodnotu zavolal
 /// `toString()` (formát `2026-08-31 00:00:00.000`). Interceptor v
-/// `core/providers.dart` je proto převádí na ISO 8601, aby odpovídaly tomu,
-/// co posílal Refit.
+/// `core/providers.dart` je převádí na kalendářní den `yyyy-MM-dd`,
+/// protože ASP.NET u zkoušek bere `.Date` a ISO instant by posunul pátek.
 @RestApi()
 abstract class ApiClient {
   factory ApiClient(Dio dio, {String baseUrl}) = _ApiClient;

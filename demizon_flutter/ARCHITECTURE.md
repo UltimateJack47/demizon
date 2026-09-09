@@ -30,7 +30,8 @@ lib/
       token_storage.dart    — protějšek TokenStorage.cs
       auth_interceptor.dart — protějšek AuthHandler.cs
       auth_controller.dart  — přihlášení/odhlášení, stav session
-    formatting.dart         — datum/čas helpery, mapování rolí
+    notifications/          — FCM, lokální kanál, deep-link, registrace zařízení
+    formatting.dart         — datum/čas helpery, mapování rolí, query DateTime
   models/                   — Dart protějšky Demizon.Contracts
   api/
     api_client.dart         — Retrofit rozhraní (protějšek IApiClient.cs)
@@ -151,18 +152,24 @@ Obrazovka je `ConsumerWidget` a stav řeší přes `.when(data:, loading:, error
 
 ## Stav prací
 
-Průběžný stav a co zbývá je v [`../docs/flutter-rewrite-plan.md`](../docs/flutter-rewrite-plan.md).
+Průběžný stav a co zbývá: [`docs/features/flutter-prepis/README.md`](../docs/features/flutter-prepis/README.md).
+Pořadí vůči backendu: [`docs/STATUS.md`](../docs/STATUS.md).
+
+Notifikace žijí v `lib/core/notifications/` (navigace, FCM, lokální kanál,
+registrace zařízení). Query `DateTime` na drátě formátuje `encodeQueryValue`
+v `lib/core/formatting.dart` na `yyyy-MM-dd`.
 
 ## Ověření
 
-Flutter SDK zatím **není nainstalované** na vývojovém stroji, takže kód není
-zkompilovaný ani spuštěný. Až bude, první kroky jsou:
+Flutter SDK **je** nainstalované (3.47.2 / Dart 3.13.2). Po změně modelů nebo
+API klienta:
 
 ```
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 flutter analyze
+flutter test
 ```
 
-Do té doby ke každému nedořešenému místu piš `// TODO(verify):` s popisem,
-co je potřeba ověřit.
+`*.g.dart` jsou gitignorované — bez `build_runner` analyze i test spadnou.
+Ke každému nedořešenému místu, které chce běh na telefonu, piš `// TODO(verify):`.

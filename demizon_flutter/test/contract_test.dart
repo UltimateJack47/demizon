@@ -1,5 +1,8 @@
 import 'package:demizon/core/formatting.dart';
 import 'package:demizon/core/theme.dart';
+import 'package:demizon/features/attendance/attendance_controller.dart';
+import 'package:demizon/features/attendance/member_attendance_detail_controller.dart';
+import 'package:demizon/features/events/event_detail_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -57,6 +60,53 @@ void main() {
 
     test('endpointy zkoušek dostanou datum, ne čas', () {
       expect(formatApiDate(DateTime(2026, 5, 15, 18, 30)), '2026-05-15');
+    });
+
+    test('query interceptor posílá yyyy-MM-dd, ne ISO instant', () {
+      expect(encodeQueryValue(DateTime(2026, 5, 15, 18, 30)), '2026-05-15');
+      expect(encodeQueryValue('2026-05-15T00:00:00.000'), '2026-05-15');
+      expect(encodeQueryValue('2026-05-15T22:00:00.000Z'), '2026-05-15');
+      expect(encodeQueryValue('2026-05-15'), '2026-05-15');
+      expect(encodeQueryValue(12), 12);
+    });
+
+    test('cesta ke zkoušce nese datum, ne čas', () {
+      expect(
+        rehearsalDetailPath(DateTime(2026, 5, 15, 18, 30)),
+        '/events/0?rehearsalDate=2026-05-15',
+      );
+    });
+  });
+
+  group('duální režim akce / zkouška', () {
+    test('fromRoute: id 0 + datum je zkouška, kladné id je akce', () {
+      final rehearsal = EventDetailArgs.fromRoute(
+        eventId: 0,
+        rehearsalDate: DateTime(2026, 5, 15),
+      );
+      expect(rehearsal.isRehearsal, isTrue);
+      expect(rehearsal.eventId, isNull);
+
+      final event = EventDetailArgs.fromRoute(eventId: 12);
+      expect(event.isRehearsal, isFalse);
+      expect(event.eventId, 12);
+    });
+
+    test('MemberAttendanceTarget pozná zkoušku i z eventId 0', () {
+      final rehearsal = MemberAttendanceTarget(
+        eventId: 0,
+        rehearsalDate: DateTime(2026, 1, 16),
+        memberId: 3,
+        memberName: 'Jan',
+      );
+      expect(rehearsal.isRehearsal, isTrue);
+
+      const event = MemberAttendanceTarget(
+        eventId: 12,
+        memberId: 3,
+        memberName: 'Jan',
+      );
+      expect(event.isRehearsal, isFalse);
     });
   });
 
