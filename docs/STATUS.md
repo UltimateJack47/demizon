@@ -1,7 +1,7 @@
 # Stav projektu a plán další práce
 
 > **Živý dokument a vstupní bod.** Průběžně aktualizovat při každé dokončené položce.
-> Založeno: 2026-09-08. Poslední aktualizace: 2026-09-09 (nasazení nachystané v nasazeni.md).
+> Založeno: 2026-09-08. Poslední aktualizace: 2026-09-30 (plán kalendáře zkoušek, sekce F).
 >
 > Účel: předat kontext další session (Claude / kdokoli) — co je hotové, na co
 > nesahat, co zbývá a v jakém pořadí.
@@ -138,14 +138,16 @@ Až tohle pojede:
 ## D. Nasazení (až bude doména)
 
 **Postup shora dolů je v [`nasazeni.md`](nasazeni.md)** (VAPID, Firebase env,
-`VACUUM`, Caddy, seed, cron, CI). Tady jen co zbývá, ať STATUS zůstane
+`VACUUM`, nginx vhost, seed, cron, CI). Tady jen co zbývá, ať STATUS zůstane
 krátký:
 
 - [ ] Doména. Dnes `AllowedHosts` v `appsettings.Production.json` i
       `GoogleCalendar.RedirectUri` míří na Railway — na Scalewayu by každý request
       skončil HTTP 400. (Základní `appsettings.json` už `demizon.cz` obsahuje.)
-- [ ] HTTPS přes Caddy (Let's Encrypt), Kestrel jen HTTP na localhost.
-      Ne `dotnet dev-certs`.
+- [ ] HTTPS přes master nginx + certbot (vhost podle `mru.conf`), Kestrel jen HTTP
+      na localhost. Ne `dotnet dev-certs`. Caddy ne, na 443 už sedí nginx.
+- [ ] `ForwardedHeaders` v `Program.cs` — dnes chybí, za proxy by appka viděla
+      `http` a IP nginxu.
 - [ ] Google OAuth redirect URI 1:1 s Google Cloud Console.
 - [ ] Registry: zůstat u Docker Hubu (`jackeq/demizon-mvc`) nebo GHCR.
 - [ ] `build.yml` — po testech image `latest` + `sha-<commit>`.
@@ -173,12 +175,25 @@ Podrobnosti, konvence a co která sada hlídá: [`testing-plan.md`](testing-plan
 
 ---
 
+## F. Kalendář zkoušek
+
+Plán: [`features/zkousky-kalendar/`](features/zkousky-kalendar/README.md).
+Páteční pravidlo je dnes zkopírované na pěti místech a kopie se rozcházejí.
+Ruční připomínka pošle „zkouška“ i na pátek s akcí a vícedenní akce zkoušku neschová.
+
+- [ ] A–C: `RehearsalSchedule` + `IRehearsalService`, přepojit pět míst, validace upsertu
+- [ ] D–G: tabulka `RehearsalCancellation`, admin UI, úklid Google Calendar, Flutter
+- [x] Rozhodnuto 2026-09-30: 19:00 + 2 h 30, zrušená akce vrací zkoušku, každá akce
+      zkoušku schová, push při zrušení volitelný. Zbývají drobnosti v plánu.
+
+---
+
 ## Doporučené pořadí
 
 1. **Flutter na telefonu. (B)** Odloženo. Postup:
    [`flutter-prepis`](features/flutter-prepis/README.md) → *Až budeš mít Firebase a telefon*.
 2. **Až bude jasná doména. (D + A)** Postup shora dolů:
-   [`nasazeni.md`](nasazeni.md) → *Až budeš nasazovat*. Caddy, secrets, seed,
+   [`nasazeni.md`](nasazeni.md) → *Až budeš nasazovat*. nginx vhost, secrets, seed,
    VAPID, `VACUUM`, cron záloh + vyzkoušená obnova, CI.
 
 Bez telefonu a bez domény **není co nutně dopsat v kódu.** Položky v E

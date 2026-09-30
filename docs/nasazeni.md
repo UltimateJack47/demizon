@@ -18,8 +18,9 @@ jsou v sekcích pod tím.
        `GoogleCalendar.RedirectUri` míří na Railway — na Scalewayu by každý
        request skončil HTTP 400. (Základní `appsettings.json` už `demizon.cz`
        obsahuje.) DNS A/AAAA na IP Stardustu.
-2. [ ] **HTTPS přes Caddy** (Let's Encrypt). Kestrel jen HTTP na localhost.
-       Ne `dotnet dev-certs`.
+2. [ ] **HTTPS přes master nginx** na hostiteli (certbot, Let's Encrypt), vhost
+       podle `mru.conf` v `scaleway-infrastructure`. Kestrel jen HTTP na localhost.
+       Ne `dotnet dev-certs`. Předtím v appce zapnout `ForwardedHeaders`.
 3. [ ] **Google OAuth redirect URI** 1:1 s Google Cloud Console
        (`https://<domena>/google/callback`).
 4. [ ] **Tajemství** mimo repo, předat jako `-e` při `docker run`:
@@ -48,13 +49,18 @@ je jiná větev — viz flutter-prepis, sekce *Až budeš mít Firebase a telefo
       Při `docker run` přebij `AllowedHosts` a `GoogleCalendar__RedirectUri`
       na ostrou doménu (env overlay v `Program.cs` sedí až za json soubory).
 - [ ] **HTTPS řešit reverzní proxy**, ne `dotnet dev-certs` (dev certifikát prohlížeč
-      na veřejné doméně odmítne). Caddy stačí takto:
-      ```
-      demizon.cz {
-          reverse_proxy 127.0.0.1:8083
-      }
-      ```
-      Let's Encrypt si vyřídí sám. Kestrel pak jede prostý HTTP na localhostu.
+      na veřejné doméně odmítne). Na serveru už běží **master nginx** pro mru.sk, takže
+      Demizon dostane vedle něj vlastní vhost. Caddy by na 443 kolidoval s nginx
+      a server má zůstat u jednoho (rozhodnuto 2026-09-30). Vhost
+      `/etc/nginx/sites-available/demizon.conf` zkopírovat ze šablony `mru.conf`
+      v `scaleway-infrastructure/README.md`, včetně hlaviček `Upgrade`/`Connection` pro
+      Blazor WebSocket, `X-Forwarded-*`, `Host` a timeoutů. Jen `proxy_pass` změnit na
+      `http://127.0.0.1:8083`. Pak `certbot --nginx -d <domena>`.
+- [ ] **`ForwardedHeaders` v `Program.cs`** (dnes chybí). Bez něj Demizon za proxy
+      vidí schéma `http` a IP adresu nginxu místo klienta. Rozbije to audit log
+      i limity podle IP a `UseHttpsRedirection` neví, kam přesměrovat.
+      `ForwardedHeaders = XForwardedFor | XForwardedProto`, důvěřovat jen
+      loopbacku / Docker bridge. mru.sk to řeší stejně (`ForwardLimit 2`).
 - [ ] **Google OAuth redirect URI** musí přesně odpovídat tomu, co je zaregistrované
       v Google Cloud Console.
 

@@ -51,6 +51,7 @@ soubor vypadá jako chybějící práce — což je horší než žádný.
 | Feature | Stav |
 |---|---|
 | [`features/flutter-prepis/`](features/flutter-prepis/README.md) | 🔨 probíhá — kód bez telefonu je hotový; zbývá Firebase + fyzické zařízení (**odloženo**). |
+| [`features/zkousky-kalendar/`](features/zkousky-kalendar/README.md) | 📝 plán — páteční pravidlo na jednom místě, rušení zkoušek, vícedenní akce. |
 
 ## Uzavřené featury
 
