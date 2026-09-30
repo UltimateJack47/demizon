@@ -74,6 +74,10 @@
 
     private void SetCulture(string culture)
     {
-        NavigationManager.NavigateTo(NavigationManager.BaseUri + $"SetLanguage/{culture}", true);
+        // Po přepnutí zpátky na stejnou stránku. Relativně, server pustí jen místní adresu.
+        var returnUrl = "/" + NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.NavigateTo(
+            NavigationManager.BaseUri + $"SetLanguage/{culture}?returnUrl={Uri.EscapeDataString(returnUrl)}",
+            true);
     }
 }

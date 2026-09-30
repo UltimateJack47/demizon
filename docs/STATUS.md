@@ -14,7 +14,7 @@
 
 | | Stav |
 |---|---|
-| Testy | **352 zelených** — 130 unit + 169 integration + 53 E2E |
+| Testy | **358 zelených** — 136 unit + 169 integration + 53 E2E |
 | CI | [`test.yml`](../.github/workflows/test.yml) — dvě úlohy: `Demizon.Backend.slnf` a `Demizon.E2E.slnf` |
 | Docker image | 30 MB publish payload, 261 MB image |
 

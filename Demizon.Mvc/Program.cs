@@ -381,7 +381,9 @@ app.MapHealthChecks("/health", new HealthCheckOptions
         });
     }
 });
-app.MapGet("/SetLanguage/{culture}", (HttpContext context, string culture) =>
+// Návrat jen na adresu v rámci webu. Dřív se přesměrovávalo na Referer bez kontroly:
+// bez hlavičky to skončilo 500 (Redirect("")) a s cizí adresou to byl open redirect.
+app.MapGet("/SetLanguage/{culture}", (HttpContext context, string culture, string? returnUrl) =>
 {
     var cultureInfo = culture == "cs" ? new CultureInfo("cs-CZ") : new CultureInfo("en-US");
 
@@ -390,7 +392,15 @@ app.MapGet("/SetLanguage/{culture}", (HttpContext context, string culture) =>
     var cookieValue = CookieRequestCultureProvider.MakeCookieValue(requestCulture);
 
     context.Response.Cookies.Append(cookieName, cookieValue);
-    return Task.FromResult(Results.Redirect(context.Request.Headers.Referer.ToString()));
+    return Results.LocalRedirect(IsLocalUrl(returnUrl) ? returnUrl! : "/");
+
+    // Stejné pravidlo jako IUrlHelper.IsLocalUrl: začíná jedním "/", ne "//" ani "/\"
+    // (prohlížeč je čte jako adresu jiného serveru) a nemá řídicí znaky.
+    static bool IsLocalUrl(string? url) =>
+        !string.IsNullOrEmpty(url)
+        && url[0] == '/'
+        && (url.Length == 1 || (url[1] != '/' && url[1] != '\\'))
+        && !url.Any(char.IsControl);
 });
 
 app.MapBlazorHub();
