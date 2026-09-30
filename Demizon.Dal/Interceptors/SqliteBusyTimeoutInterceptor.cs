@@ -27,6 +27,16 @@ public class SqliteBusyTimeoutInterceptor : DbConnectionInterceptor
     private const int WalAutoCheckpointPages = 512;
 
     /// <summary>
+    /// <c>synchronous=NORMAL</c> místo výchozího <c>FULL</c>: ve WAL režimu se fsync dělá
+    /// až při checkpointu, ne po každém commitu. Databáze se ani při výpadku proudu
+    /// nepoškodí (commity ve WAL mají kontrolní součty), přijít se dá jen o poslední
+    /// transakce od checkpointu — a jen při pádu celého stroje, ne appky či kontejneru.
+    /// V benchmarku (2026-09-30, mru.sk na SQLite) FULL 154 req/s, NORMAL 325 req/s:
+    /// s FULL čekalo všechno na disk. SQLite ve WAL režimu NORMAL samo doporučuje.
+    /// </summary>
+    private const string Synchronous = "NORMAL";
+
+    /// <summary>
     /// <c>auto_vacuum=INCREMENTAL</c> is database-level. Setting it on an existing DB
     /// that was created with <c>NONE</c> (EF Core default) has <b>no effect</b> until a
     /// one-time <c>VACUUM</c> rewrites the file. That VACUUM temporarily needs ~2× the
@@ -39,6 +49,7 @@ public class SqliteBusyTimeoutInterceptor : DbConnectionInterceptor
         $"PRAGMA busy_timeout={BusyTimeoutMs};" +
         $"PRAGMA journal_size_limit={JournalSizeLimitBytes};" +
         $"PRAGMA wal_autocheckpoint={WalAutoCheckpointPages};" +
+        $"PRAGMA synchronous={Synchronous};" +
         "PRAGMA auto_vacuum=INCREMENTAL;";
 
     public override void ConnectionOpened(DbConnection connection, ConnectionEndEventData eventData)

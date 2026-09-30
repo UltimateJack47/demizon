@@ -14,7 +14,7 @@
 
 | | Stav |
 |---|---|
-| Testy | **358 zelených** — 136 unit + 169 integration + 53 E2E |
+| Testy | **359 zelených** — 136 unit + 170 integration + 53 E2E |
 | CI | [`test.yml`](../.github/workflows/test.yml) — dvě úlohy: `Demizon.Backend.slnf` a `Demizon.E2E.slnf` |
 | Docker image | 30 MB publish payload, 190 MB image (`aspnet:10.0-alpine` + ICU + tzdata, stejný base jako mru.sk) |
 

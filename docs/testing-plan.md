@@ -369,7 +369,7 @@ Zbylé tři nálezy kola 6:
 | `AttendanceAndEventServiceTests` | Vložení vs. přepis podle `Id`, `LastUpdated` nastavuje služba, nesrovnalost v chování `DeleteAsync` mezi službami |
 | `ChangeTrackerRecoveryTests` | Služby po neúspěšném zápisu uklidí change tracker, takže vrácené `false` skutečně znamená „neuložilo se“ a další pokus projde |
 | `ModelAndMigrationsTests` | **Model odpovídá snapshotu migrací**, všechny migrace projdou od nuly, enumy jako text, unique index, kaskáda, seed data |
-| `SqlitePragmaInterceptorTests` | `busy_timeout` / `journal_size_limit` / `wal_autocheckpoint` / `auto_vacuum=INCREMENTAL` se skutečně propíšou, a to na **každé** nové spojení |
+| `SqlitePragmaInterceptorTests` | `busy_timeout` / `journal_size_limit` / `wal_autocheckpoint` / `synchronous=NORMAL` / `auto_vacuum=INCREMENTAL` se skutečně propíšou, a to na **každé** nové spojení |
 | `StorageQuotaServiceTests` | per-file / count / total-bytes kvóty; `FileService.CreateAsync` při odmítnutí nic neuloží |
 | `DiskMaintenanceServiceTests` | purge AuditLog 90 dní, revokované i expirované refresh tokeny, SentNotifications 180 dní; netýká se členů ani souborů |
 | `FileBlobLoadingTests` | `GetOneAsync` / seznamy nenačtou BLOBy; `UpdateAsync` nemaže Data; `GetContentAsync` vrací jen požadovaný sloupec |

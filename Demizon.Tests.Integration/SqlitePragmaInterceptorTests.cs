@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Demizon.Tests.Integration;
 
 /// <summary>
-/// <see cref="SqliteBusyTimeoutInterceptor"/> aplikuje tři connection-level PRAGMA.
+/// <see cref="SqliteBusyTimeoutInterceptor"/> aplikuje connection-level PRAGMA.
 /// </summary>
 /// <remarks>
 /// Jsou to opatření proti dvěma reálným provozním problémům na cílovém 1 GB / 10 GB
@@ -23,6 +23,7 @@ public sealed class SqlitePragmaInterceptorTests : IDisposable
     private const int ExpectedJournalSizeLimitBytes = 32 * 1024 * 1024;
     private const int ExpectedWalAutoCheckpointPages = 512;
     private const int ExpectedAutoVacuumIncremental = 2;
+    private const int ExpectedSynchronousNormal = 1;   // 0 OFF, 1 NORMAL, 2 FULL, 3 EXTRA
 
     private readonly string _databasePath = Path.Combine(
         Path.GetTempPath(), $"demizon-pragma-{Guid.NewGuid():N}.sqlite");
@@ -88,6 +89,19 @@ public sealed class SqlitePragmaInterceptorTests : IDisposable
     }
 
     /// <summary>
+    /// NORMAL místo FULL: fsync až při checkpointu. Ve WAL režimu to databázi
+    /// nepoškodí, jen zkrátí čekání na disk u každého commitu.
+    /// </summary>
+    [Fact]
+    public void Interceptor_nastavi_synchronous_na_normal()
+    {
+        using var db = NewContext();
+        db.Database.EnsureCreated();
+
+        Assert.Equal(ExpectedSynchronousNormal, ReadPragma(db, "synchronous"));
+    }
+
+    /// <summary>
     /// Bez interceptoru platí defaulty. Test dokládá, že hodnoty výše skutečně nastavuje
     /// interceptor, a ne že by je SQLite měla samo.
     /// </summary>
@@ -101,6 +115,7 @@ public sealed class SqlitePragmaInterceptorTests : IDisposable
         Assert.Equal(-1, ReadPragma(db, "journal_size_limit"));
         Assert.Equal(1000, ReadPragma(db, "wal_autocheckpoint"));
         Assert.Equal(0, ReadPragma(db, "auto_vacuum"));
+        Assert.Equal(2, ReadPragma(db, "synchronous"));   // FULL
     }
 
     /// <summary>
@@ -135,6 +150,7 @@ public sealed class SqlitePragmaInterceptorTests : IDisposable
         Assert.Equal(ExpectedBusyTimeoutMs, ReadPragma(second, "busy_timeout"));
         Assert.Equal(ExpectedJournalSizeLimitBytes, ReadPragma(second, "journal_size_limit"));
         Assert.Equal(ExpectedWalAutoCheckpointPages, ReadPragma(second, "wal_autocheckpoint"));
+        Assert.Equal(ExpectedSynchronousNormal, ReadPragma(second, "synchronous"));
     }
 
     [Fact]
