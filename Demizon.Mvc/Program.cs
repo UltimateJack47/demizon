@@ -16,6 +16,7 @@ using Demizon.Mvc.Services.Notification;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
@@ -132,7 +133,24 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+// Na serveru stojí před Kestrelem master nginx (docker run -p 127.0.0.1:8083:8080),
+// takže Kestrel je dosažitelný jen z hostitele a X-Forwarded-* se věří bez seznamu
+// proxy. Adresa nginxu je brána Docker bridge a ta se mezi hostiteli liší.
+// ForwardLimit 1 = jedna proxy: z X-Forwarded-For se vezme jen poslední adresa,
+// kterou dopsal nginx, a to, co si klient poslal sám, se přeskočí.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+// Musí být před vším, co čte schéma nebo IP (HSTS, přesměrování na HTTPS,
+// Secure cookies, rate limiter) — jinak vidí http a adresu proxy.
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 // R7.8: API endpointy jsou zdokumentovány jako Minimal API – strojově čitelný popis

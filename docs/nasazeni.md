@@ -20,7 +20,7 @@ jsou v sekcích pod tím.
        obsahuje.) DNS A/AAAA na IP Stardustu.
 2. [ ] **HTTPS přes master nginx** na hostiteli (certbot, Let's Encrypt), vhost
        podle `mru.conf` v `scaleway-infrastructure`. Kestrel jen HTTP na localhost.
-       Ne `dotnet dev-certs`. Předtím v appce zapnout `ForwardedHeaders`.
+       Ne `dotnet dev-certs`. `ForwardedHeaders` v appce už jsou (2026-09-30).
 3. [ ] **Google OAuth redirect URI** 1:1 s Google Cloud Console
        (`https://<domena>/google/callback`).
 4. [ ] **Tajemství** mimo repo, předat jako `-e` při `docker run`:
@@ -56,11 +56,15 @@ je jiná větev — viz flutter-prepis, sekce *Až budeš mít Firebase a telefo
       v `scaleway-infrastructure/README.md`, včetně hlaviček `Upgrade`/`Connection` pro
       Blazor WebSocket, `X-Forwarded-*`, `Host` a timeoutů. Jen `proxy_pass` změnit na
       `http://127.0.0.1:8083`. Pak `certbot --nginx -d <domena>`.
-- [ ] **`ForwardedHeaders` v `Program.cs`** (dnes chybí). Bez něj Demizon za proxy
-      vidí schéma `http` a IP adresu nginxu místo klienta. Rozbije to audit log
-      i limity podle IP a `UseHttpsRedirection` neví, kam přesměrovat.
-      `ForwardedHeaders = XForwardedFor | XForwardedProto`, důvěřovat jen
-      loopbacku / Docker bridge. mru.sk to řeší stejně (`ForwardLimit 2`).
+- [x] **`ForwardedHeaders` v `Program.cs`** (2026-09-30). Bez něj Demizon za proxy
+      vidí schéma `http` a IP adresu nginxu místo klienta: HSTS se nepošle a
+      `UseHttpsRedirection` neví, kam přesměrovat. `XForwardedFor | XForwardedProto`,
+      `ForwardLimit 1` (jen master nginx), seznam proxy prázdný — Kestrel je
+      díky `-p 127.0.0.1:8083` dosažitelný jen z hostitele. mru.sk to řeší
+      stejně, jen s `ForwardLimit 2` (má ještě kontejnerový nginx). Hlídá to
+      `ForwardedHeadersTests`. **Podmínka:** vhost musí posílat
+      `X-Forwarded-For $proxy_add_x_forwarded_for` a `X-Forwarded-Proto $scheme`
+      (šablona `mru.conf` to má) a port kontejneru nesmí být vystavený mimo `127.0.0.1`.
 - [ ] **Google OAuth redirect URI** musí přesně odpovídat tomu, co je zaregistrované
       v Google Cloud Console.
 

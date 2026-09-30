@@ -14,7 +14,7 @@
 
 | | Stav |
 |---|---|
-| Testy | **348 zelených** — 126 unit + 169 integration + 53 E2E |
+| Testy | **350 zelených** — 128 unit + 169 integration + 53 E2E |
 | CI | [`test.yml`](../.github/workflows/test.yml) — dvě úlohy: `Demizon.Backend.slnf` a `Demizon.E2E.slnf` |
 | Docker image | 30 MB publish payload, 261 MB image |
 
@@ -146,8 +146,9 @@ krátký:
       skončil HTTP 400. (Základní `appsettings.json` už `demizon.cz` obsahuje.)
 - [ ] HTTPS přes master nginx + certbot (vhost podle `mru.conf`), Kestrel jen HTTP
       na localhost. Ne `dotnet dev-certs`. Caddy ne, na 443 už sedí nginx.
-- [ ] `ForwardedHeaders` v `Program.cs` — dnes chybí, za proxy by appka viděla
-      `http` a IP nginxu.
+- [x] `ForwardedHeaders` v `Program.cs` (2026-09-30, `ForwardedHeadersTests`).
+- [ ] Rate limiter `auth` je globální (5 přihlášení/min pro všechny dohromady),
+      ne podle IP. Po `ForwardedHeaders` jde rozdělit podle `RemoteIpAddress`.
 - [ ] Google OAuth redirect URI 1:1 s Google Cloud Console.
 - [ ] Registry: zůstat u Docker Hubu (`jackeq/demizon-mvc`) nebo GHCR.
 - [ ] `build.yml` — po testech image `latest` + `sha-<commit>`.
@@ -184,7 +185,7 @@ Ruční připomínka pošle „zkouška“ i na pátek s akcí a vícedenní akc
 - [ ] A–C: `RehearsalSchedule` + `IRehearsalService`, přepojit pět míst, validace upsertu
 - [ ] D–G: tabulka `RehearsalCancellation`, admin UI, úklid Google Calendar, Flutter
 - [x] Rozhodnuto 2026-09-30: 19:00 + 2 h 30, zrušená akce vrací zkoušku, každá akce
-      zkoušku schová, push při zrušení volitelný. Zbývají drobnosti v plánu.
+      zkoušku schová, push při zrušení volitelný (jen kdo nemá „ne“).
 
 ---
 
