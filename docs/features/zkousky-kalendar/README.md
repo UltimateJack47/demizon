@@ -1,6 +1,6 @@
 # Kalendář zkoušek: jedno pravidlo, rušení a výjimky
 
-> Založeno: 2026-09-30. Stav: 📝 **plán, nic neimplementováno.** Otázky 1, 2, 3 a 5
+> Založeno: 2026-09-30. Stav: 📝 **plán, nic neimplementováno.** Všechny otázky
 > rozhodnuté 2026-09-30 (viz [Rozhodnutí](#rozhodnutí)).
 
 ## Zadání
@@ -175,13 +175,13 @@ Rozhodnuto 2026-09-30:
    zkoušku, přidá výjimku.
 3. **Zkoušku schová každá akce**, i malé vystoupení. Příznak `ReplacesRehearsal` se nezavádí.
 4. **Push při zrušení je volitelný**, zaškrtávátko u zrušení zkoušky i akce, výchozí vypnuto.
+5. **Push dostanou ti, kdo nemají „ne“**, tedy „ano“, „nevím“ a kdo se ještě nevyjádřil.
+   Platí stejně pro zkoušku i akci.
+6. **Mimořádné zkoušky v jiný den nejsou.** Vícedenní soustředění se zakládá jako akce.
+   Tabulka výjimek tedy umí jen rušit, `Kind = Extra` se nezavádí.
+7. **Týdně se opakující akce se nepoužívají.** Jediné, co se opakuje, jsou virtuální zkoušky.
+   `IsEvent` v `MonthlyColumnDto` bude prostě `EventId != null`. `Event.Recurrence`
+   a `RecurrenceEndDate` jsou kandidáti na odstranění, ale až samostatně: pole nese
+   i `EventDto` a Flutter/MAUI ho čtou.
 
-## Otevřené otázky
-
-1. **Mimořádná zkouška v jiný den** (např. středa před festivalem)? Dnes jde jen
-   jako akce. Tabulku výjimek by šlo rozšířit o `Kind = Extra`, ale bez potřeby to
-   nedělat.
-2. **Komu push při zrušení:** všem, nebo jen těm, kdo mají „ano“? Návrh: u zkoušky
-   všem (zrušení se týká každého), u akce těm, kdo nemají „ne“.
-3. **Týdně se opakující akce** (`Recurrence = Weekly`): používají se ještě v datech?
-   Pokud ne, `IsEvent` v `MonthlyColumnDto` zjednodušit.
+Otevřené otázky nezbývají.
