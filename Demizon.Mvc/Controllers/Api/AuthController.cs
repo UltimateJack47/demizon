@@ -43,7 +43,7 @@ public class AuthController(
     }
 
     [HttpPost("refresh")]
-    [EnableRateLimiting("auth")]
+    [EnableRateLimiting("refresh")]
     public async Task<ActionResult<TokenResponse>> Refresh([FromBody] RefreshRequest request)
     {
         var memberId = await refreshTokenService.ValidateAsync(request.RefreshToken);

@@ -78,8 +78,9 @@ public sealed class AppHost : IAsyncDisposable
         env["Vapid__PrivateKey"] = "e2e-vapid-private";
         env["Vapid__Subject"] = "mailto:e2e@demizon.test";
         env["AllowedHosts"] = "*";
-        // Bez zvednutého limitu by se přihlašování ve více testech trefilo do 429.
+        // Bez zvednutých limitů by se přihlašování ve více testech trefilo do 429.
         env["RateLimiting__AuthPermitLimit"] = "10000";
+        env["RateLimiting__RefreshPermitLimit"] = "10000";
 
         _process = Process.Start(startInfo)
             ?? throw new InvalidOperationException("Nepodařilo se spustit hosta.");

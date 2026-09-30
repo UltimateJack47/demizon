@@ -92,6 +92,59 @@ public class ApiLimitTests
         Assert.Equal(HttpStatusCode.TooManyRequests, blocked.StatusCode);
     }
 
+    /// <summary>
+    /// Okno se počítá pro každou IP zvlášť. Dřív bylo jedno pro všechny, takže
+    /// cizí pokusy zablokovaly i ostatní. IP se podvrhne přes X-Forwarded-For,
+    /// kterému appka za master nginx věří (viz <see cref="ForwardedHeadersTests"/>).
+    /// </summary>
+    [Fact]
+    public async Task Vycerpany_limit_jedne_IP_neblokuje_jinou_IP()
+    {
+        using var factory = new TunedApiFactory(authPermitLimit: 1);
+        using var client = factory.CreateClient();
+        var badLogin = new TokenRequest(TunedApiFactory.AdminLogin, "spatne-heslo");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Login(client, "203.0.113.1", badLogin)).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await Login(client, "203.0.113.1", badLogin)).StatusCode);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Login(client, "203.0.113.2", badLogin)).StatusCode);
+    }
+
+    /// <summary>
+    /// Scénář po push notifikaci: JWT platí hodinu, takže appka po otevření
+    /// volá /api/auth/refresh. Ten má vlastní, volnější okno a vyčerpané
+    /// přihlašování heslem ho nesmí zablokovat.
+    /// </summary>
+    [Fact]
+    public async Task Vycerpane_prihlaseni_heslem_neblokuje_obnovu_tokenu()
+    {
+        using var factory = new TunedApiFactory(authPermitLimit: 1);
+        using var client = factory.CreateClient();
+        var badLogin = new TokenRequest(TunedApiFactory.AdminLogin, "spatne-heslo");
+        await Login(client, "203.0.113.1", badLogin);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await Login(client, "203.0.113.1", badLogin)).StatusCode);
+
+        using var refresh = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh")
+        {
+            Content = JsonContent.Create(new RefreshRequest("neplatny-refresh-token")),
+        };
+        refresh.Headers.Add("X-Forwarded-For", "203.0.113.1");
+        var response = await client.SendAsync(refresh);
+
+        // 401 = request prošel limiterem až do kontroléru.
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    private static async Task<HttpResponseMessage> Login(HttpClient client, string ip, TokenRequest request)
+    {
+        using var message = new HttpRequestMessage(HttpMethod.Post, "/api/auth/token")
+        {
+            Content = JsonContent.Create(request),
+        };
+        message.Headers.Add("X-Forwarded-For", ip);
+        return await client.SendAsync(message);
+    }
+
     [Fact]
     public async Task Rate_limiter_se_netyka_jinych_endpointu()
     {

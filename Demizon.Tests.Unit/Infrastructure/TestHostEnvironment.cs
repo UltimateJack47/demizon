@@ -26,8 +26,10 @@ internal static class TestHostEnvironment
         Environment.SetEnvironmentVariable("Vapid__PublicKey", "test-vapid-public");
         Environment.SetEnvironmentVariable("Vapid__PrivateKey", "test-vapid-private");
         Environment.SetEnvironmentVariable("Vapid__Subject", "mailto:test@demizon.test");
-        // Bez zvednutého limitu by se suite trefila do HTTP 429 na /api/auth/token.
+        // Bez zvednutých limitů by se suite trefila do HTTP 429 na /api/auth/token
+        // a /api/auth/refresh — celý test host má jednu IP.
         Environment.SetEnvironmentVariable("RateLimiting__AuthPermitLimit", authPermitLimit.ToString());
+        Environment.SetEnvironmentVariable("RateLimiting__RefreshPermitLimit", "10000");
         Environment.SetEnvironmentVariable("AllowedHosts", "*");
         Environment.SetEnvironmentVariable(
             "Upload__MaxTotalStorageBytes",

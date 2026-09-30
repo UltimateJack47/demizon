@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Threading.RateLimiting;
 using Append.Blazor.Notifications;
 using Demizon.Common.Configuration;
 using Demizon.Core.Extensions;
@@ -121,16 +122,29 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<DemizonContext>("database");
 
 
+// Limity se počítají zvlášť pro každou IP klienta (skutečnou díky ForwardedHeaders
+// níž). Dřív bylo okno jedno společné pro všechny: po push notifikaci si deset lidí
+// obnovilo token a šestý dostal 429.
+//  - "auth": přihlášení heslem a seed. Chrání proti hádání hesel. Počítá každý
+//    pokus, i úspěšný, protože limiter běží před kontrolérem.
+//  - "refresh": obnova JWT (platí 60 min) refresh tokenem. Ten je náhodný a nedá se
+//    uhodnout, takže limit je jen pojistka proti zahlcení. Lidé na jedné Wi-Fi
+//    (zkušebna) sdílejí IP, proto je výrazně volnější.
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    var authPermitLimit = builder.Configuration.GetValue("RateLimiting:AuthPermitLimit", 5);
-    options.AddFixedWindowLimiter("auth", o =>
-    {
-        o.PermitLimit = authPermitLimit;
-        o.Window = TimeSpan.FromMinutes(1);
-        o.QueueLimit = 0;
-    });
+    AddPerIpFixedWindow(options, "auth", builder.Configuration.GetValue("RateLimiting:AuthPermitLimit", 10));
+    AddPerIpFixedWindow(options, "refresh", builder.Configuration.GetValue("RateLimiting:RefreshPermitLimit", 60));
+
+    static void AddPerIpFixedWindow(RateLimiterOptions options, string policy, int permitLimit) =>
+        options.AddPolicy(policy, context => RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = permitLimit,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            }));
 });
 
 // Na serveru stojí před Kestrelem master nginx (docker run -p 127.0.0.1:8083:8080),

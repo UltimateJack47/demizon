@@ -14,7 +14,7 @@
 
 | | Stav |
 |---|---|
-| Testy | **350 zelených** — 128 unit + 169 integration + 53 E2E |
+| Testy | **352 zelených** — 130 unit + 169 integration + 53 E2E |
 | CI | [`test.yml`](../.github/workflows/test.yml) — dvě úlohy: `Demizon.Backend.slnf` a `Demizon.E2E.slnf` |
 | Docker image | 30 MB publish payload, 261 MB image |
 
@@ -147,8 +147,9 @@ krátký:
 - [ ] HTTPS přes master nginx + certbot (vhost podle `mru.conf`), Kestrel jen HTTP
       na localhost. Ne `dotnet dev-certs`. Caddy ne, na 443 už sedí nginx.
 - [x] `ForwardedHeaders` v `Program.cs` (2026-09-30, `ForwardedHeadersTests`).
-- [ ] Rate limiter `auth` je globální (5 přihlášení/min pro všechny dohromady),
-      ne podle IP. Po `ForwardedHeaders` jde rozdělit podle `RemoteIpAddress`.
+- [x] Rate limiter podle IP (2026-09-30). Dřív jedno okno 5/min pro všechny a i pro
+      `/api/auth/refresh` — po push notifikaci by šestý člověk dostal 429.
+      Dnes `auth` 10/min/IP (heslo, seed) a `refresh` 60/min/IP, viz `ApiLimitTests`.
 - [ ] Google OAuth redirect URI 1:1 s Google Cloud Console.
 - [ ] Registry: zůstat u Docker Hubu (`jackeq/demizon-mvc`) nebo GHCR.
 - [ ] `build.yml` — po testech image `latest` + `sha-<commit>`.
