@@ -162,8 +162,12 @@ chování kromě dvou opravených chyb. Nová funkce přichází až v C.
       a Google událost dostane 19:00–21:30. `IsEvent` = `EventId != null`.
       Blazor tabulka bere `EndDate` jako konec měsíce, ne půlnoc posledního dne,
       takže už nevypadne akce 31. večer.)
-- [ ] **C. Validace uložení docházky** v obou `Upsert*Rehearsal` přes `GetAsync`.
+- [x] **C. Validace uložení docházky** v obou `Upsert*Rehearsal` přes `GetAsync`.
       Zkontrolovat, že Flutter posílá jen dny, které dostal od API.
+      (2026-10-01: `RejectUnlessRehearsalAsync`, běží před synchronizací s Google.
+      Flutter bere datum ze sloupce tabulky, z `event.dateFrom` nebo z payloadu
+      notifikace, tedy vždy od API. Mazání docházky validaci nemá záměrně, aby
+      šla uklidit i docházka na den, který zkouškou přestal být.)
 - [ ] **D. Migrace `RehearsalCancellation`** + `CancelAsync` / `RestoreAsync` /
       `GetCancellationsAsync`. API pro admina: `GET/POST /api/rehearsals/cancellations`,
       `DELETE /api/rehearsals/cancellations/{id}`.

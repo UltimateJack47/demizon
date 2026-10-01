@@ -159,6 +159,11 @@ public class AttendancesController(
         var memberId = User.GetMemberId();
         var day = date.Date;
 
+        // Před synchronizací s kalendářem: jinak by v Google vznikla událost
+        // na den, kdy žádná zkouška není.
+        var rejection = await RejectUnlessRehearsalAsync(day);
+        if (rejection is not null) return rejection;
+
         var existing = await attendanceService.GetAll()
             .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == null && a.Date == day);
 
@@ -355,6 +360,9 @@ public class AttendancesController(
     public async Task<ActionResult<AttendanceDto>> UpsertMemberRehearsal(int memberId, [FromQuery] DateTime date, [FromBody] UpsertAttendanceRequest request)
     {
         var day = date.Date;
+
+        var rejection = await RejectUnlessRehearsalAsync(day);
+        if (rejection is not null) return rejection;
 
         var existing = await attendanceService.GetAll()
             .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == null && a.Date == day);
@@ -565,6 +573,21 @@ public class AttendancesController(
                     attendanceId, deletedGoogleEventId, cleared.Error);
             }
         }
+    }
+
+    /// <summary>
+    /// Docházku na zkoušku jde vyplnit jen na den, kdy zkouška je. Dřív se
+    /// přijalo libovolné datum, klidně úterý nebo pátek s vystoupením.
+    /// </summary>
+    /// <returns><c>null</c>, když je v ten den zkouška a není zrušená.</returns>
+    private async Task<ActionResult?> RejectUnlessRehearsalAsync(DateTime day)
+    {
+        var rehearsal = await rehearsalService.GetAsync(DateOnly.FromDateTime(day));
+        if (rehearsal is null)
+            return BadRequest(new { error = "V tento den zkouška není." });
+        if (rehearsal.IsCancelled)
+            return Conflict(new { error = "Zkouška je zrušená." });
+        return null;
     }
 
     internal static AttendanceStatus ParseStatus(string? status) => status?.ToLowerInvariant() switch

@@ -149,6 +149,54 @@ public class RehearsalApiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    // ------------------------------------------------ uložení docházky
+
+    private Task<HttpResponseMessage> UpsertRehearsalAsync(DateTime day, string status = "yes") =>
+        _client.PutAsJsonAsync(
+            $"/api/attendances/rehearsal?date={day:yyyy-MM-dd}",
+            new { status, comment = (string?)null, activityRole = (string?)null });
+
+    private Task<HttpResponseMessage> UpsertMemberRehearsalAsync(DateTime day) =>
+        _client.PutAsJsonAsync(
+            $"/api/attendances/rehearsal/member/{_factory.MemberId}?date={day:yyyy-MM-dd}",
+            new { status = "yes", comment = (string?)null, activityRole = (string?)null });
+
+    [Fact]
+    public async Task Dochazka_na_zkousku_v_patek_se_ulozi()
+    {
+        var response = await UpsertRehearsalAsync(T(6, 5));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await using var db = _factory.NewContext();
+        var stored = Assert.Single(await db.Attendances.Where(a => a.EventId == null).ToListAsync());
+        Assert.Equal(T(6, 5), stored.Date);
+    }
+
+    [Fact]
+    public async Task Dochazka_na_zkousku_v_utery_vrati_400_a_nic_nezalozi()
+    {
+        var response = await UpsertRehearsalAsync(T(6, 2));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await using var db = _factory.NewContext();
+        Assert.Empty(await db.Attendances.Where(a => a.EventId == null).ToListAsync());
+        // Validace běží před synchronizací, takže v Google nic nevzniklo.
+        Assert.Empty(_factory.State.CreatedEvents);
+    }
+
+    [Fact]
+    public async Task Dochazka_na_zkousku_v_patek_s_akci_vrati_400()
+    {
+        await AddEventAsync("Festival", T(6, 11, 17), T(6, 14, 16));
+
+        var own = await UpsertRehearsalAsync(T(6, 12));
+        var byAdmin = await UpsertMemberRehearsalAsync(T(6, 12));
+
+        Assert.Equal(HttpStatusCode.BadRequest, own.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, byAdmin.StatusCode);
+        Assert.Empty(_factory.State.CreatedEvents);
+    }
+
     // ------------------------------------------------ automatické připomínky
 
     private async Task RunRehearsalRemindersAsync(DateTime now)
