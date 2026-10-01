@@ -5,6 +5,7 @@ using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
 using Demizon.Core.Services.GoogleCalendar;
 using Demizon.Core.Services.Member;
+using Demizon.Core.Services.Rehearsal;
 using Demizon.Dal.Entities;
 using Demizon.Mvc.Pages.Admin.Attendance.Components;
 using Demizon.Mvc.ViewModels;
@@ -24,11 +25,15 @@ public partial class MemberAttendance : ComponentBase
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private IGoogleCalendarService GoogleCalendarService { get; set; } = null!;
+    [Inject] private IRehearsalService RehearsalService { get; set; } = null!;
 
     // Aktuálně zobrazený měsíc
     private DateTime CurrentMonth { get; set; }
     private DateTime StartDate => new(CurrentMonth.Year, CurrentMonth.Month, 1);
-    private DateTime EndDate => StartDate.AddMonths(1).AddDays(-1);
+
+    // Poslední okamžik měsíce. Dřív to byla půlnoc posledního dne, takže akce
+    // 31. v 18:00 (a docházka na ni, Date = DateFrom) z tabulky vypadla.
+    private DateTime EndDate => StartDate.AddMonths(1).AddTicks(-1);
 
     private MemberViewModel LoggedUser { get; set; } = new();
 
@@ -80,27 +85,22 @@ public partial class MemberAttendance : ComponentBase
 
     private async Task LoadData()
     {
-        // Pátky v aktuálním měsíci
-        var allDates = Enumerable
-            .Range(0, 1 + EndDate.Subtract(StartDate).Days)
-            .Select(offset => StartDate.AddDays(offset))
-            .ToList();
-
         var events = EventService.GetAll()
             .Where(x => x.DateFrom >= StartDate && x.DateFrom <= EndDate)
             .ToList()
             .Select(x => x.ToViewModel())
             .ToList();
 
-        // Pátky bez akce
-        Attendances = allDates
-            .Where(date => date.DayOfWeek == DayOfWeek.Friday)
-            .Where(date => !events.Any(e => e.DateFrom.Date == date.Date))
-            .Select(x => new AttendanceViewModel
+        var monthStart = DateOnly.FromDateTime(StartDate);
+        var rehearsals = await RehearsalService.GetRangeAsync(monthStart, monthStart.AddMonths(1));
+
+        Attendances = rehearsals
+            .Select(r => new AttendanceViewModel
             {
                 Member = LoggedUser,
                 MemberId = LoggedUser.Id,
-                Date = x,
+                Date = r.Day,
+                Rehearsal = r,
             }).ToList();
 
         // Akce

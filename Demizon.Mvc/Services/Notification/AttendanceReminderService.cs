@@ -1,5 +1,6 @@
 using Demizon.Contracts.Notifications;
 using Demizon.Core.Services.Notification;
+using Demizon.Core.Services.Rehearsal;
 using Demizon.Dal;
 using Demizon.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,7 @@ public sealed class AttendanceReminderService(
     IPushSubscriptionService subscriptionService,
     WebPushSender webPush,
     FcmService fcm,
+    IRehearsalService rehearsals,
     ILogger<AttendanceReminderService> logger)
 {
     /// <summary>
@@ -74,13 +76,18 @@ public sealed class AttendanceReminderService(
 
     /// <summary>
     /// Admin-triggered reminder for members who don't yet have an attendance record for the rehearsal on the given date.
+    /// <see cref="NotifyMissingAttendanceOutcome.NotFound"/> also for a Friday with an event:
+    /// that day has no rehearsal, so "zkouška" in the push would be a lie.
     /// </summary>
     public async Task<NotifyMissingAttendanceResult> NotifyMissingRehearsalAttendanceAsync(
         DateTime date, CancellationToken ct = default)
     {
         date = date.Date;
-        if (date.DayOfWeek != DayOfWeek.Friday)
+        var rehearsal = await rehearsals.GetAsync(DateOnly.FromDateTime(date), ct);
+        if (rehearsal is null)
             return NotifyMissingAttendanceResult.NotFound;
+        if (rehearsal.IsCancelled)
+            return NotifyMissingAttendanceResult.Cancelled;
 
         if (date <= DateTime.UtcNow.Date)
             return NotifyMissingAttendanceResult.AlreadyPast;
@@ -100,7 +107,7 @@ public sealed class AttendanceReminderService(
                 new NotifyMissingAttendanceResponse(0, membersWithAttendance.Count, 0));
 
         var title = "Doplň si docházku na zkoušku";
-        var body = $"Zkouška v pátek {date:d.M.yyyy}";
+        var body = $"Zkouška {date:d.M.yyyy} v {rehearsal.StartsAt:H:mm}";
         var data = new Dictionary<string, string> { ["rehearsalDate"] = date.ToString("yyyy-MM-dd") };
         var now = DateTime.UtcNow;
         var actualNotifiedCount = 0;

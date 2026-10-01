@@ -4,6 +4,7 @@ using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
 using Demizon.Core.Services.GoogleCalendar;
 using Demizon.Core.Services.Member;
+using Demizon.Core.Services.Rehearsal;
 using Demizon.Dal;
 using Demizon.Dal.Entities;
 using Demizon.Mvc.Extensions;
@@ -25,6 +26,7 @@ public class EventsController(
     IMemberService memberService,
     IGoogleCalendarService googleCalendarService,
     DemizonContext dbContext,
+    IRehearsalService rehearsalService,
     AttendanceReminderService attendanceReminder) : ControllerBase
 {
     [HttpGet("upcoming")]
@@ -62,37 +64,31 @@ public class EventsController(
             .OrderBy(e => e.DateFrom)
             .ToListAsync();
 
-        var eventDates = events.Select(e => e.DateFrom.Date).ToHashSet();
+        var monthStart = new DateOnly(year, month, 1);
+        var rehearsals = await rehearsalService.GetRangeAsync(monthStart, monthStart.AddMonths(1));
+        var rehearsalDays = rehearsals.Select(r => r.Day).ToList();
 
-        // Fridays in the month that have no event = rehearsals (zkoušky)
-        var rehearsalFridays = Enumerable
-            .Range(0, (to - from).Days)
-            .Select(d => from.AddDays(d))
-            .Where(d => d.DayOfWeek == DayOfWeek.Friday && !eventDates.Contains(d.Date))
-            .ToList();
-
-        // Load rehearsal attendances (EventId == null, Date matches a Friday)
-        var rehearsalAttendances = rehearsalFridays.Count > 0
+        // Docházka na zkoušku: EventId == null, Date = půlnoc dne zkoušky
+        var rehearsalAttendances = rehearsalDays.Count > 0
             ? await attendanceService.GetAll()
-                .Where(a => a.MemberId == memberId && a.EventId == null && rehearsalFridays.Contains(a.Date))
+                .Where(a => a.MemberId == memberId && a.EventId == null && rehearsalDays.Contains(a.Date))
                 .ToListAsync()
             : [];
 
         var result = new List<EventDto>();
 
-        // Add events
         result.AddRange(events.Select(e =>
         {
             var myAttendance = e.Attendances.FirstOrDefault(a => a.MemberId == memberId);
             return e.ToDto(myAttendance?.ToDto());
         }));
 
-        // Add rehearsal rows
-        result.AddRange(rehearsalFridays.Select(friday =>
+        result.AddRange(rehearsals.Select(r =>
         {
-            var myAttendance = rehearsalAttendances.FirstOrDefault(a => a.Date == friday);
-            return new EventDto(0, "Zkouška", friday, friday.AddHours(2),
-                null, false, "none", myAttendance?.ToDto(), IsRehearsal: true);
+            var myAttendance = rehearsalAttendances.FirstOrDefault(a => a.Date == r.Day);
+            return new EventDto(0, "Zkouška", r.StartsAt, r.EndsAt,
+                null, r.IsCancelled, "none", myAttendance?.ToDto(), IsRehearsal: true,
+                CancellationReason: r.CancellationReason);
         }));
 
         return Ok(result.OrderBy(e => e.DateFrom).ToList());
@@ -293,6 +289,7 @@ public class EventsController(
         return result.Outcome switch
         {
             NotifyMissingAttendanceOutcome.NotFound => NotFound(),
+            NotifyMissingAttendanceOutcome.Cancelled => BadRequest(new { error = "Zkouška je zrušená." }),
             NotifyMissingAttendanceOutcome.AlreadyPast => BadRequest(new { error = "Zkouška už proběhla." }),
             NotifyMissingAttendanceOutcome.Ok => Ok(result.Response),
             _ => StatusCode(500),

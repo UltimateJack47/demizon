@@ -153,10 +153,15 @@ chování kromě dvou opravených chyb. Nová funkce přichází až v C.
       měsíce, jednodenní akce v pátek, vícedenní akce čt–ne, akce končící v 00:00,
       akce v pátek 00:30 místního času (UTC čtvrtek), zrušení jednoho dne, zrušení
       rozsahu přes hranici měsíce, přechod letního času (začátek zkoušky v UTC).
-- [ ] **B. `IRehearsalService` a přepojení všech pěti míst** na `GetRangeAsync`
+- [x] **B. `IRehearsalService` a přepojení všech pěti míst** na `GetRangeAsync`
       a `GetAsync`. Integrační testy pro API (měsíční tabulka, `GetByMonth`)
       a obě připomínky. Opraví se tím ruční připomínka na pátek s akcí
-      a vícedenní akce.
+      a vícedenní akce. (2026-10-01: `RehearsalServiceTests` nad SQLite,
+      `RehearsalApiTests` přes HTTP. Navíc: čas zkoušky je jen v sekci
+      `Rehearsals`, `GoogleCalendar:RehearsalStartHour/EndHour` zmizely
+      a Google událost dostane 19:00–21:30. `IsEvent` = `EventId != null`.
+      Blazor tabulka bere `EndDate` jako konec měsíce, ne půlnoc posledního dne,
+      takže už nevypadne akce 31. večer.)
 - [ ] **C. Validace uložení docházky** v obou `Upsert*Rehearsal` přes `GetAsync`.
       Zkontrolovat, že Flutter posílá jen dny, které dostal od API.
 - [ ] **D. Migrace `RehearsalCancellation`** + `CancelAsync` / `RestoreAsync` /

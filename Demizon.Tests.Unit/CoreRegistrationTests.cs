@@ -63,5 +63,6 @@ public class CoreRegistrationTests
         Assert.Contains(typeof(Core.Services.FileUpload.IFileUploadService), registered);
         Assert.Contains(typeof(Core.Services.Storage.IStorageQuotaService), registered);
         Assert.Contains(typeof(Core.Services.Authentication.TokenService), registered);
+        Assert.Contains(typeof(Core.Services.Rehearsal.IRehearsalService), registered);
     }
 }

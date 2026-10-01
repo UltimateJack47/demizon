@@ -1,4 +1,5 @@
 using Demizon.Core.Services.Notification;
+using Demizon.Core.Services.Rehearsal;
 using Demizon.Dal;
 using Demizon.Dal.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -65,12 +66,13 @@ public sealed class UnifiedNotificationService(
         await using var scope = scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<DemizonContext>();
         var sender = scope.ServiceProvider.GetRequiredService<AttendanceReminderService>();
+        var rehearsals = scope.ServiceProvider.GetRequiredService<IRehearsalService>();
 
         var now = DateTime.UtcNow;
 
         await CheckNewEventNotificationsAsync(db, sender, now, ct);
         await CheckEventMilestoneNotificationsAsync(db, sender, now, ct);
-        await CheckRehearsalRemindersAsync(db, sender, now, ct);
+        await CheckRehearsalRemindersAsync(db, sender, rehearsals, now, ct);
     }
 
     /// <summary>
@@ -233,24 +235,19 @@ public sealed class UnifiedNotificationService(
 
     /// <summary>
     /// Rehearsal reminders for members who haven't filled in attendance.
-    /// Checks 5d, 3d, 1d before each Friday rehearsal.
+    /// Checks 5d, 3d, 1d before each rehearsal. Cancelled rehearsals are skipped.
     /// </summary>
-    private async Task CheckRehearsalRemindersAsync(
-        DemizonContext db, AttendanceReminderService sender, DateTime now, CancellationToken ct)
+    internal static async Task CheckRehearsalRemindersAsync(
+        DemizonContext db, AttendanceReminderService sender, IRehearsalService rehearsals,
+        DateTime now, CancellationToken ct)
     {
-        // Find upcoming Fridays within the next 7 days
-        var upcomingFridays = Enumerable.Range(0, 7)
-            .Select(d => now.Date.AddDays(d))
-            .Where(d => d.DayOfWeek == DayOfWeek.Friday)
+        // Zkoušky v příštích 7 dnech podle společného kalendáře: vícedenní akce
+        // a zrušené zkoušky tím přeskočí stejně jako na všech ostatních místech.
+        var today = DateOnly.FromDateTime(now);
+        var rehearsalFridays = (await rehearsals.GetRangeAsync(today, today.AddDays(7), ct))
+            .Where(r => !r.IsCancelled)
+            .Select(r => r.Day)
             .ToList();
-
-        // Exclude Fridays that have events (those are not rehearsals)
-        var eventDates = await db.Events
-            .Where(e => upcomingFridays.Contains(e.DateFrom.Date))
-            .Select(e => e.DateFrom.Date)
-            .ToListAsync(ct);
-
-        var rehearsalFridays = upcomingFridays.Where(f => !eventDates.Contains(f)).ToList();
 
         foreach (var friday in rehearsalFridays)
         {

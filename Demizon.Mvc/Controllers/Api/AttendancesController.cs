@@ -4,6 +4,7 @@ using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Event;
 using Demizon.Core.Services.GoogleCalendar;
 using Demizon.Core.Services.Member;
+using Demizon.Core.Services.Rehearsal;
 using Demizon.Dal.Entities;
 using Demizon.Mvc.Extensions;
 using Demizon.Mvc.Mapping;
@@ -24,6 +25,7 @@ public class AttendancesController(
     IMemberService memberService,
     IGoogleCalendarService googleCalendarService,
     IAttendanceReportService reportService,
+    IRehearsalService rehearsalService,
     ILogger<AttendancesController> logger) : ControllerBase
 {
     [HttpGet("me")]
@@ -471,19 +473,19 @@ public class AttendancesController(
             .OrderBy(e => e.DateFrom)
             .ToListAsync();
 
-        var eventDates = events.Select(e => e.DateFrom.Date).ToHashSet();
+        var monthStart = new DateOnly(year, month, 1);
+        var rehearsals = await rehearsalService.GetRangeAsync(monthStart, monthStart.AddMonths(1));
 
-        var fridayColumns = Enumerable
-            .Range(0, (to - from).Days)
-            .Select(i => from.AddDays(i))
-            .Where(d => d.DayOfWeek == DayOfWeek.Friday && !eventDates.Contains(d.Date))
-            .Select(d => new MonthlyColumnDto(null, $"Zkouška {d:d.M.}", d, false, false));
+        // Datum sloupce zkoušky je půlnoc: podle něj se páruje docházka (Attendance.Date)
+        // a Flutter z něj staví ?date=. Skutečný čas zkoušky nese GetByMonth.
+        var rehearsalColumns = rehearsals
+            .Select(r => new MonthlyColumnDto(null, $"Zkouška {r.Day:d.M.}", r.Day, false,
+                r.IsCancelled, r.CancellationReason));
 
         var eventColumns = events
-            .Select(e => new MonthlyColumnDto(e.Id, e.Name, e.DateFrom,
-                e.Recurrence != RecurrenceType.Weekly, e.IsCancelled));
+            .Select(e => new MonthlyColumnDto(e.Id, e.Name, e.DateFrom, true, e.IsCancelled));
 
-        var columns = fridayColumns.Concat(eventColumns).OrderBy(c => c.Date).ToList();
+        var columns = rehearsalColumns.Concat(eventColumns).OrderBy(c => c.Date).ToList();
 
         var members = await memberService.GetAll()
             .Where(m => m.IsAttendanceVisible)

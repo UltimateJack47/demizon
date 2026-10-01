@@ -1,3 +1,4 @@
+using Demizon.Core.Services.Rehearsal;
 using Demizon.Dal.Entities;
 
 namespace Demizon.Mvc.ViewModels;
@@ -25,6 +26,12 @@ public class AttendanceViewModel
     public DateTime LastUpdated { get; set; }
 
     public string? GoogleEventId { get; set; }
+
+    /// <summary>Jen u sloupce zkoušky v tabulce docházky.</summary>
+    public RehearsalOccurrence? Rehearsal { get; set; }
+
+    /// <summary>Zrušená akce nebo zrušená zkouška: sloupec se nedá vyplnit.</summary>
+    public bool IsCancelled => Event?.IsCancelled == true || Rehearsal?.IsCancelled == true;
 }
 
 public static class AttendanceMappingExtensions

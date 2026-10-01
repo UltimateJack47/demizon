@@ -17,15 +17,18 @@ namespace Demizon.Core.Services.GoogleCalendar;
 public sealed class GoogleCalendarService : IGoogleCalendarService, IDisposable
 {
     private readonly GoogleCalendarSettings _settings;
+    private readonly RehearsalSettings _rehearsal;
     private readonly ILogger<GoogleCalendarService> _logger;
     private readonly GoogleAuthorizationCodeFlow _flow;
     private const string ApplicationName = "Demizon";
 
     public GoogleCalendarService(
         IOptions<GoogleCalendarSettings> options,
+        IOptions<RehearsalSettings> rehearsalOptions,
         ILogger<GoogleCalendarService> logger)
     {
         _settings = options.Value;
+        _rehearsal = rehearsalOptions.Value;
         _logger = logger;
         _flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
         {
@@ -175,9 +178,9 @@ public sealed class GoogleCalendarService : IGoogleCalendarService, IDisposable
     {
         if (dateTo is null)
         {
-            // Zkouška — pevný čas z konfigurace
-            return (dateFrom.Date.AddHours(_settings.RehearsalStartHour),
-                    dateFrom.Date.AddHours(_settings.RehearsalEndHour));
+            // Zkouška — čas ze stejného nastavení, ze kterého počítá RehearsalSchedule
+            var start = dateFrom.Date + _rehearsal.StartTime;
+            return (start, start + _rehearsal.Duration);
         }
 
         // Akce s reálným DateFrom/DateTo

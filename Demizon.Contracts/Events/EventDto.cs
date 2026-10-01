@@ -7,4 +7,5 @@ public sealed record EventDto(
     AttendanceDto? MyAttendance = null,
     bool IsRehearsal = false,
     bool IsPublic = false,
-    int? NotifyBeforeDays = null);
+    int? NotifyBeforeDays = null,
+    string? CancellationReason = null);

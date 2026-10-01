@@ -7,6 +7,7 @@ using Demizon.Core.Services.FileUpload;
 using Demizon.Core.Services.GoogleCalendar;
 using Demizon.Core.Services.Member;
 using Demizon.Core.Services.Notification;
+using Demizon.Core.Services.Rehearsal;
 using Demizon.Core.Services.Storage;
 using Demizon.Core.Services.VideoLink;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +44,7 @@ public static class CoreServicesRegistrationExtension
         services.AddTransient<IPushSubscriptionService, PushSubscriptionService>();
         services.AddTransient<IAttendanceReportService, AttendanceReportService>();
         services.AddTransient<IGoogleCalendarService, GoogleCalendarService>();
+        services.AddTransient<IRehearsalService, RehearsalService>();
         services.AddSingleton<TokenService>();
         services.AddScoped<RefreshTokenService>();
         return services;

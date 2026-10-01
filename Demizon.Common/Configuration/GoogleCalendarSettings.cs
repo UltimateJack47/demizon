@@ -32,14 +32,4 @@ public class GoogleCalendarSettings
     /// </summary>
     public string TimeZone { get; set; } = "Europe/Prague";
 
-    /// <summary>
-    /// Hodina začátku páteční zkoušky (24h formát).
-    /// </summary>
-    public int RehearsalStartHour { get; set; } = 19;
-
-    /// <summary>
-    /// Hodina konce páteční zkoušky (24h formát).
-    /// </summary>
-    public int RehearsalEndHour { get; set; } = 21;
-
 }

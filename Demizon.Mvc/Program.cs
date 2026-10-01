@@ -100,6 +100,8 @@ builder.Services.AddOptions<GoogleCalendarSettings>()
     .BindConfiguration("GoogleCalendar")
     .ValidateDataAnnotations()
     .ValidateOnStart();
+builder.Services.AddOptions<RehearsalSettings>()
+    .BindConfiguration("Rehearsals");
 builder.Services.AddNotifications();
 builder.Services.AddHostedService<UnifiedNotificationService>();
 
