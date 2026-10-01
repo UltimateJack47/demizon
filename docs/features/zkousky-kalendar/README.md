@@ -136,7 +136,7 @@ aktivní, jen se nezobrazuje a nepočítá.
 | Blazor admin `MemberAttendance` | stejný zdroj, zrušená zkouška bez možnosti vyplnit |
 | Automatické připomínky | zrušené přeskočí, vícedenní akce opravené díky společnému výpočtu |
 | Ruční připomínka | pro zrušenou zkoušku `Cancelled`, pro den bez zkoušky `NotFound`, a to i když na ten pátek připadá akce |
-| `UpsertRehearsal`, `UpsertMemberRehearsal` | 400 „V tento den zkouška není“ nebo 409 „Zkouška je zrušená“ |
+| `UpsertRehearsal`, `UpsertMemberRehearsal` | 400 „V tento den zkouška není“ nebo 400 „Zkouška je zrušená“ |
 | Google Calendar | při zrušení smazat události „Zkouška Demizon“ členům s docházkou „ano“ |
 | Push | **volitelný**: při zrušení zaškrtávátko „Upozornit členy“ (výchozí vypnuto). Stejné zaškrtávátko dostane i zrušení akce, které dnes (`EventsController.ToggleCancelled`) nepošle nic. U zrušené páteční akce text zmíní, že místo ní je zkouška |
 
@@ -168,9 +168,16 @@ chování kromě dvou opravených chyb. Nová funkce přichází až v C.
       Flutter bere datum ze sloupce tabulky, z `event.dateFrom` nebo z payloadu
       notifikace, tedy vždy od API. Mazání docházky validaci nemá záměrně, aby
       šla uklidit i docházka na den, který zkouškou přestal být.)
-- [ ] **D. Migrace `RehearsalCancellation`** + `CancelAsync` / `RestoreAsync` /
+- [x] **D. Migrace `RehearsalCancellation`** + `CancelAsync` / `RestoreAsync` /
       `GetCancellationsAsync`. API pro admina: `GET/POST /api/rehearsals/cancellations`,
       `DELETE /api/rehearsals/cancellations/{id}`.
+      (2026-10-01: migrace `AddRehearsalCancellations`. `CancelAsync` vrací
+      `Result<int>` jako ostatní `Create*`, ne entitu, a odmítne období bez
+      naplánované zkoušky, obrácený rozsah, víc než 366 dní a důvod nad 200 znaků.
+      GET smí každý přihlášený, POST a DELETE jen admin. `AttendanceReportService`
+      zrušené zkoušky nepočítá. **Odchylka:** zrušená zkouška u `Upsert*Rehearsal`
+      vrací 400, ne 409, podle konvence v `ResultHttpExtensions`: mobilní klienti
+      ukážou text ze serveru jen u 400.)
 - [ ] **E. Admin UI v Blazoru**: seznam výjimek, formulář od–do + důvod,
       obnovení výjimky. Rychlá akce „Zrušit tuhle zkoušku“ přímo ze sloupce
       měsíční tabulky.

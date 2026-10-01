@@ -8,11 +8,28 @@ public class AttendanceReportService(DemizonContext db) : IAttendanceReportServi
 {
     public async Task<List<MemberAttendanceStat>> GetMemberStatsAsync(DateTime dateFrom, DateTime dateTo)
     {
-        var totalRehearsals = await db.Attendances
+        // Docházka na zrušenou zkoušku v databázi zůstává (vrátí se, když se
+        // výjimka smaže), ale dokud výjimka platí, nepočítá se.
+        var fromDay = DateOnly.FromDateTime(dateFrom);
+        var toDay = DateOnly.FromDateTime(dateTo);
+        var cancellations = await db.RehearsalCancellations
+            .Where(c => c.DateFrom <= toDay && c.DateTo >= fromDay)
+            .Select(c => new { c.DateFrom, c.DateTo })
+            .ToListAsync();
+
+        bool IsCancelledRehearsal(DateTime date, int? eventId)
+        {
+            if (eventId is not null) return false;
+            var day = DateOnly.FromDateTime(date);
+            return cancellations.Any(c => c.DateFrom <= day && day <= c.DateTo);
+        }
+
+        var rehearsalDays = await db.Attendances
             .Where(a => a.Date >= dateFrom && a.Date <= dateTo && a.EventId == null)
             .Select(a => a.Date.Date)
             .Distinct()
-            .CountAsync();
+            .ToListAsync();
+        var totalRehearsals = rehearsalDays.Count(d => !IsCancelledRehearsal(d, null));
 
         var totalActions = await db.Attendances
             .Where(a => a.Date >= dateFrom && a.Date <= dateTo && a.EventId != null)
@@ -20,10 +37,12 @@ public class AttendanceReportService(DemizonContext db) : IAttendanceReportServi
             .Distinct()
             .CountAsync();
 
-        var records = await db.Attendances
+        var records = (await db.Attendances
             .Where(a => a.Date >= dateFrom && a.Date <= dateTo && a.Member.IsAttendanceVisible)
-            .Select(a => new { a.MemberId, a.Member.Name, a.Member.Surname, a.Status, a.EventId })
-            .ToListAsync();
+            .Select(a => new { a.MemberId, a.Member.Name, a.Member.Surname, a.Status, a.EventId, a.Date })
+            .ToListAsync())
+            .Where(a => !IsCancelledRehearsal(a.Date, a.EventId))
+            .ToList();
 
         return records
             .GroupBy(a => a.MemberId)

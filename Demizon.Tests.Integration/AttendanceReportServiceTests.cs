@@ -277,4 +277,34 @@ public class AttendanceReportServiceTests : IAsyncDisposable
 
         Assert.Equal(33.3, stat.RehearsalRate);
     }
+
+    // ---------------------------------------------------------------- zrušené zkoušky
+
+    /// <summary>
+    /// Docházka na zrušenou zkoušku v databázi zůstává, aby se po smazání výjimky
+    /// vrátila. Do statistik se ale počítat nesmí: zkouška, která nebyla, by jinak
+    /// snižovala procento každému, kdo na ni „nepřišel“.
+    /// </summary>
+    [Fact]
+    public async Task Zrusena_zkouska_se_nepocita_ani_do_celku_ani_do_ucasti()
+    {
+        await using var db = _fixture.NewContext();
+        var member = await TestData.SeedMemberAsync(db);
+        db.Attendances.AddRange(
+            TestData.RehearsalAttendance(member.Id, Day(1, 9), AttendanceStatus.Yes),
+            TestData.RehearsalAttendance(member.Id, Day(1, 16), AttendanceStatus.Yes),
+            TestData.RehearsalAttendance(member.Id, Day(1, 23), AttendanceStatus.No));
+        db.RehearsalCancellations.Add(new RehearsalCancellation
+        {
+            DateFrom = new DateOnly(2026, 1, 16),
+            DateTo = new DateOnly(2026, 1, 16),
+        });
+        await db.SaveChangesAsync();
+
+        var stat = Assert.Single(await GetStatsAsync());
+
+        Assert.Equal(2, stat.TotalRehearsals);
+        Assert.Equal(1, stat.AttendedRehearsals);
+        Assert.Equal(50, stat.RehearsalRate);
+    }
 }

@@ -585,8 +585,10 @@ public class AttendancesController(
         var rehearsal = await rehearsalService.GetAsync(DateOnly.FromDateTime(day));
         if (rehearsal is null)
             return BadRequest(new { error = "V tento den zkouška není." });
+        // 400, ne 409: stejná konvence jako Rejected v ResultHttpExtensions,
+        // mobilní klienti text ze serveru umí ukázat jen u 400.
         if (rehearsal.IsCancelled)
-            return Conflict(new { error = "Zkouška je zrušená." });
+            return BadRequest(new { error = "Zkouška je zrušená." });
         return null;
     }
 

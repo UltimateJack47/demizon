@@ -19,6 +19,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
     public DbSet<DeviceToken> DeviceTokens { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
     public DbSet<SentNotification> SentNotifications { get; set; } = null!;
+    public DbSet<RehearsalCancellation> RehearsalCancellations { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -182,5 +183,22 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
                 .HasForeignKey(x => x.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<RehearsalCancellation>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.DateFrom).IsRequired();
+            b.Property(x => x.DateTo).IsRequired();
+            b.Property(x => x.Reason).HasMaxLength(RehearsalCancellationReasonMaxLength);
+            b.Property(x => x.CreatedAt).IsRequired();
+            b.HasIndex(x => new { x.DateFrom, x.DateTo });
+            // Výjimka přežije i smazání člena, který ji zadal.
+            b.HasOne(x => x.CreatedBy)
+                .WithMany()
+                .HasForeignKey(x => x.CreatedByMemberId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
     }
+
+    public const int RehearsalCancellationReasonMaxLength = 200;
 }
