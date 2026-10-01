@@ -100,18 +100,22 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const SizedBox(height: 16),
-          _statusButtons(s),
-          if (s.isAttending) ...[
+          if (s.isLocked)
+            _lockedCard(event!)
+          else ...[
+            _statusButtons(s),
+            if (s.isAttending) ...[
+              const SizedBox(height: 16),
+              _rolePicker(s),
+            ],
             const SizedBox(height: 16),
-            _rolePicker(s),
+            _commentField(),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _isBusy ? null : _saveAttendance,
+              child: const Text('Uložit docházku'),
+            ),
           ],
-          const SizedBox(height: 16),
-          _commentField(),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _isBusy ? null : _saveAttendance,
-            child: const Text('Uložit docházku'),
-          ),
           if (s.isAdmin) ...[
             const SizedBox(height: 24),
             _adminCard(s),
@@ -184,9 +188,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                     color: DemizonColors.attendanceNo,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
-                    'ZRUŠENO',
-                    style: TextStyle(
+                  child: Text(
+                    event.isRehearsal ? 'ODPADÁ' : 'ZRUŠENO',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
@@ -194,8 +198,32 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                   ),
                 ),
               ),
+              if (event.cancellationReason != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  event.cancellationReason!,
+                  style: const TextStyle(color: DemizonColors.textSecondary),
+                ),
+              ],
             ],
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Místo formuláře u zrušené zkoušky. Docházka na ni v databázi zůstává
+  /// a vrátí se, když admin zkoušku obnoví.
+  Widget _lockedCard(Event event) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          event.cancellationReason == null
+              ? 'Zkouška odpadá, docházka se nevyplňuje.'
+              : 'Zkouška odpadá: ${event.cancellationReason}',
+          style: const TextStyle(color: DemizonColors.textSecondary),
         ),
       ),
     );

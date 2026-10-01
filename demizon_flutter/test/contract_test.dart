@@ -3,6 +3,7 @@ import 'package:demizon/core/theme.dart';
 import 'package:demizon/features/attendance/attendance_controller.dart';
 import 'package:demizon/features/attendance/member_attendance_detail_controller.dart';
 import 'package:demizon/features/events/event_detail_controller.dart';
+import 'package:demizon/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -115,6 +116,90 @@ void main() {
       expect(imageUrl(42), endsWith('/api/files/42/image?size=full'));
       expect(thumbnailUrl(42), endsWith('/api/files/42/image?size=thumb'));
       expect(documentUrl(42), endsWith('/api/files/42/document'));
+    });
+  });
+
+  group('zrušená zkouška', () {
+    Map<String, dynamic> rehearsalJson({
+      required bool isCancelled,
+      String? reason,
+      String date = '2026-06-12',
+    }) =>
+        {
+          'id': 0,
+          'name': 'Zkouška',
+          'dateFrom': '${date}T19:00:00',
+          'dateTo': '${date}T21:30:00',
+          'place': null,
+          'isCancelled': isCancelled,
+          'recurrence': 'none',
+          'myAttendance': null,
+          'isRehearsal': true,
+          'isPublic': false,
+          'notifyBeforeDays': null,
+          if (reason != null) 'cancellationReason': reason,
+        };
+
+    test('důvod přijde v EventDto i v MonthlyColumnDto', () {
+      final event =
+          Event.fromJson(rehearsalJson(isCancelled: true, reason: 'Hody'));
+      expect(event.isCancelled, isTrue);
+      expect(event.cancellationReason, 'Hody');
+
+      final column = MonthlyColumn.fromJson({
+        'eventId': null,
+        'label': 'Zkouška 12.6.',
+        'date': '2026-06-12T00:00:00',
+        'isEvent': false,
+        'isCancelled': true,
+        'cancellationReason': 'Hody',
+      });
+      expect(column.cancellationReason, 'Hody');
+    });
+
+    test('starší server bez důvodu se načte s null', () {
+      final event = Event.fromJson(rehearsalJson(isCancelled: false));
+      expect(event.cancellationReason, isNull);
+    });
+
+    test('detail najde zkoušku v měsíci podle dne, ne akci', () {
+      final month = [
+        Event.fromJson({
+          ...rehearsalJson(isCancelled: false, date: '2026-06-05'),
+          'id': 7,
+          'name': 'Vystoupení',
+          'isRehearsal': false,
+        }),
+        Event.fromJson(rehearsalJson(isCancelled: true, reason: 'Hody')),
+      ];
+
+      expect(
+        findRehearsal(month, DateTime(2026, 6, 12))?.cancellationReason,
+        'Hody',
+      );
+      expect(findRehearsal(month, DateTime(2026, 6, 5)), isNull);
+    });
+
+    test('zrušená zkouška a den bez zkoušky jsou zamčené, záloha ne', () {
+      final day = DateTime(2026, 6, 12);
+      final args = EventDetailArgs(rehearsalDate: day);
+      final cancelled = Event.fromJson(rehearsalJson(isCancelled: true));
+
+      expect(EventDetailState(args: args, event: cancelled).isLocked, isTrue);
+      expect(
+        EventDetailState(args: args, event: noRehearsalOn(day)).isLocked,
+        isTrue,
+      );
+      expect(
+        EventDetailState(args: args, event: rehearsalPlaceholder(day)).isLocked,
+        isFalse,
+      );
+    });
+
+    test('záloha má čas zkoušky, ne půlnoc', () {
+      final placeholder = rehearsalPlaceholder(DateTime(2026, 6, 12));
+      expect(placeholder.dateFrom, DateTime(2026, 6, 12, 19));
+      expect(placeholder.dateTo, DateTime(2026, 6, 12, 21, 30));
     });
   });
 }

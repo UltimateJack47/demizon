@@ -14,6 +14,7 @@ class MonthlyColumn {
     required this.date,
     required this.isEvent,
     required this.isCancelled,
+    this.cancellationReason,
   });
 
   final int? eventId;
@@ -21,6 +22,9 @@ class MonthlyColumn {
   final DateTime date;
   final bool isEvent;
   final bool isCancelled;
+
+  /// Důvod zrušené zkoušky. Starší server ho neposílá.
+  final String? cancellationReason;
 
   factory MonthlyColumn.fromJson(Map<String, dynamic> json) =>
       _$MonthlyColumnFromJson(json);

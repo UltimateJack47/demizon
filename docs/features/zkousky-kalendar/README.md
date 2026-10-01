@@ -209,8 +209,18 @@ chování kromě dvou opravených chyb. Nová funkce přichází až v C.
       ne za každý pátek. „Nemá ne“ u období znamená nemá „ne“ na všechny zrušené
       dny. API: `CancelRehearsalsRequest.Notify`, `PATCH /api/events/{id}/cancel?notify=true`.
       Test: `RehearsalWorkflowTests`.)
-- [ ] **G. Flutter**: zobrazit důvod zrušení, zakázat vyplnění. Admin akci zrušení
+- [x] **G. Flutter**: zobrazit důvod zrušení, zakázat vyplnění. Admin akci zrušení
       v appce jen pokud bude chtít (Blazor admin stačí).
+      (2026-10-01: `cancellationReason` v `Event` a `MonthlyColumn`. **Detail zkoušky
+      si dřív `Event` skládal lokálně** s `isCancelled: false` (převzato z MAUI), takže
+      by zrušenou zkoušku ukázal jako normální. Teď ho bere z `/api/events/month`
+      (`findRehearsal`). Den, kdy podle serveru zkouška není, ukáže jako zamčený
+      s „V tento den zkouška není.“ a lokální složení zůstává jen jako záloha bez
+      spojení. Zamčená zkouška má místo formuláře kartu s důvodem, v seznamu „Odpadá“
+      + důvod a v tabulce tooltip na hlavičce. Zrušení z appky se nedělá, admin má
+      Blazor. MAUI se neměnil: `IsCancelled` už vykresluje a důvod nepotřebuje.
+      Testy: skupina „zrušená zkouška“ v `test/contract_test.dart`. **Na telefonu
+      neověřeno**, stejně jako zbytek Flutteru.)
 - [ ] **H. Dokumentace**: `notifications.md` (připomínky přeskakují zrušené zkoušky),
       `STATUS.md`, tady stav kroků.
 

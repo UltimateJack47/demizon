@@ -228,7 +228,7 @@ class _AttendanceTable extends StatelessWidget {
   }
 
   Widget _columnHeader(MonthlyColumn column) {
-    return Builder(
+    final header = Builder(
       builder: (context) => _cell(
         width: _cellWidth,
         height: _headerHeight,
@@ -261,6 +261,10 @@ class _AttendanceTable extends StatelessWidget {
         ]),
       ),
     );
+
+    // Důvod zrušené zkoušky (dlouhý stisk, hlavička je na text malá).
+    final reason = column.cancellationReason;
+    return reason == null ? header : Tooltip(message: reason, child: header);
   }
 
   Widget _nameCell(BuildContext context, String name, int row) => _cell(

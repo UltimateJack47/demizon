@@ -21,9 +21,10 @@ import 'events_controller.dart';
 ///     DELETE /api/attendances/rehearsal?date=…                      deleteMyRehearsalAttendance
 ///     POST   /api/events/rehearsals/notify-missing-attendance?date=… notifyMissingRehearsalAttendance
 ///
-/// V režimu zkoušky se `Event` nenačítá z API — MAUI si ho složil lokálně
-/// ("Zkouška", dvě hodiny, `isRehearsal: true`) a seznam účastníků se
-/// nezobrazuje vůbec.
+/// V režimu zkoušky se `Event` bere z `/api/events/month` (skutečný čas,
+/// zrušení a jeho důvod). MAUI si ho skládal lokálně a zrušenou zkoušku by
+/// ukázal jako normální; lokální složení zůstává jen jako záloha, když
+/// volání selže. Seznam účastníků se u zkoušky nezobrazuje vůbec.
 @immutable
 class EventDetailArgs {
   const EventDetailArgs({this.eventId, this.rehearsalDate})
@@ -91,6 +92,10 @@ class EventDetailState {
   bool get hasStatus => status.isNotEmpty;
   bool get showAttendees => !isRehearsal && (attendees?.totalCount ?? 0) > 0;
 
+  /// Zrušená zkouška (nebo den, kdy žádná není) se vyplnit nedá — server by
+  /// uložení odmítl s 400.
+  bool get isLocked => isRehearsal && (event?.isCancelled ?? false);
+
   /// `EventDetailViewModel.CanSendReminder` — admin, akce není zrušená
   /// a začíná až po dnešku.
   bool get canSendReminder {
@@ -124,6 +129,53 @@ class EventDetailState {
   }
 }
 
+/// Zkouška z odpovědi `/api/events/month`. `null` = v ten den žádná není
+/// (připadla na ni akce, nebo to není den zkoušky).
+Event? findRehearsal(List<Event> month, DateTime date) {
+  for (final e in month) {
+    if (e.isRehearsal &&
+        e.dateFrom.year == date.year &&
+        e.dateFrom.month == date.month &&
+        e.dateFrom.day == date.day) {
+      return e;
+    }
+  }
+  return null;
+}
+
+/// Záloha, když se stav zkoušky nepodařilo načíst. Časy podle pravidla
+/// na serveru (19:00–21:30), aby hlavička neukazovala půlnoc.
+Event rehearsalPlaceholder(DateTime date) {
+  final start = DateTime(date.year, date.month, date.day, 19);
+  return Event(
+    id: 0,
+    name: 'Zkouška',
+    dateFrom: start,
+    dateTo: start.add(const Duration(hours: 2, minutes: 30)),
+    place: null,
+    isCancelled: false,
+    recurrence: 'none',
+    isRehearsal: true,
+  );
+}
+
+/// Den, kdy podle serveru zkouška není — typicky na pátek mezitím
+/// připadla akce. Zobrazí se jako zrušená, aby nešla vyplnit.
+Event noRehearsalOn(DateTime date) {
+  final placeholder = rehearsalPlaceholder(date);
+  return Event(
+    id: 0,
+    name: placeholder.name,
+    dateFrom: placeholder.dateFrom,
+    dateTo: placeholder.dateTo,
+    place: null,
+    isCancelled: true,
+    recurrence: placeholder.recurrence,
+    isRehearsal: true,
+    cancellationReason: 'V tento den zkouška není.',
+  );
+}
+
 final eventDetailProvider = AsyncNotifierProvider.family<EventDetailController,
     EventDetailState, EventDetailArgs>(EventDetailController.new);
 
@@ -139,18 +191,15 @@ class EventDetailController
 
     if (arg.isRehearsal) {
       final date = arg.rehearsalDate!;
-      // Zkouška se z API nenačítá — `Event` si složíme lokálně,
-      // stejně jako EventDetailViewModel.cs:88.
-      final event = Event(
-        id: 0,
-        name: 'Zkouška',
-        dateFrom: date,
-        dateTo: date.add(const Duration(hours: 2)),
-        place: null,
-        isCancelled: false,
-        recurrence: 'Weekly',
-        isRehearsal: true,
-      );
+      Event event;
+      try {
+        final month = await api.getEventsByMonth(date.year, date.month);
+        event = findRehearsal(month, date) ?? noRehearsalOn(date);
+      } catch (_) {
+        // Bez spojení se stav zjistit nedá. Formulář necháme odemčený,
+        // server případné zrušení stejně pohlídá.
+        event = rehearsalPlaceholder(date);
+      }
 
       // Docházka na zkoušku nemusí existovat — 404 znamená "nepřijdu".
       try {

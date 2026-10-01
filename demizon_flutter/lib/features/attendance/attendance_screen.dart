@@ -323,10 +323,17 @@ class _EventCard extends StatelessWidget {
                       ],
                       if (event.isCancelled) ...[
                         const SizedBox(height: 2),
-                        const _Badge(
-                          text: 'Zrušeno',
+                        _Badge(
+                          text: event.isRehearsal ? 'Odpadá' : 'Zrušeno',
                           color: DemizonColors.attendanceNo,
                         ),
+                        if (event.cancellationReason != null)
+                          Text(
+                            event.cancellationReason!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12),
+                          ),
                       ],
                     ],
                   ),

@@ -22,6 +22,7 @@ class Event {
     this.isRehearsal = false,
     this.isPublic = false,
     this.notifyBeforeDays,
+    this.cancellationReason,
   });
 
   final int id;
@@ -35,6 +36,9 @@ class Event {
   final bool isRehearsal;
   final bool isPublic;
   final int? notifyBeforeDays;
+
+  /// Důvod zrušené zkoušky („Prázdniny“). Jen u `isRehearsal && isCancelled`.
+  final String? cancellationReason;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
 
