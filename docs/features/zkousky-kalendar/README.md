@@ -1,7 +1,8 @@
 # Kalendář zkoušek: jedno pravidlo, rušení a výjimky
 
-> Založeno: 2026-09-30. Stav: 📝 **plán, nic neimplementováno.** Všechny otázky
-> rozhodnuté 2026-09-30 (viz [Rozhodnutí](#rozhodnutí)).
+> Založeno: 2026-09-30. Stav: 🚧 **implementace probíhá** (od 2026-10-01), stav
+> po krocích v [Postupu](#postup). Všechny otázky rozhodnuté 2026-09-30
+> (viz [Rozhodnutí](#rozhodnutí)).
 
 ## Zadání
 
@@ -28,9 +29,17 @@ Další nálezy:
 
 - **Uložení docházky nic nevaliduje.** `UpsertRehearsal` (`AttendancesController.cs:153`)
   a `UpsertMemberRehearsal` (`:351`) přijmou libovolné datum, klidně úterý.
-- **Časová zóna.** `DateFrom` je v UTC, `.Date` se bere z UTC. Akce v pátek po půlnoci
-  místního času (čtvrtek 22:xx UTC) se přiřadí ke čtvrtku. U večerních akcí se to
-  neprojeví, ale je to chyba.
+- **Časová zóna.** ~~`DateFrom` je v UTC~~ — *opraveno při implementaci 2026-10-01:*
+  časy akcí jsou **místní** (Europe/Prague), ne UTC. `UtcDateConvertExtension`
+  existuje, ale nikde se nevolá; Flutter posílá ISO bez `Z`, Blazor date picker
+  půlnoc a `GoogleCalendarService.ToLocalOffset` čte `DateFrom` jako místní čas.
+  `.Date` je tedy správně a převod UTC → Praha by chybu naopak zavedl
+  (akce v pátek 23:00 by se posunula na sobotu).
+- **Konec akce v 00:00 má dva významy.** Blazor zadává jen datum od–do, obojí
+  o půlnoci, a poslední den do akce *patří* („čt–pá“ má `DateTo = pá 00:00`).
+  Akce s časem končící o půlnoci („čt 18:00 – pá 00:00“) do pátku nezasahuje.
+  `RehearsalSchedule.CoveredDays` je rozlišuje podle toho, jestli jsou o půlnoci
+  oba konce.
 - **`IsEvent` v `MonthlyColumnDto`** se počítá jako `Recurrence != Weekly`. Týdně se
   opakující akce se tedy tváří jako zkouška. Vypadá to jako pozůstatek dřívějšího
   modelování zkoušek přes `Event`. Při refaktoru rozhodnout, co s tím.
@@ -70,13 +79,15 @@ public static class RehearsalSchedule
 Pravidla výpočtu:
 
 1. Vezmi každý den v rozsahu, který je `rule.DayOfWeek`.
-2. **Akce ho schová**, když jde přes celý ten den: `lokálníStart.Date <= den <= lokálníKonec.Date`.
-   Převod z UTC do `Europe/Prague` proběhne ještě před `.Date`. Akce končící přesně
-   v 00:00 do toho dne nezasahuje, konec je exkluzivní. Schová ho **každá nezrušená
+2. **Akce ho schová**, když jde přes ten den: `start.Date <= den <= konec.Date`.
+   Časy jsou už místní (viz *Současný stav*), nic se nepřevádí. Akce s časem
+   končící přesně v 00:00 do toho dne nezasahuje; akce zadaná jen datem
+   (oba konce o půlnoci) má poslední den včetně. Schová ho **každá nezrušená
    akce**, i malé vystoupení. **Zrušená akce zkoušku vrátí.**
 3. **Výjimka ho nesmaže, ale označí.** Zrušená zkouška se vrátí se
    `State = Cancelled`, aby ji členové viděli jako „odpadá“ a nemizela jim beze stopy.
-4. `StartsAtUtc` a `EndsAtUtc` se spočítají z `rule` (lokální čas → UTC). Tím odpadne
+4. `StartsAt`/`EndsAt` (místní, jako `Event.DateFrom`) a `StartsAtUtc`/`EndsAtUtc`
+   se spočítají z `rule`. Tím odpadne
    `DateTo = pátek 00:00 + 2 h` v `GetByMonth`.
 
 `RehearsalRule` se naplní z `appsettings` (sekce `Rehearsals`: `DayOfWeek = Friday`,
@@ -137,7 +148,8 @@ ignorují, kontrakt se nerozbije.
 Kroky jdou po sobě a každý projde testy samostatně. Refaktor (A–B) nemění
 chování kromě dvou opravených chyb. Nová funkce přichází až v C.
 
-- [ ] **A. `RehearsalSchedule` + unit testy.** Případy: měsíc s 4 a 5 pátky, hranice
+- [x] **A. `RehearsalSchedule` + unit testy.** (2026-10-01, `RehearsalScheduleTests`, 19 testů.
+      Případ „pátek 00:30 = UTC čtvrtek“ se díky místním časům změnil na „pátek 00:30 je pátek“.) Případy: měsíc s 4 a 5 pátky, hranice
       měsíce, jednodenní akce v pátek, vícedenní akce čt–ne, akce končící v 00:00,
       akce v pátek 00:30 místního času (UTC čtvrtek), zrušení jednoho dne, zrušení
       rozsahu přes hranici měsíce, přechod letního času (začátek zkoušky v UTC).
