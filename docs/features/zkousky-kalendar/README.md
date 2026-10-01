@@ -181,12 +181,22 @@ chování kromě dvou opravených chyb. Nová funkce přichází až v C.
 - [ ] **E. Admin UI v Blazoru**: seznam výjimek, formulář od–do + důvod,
       obnovení výjimky. Rychlá akce „Zrušit tuhle zkoušku“ přímo ze sloupce
       měsíční tabulky.
-- [ ] **F. Důsledky zrušení**: úklid událostí v Google Calendar (stejná kompenzace
+- [x] **F. Důsledky zrušení**: úklid událostí v Google Calendar (stejná kompenzace
       jako u `ReconcileCalendarAfterFailedSaveAsync`). Volitelný push (`notify` v požadavku)
       pro zrušení zkoušky i akce, nový `NotificationType` pro obojí, aby šel dohledat
       v `SentNotifications`. Úklid Google
       událostí se týká i existující chyby „akce založená na pátek s vyplněnou
       zkouškou“ a měl by jet stejnou cestou.
+      (2026-10-01: `Demizon.Mvc/Services/Rehearsal/RehearsalWorkflow.cs`. Všechny změny
+      končí v `SyncCalendarAsync(days)`, které pro dotčené dny srovná Google události
+      s tím, jestli je v ten den zkouška. Den bez zkoušky událost ztratí, den se
+      zkouškou ji dostane u každého „ano“. Volá ho zrušení i obnovení výjimky
+      a založení, úprava, smazání i zrušení akce, takže **obnovení** vrací události
+      zpátky, i když to plán výslovně nežádal. `NotificationType.RehearsalCancelled`
+      (13) a `EventCancelled` (5). Push při zrušení více zkoušek jde jednou na člena,
+      ne za každý pátek. „Nemá ne“ u období znamená nemá „ne“ na všechny zrušené
+      dny. API: `CancelRehearsalsRequest.Notify`, `PATCH /api/events/{id}/cancel?notify=true`.
+      Test: `RehearsalWorkflowTests`.)
 - [ ] **G. Flutter**: zobrazit důvod zrušení, zakázat vyplnění. Admin akci zrušení
       v appce jen pokud bude chtít (Blazor admin stačí).
 - [ ] **H. Dokumentace**: `notifications.md` (připomínky přeskakují zrušené zkoušky),

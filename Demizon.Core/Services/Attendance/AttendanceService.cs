@@ -115,6 +115,26 @@ public class AttendanceService(DemizonContext demizonContext, ILogger<Attendance
         }
     }
 
+    public async Task<Common.Result> SetGoogleEventIdAsync(int id, string googleEventId)
+    {
+        try
+        {
+            var affected = await DemizonContext.Attendances
+                .Where(a => a.Id == id)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(a => a.GoogleEventId, googleEventId));
+
+            return affected == 0
+                ? Common.Result.NotFound("Docházka nebyla nalezena.")
+                : Common.Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            DemizonContext.DiscardPendingChanges();
+            logger.LogError(ex, "Failed to set GoogleEventId for attendance {AttendanceId}.", id);
+            return Common.Result.Fail("ID události se nepodařilo k docházce zapsat.");
+        }
+    }
+
     public async Task<List<Dal.Entities.Attendance>> GetMemberAttendancesAsync(int memberId, DateTime dateFrom,
         DateTime dateTo)
     {

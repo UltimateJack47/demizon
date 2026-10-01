@@ -14,6 +14,13 @@ public interface IAttendanceService
     /// v kalendáři není, ale docházka si její ID drží.
     /// </summary>
     Task<Common.Result> ClearGoogleEventIdAsync(int id);
+
+    /// <summary>
+    /// Zapíše <c>GoogleEventId</c> přímo v databázi, bez change trackeru a bez
+    /// změny <c>LastUpdated</c>. Pro systémový úklid kalendáře (obnovená
+    /// zkouška), který není změnou docházky ze strany člena.
+    /// </summary>
+    Task<Common.Result> SetGoogleEventIdAsync(int id, string googleEventId);
     Task<List<Dal.Entities.Attendance>> GetMemberAttendancesAsync(int memberId, DateTime dateFrom, DateTime dateTo);
     Task<List<Dal.Entities.Attendance>> GetMembersAttendancesAsync(List<int> memberIds, DateTime dateFrom, DateTime dateTo);
 }

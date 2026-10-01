@@ -10,6 +10,7 @@ using Demizon.Dal.Entities;
 using Demizon.Mvc.Extensions;
 using Demizon.Mvc.Mapping;
 using Demizon.Mvc.Services.Notification;
+using Demizon.Mvc.Services.Rehearsal;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +28,7 @@ public class EventsController(
     IGoogleCalendarService googleCalendarService,
     DemizonContext dbContext,
     IRehearsalService rehearsalService,
+    RehearsalWorkflow rehearsalWorkflow,
     AttendanceReminderService attendanceReminder) : ControllerBase
 {
     [HttpGet("upcoming")]
@@ -140,6 +142,8 @@ public class EventsController(
         if (!created.IsSuccess)
             return created.ToErrorResponse();
 
+        await rehearsalWorkflow.EventChangedAsync(null, Span(ev));
+
         return CreatedAtAction(nameof(GetOne), new { id = ev.Id }, ev.ToDto());
     }
 
@@ -178,6 +182,7 @@ public class EventsController(
         try
         {
             var ev = await eventService.GetOneAsync(id);
+            var before = Span(ev);
 
             var recurrence = request.Recurrence?.ToLowerInvariant() switch
             {
@@ -198,6 +203,7 @@ public class EventsController(
 
             // Sync updated time/name to Google Calendar for all attendees
             await SyncGoogleCalendarForEventAsync(ev);
+            await rehearsalWorkflow.EventChangedAsync(before, Span(ev));
 
             return Ok(ev.ToDto());
         }
@@ -214,14 +220,19 @@ public class EventsController(
         try
         {
             // Verify event exists
-            await eventService.GetOneAsync(id);
+            var before = Span(await eventService.GetOneAsync(id));
 
             // Clean up Google Calendar events and delete attendances before the event
             await CleanupGoogleCalendarForEventAsync(id);
             await DeleteAttendancesForEventAsync(id);
 
             var deleted = await eventService.DeleteAsync(id);
-            return deleted.IsSuccess ? NoContent() : deleted.ToErrorResponse();
+            if (!deleted.IsSuccess)
+                return deleted.ToErrorResponse();
+
+            // Pátek po smazané akci je zase zkouška.
+            await rehearsalWorkflow.EventChangedAsync(before, null);
+            return NoContent();
         }
         catch (Common.Exceptions.EntityNotFoundException)
         {
@@ -231,12 +242,19 @@ public class EventsController(
 
     [HttpPatch("{id:int}/cancel")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-    public async Task<IActionResult> ToggleCancelled(int id)
+    public async Task<IActionResult> ToggleCancelled(int id, [FromQuery] bool notify = false)
     {
         try
         {
             var ev = await eventService.GetOneAsync(id);
-            await eventService.SetCancelledAsync(id, !ev.IsCancelled);
+            var cancelling = !ev.IsCancelled;
+            await eventService.SetCancelledAsync(id, cancelling);
+
+            // Zrušená akce zkoušku vrací, obnovená ji zase bere.
+            await rehearsalWorkflow.EventChangedAsync(Span(ev), null);
+            if (cancelling && notify)
+                await rehearsalWorkflow.NotifyEventCancelledAsync(id);
+
             return Ok();
         }
         catch (Common.Exceptions.EntityNotFoundException)
@@ -295,6 +313,8 @@ public class EventsController(
             _ => StatusCode(500),
         };
     }
+
+    private static EventSpan Span(Dal.Entities.Event ev) => new(ev.DateFrom, ev.DateTo, ev.IsCancelled);
 
     /// <summary>
     /// Aktualizuje Google Calendar události pro všechny členy, kteří mají attendance s GoogleEventId pro danou akci.

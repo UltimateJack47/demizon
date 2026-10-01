@@ -45,6 +45,9 @@ public enum NotificationType
     /// <summary>Ruční admin trigger "doplň si docházku". Zabraňuje scheduleru znovu poslat milestone notifikaci stejnému členovi.</summary>
     EventManualReminder = 4,
 
+    /// <summary>Akce byla zrušena (volitelný push při zrušení).</summary>
+    EventCancelled = 5,
+
     /// <summary>Chybí docházka na zkoušku – 5 dní předem.</summary>
     RehearsalReminder5Days = 10,
 
@@ -53,4 +56,7 @@ public enum NotificationType
 
     /// <summary>Chybí docházka na zkoušku – 1 den předem.</summary>
     RehearsalReminder1Day = 12,
+
+    /// <summary>Zkouška (nebo celé období zkoušek) byla zrušena. <c>RehearsalDate</c> = první zrušený den.</summary>
+    RehearsalCancelled = 13,
 }

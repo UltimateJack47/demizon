@@ -44,6 +44,9 @@ public sealed class WriteFailingAttendanceService(IAttendanceService inner, Cale
             : inner.ClearGoogleEventIdAsync(id);
     }
 
+    public Task<Result> SetGoogleEventIdAsync(int id, string googleEventId) =>
+        inner.SetGoogleEventIdAsync(id, googleEventId);
+
     public Task<List<Attendance>> GetMemberAttendancesAsync(int memberId, DateTime dateFrom, DateTime dateTo) =>
         inner.GetMemberAttendancesAsync(memberId, dateFrom, dateTo);
 

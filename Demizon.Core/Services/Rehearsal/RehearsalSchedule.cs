@@ -114,7 +114,7 @@ public static class RehearsalSchedule
     /// zabírá. Akce s časem začátku končící o půlnoci („čt 18:00 – pá 00:00“)
     /// do pátku nezasahuje, konec je exkluzivní.
     /// </remarks>
-    internal static (DateOnly First, DateOnly Last) CoveredDays(EventSpan e)
+    public static (DateOnly First, DateOnly Last) CoveredDays(EventSpan e)
     {
         var first = DateOnly.FromDateTime(e.DateFrom);
         var dateOnlyEvent = e.DateFrom.TimeOfDay == TimeSpan.Zero && e.DateTo.TimeOfDay == TimeSpan.Zero;

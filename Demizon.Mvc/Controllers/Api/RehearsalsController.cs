@@ -2,6 +2,7 @@ using Demizon.Contracts.Rehearsals;
 using Demizon.Core.Services.Rehearsal;
 using Demizon.Dal.Entities;
 using Demizon.Mvc.Extensions;
+using Demizon.Mvc.Services.Rehearsal;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +17,9 @@ namespace Demizon.Mvc.Controllers.Api;
 [ApiController]
 [Route("api/rehearsals")]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-public class RehearsalsController(IRehearsalService rehearsalService) : ControllerBase
+public class RehearsalsController(
+    IRehearsalService rehearsalService,
+    RehearsalWorkflow workflow) : ControllerBase
 {
     /// <summary>
     /// Výjimky, které zasahují do <paramref name="from"/>–<paramref name="to"/> (obojí včetně).
@@ -40,12 +43,14 @@ public class RehearsalsController(IRehearsalService rehearsalService) : Controll
     public async Task<ActionResult<RehearsalCancellationDto>> Cancel(
         [FromBody] CancelRehearsalsRequest request, CancellationToken ct)
     {
-        var created = await rehearsalService.CancelAsync(
-            request.DateFrom, request.DateTo, request.Reason, User.GetMemberId(), ct);
+        // Přes workflow, ne rovnou službu: zrušení smaže členům události
+        // v Google Calendaru a s Notify pošle push.
+        var created = await workflow.CancelAsync(
+            request.DateFrom, request.DateTo, request.Reason, User.GetMemberId(), request.Notify, ct);
         if (!created.IsSuccess)
             return created.ToErrorResponse();
 
-        var cancellation = await rehearsalService.GetCancellationAsync(created.Value, ct);
+        var cancellation = await rehearsalService.GetCancellationAsync(created.Value!.CancellationId, ct);
         return CreatedAtAction(nameof(GetCancellations), null, ToDto(cancellation!));
     }
 
@@ -53,7 +58,7 @@ public class RehearsalsController(IRehearsalService rehearsalService) : Controll
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     public async Task<IActionResult> Restore(int id, CancellationToken ct)
     {
-        var restored = await rehearsalService.RestoreAsync(id, ct);
+        var restored = await workflow.RestoreAsync(id, ct);
         return restored.IsSuccess ? NoContent() : restored.ToErrorResponse();
     }
 
