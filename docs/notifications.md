@@ -1,6 +1,7 @@
 # Notifikační systém – Demizon
 
-> Poslední aktualizace: 2026-09-09. Mobilní kanál je Flutter, ne MAUI.
+> Poslední aktualizace: 2026-10-01 (kalendář zkoušek: připomínky přeskakují
+> zrušené zkoušky, volitelný push při zrušení). Mobilní kanál je Flutter, ne MAUI.
 
 ## Přehled
 
@@ -51,11 +52,41 @@ Příklad: akce zadána 20 dní před konáním → milník 60d i 30d se přesko
 - **Odpověď**: `NotifyMissingAttendanceResponse { NotifiedCount, SkippedWithAttendance }` pro zobrazení v UI.
 
 ### 4. Připomínky zkoušky (nevyplněná docházka)
-- **Kdy**: 5 dní, 3 dny a 1 den před každým **pátekem** (zkouška)
-- **Výjimka**: pátek, na který připadá akce (`Event.DateFrom.Date == pátek`), není považován za zkoušku
+- **Kdy**: 5 dní, 3 dny a 1 den před každou zkouškou
+- **Které dny jsou zkouška**: rozhoduje `IRehearsalService` (jediné místo s pravidlem,
+  viz [`features/zkousky-kalendar`](features/zkousky-kalendar/README.md)). Pátek,
+  přes který vede nezrušená akce (i vícedenní, ne jen začínající v pátek), zkouškou
+  není. **Zrušená zkouška se přeskočí.**
 - **Komu**: pouze členům, kteří **nemají vyplněnou docházku** na daný pátek
 - **Obsah**: „Zkouška DD.MM.YYYY – nezapomeň vyplnit docházku!"
 - **Deduplikace**: jeden záznam na člena + pátek + milník
+
+### 5. Manuální připomínka docházky (admin, zkouška)
+- **Endpoint**: `POST /api/events/rehearsals/notify-missing-attendance?date=yyyy-MM-dd`
+- **404**, když v ten den zkouška není, a to i na pátek s akcí (dřív se kontroloval jen
+  den v týdnu, takže šlo poslat „zkouška“ na den vystoupení). **400**, když je zrušená
+  nebo už proběhla.
+- Zapisuje `EventManualReminder` s `RehearsalDate`, aby automatické milníky stejného
+  člena přeskočily.
+
+### 6. Zrušení zkoušky nebo akce (volitelné)
+- **Kdo spouští**: admin, jen když zaškrtne „Upozornit členy“. Výchozí je vypnuto.
+  - zkouška: `POST /api/rehearsals/cancellations` s `notify: true`, nebo Blazor
+    `/Admin/Rehearsals` a hlavička sloupce v tabulce docházky
+  - akce: `PATCH /api/events/{id}/cancel?notify=true` nebo Blazor seznam akcí.
+    Reaktivace akce push neposílá nikdy.
+- **Komu**: kdo **nemá „ne“**, tedy „ano“, „nevím“ i kdo se ještě nevyjádřil.
+  U zrušení více zkoušek najednou (prázdniny) jde push **jednou na člena** a vynechá
+  jen toho, kdo má „ne“ na všechny zrušené dny.
+- **Obsah**: „Zkouška odpadá“ / „Zkoušky odpadají“ + datum (rozsah) + důvod;
+  „Akce odpadá“ + název a datum. Když místo zrušené akce vznikla zkouška, text
+  to řekne („Místo ní je zkouška 12. 6. v 19:00.“).
+- **Data**: `rehearsalDate` (první zrušený den), resp. `eventId`. Tap otevře detail,
+  který zrušení ukáže.
+- **Záznam**: `RehearsalCancelled` (s `RehearsalDate`) / `EventCancelled` (s `EventId`)
+  na každého adresáta. Jen pro dohledání, žádná deduplikace na tom nestojí.
+- Zrušení zároveň smaže členům „Zkoušku Demizon“ z Google Calendaru
+  (`RehearsalWorkflow`). Obnovení ji vrátí těm, kdo mají „ano“.
 
 ---
 
@@ -96,6 +127,9 @@ SentNotification
 | `RehearsalReminder5Days` | Připomínka nevyplněné docházky 5 dní předem |
 | `RehearsalReminder3Days` | Připomínka nevyplněné docházky 3 dny předem |
 | `RehearsalReminder1Day` | Připomínka nevyplněné docházky 1 den předem |
+| `EventManualReminder` | Ruční připomínka admina (akce i zkouška) |
+| `EventCancelled` | Akce zrušena, push volitelný (sekce 6) |
+| `RehearsalCancelled` | Zkouška/období zrušeno, push volitelný (sekce 6) |
 
 ---
 

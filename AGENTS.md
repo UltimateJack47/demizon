@@ -45,7 +45,8 @@
   the marker; enforcing it needs a `MudForm` plus a validity check in the OK handler.
 - Keep contract boundary strict: API returns `Demizon.Contracts.*` DTOs; do not expose EF entities directly.
 - Attendance status contract is lowercase strings (`"yes"|"maybe"|"no"`), parsed in controllers (see `AttendancesController.ParseStatus`).
-- Rehearsals are modeled as attendance rows with `EventId == null` and Friday date semantics (see `EventsController.GetByMonth`, `AttendancesController` rehearsal endpoints).
+- Rehearsals are virtual: attendance rows with `EventId == null` and `Date` = midnight of the rehearsal day. **Which days are rehearsals is decided only by `IRehearsalService` / `RehearsalSchedule`** (Friday unless a non-cancelled event covers it, minus `RehearsalCancellation` ranges) — never recompute "is it Friday" elsewhere; it used to be copied five times and the copies drifted. Side effects of calendar changes (Google Calendar, push) go through `Demizon.Mvc/Services/Rehearsal/RehearsalWorkflow.cs`.
+- `Event.DateFrom`/`DateTo` are **local Prague wall-clock time**, not UTC (clients send them without offset; `UtcDateConvertExtension` is not applied). Do not convert them from UTC.
 - Member soft delete is implemented by EF global query filter (`Member.DeletedAt == null`) in `DemizonContext`; avoid bypassing with raw SQL unless intentional.
 - Audit logging is automatic through `AuditSaveChangesInterceptor`; `ICurrentUserAccessor` is expected to be available in web hosts.
 - SQLite concurrency is intentional: app startup calls `EnableWalMode()` so the host and `sqlite3` backup can share the same file.

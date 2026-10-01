@@ -1,8 +1,11 @@
 # Kalendář zkoušek: jedno pravidlo, rušení a výjimky
 
-> Založeno: 2026-09-30. Stav: 🚧 **implementace probíhá** (od 2026-10-01), stav
-> po krocích v [Postupu](#postup). Všechny otázky rozhodnuté 2026-09-30
-> (viz [Rozhodnutí](#rozhodnutí)).
+> Založeno: 2026-09-30. Stav: ✅ **hotové v kódu** (2026-10-01), kroky A–H
+> v [Postupu](#postup). Flutter část čeká na ověření na telefonu spolu se zbytkem
+> appky. Všechny otázky rozhodnuté 2026-09-30 (viz [Rozhodnutí](#rozhodnutí)).
+>
+> Sekce *Současný stav* a *Návrh* popisují stav **před** implementací. Kde se
+> implementace od návrhu odchýlila, je to poznamenané u kroku v *Postupu*.
 
 ## Zadání
 
@@ -221,8 +224,33 @@ chování kromě dvou opravených chyb. Nová funkce přichází až v C.
       Blazor. MAUI se neměnil: `IsCancelled` už vykresluje a důvod nepotřebuje.
       Testy: skupina „zrušená zkouška“ v `test/contract_test.dart`. **Na telefonu
       neověřeno**, stejně jako zbytek Flutteru.)
-- [ ] **H. Dokumentace**: `notifications.md` (připomínky přeskakují zrušené zkoušky),
-      `STATUS.md`, tady stav kroků.
+- [x] **H. Dokumentace**: `notifications.md` (připomínky přeskakují zrušené zkoušky),
+      `STATUS.md`, tady stav kroků. (2026-10-01, v `notifications.md` přibyly
+      sekce 5 a 6 a nové `NotificationType`.)
+
+### Kde co je
+
+| Co | Kde |
+|---|---|
+| Pravidlo (čistý výpočet) | `Demizon.Core/Services/Rehearsal/RehearsalSchedule.cs` |
+| Načtení akcí a výjimek, správa výjimek | `Demizon.Core/Services/Rehearsal/RehearsalService.cs` |
+| Nastavení (den, 19:00, 2 h 30) | sekce `Rehearsals` v `appsettings.json`, `RehearsalSettings` |
+| Google Calendar a push při změnách | `Demizon.Mvc/Services/Rehearsal/RehearsalWorkflow.cs` |
+| API výjimek | `Demizon.Mvc/Controllers/Api/RehearsalsController.cs` |
+| Admin UI | `Pages/Admin/Attendance/Rehearsals.razor`, hlavička sloupce v `MemberAttendance.razor` |
+| Testy | `RehearsalScheduleTests`, `RehearsalServiceTests`, `RehearsalApiTests`, `RehearsalWorkflowTests`, E2E `RehearsalCancellationTests` |
+
+### Co se vědomě nedělalo
+
+- **Google událost akce při zrušení akce** zůstává, jako dřív. Řeší se jen události
+  *zkoušek*. Rušit i události akcí by chtělo vlastní rozhodnutí: zrušená akce se
+  dá reaktivovat a událost by se pak musela znovu zakládat.
+- **Validace mazání docházky na zkoušku** (`DELETE /api/attendances/rehearsal`)
+  záměrně chybí, aby šla uklidit docházka na den, který zkouškou přestal být.
+- **Report docházky** nepočítá zrušené zkoušky. Docházku na pátek, na který
+  později připadla akce, ale počítá dál, jako dřív.
+- **Blazor `ListEvents.RemoveEvent`** dál maže akci bez úklidu Google událostí
+  *akce* (to dělá jen API). Mimo rozsah, jen se k tomu přidalo srovnání zkoušek.
 
 ## Rozhodnutí
 

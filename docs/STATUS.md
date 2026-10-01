@@ -1,7 +1,7 @@
 # Stav projektu a plán další práce
 
 > **Živý dokument a vstupní bod.** Průběžně aktualizovat při každé dokončené položce.
-> Založeno: 2026-09-08. Poslední aktualizace: 2026-09-30 (plán kalendáře zkoušek, sekce F).
+> Založeno: 2026-09-08. Poslední aktualizace: 2026-10-01 (kalendář zkoušek hotový, sekce F).
 >
 > Účel: předat kontext další session (Claude / kdokoli) — co je hotové, na co
 > nesahat, co zbývá a v jakém pořadí.
@@ -14,7 +14,7 @@
 
 | | Stav |
 |---|---|
-| Testy | **359 zelených** — 136 unit + 170 integration + 53 E2E |
+| Testy | **427 zelených** — 186 unit + 185 integration + 56 E2E; Flutter 31 |
 | CI | [`test.yml`](../.github/workflows/test.yml) — dvě úlohy: `Demizon.Backend.slnf` a `Demizon.E2E.slnf` |
 | Docker image | 30 MB publish payload, 190 MB image (`aspnet:10.0-alpine` + ICU + tzdata, stejný base jako mru.sk) |
 
@@ -179,14 +179,20 @@ Podrobnosti, konvence a co která sada hlídá: [`testing-plan.md`](testing-plan
 
 ## F. Kalendář zkoušek
 
-Plán: [`features/zkousky-kalendar/`](features/zkousky-kalendar/README.md).
-Páteční pravidlo je dnes zkopírované na pěti místech a kopie se rozcházejí.
-Ruční připomínka pošle „zkouška“ i na pátek s akcí a vícedenní akce zkoušku neschová.
+Záznam: [`features/zkousky-kalendar/`](features/zkousky-kalendar/README.md).
+**Hotové v kódu (2026-10-01).** Pravidlo „pátek bez akce“ žije jen v
+`RehearsalSchedule` / `IRehearsalService`. Zkoušky jdou rušit jednotlivě i po
+obdobích (`RehearsalCancellation`, `/Admin/Rehearsals`, `/api/rehearsals/cancellations`).
+Google Calendar a volitelný push řeší `RehearsalWorkflow`.
 
-- [ ] A–C: `RehearsalSchedule` + `IRehearsalService`, přepojit pět míst, validace upsertu
-- [ ] D–G: tabulka `RehearsalCancellation`, admin UI, úklid Google Calendar, Flutter
-- [x] Rozhodnuto 2026-09-30: 19:00 + 2 h 30, zrušená akce vrací zkoušku, každá akce
-      zkoušku schová, push při zrušení volitelný (jen kdo nemá „ne“).
+- [x] A–C: `RehearsalSchedule` + `IRehearsalService`, přepojit pět míst, validace upsertu
+- [x] D–G: tabulka `RehearsalCancellation`, admin UI, úklid Google Calendar, Flutter
+- [ ] Flutter část (zrušená zkouška, zamčená docházka) ověřit na telefonu spolu s B.
+- [ ] `Event.Recurrence` / `RecurrenceEndDate` jsou kandidáti na odstranění
+      (rozhodnutí 7), ale až samostatně, protože pole nese `EventDto`.
+
+**Pozor:** časy akcí jsou v DB **místní** (Europe/Prague), ne UTC. Podrobnosti
+v záznamu featury, sekce *Současný stav*.
 
 ---
 
