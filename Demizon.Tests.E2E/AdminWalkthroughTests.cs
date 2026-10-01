@@ -28,6 +28,7 @@ public class AdminWalkthroughTests(E2EFixture fixture) : E2ETestBase(fixture)
         { "/Admin/Videos", "admin-videos" },
         { "/Admin/MemberAttendance/", "admin-attendance" },
         { "/Admin/AttendanceStats", "admin-attendance-stats" },
+        { "/Admin/Rehearsals", "admin-rehearsals" },
         { "/Admin/Profile", "admin-profile" },
     };
 

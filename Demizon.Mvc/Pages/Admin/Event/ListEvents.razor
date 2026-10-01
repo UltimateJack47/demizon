@@ -1,5 +1,7 @@
 @page "/Admin/Events"
 @using Demizon.Core.Services.Event
+@using Demizon.Core.Services.Rehearsal
+@using Demizon.Mvc.Services.Rehearsal
 @using Demizon.Mvc.Pages.Admin.Event.Components
 @using Demizon.Mvc.ViewModels
 @using Microsoft.EntityFrameworkCore
@@ -9,6 +11,7 @@
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
 @inject IEventService EventService
+@inject RehearsalWorkflow RehearsalWorkflow
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject ILogger<ListEvents> Logger
@@ -82,6 +85,8 @@
 @code {
     private List<EventViewModel> Events { get; set; } = new();
 
+    private static EventSpan Span(DateTime from, DateTime to, bool isCancelled) => new(from, to, isCancelled);
+
     private MudTable<EventViewModel> EventsGrid { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
@@ -113,20 +118,27 @@
             var memberResult = result.Data as EventViewModel;
             try
             {
+                var entity = memberResult!.ToEntity();
                 if (isUpdate)
                 {
-                    await EventService.UpdateAsync(viewModel!.Id, memberResult!.ToEntity());
+                    // viewModel je řádek tabulky, ale formulář binduje na tutéž instanci,
+                    // takže původní termín je potřeba vzít z databáze.
+                    var stored = await EventService.GetOneAsync(viewModel!.Id);
+                    var before = Span(stored.DateFrom, stored.DateTo, stored.IsCancelled);
+                    await EventService.UpdateAsync(viewModel.Id, entity);
+                    await RehearsalWorkflow.EventChangedAsync(before, Span(entity.DateFrom, entity.DateTo, entity.IsCancelled));
                     Snackbar.Add("Událost byla upravena.", Severity.Success);
                 }
                 else
                 {
-                    var created = await EventService.CreateAsync(memberResult!.ToEntity());
+                    var created = await EventService.CreateAsync(entity);
                     if (!created.IsSuccess)
                     {
                         Snackbar.Add(created.Error ?? "Událost se nepodařilo vytvořit.", Severity.Error);
                         return;
                     }
 
+                    await RehearsalWorkflow.EventChangedAsync(null, Span(entity.DateFrom, entity.DateTo, entity.IsCancelled));
                     Snackbar.Add("Událost byla vytvořena.", Severity.Success);
                 }
 
@@ -157,6 +169,7 @@
             // Řádek se z mřížky odebírá teprve po úspěchu. Dřív zmizel z obrazovky
             // vždy, takže po neúspěšném smazání se akce jen "ztratila" z výpisu
             // a vrátila se až po dalším načtení stránky.
+            var row = Events.FirstOrDefault(x => x.Id == id);
             var deleted = await EventService.DeleteAsync(id);
             if (!deleted.IsSuccess)
             {
@@ -164,20 +177,47 @@
                 return;
             }
 
+            // Pátek po smazané akci je zase zkouška.
+            if (row is not null)
+                await RehearsalWorkflow.EventChangedAsync(Span(row.DateFrom, row.DateTo, row.IsCancelled), null);
             Events.RemoveAll(x => x.Id == id);
         }
     }
 
     private async Task CancelEvent(int id, bool isCancelled)
     {
-        var action = isCancelled ? "zrušit" : "reaktivovat";
-        var result = await DialogService.ShowMessageBoxAsync($"Chcete {action} tuto událost?", "", "Ano", "Zrušit");
-        if (result.HasValue && result.Value)
+        // Zrušení nabízí push, reaktivace jen potvrzení.
+        bool notify;
+        if (isCancelled)
+        {
+            var dialog = await DialogService.ShowAsync<CancelEventDialog>((string?)null, new DialogOptions { CloseOnEscapeKey = true });
+            var dialogResult = await dialog.Result;
+            if (dialogResult is null || dialogResult.Canceled) return;
+            notify = dialogResult.Data is true;
+        }
+        else
+        {
+            var result = await DialogService.ShowMessageBoxAsync("Chcete reaktivovat tuto událost?", "", "Ano", "Zrušit");
+            if (result != true) return;
+            notify = false;
+        }
+
         {
             try
             {
                 await EventService.SetCancelledAsync(id, isCancelled);
-                Snackbar.Add(isCancelled ? "Událost byla zrušena." : "Událost byla reaktivována.", Severity.Success);
+
+                // Zrušená akce zkoušku vrací, reaktivovaná ji zase bere.
+                var row = Events.FirstOrDefault(x => x.Id == id);
+                if (row is not null)
+                    await RehearsalWorkflow.EventChangedAsync(Span(row.DateFrom, row.DateTo, isCancelled), null);
+
+                var notified = notify ? await RehearsalWorkflow.NotifyEventCancelledAsync(id) : 0;
+                Snackbar.Add(
+                    isCancelled
+                        ? notify ? $"Událost byla zrušena, upozornění dostalo {notified} členů." : "Událost byla zrušena."
+                        : "Událost byla reaktivována.",
+                    Severity.Success);
                 await RefreshTable();
             }
             catch (Exception ex)

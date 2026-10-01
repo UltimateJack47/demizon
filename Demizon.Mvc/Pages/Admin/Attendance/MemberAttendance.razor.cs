@@ -8,6 +8,7 @@ using Demizon.Core.Services.Member;
 using Demizon.Core.Services.Rehearsal;
 using Demizon.Dal.Entities;
 using Demizon.Mvc.Pages.Admin.Attendance.Components;
+using Demizon.Mvc.Services.Rehearsal;
 using Demizon.Mvc.ViewModels;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -26,6 +27,7 @@ public partial class MemberAttendance : ComponentBase
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private IGoogleCalendarService GoogleCalendarService { get; set; } = null!;
     [Inject] private IRehearsalService RehearsalService { get; set; } = null!;
+    [Inject] private RehearsalWorkflow RehearsalWorkflow { get; set; } = null!;
 
     // Aktuálně zobrazený měsíc
     private DateTime CurrentMonth { get; set; }
@@ -120,8 +122,7 @@ public partial class MemberAttendance : ComponentBase
 
         foreach (var attendance in Attendances)
         {
-            var userAttendance = LoggedUser.Attendances.FirstOrDefault(x =>
-                x.Date == attendance.Date || (x.EventId.HasValue && x.EventId == attendance.EventId));
+            var userAttendance = LoggedUser.Attendances.FirstOrDefault(x => Matches(x, attendance));
             if (userAttendance is not null)
             {
                 attendance.Id = userAttendance.Id;
@@ -167,40 +168,88 @@ public partial class MemberAttendance : ComponentBase
         };
     }
 
-    private int CountAttending(IEnumerable<MemberViewModel> members, DateTime date) =>
+    /// <summary>
+    /// Patří docházka do sloupce? Akce podle <c>EventId</c>, zkouška podle dne a bez
+    /// <c>EventId</c>. Dřív se párovalo jen podle data, a to se rozbije, jakmile má
+    /// zrušená akce zadaná jen datem (pátek 00:00) vedle sebe vrácenou zkoušku.
+    /// </summary>
+    private static bool Matches(AttendanceViewModel attendance, AttendanceViewModel col) =>
+        col.EventId.HasValue
+            ? attendance.EventId == col.EventId
+            : attendance.EventId is null && attendance.Date == col.Date;
+
+    /// <summary>Docházka člena ve sloupci. Na zrušené zkoušce se neukazuje (ale v DB zůstává).</summary>
+    private static AttendanceViewModel? CellOf(MemberViewModel member, AttendanceViewModel col) =>
+        col.Rehearsal?.IsCancelled == true
+            ? null
+            : member.Attendances.FirstOrDefault(x => Matches(x, col));
+
+    private static bool AttendsAs(AttendanceViewModel a, AttendanceViewModel col) =>
+        a.Status == AttendanceStatus.Yes && Matches(a, col) && col.Rehearsal?.IsCancelled != true;
+
+    private int CountAttending(IEnumerable<MemberViewModel> members, AttendanceViewModel col) =>
         members.SelectMany(x => x.Attendances)
-            .Where(y => y.Date == date)
-            .Count(y => y.Status == AttendanceStatus.Yes);
+            .Count(y => AttendsAs(y, col));
 
     // Počítá ženy označené jako tanečnice, které jsou přítomné.
     // Pokud je členka zároveň muzikantka, počítá se jako tanečnice jen pokud má ActivityRole = Dancer.
-    private int CountAttendingFemaleDancers(DateTime date) =>
+    private int CountAttendingFemaleDancers(AttendanceViewModel col) =>
         FilteredFemales
             .Concat(FilteredExternals.Where(x => x.Gender == Gender.Female))
             .Where(m => m.IsDancer)
             .Count(m => m.Attendances.Any(a =>
-                a.Date == date && a.Status == AttendanceStatus.Yes &&
+                AttendsAs(a, col) &&
                 (!m.IsMusician || a.ActivityRole == AttendanceActivityRole.Dancer)));
 
     // Totéž pro muže tanečníky.
-    private int CountAttendingMaleDancers(DateTime date) =>
+    private int CountAttendingMaleDancers(AttendanceViewModel col) =>
         FilteredMales
             .Concat(FilteredExternals.Where(x => x.Gender == Gender.Male))
             .Where(m => m.IsDancer)
             .Count(m => m.Attendances.Any(a =>
-                a.Date == date && a.Status == AttendanceStatus.Yes &&
+                AttendsAs(a, col) &&
                 (!m.IsMusician || a.ActivityRole == AttendanceActivityRole.Dancer)));
 
     // Počítá všechny přítomné muzikanty (obě pohlaví).
     // Pokud je muzikant zároveň tanečník, počítá se jako muzikant jen pokud ActivityRole != Dancer (nebo null = default).
-    private int CountAttendingMusicians(DateTime date) =>
+    private int CountAttendingMusicians(AttendanceViewModel col) =>
         TableMembers
             .Where(x => x.IsMusician)
             .Where(x => GenderFilter == null || x.Gender == GenderFilter)
             .Where(x => ShowAttendanceHidden || x.IsAttendanceVisible)
             .Count(m => m.Attendances.Any(a =>
-                a.Date == date && a.Status == AttendanceStatus.Yes &&
+                AttendsAs(a, col) &&
                 (!m.IsDancer || a.ActivityRole != AttendanceActivityRole.Dancer)));
+
+    // Rychlá akce z hlavičky sloupce zkoušky (jen admin)
+    private async Task CancelRehearsalAsync(AttendanceViewModel col)
+    {
+        if (await RehearsalAdminActions.CancelAsync(DialogService, Snackbar, RehearsalWorkflow, LoggedUser.Id, col.Date))
+        {
+            await LoadData();
+            await LoadTableData();
+        }
+    }
+
+    private async Task RestoreRehearsalAsync(AttendanceViewModel col)
+    {
+        if (col.Rehearsal?.CancellationId is not { } cancellationId)
+            return;
+
+        var cancellation = await RehearsalService.GetCancellationAsync(cancellationId);
+        if (cancellation is null)
+        {
+            // Mezitím ji obnovil někdo jiný.
+            await LoadData();
+            return;
+        }
+
+        if (await RehearsalAdminActions.RestoreAsync(DialogService, Snackbar, RehearsalWorkflow, cancellation))
+        {
+            await LoadData();
+            await LoadTableData();
+        }
+    }
 
     private async Task PreviousMonth()
     {
@@ -225,8 +274,7 @@ public partial class MemberAttendance : ComponentBase
     // Kliknutí na buňku konkrétního člena v tabulce (admin může editovat kohokoliv)
     private async Task SetAttendanceMember(MemberViewModel member, AttendanceViewModel col)
     {
-        var existing = member.Attendances.FirstOrDefault(x =>
-            x.Date == col.Date || (col.EventId.HasValue && x.EventId == col.EventId));
+        var existing = member.Attendances.FirstOrDefault(x => Matches(x, col));
 
         var model = existing ?? new AttendanceViewModel
         {

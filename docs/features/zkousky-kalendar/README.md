@@ -178,9 +178,21 @@ chování kromě dvou opravených chyb. Nová funkce přichází až v C.
       zrušené zkoušky nepočítá. **Odchylka:** zrušená zkouška u `Upsert*Rehearsal`
       vrací 400, ne 409, podle konvence v `ResultHttpExtensions`: mobilní klienti
       ukážou text ze serveru jen u 400.)
-- [ ] **E. Admin UI v Blazoru**: seznam výjimek, formulář od–do + důvod,
+- [x] **E. Admin UI v Blazoru**: seznam výjimek, formulář od–do + důvod,
       obnovení výjimky. Rychlá akce „Zrušit tuhle zkoušku“ přímo ze sloupce
       měsíční tabulky.
+      (2026-10-01, uděláno až po F, aby UI rovnou volalo `RehearsalWorkflow`.
+      Stránka `/Admin/Rehearsals` (jen admin, v menu „Zkoušky“) ukazuje nadcházející
+      zkoušky na 8 týdnů a výjimky od začátku minulého měsíce. `CancelRehearsalDialog`
+      má `MudForm` a zaškrtávátko „Upozornit členy“. V tabulce docházky má hlavička
+      zkoušky ikonku zrušit nebo obnovit a zrušená zkouška ukazuje „odpadá“ s důvodem
+      v tooltipu, bez buněk a s nulovými součty. Zrušení akce v `ListEvents` dostalo
+      `CancelEventDialog` se stejným zaškrtávátkem. Založení, úprava, smazání
+      a zrušení akce z Blazoru jedou přes `RehearsalWorkflow.EventChangedAsync`.
+      **Opraveno navíc:** tabulka docházky párovala buňky jen podle data, takže
+      zrušená akce zadaná jen datem (pátek 00:00) by se s vrácenou zkouškou
+      o buňky přetahovala. Teď páruje podle `EventId` + data. E2E:
+      `RehearsalCancellationTests`, `/Admin/Rehearsals` v `AdminWalkthroughTests`.)
 - [x] **F. Důsledky zrušení**: úklid událostí v Google Calendar (stejná kompenzace
       jako u `ReconcileCalendarAfterFailedSaveAsync`). Volitelný push (`notify` v požadavku)
       pro zrušení zkoušky i akce, nový `NotificationType` pro obojí, aby šel dohledat

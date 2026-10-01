@@ -1,11 +1,14 @@
 @page "/Events/Detail/{Id:int}"
 @using Demizon.Core.Services.Event
+@using Demizon.Core.Services.Rehearsal
 @using Demizon.Dal.Entities
 @using Demizon.Mvc.Pages.Admin.Event.Components
+@using Demizon.Mvc.Services.Rehearsal
 @using Demizon.Mvc.ViewModels
 @using Microsoft.EntityFrameworkCore
 
 @inject IEventService EventService
+@inject RehearsalWorkflow RehearsalWorkflow
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @layout AdminMainLayout
@@ -261,7 +264,11 @@ else
             if (result.Data is not EventViewModel updated) return;
             try
             {
-                await EventService.UpdateAsync(Id, updated.ToEntity());
+                var stored = await EventService.GetOneAsync(Id);
+                var before = new EventSpan(stored.DateFrom, stored.DateTo, stored.IsCancelled);
+                var entity = updated.ToEntity();
+                await EventService.UpdateAsync(Id, entity);
+                await RehearsalWorkflow.EventChangedAsync(before, new EventSpan(entity.DateFrom, entity.DateTo, entity.IsCancelled));
                 Snackbar.Add("Akce byla aktualizována.", Severity.Success);
                 await LoadEvent();
             }

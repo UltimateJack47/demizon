@@ -1,0 +1,148 @@
+@page "/Admin/Rehearsals"
+@using System.Globalization
+@using System.Security.Claims
+@using Demizon.Core.Services.Member
+@using Demizon.Core.Services.Rehearsal
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.Pages.Admin.Attendance.Components
+@using Demizon.Mvc.Services.Rehearsal
+
+@attribute [Authorize(Roles = "Admin")]
+@layout AdminMainLayout
+
+@inject IRehearsalService RehearsalService
+@inject RehearsalWorkflow RehearsalWorkflow
+@inject IMemberService MemberService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3" Wrap="Wrap.Wrap">
+    <MudText Typo="Typo.body2" Color="Color.Secondary">
+        Zkouška je každý pátek, pokud na něj nepřipadá akce. Tady se dají zkoušky zrušit — jedna i celé období.
+    </MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.EventBusy"
+               OnClick="() => CancelAsync(null)">
+        Zrušit období
+    </MudButton>
+</MudStack>
+
+<MudGrid>
+    <MudItem xs="12" md="5">
+        <MudPaper Class="pa-3" Elevation="1">
+            <MudText Typo="Typo.subtitle1" Class="mb-2"><b>Nadcházející zkoušky</b></MudText>
+            <MudSimpleTable Dense="true" Hover="true">
+                <tbody>
+                @foreach (var r in _upcoming)
+                {
+                    <tr class="@(r.IsCancelled ? "demi-event-row-cancelled" : "")">
+                        <td>@r.StartsAt.ToString("ddd d. M.", CsCulture)</td>
+                        <td>@r.StartsAt.ToString("H:mm")–@r.EndsAt.ToString("H:mm")</td>
+                        <td>
+                            @if (r.IsCancelled)
+                            {
+                                <MudChip T="string" Color="Color.Error" Size="Size.Small">odpadá</MudChip>
+                                @r.CancellationReason
+                            }
+                        </td>
+                        <td style="text-align: right;">
+                            @if (!r.IsCancelled)
+                            {
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.EventBusy" Color="Color.Error"
+                                               title="Zrušit tuto zkoušku" OnClick="() => CancelAsync(r.Day)"/>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </MudSimpleTable>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="7">
+        <MudPaper Class="pa-3" Elevation="1">
+            <MudText Typo="Typo.subtitle1" Class="mb-2"><b>Zrušené zkoušky</b></MudText>
+            @if (_cancellations.Count == 0)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Žádné zrušené zkoušky.</MudText>
+            }
+            else
+            {
+                <MudSimpleTable Dense="true" Hover="true">
+                    <thead>
+                    <tr>
+                        <th>Kdy</th>
+                        <th>Důvod</th>
+                        <th>Zadal</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var c in _cancellations)
+                    {
+                        <tr>
+                            <td style="white-space: nowrap;">
+                                @(c.DateFrom == c.DateTo
+                                    ? c.DateFrom.ToString("d. M. yyyy")
+                                    : $"{c.DateFrom:d. M.} – {c.DateTo:d. M. yyyy}")
+                            </td>
+                            <td>@c.Reason</td>
+                            <td>@(c.CreatedBy is null ? "" : $"{c.CreatedBy.Name} {c.CreatedBy.Surname}")</td>
+                            <td style="text-align: right;">
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.EventAvailable" Color="Color.Success"
+                                               title="Obnovit zkoušky" OnClick="() => RestoreAsync(c)"/>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    /// <summary>Kolik týdnů dopředu ukazovat nadcházející zkoušky.</summary>
+    private const int UpcomingWeeks = 8;
+
+    private static readonly CultureInfo CsCulture = new("cs-CZ");
+
+    private IReadOnlyList<RehearsalOccurrence> _upcoming = [];
+    private IReadOnlyList<RehearsalCancellation> _cancellations = [];
+    private int _memberId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageService.SetTitle("Zkoušky");
+
+        var authState = await AuthenticationState!;
+        var login = authState.User.Claims.First(x => x.Type == ClaimTypes.Name).Value;
+        _memberId = MemberService.GetOneByLogin(login)!.Id;
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        _upcoming = await RehearsalService.GetRangeAsync(today, today.AddDays(7 * UpcomingWeeks));
+        // Od začátku minulého měsíce: čerstvě proběhlé výjimky se ještě hodí vidět.
+        var since = new DateOnly(today.Year, today.Month, 1).AddMonths(-1);
+        _cancellations = await RehearsalService.GetCancellationsAsync(since, today.AddYears(1));
+    }
+
+    private async Task CancelAsync(DateTime? day)
+    {
+        if (await RehearsalAdminActions.CancelAsync(DialogService, Snackbar, RehearsalWorkflow, _memberId, day))
+            await LoadAsync();
+    }
+
+    private async Task RestoreAsync(RehearsalCancellation cancellation)
+    {
+        if (await RehearsalAdminActions.RestoreAsync(DialogService, Snackbar, RehearsalWorkflow, cancellation))
+            await LoadAsync();
+    }
+}

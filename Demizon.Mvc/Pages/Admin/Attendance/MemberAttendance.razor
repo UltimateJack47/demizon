@@ -56,7 +56,31 @@
                         else
                         {
                             <span class="demi-att-date-label">@col.Date.ToString("d.M.")</span><br/>
-                            <span style="font-size: 0.6rem; color: #aaa;">@FormatDayAbbr(col.Date)</span>
+                            @if (col.Rehearsal?.IsCancelled == true)
+                            {
+                                <MudTooltip Text="@(col.Rehearsal.CancellationReason ?? "Zkouška odpadá")">
+                                    <span style="font-size: 0.6rem; color: var(--mud-palette-error);">odpadá</span>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <span style="font-size: 0.6rem; color: #aaa;">@FormatDayAbbr(col.Date)</span>
+                            }
+                            <AuthorizeView Roles="Admin">
+                                @if (col.Rehearsal?.IsCancelled == true)
+                                {
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.EventAvailable"
+                                                   Color="Color.Success" title="Obnovit zkoušku"
+                                                   OnClick="() => RestoreRehearsalAsync(col)"/>
+                                }
+                                else
+                                {
+                                    @* Šedá: je v každém sloupci, červená by tabulku přehlušila. *@
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.EventBusy"
+                                                   title="Zrušit tuto zkoušku" Style="opacity: 0.45;"
+                                                   OnClick="() => CancelRehearsalAsync(col)"/>
+                                }
+                            </AuthorizeView>
                         }
                     </th>
                 }
@@ -82,7 +106,7 @@
                             <td class="@(col.IsCancelled ? "demi-att-cell demi-att-cell-cancelled" : "demi-att-cell") @(!member.IsAttendanceVisible ? "demi-att-cell-readonly" : "")"
                                 @onclick="@(async () => { if (!col.IsCancelled && member.IsAttendanceVisible) await SetAttendanceMember(member, col); })">
                                 @{
-                                    var day = member.Attendances.FirstOrDefault(x => x.Date == col.Date);
+                                    var day = CellOf(member, col);
                                 }
                                 @if (day is not null)
                                 {
@@ -112,14 +136,14 @@
                     <td class="demi-att-sticky"><b>Σ ženy</b></td>
                     @foreach (var col in Attendances)
                     {
-                        <td><b>@CountAttending(FilteredFemales, col.Date)</b></td>
+                        <td><b>@CountAttending(FilteredFemales, col)</b></td>
                     }
                 </tr>
                 <tr class="demi-att-activity-row demi-att-dancer-row">
                     <td class="demi-att-sticky"><b>Σ tanečnice</b></td>
                     @foreach (var col in Attendances)
                     {
-                        <td>@CountAttendingFemaleDancers(col.Date)</td>
+                        <td>@CountAttendingFemaleDancers(col)</td>
                     }
                 </tr>
             }
@@ -143,7 +167,7 @@
                             <td class="@(col.IsCancelled ? "demi-att-cell demi-att-cell-cancelled" : "demi-att-cell") @(!member.IsAttendanceVisible ? "demi-att-cell-readonly" : "")"
                                 @onclick="@(async () => { if (!col.IsCancelled && member.IsAttendanceVisible) await SetAttendanceMember(member, col); })">
                                 @{
-                                    var day = member.Attendances.FirstOrDefault(x => x.Date == col.Date);
+                                    var day = CellOf(member, col);
                                 }
                                 @if (day is not null)
                                 {
@@ -173,14 +197,14 @@
                     <td class="demi-att-sticky"><b>Σ muži</b></td>
                     @foreach (var col in Attendances)
                     {
-                        <td><b>@CountAttending(FilteredMales, col.Date)</b></td>
+                        <td><b>@CountAttending(FilteredMales, col)</b></td>
                     }
                 </tr>
                 <tr class="demi-att-activity-row demi-att-dancer-row">
                     <td class="demi-att-sticky"><b>Σ tanečníci</b></td>
                     @foreach (var col in Attendances)
                     {
-                        <td>@CountAttendingMaleDancers(col.Date)</td>
+                        <td>@CountAttendingMaleDancers(col)</td>
                     }
                 </tr>
             }
@@ -212,7 +236,7 @@
                             <td class="@(col.IsCancelled ? "demi-att-cell demi-att-cell-cancelled" : "demi-att-cell") @(!member.IsAttendanceVisible ? "demi-att-cell-readonly" : "")"
                                 @onclick="@(async () => { if (!col.IsCancelled && member.IsAttendanceVisible) await SetAttendanceMember(member, col); })">
                                 @{
-                                    var extDay = member.Attendances.FirstOrDefault(x => x.Date == col.Date);
+                                    var extDay = CellOf(member, col);
                                 }
                                 @if (extDay is not null)
                                 {
@@ -242,7 +266,7 @@
                     <td class="demi-att-sticky"><b>Σ externisté</b></td>
                     @foreach (var col in Attendances)
                     {
-                        <td><b>@CountAttending(FilteredExternals, col.Date)</b></td>
+                        <td><b>@CountAttending(FilteredExternals, col)</b></td>
                     }
                 </tr>
             }
@@ -252,7 +276,7 @@
                 <td class="demi-att-sticky"><b>Σ muzikanti</b></td>
                 @foreach (var col in Attendances)
                 {
-                    <td>@CountAttendingMusicians(col.Date)</td>
+                    <td>@CountAttendingMusicians(col)</td>
                 }
             </tr>
 
@@ -263,7 +287,7 @@
                     <td class="demi-att-sticky"><b>Σ celkem</b></td>
                     @foreach (var col in Attendances)
                     {
-                        <td><b>@CountAttending(FilteredFemales.Concat(FilteredMales).Concat(FilteredExternals), col.Date)</b></td>
+                        <td><b>@CountAttending(FilteredFemales.Concat(FilteredMales).Concat(FilteredExternals), col)</b></td>
                     }
                 </tr>
             }

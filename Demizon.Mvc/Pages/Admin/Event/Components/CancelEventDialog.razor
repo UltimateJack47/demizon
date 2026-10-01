@@ -1,0 +1,18 @@
+<MudDialog>
+    <DialogContent>
+        <MudText Class="mb-2">Chcete zrušit tuto událost?</MudText>
+        <MudCheckBox @bind-Value="_notify" Color="Color.Primary"
+                     Label="Upozornit členy (kdo nemá „nepřijdu“)"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => MudDialog.Cancel()">Zpět</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error"
+                   OnClick="() => MudDialog.Close(DialogResult.Ok(_notify))">Zrušit událost</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private bool _notify;
+}

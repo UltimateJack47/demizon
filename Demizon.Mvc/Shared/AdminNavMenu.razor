@@ -19,6 +19,12 @@
                 Icon="@Icons.Material.Filled.CalendarMonth">
         Docházka
     </MudNavLink>
+    <AuthorizeView Roles="Admin">
+        <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Rehearsals")"
+                    Icon="@Icons.Material.Filled.EventBusy">
+            Zkoušky
+        </MudNavLink>
+    </AuthorizeView>
     <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/AttendanceStats")"
                 Icon="@Icons.Material.Filled.BarChart">
         Statistiky docházky

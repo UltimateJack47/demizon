@@ -1,0 +1,71 @@
+@using Demizon.Dal
+<MudDialog Style="min-width: min(480px, calc(100vw - 32px))">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Zrušit zkoušky</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @* MudForm kvůli tomu, aby ClickedOk mohl zavření odmítnout. Samotné
+           Required="true" na poli jen vykreslí hvězdičku a chybu — nic neblokuje. *@
+        <MudForm @ref="_form">
+            <MudGrid Spacing="2">
+                <MudItem xs="12">
+                    <MudDateRangePicker @bind-DateRange="_range" Label="Od – do (včetně)"
+                                        Variant="Variant.Outlined" Margin="Margin.Dense" Editable="true"
+                                        Required="true" RequiredError="Termín je povinný!"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_reason" Label="Důvod (uvidí ho členové)"
+                                  Placeholder="Prázdniny, hody…"
+                                  Variant="Variant.Outlined" Margin="Margin.Dense"
+                                  MaxLength="DemizonContext.RehearsalCancellationReasonMaxLength"
+                                  Counter="DemizonContext.RehearsalCancellationReasonMaxLength"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCheckBox @bind-Value="_notify" Color="Color.Primary"
+                                 Label="Upozornit členy (kdo nemá „nepřijdu“)"/>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Zpět</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ClickedOk">Zrušit zkoušky</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    /// <summary>Předvyplněný den, např. ze sloupce tabulky docházky.</summary>
+    [Parameter] public DateTime? Day { get; set; }
+
+    private MudForm _form = null!;
+    private DateRange? _range;
+    private string? _reason;
+    private bool _notify;
+
+    protected override void OnInitialized()
+    {
+        if (Day is not null)
+            _range = new DateRange(Day.Value.Date, Day.Value.Date);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task ClickedOk()
+    {
+        await _form.ValidateAsync();
+        if (!_form.IsValid || _range?.Start is null || _range.End is null)
+            return;
+
+        MudDialog.Close(DialogResult.Ok(new CancelRehearsalInput(
+            DateOnly.FromDateTime(_range.Start.Value),
+            DateOnly.FromDateTime(_range.End.Value),
+            _reason,
+            _notify)));
+    }
+
+    public sealed record CancelRehearsalInput(DateOnly From, DateOnly To, string? Reason, bool Notify);
+}
