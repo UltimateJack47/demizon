@@ -363,7 +363,8 @@ public class AttendancesController(
 
         attendance.Status = ParseStatus(request.Status);
         attendance.Comment = request.Comment;
-        attendance.ActivityRole = ParseActivityRole(request.ActivityRole);
+        // ActivityRole záměrně ne: klienti adminovi výběr role u zkoušky nenabízí
+        // a posílají null, takže by smazal roli, kterou si člen uložil sám.
 
         var saved = await attendanceService.CreateOrUpdateAsync(attendance);
         if (!saved.IsSuccess)
