@@ -1,7 +1,7 @@
 # Stav projektu a plán další práce
 
 > **Živý dokument a vstupní bod.** Průběžně aktualizovat při každé dokončené položce.
-> Založeno: 2026-09-08. Poslední aktualizace: 2026-10-01 (kalendář zkoušek hotový, sekce F).
+> Založeno: 2026-09-08. Poslední aktualizace: 2026-10-14 (Flutter proklikaný na emulátoru, sekce B).
 >
 > Účel: předat kontext další session (Claude / kdokoli) — co je hotové, na co
 > nesahat, co zbývá a v jakém pořadí.
@@ -14,7 +14,7 @@
 
 | | Stav |
 |---|---|
-| Testy | **427 zelených** — 186 unit + 185 integration + 56 E2E; Flutter 31 |
+| Testy | **429** — 188 unit + 185 integration (2026-10-14 zelené) + 56 E2E (ten den nespuštěné); Flutter 37 |
 | CI | [`test.yml`](../.github/workflows/test.yml) — dvě úlohy: `Demizon.Backend.slnf` a `Demizon.E2E.slnf` |
 | Docker image | 30 MB publish payload, 190 MB image (`aspnet:10.0-alpine` + ICU + tzdata, stejný base jako mru.sk) |
 
@@ -94,15 +94,23 @@ Podrobný seznam je v [`flutter-prepis/`](features/flutter-prepis/README.md).
       `MemberAttendanceTarget.isRehearsal`. Zamčeno testy.
 - [x] Auth refresh 5 min + 401 — kód je v `auth_interceptor.dart`.
 - [x] Křížová tabulka — zamrzlý sloupec jmen i gesture aréna jsou v kódu.
+- [x] **Proklik na emulátoru proti lokálnímu backendu** (2026-10-14). Našel
+      a opravil 4 chyby: neobnovený přehled po uložení docházky, admin editace
+      docházky člena (router čekal `extra`), „zpět“ po přepnutí tabů zavřel appku
+      (go_router 14 → 18), data minulého uživatele po přihlášení jiného.
+      Detail a postup: [`flutter-prepis`](features/flutter-prepis/README.md#proklik-proti-lokálnímu-backendu-2026-10-14).
 
 ### Čeká na člověka (Firebase konzole + telefon)
 
 - [ ] `flutterfire configure` → `lib/firebase_options.dart` + `google-services.json`
 - [ ] Ikony a splash (`flutter_launcher_icons`, `flutter_native_splash`)
       ze `Demizon.Maui/Resources/AppIcon/` + `demizon_flutter/assets/images/demizon_logo.jpg`
-- [ ] Běh na **fyzickém telefonu** proti živému API (přihlášení, docházka,
-      ťuknutí na notifikaci, auth refresh, swipe v tabulce). Na emulátoru
-      je ověřený jen login a chybová cesta přihlášení.
+- [ ] **Release keystore** — Flutter release se zatím podepisuje debug klíčem;
+      pro update přes rozdanou MAUI appku musí být stejný keystore jako MAUI.
+      Kde je, není známo.
+- [ ] Běh na **fyzickém telefonu** proti živému API — hlavně ťuknutí
+      na notifikaci a auth refresh. Docházka, tabulka, akce, tance a profil
+      jsou ověřené na emulátoru.
 
 Až tohle pojede:
 

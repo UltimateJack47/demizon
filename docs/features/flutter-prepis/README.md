@@ -1,7 +1,7 @@
 # Přepis mobilní aplikace z .NET MAUI do Flutteru
 
 > **Živý dokument.** Průběžně aktualizovat.
-> Poslední aktualizace: 2026-09-09 (checklist na telefon + Firebase).
+> Poslední aktualizace: 2026-10-14 (proklik na emulátoru proti lokálnímu backendu, 4 opravy).
 > Založeno: 2026-09-01. Větev: `feat/flutter-app`. Adresář: `demizon_flutter/`.
 >
 > Pořadí vůči backendu a nasazení: [`STATUS.md`](../../STATUS.md).
@@ -130,14 +130,16 @@ Jedna skutečná trhlina z paralelní práce se tím našla a opravila: router o
 
 ## ✅ Zkompilováno a postaveno
 
-Flutter **3.47.2 / Dart 3.13.2** doinstalován 2026-09-01. Stav:
+Flutter **3.47.2 / Dart 3.13.2** doinstalován 2026-09-01. Od go_router 18
+(2026-10-14) je minimum **Flutter 3.44 / Dart 3.12** — se starším SDK neprojde
+ani `pub get` (`intl` z `flutter_localizations`). Stav:
 
 | Krok | Výsledek |
 |---|---|
 | `flutter pub get` | OK |
 | `dart run build_runner build` | **42 vygenerovaných souborů** |
 | `flutter analyze` | **No issues found!** |
-| `flutter test` | **26 testů prošlo** (2026-09-09; bylo 14) |
+| `flutter test` | **37 testů prošlo** (2026-10-14; bylo 26) |
 | `flutter build apk --debug` | **APK postaveno** (159 MB debug) |
 | **spuštěno na emulátoru** | **Pixel 9 / API 36 — aplikace běží** |
 
@@ -159,15 +161,21 @@ našel jen **3 nálezy** na 61 souborech a žádnou skutečnou chybu. Zásluhu n
 
 ### Testy
 
-`flutter test` — **26 testů** (2026-09-09):
+`flutter test` — **37 testů** (2026-10-14):
 
 - `test/contract_test.dart` — kontrakt s API, který kompilátor nehlídá: statusy
   docházky (`yes`/`maybe`/`no`), mapování rolí, `yyyy-MM-dd` na drátě u zkoušek,
-  duální režim akce/zkouška, tvar URL souborů.
+  duální režim akce/zkouška, tvar URL souborů, a že cesty přehledu docházky
+  (`memberRehearsalDetailPath`, `attendanceOverviewPath`) přežijí cestu přes URL.
 - `test/auth_state_test.dart` — `isRestoring` vs. přihlašování (router nesmí
   zahodit login obrazovku).
 - `test/notification_navigation_test.dart` — parse payloadu, pending replay
   po loginu, reset po odhlášení.
+- `test/invalidation_test.dart` — změna docházky znovu načte seznam akcí
+  i všechny načtené měsíce; nová session zahodí data minulého uživatele.
+
+Router samotný (redirect `/attendance/member`) unit testem pokrytý není —
+potřeboval by podvrhnout auth i API. Ověřuje se proklikem, viz níž.
 
 ### Ověřeno za běhu na emulátoru
 
@@ -194,6 +202,69 @@ a aplikace pokračuje. To je zatím v pořádku; notifikace stejně nejsou dopsa
    Opraveno na dvou úrovních: `login()` stav na `AsyncLoading` nepřepíná (spinner
    si drží obrazovka sama) a `isRestoring` je nově `isLoading && !hasValue`.
    Zamčeno regresními testy v `test/auth_state_test.dart`.
+
+### Proklik proti lokálnímu backendu (2026-10-14)
+
+Emulátor Medium Phone API 36.1, debug APK, backend `Demizon.Mvc` lokálně
+s čistou SQLite ve scratch adresáři. Postup, jak to zopakovat:
+
+```
+# backend (z kořene repa) — DB mimo repo, secrets jen v env
+ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://0.0.0.0:5272 \
+ConnectionStrings__Default="Data Source=<tmp>/demizon.sqlite" \
+Jwt__SecretKey=<min-32-znaku> Bootstrap__SeedToken=<token> \
+dotnet run --project Demizon.Mvc/Demizon.Mvc.csproj --no-launch-profile
+# první admin: POST /api/database/seed (viz nasazeni.md)
+
+# appka — 10.0.2.2 je z emulátoru hostitel
+flutter build apk --debug --dart-define=DEMIZON_API_BASE_URL=http://10.0.2.2:5272
+adb install -r build/app/outputs/flutter-apk/app-debug.apk
+```
+
+Starou MAUI build z emulátoru je nutné nejdřív odinstalovat — stejné
+`applicationId`, jiný podpis (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`).
+
+**Funguje:** login + chyba, obnova session po restartu, měsíční docházka
+(swipe i šipky), uložení docházky na zkoušku (pátek se neposune) i akci včetně
+role, křížová tabulka (zamrzlé jména, horizontální scroll, swipe měsíce pod
+tabulkou, admin edituje docházku jiného člena), statistiky, založení
+a editace akce, tance (filtr, detail, text písně), profil, změna hesla
+(chybová cesta), odhlášení, neadmin nevidí sekci Správa.
+
+**Čtyři chyby, které našel teprve proklik:**
+
+1. **Po uložení docházky zůstal měsíční přehled starý** — i po přepnutí měsíce
+   tam a zpět, protože rodina providerů drží každý načtený měsíc. Ukládání
+   invalidovalo jen `eventsProvider`, admin uložení docházky člena nic.
+   Opraveno `invalidateAttendanceViews` v `lib/core/invalidation.dart`
+   (akce, měsíc, přehled, statistiky — celé rodiny), volá se ze všech míst,
+   která mění docházku nebo akci.
+2. **Admin nemohl editovat docházku jiného člena.** Obrazovka přehledu naviguje
+   na `/attendance/member?…` s query, router ale čekal `extra`, který nikdo
+   neposílal → redirect na nový přehled s aktuálním měsícem. Router teď cíl
+   čte přes `MemberAttendanceTarget.fromQuery` (neúplný odkaz → přehled)
+   a přehled bere měsíc z `?year=&month=`.
+3. **Systémové „zpět“ po přepnutí tabů zavřelo aplikaci** místo návratu
+   v rámci větve. Chyba go_router 14.8.1 se `StatefulShellRoute`; s go_router
+   **18.0.2** je pryč bez změny kódu (breaking changes 15–18 se nás netýkají:
+   case-sensitive URL, notifikace observerů, min. SDK).
+4. **Po odhlášení a přihlášení jiného člena byla vidět data předchozího**
+   (barevné tečky docházky). `login()` teď před přepnutím stavu volá
+   `invalidateSessionData`. Při odhlášení záměrně ne — obrazovky jsou ještě
+   připojené a invalidace by poslala requesty bez tokenu.
+
+Cestou opravený backend: `PUT /api/attendances/rehearsal` roli tiše zahazoval
+(u akcí ji ukládá). Teď ji ukládá; adminský `PUT …/rehearsal/member/{id}` roli
+nemění, protože klienti adminovi výběr role u zkoušky nenabízí a posílají `null`.
+
+**Drobnosti, beze změny** (stejné jako v MAUI, není to regrese přepisu):
+„1 videí“ v seznamu tanců; u akce bez docházky je předvybrané „Nepřijdu“
+(`EventDetailViewModel.cs:31`); admin detail docházky na zkoušce ukazuje čas
+00:00; „+“ pro založení akce vidí každý člen a `POST /api/events` nemá
+`Roles = "Admin"`.
+
+**Neověřeno:** galerie a fotky (žádná data), zrušená zkouška, notifikace
+a auth refresh — čeká na telefon a Firebase.
 
 ### Nativní projekty
 
@@ -222,14 +293,20 @@ bez konzole a zařízení dál nejde. Až bude čas, jdi shora dolů.
        `demizon_flutter/assets/images/demizon_logo.jpg`:
        `flutter_launcher_icons` + `flutter_native_splash`, pak
        `dart run flutter_launcher_icons` a `dart run flutter_native_splash:create`.
-3. [ ] **Fyzický telefon** proti živému API:
+3. [ ] **Release podpis.** `android/app/build.gradle.kts` zatím podepisuje
+       release debug klíčem. Aby Flutter build šel nainstalovat jako update přes
+       rozdanou MAUI appku, musí mít **stejný keystore jako distribuovaná MAUI
+       verze** — jinak Android update odmítne a uživatel musí MAUI nejdřív
+       odinstalovat. `Demizon.Maui.csproj` keystore nekonfiguruje; kde je, je
+       otevřená otázka. Keystore ani hesla do repa nepatří.
+4. [ ] **Fyzický telefon** proti živému API:
        ```
        flutter run --dart-define=DEMIZON_API_BASE_URL=https://<domena>
        ```
        Proklik: přihlášení, docházka (včetně křížové tabulky a swipe měsíce),
        dual režim akce/zkouška, ťuknutí na notifikaci (cold / background /
        foreground), auth refresh po 5 min / 401.
-4. [ ] Až tohle pojede: vyhodit `Demizon.Maui` z `Demizon.slnx`. Ne dřív —
+5. [ ] Až tohle pojede: vyhodit `Demizon.Maui` z `Demizon.slnx`. Ne dřív —
        MAUI je pořád zdroj pravdy o chování.
 
 Offline cache se záměrně nedělá (MAUI ji neměla).
@@ -268,11 +345,11 @@ Offline cache se záměrně nedělá (MAUI ji neměla).
 - [x] Formát `DateTime` na drátě u zkoušek (`?date=`) — interceptor ořezává
       ISO instant z retrofitu (`toIso8601String`) na `yyyy-MM-dd`. Jinak by
       UTC pátek v CEST skočil na sobotu. Zamčeno v `test/contract_test.dart`.
-      Na telefonu ověřit, že GET/PUT rehearsal sedí na ten pátek.
+      Na emulátoru ověřeno 2026-10-14 (PUT na 16. 10. uložil 16. 10.).
 - [ ] Auth flow: proaktivní refresh 5 min před expirací i fallback na 401
       (kód je hotový, zbývá živé API)
-- [ ] Křížová tabulka docházky — zamrzlý sloupec jmen + horizontální scroll,
-      a že swipe mezi měsíci nekoliduje s vnitřním scrollem
+- [x] Křížová tabulka docházky — zamrzlý sloupec jmen + horizontální scroll,
+      swipe mezi měsíci nekoliduje s vnitřním scrollem. Emulátor 2026-10-14.
 - [x] Duální režim akce/zkouška — `EventDetailArgs.fromRoute` bere
       `/events/0?rehearsalDate=` jako zkoušku, `MemberAttendanceTarget` taky.
-      Zamčeno testy. Na telefonu ověřit otevření z notifikace i z tabulky.
+      Z tabulky ověřeno na emulátoru; z notifikace zbývá na telefonu.

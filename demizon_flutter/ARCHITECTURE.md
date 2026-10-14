@@ -150,6 +150,16 @@ class EventsController extends AsyncNotifier<List<Event>> {
 
 Obrazovka je `ConsumerWidget` a stav řeší přes `.when(data:, loading:, error:)`.
 
+**Invalidace po změně dat** — providery nejsou `autoDispose`, takže cache drží
+napořád (u rodin každý načtený měsíc). Proto:
+- Kdo mění docházku nebo akci, volá `invalidateAttendanceViews(ref.invalidate)`
+  z `lib/core/invalidation.dart`, ne jednotlivé `ref.invalidate`.
+- Nový provider s daty přihlášeného člena přidej do `invalidateSessionData`,
+  jinak po přihlášení jiného člena ukáže data toho předchozího.
+
+**Cesty s parametry** nesou parametry v query (`?eventId=&memberId=`), ne v `extra`
+— router je čte přes `fromQuery`. `extra` nepřežije deep link ani notifikaci.
+
 ## Stav prací
 
 Průběžný stav a co zbývá: [`docs/features/flutter-prepis/README.md`](../docs/features/flutter-prepis/README.md).
@@ -161,8 +171,8 @@ v `lib/core/formatting.dart` na `yyyy-MM-dd`.
 
 ## Ověření
 
-Flutter SDK **je** nainstalované (3.47.2 / Dart 3.13.2). Po změně modelů nebo
-API klienta:
+Flutter SDK **je** nainstalované (3.47.x; go_router 18 chce minimum 3.44 / Dart 3.12).
+Po změně modelů nebo API klienta:
 
 ```
 flutter pub get
