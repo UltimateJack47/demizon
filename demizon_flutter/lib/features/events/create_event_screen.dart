@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:demizon/core/formatting.dart';
+import 'package:demizon/core/invalidation.dart';
 import 'package:demizon/core/providers.dart';
 import 'package:demizon/core/theme.dart';
 import 'package:demizon/models/models.dart';
-
-import 'events_controller.dart';
 
 /// Přepis `Demizon.Maui/Pages/CreateEventPage.xaml` + `CreateEventViewModel.cs`.
 ///
@@ -81,7 +80,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
           );
 
       // Protějšek WeakReferenceMessenger.Send(new EventsChangedMessage()).
-      ref.invalidate(eventsProvider);
+      invalidateAttendanceViews(ref.invalidate);
       if (!mounted) return;
       context.pop();
     } catch (_) {

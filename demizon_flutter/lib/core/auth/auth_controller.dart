@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/models.dart';
+import '../invalidation.dart';
 import '../notifications/notification_navigation.dart';
 import '../providers.dart';
 import 'token_storage.dart';
@@ -150,6 +151,9 @@ class AuthController extends AsyncNotifier<AuthState> {
           .login(TokenRequest(login: login, password: password));
 
       await _tokens.saveTokens(response, login);
+      // Před přepnutím stavu: router pak otevře obrazovky, které si data
+      // načtou už pod novým účtem, ne z cache minulé session.
+      invalidateSessionData(ref.invalidate);
       state = AsyncData(await _authenticatedFromStorage());
     } on DioException catch (e) {
       state = const AsyncData(Unauthenticated());

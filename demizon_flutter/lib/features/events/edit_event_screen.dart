@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:demizon/core/invalidation.dart';
 import 'package:demizon/core/providers.dart';
 import 'package:demizon/core/theme.dart';
 import 'package:demizon/models/models.dart';
 
 import 'create_event_screen.dart' show EventFormField, EventDateTimeRow;
 import 'event_detail_controller.dart';
-import 'events_controller.dart';
 
 /// Přepis `Demizon.Maui/Pages/EditEventPage.xaml` + `EditEventViewModel.cs`.
 class EditEventScreen extends ConsumerStatefulWidget {
@@ -159,7 +159,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
   /// Protějšek `WeakReferenceMessenger.Send(new EventsChangedMessage())` —
   /// překreslí seznam akcí i detail, ze kterého se sem uživatel dostal.
   void _invalidateEvent() {
-    ref.invalidate(eventsProvider);
+    invalidateAttendanceViews(ref.invalidate);
     ref.invalidate(
       eventDetailProvider(EventDetailArgs(eventId: widget.eventId)),
     );

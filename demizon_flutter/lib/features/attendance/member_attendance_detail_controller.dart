@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:demizon/core/invalidation.dart';
 import 'package:demizon/core/providers.dart';
+import 'package:demizon/features/events/event_detail_controller.dart';
 import 'package:demizon/models/models.dart';
 
 /// Admin edituje docházku konkrétního člena — protějšek
@@ -205,6 +207,9 @@ class MemberAttendanceDetailController extends FamilyAsyncNotifier<
       } else {
         await api.upsertMemberAttendance(arg.eventId!, arg.memberId, request);
       }
+      invalidateAttendanceViews(ref.invalidate);
+      // Detail akce ukazuje, kdo přijde.
+      ref.invalidate(eventDetailProvider);
       return true;
     } catch (_) {
       return false;

@@ -2,10 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:demizon/core/formatting.dart';
+import 'package:demizon/core/invalidation.dart';
 import 'package:demizon/core/providers.dart';
 import 'package:demizon/models/models.dart';
-
-import 'events_controller.dart';
 
 /// Přepis `Demizon.Maui/ViewModels/EventDetailViewModel.cs`.
 ///
@@ -290,7 +289,7 @@ class EventDetailController
     }
 
     // Protějšek WeakReferenceMessenger.Send(new EventsChangedMessage()).
-    ref.invalidate(eventsProvider);
+    invalidateAttendanceViews(ref.invalidate);
   }
 
   /// `SendReminderAsync`. Vrací hlášku, kterou obrazovka zobrazí v dialogu
@@ -325,6 +324,6 @@ class EventDetailController
   /// `DeleteEventAsync`. Potvrzení řeší obrazovka.
   Future<void> deleteEvent() async {
     await ref.read(apiClientProvider).deleteEvent(_value.args.eventId!);
-    ref.invalidate(eventsProvider);
+    invalidateAttendanceViews(ref.invalidate);
   }
 }
