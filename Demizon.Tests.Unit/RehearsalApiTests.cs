@@ -152,15 +152,16 @@ public class RehearsalApiTests : IAsyncLifetime
 
     // ------------------------------------------------ uložení docházky
 
-    private Task<HttpResponseMessage> UpsertRehearsalAsync(DateTime day, string status = "yes") =>
+    private Task<HttpResponseMessage> UpsertRehearsalAsync(
+        DateTime day, string status = "yes", string? activityRole = null) =>
         _client.PutAsJsonAsync(
             $"/api/attendances/rehearsal?date={day:yyyy-MM-dd}",
-            new { status, comment = (string?)null, activityRole = (string?)null });
+            new { status, comment = (string?)null, activityRole });
 
-    private Task<HttpResponseMessage> UpsertMemberRehearsalAsync(DateTime day) =>
+    private Task<HttpResponseMessage> UpsertMemberRehearsalAsync(DateTime day, string? activityRole = null) =>
         _client.PutAsJsonAsync(
             $"/api/attendances/rehearsal/member/{_factory.MemberId}?date={day:yyyy-MM-dd}",
-            new { status = "yes", comment = (string?)null, activityRole = (string?)null });
+            new { status = "yes", comment = (string?)null, activityRole });
 
     [Fact]
     public async Task Dochazka_na_zkousku_v_patek_se_ulozi()
@@ -171,6 +172,21 @@ public class RehearsalApiTests : IAsyncLifetime
         await using var db = _factory.NewContext();
         var stored = Assert.Single(await db.Attendances.Where(a => a.EventId == null).ToListAsync());
         Assert.Equal(T(6, 5), stored.Date);
+    }
+
+    [Fact]
+    public async Task Dochazka_na_zkousku_ulozi_roli()
+    {
+        // Dřív zkouškové endpointy roli tiše zahodily, u akcí se ukládala.
+        var own = await UpsertRehearsalAsync(T(6, 5), activityRole: "musician");
+        var byAdmin = await UpsertMemberRehearsalAsync(T(6, 12), activityRole: "dancer");
+
+        Assert.Equal(HttpStatusCode.OK, own.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, byAdmin.StatusCode);
+        await using var db = _factory.NewContext();
+        var stored = await db.Attendances.Where(a => a.EventId == null).ToDictionaryAsync(a => a.Date);
+        Assert.Equal(AttendanceActivityRole.Musician, stored[T(6, 5)].ActivityRole);
+        Assert.Equal(AttendanceActivityRole.Dancer, stored[T(6, 12)].ActivityRole);
     }
 
     [Fact]

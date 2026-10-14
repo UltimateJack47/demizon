@@ -51,13 +51,6 @@ public class AttendancesController(
         try { ev = await eventService.GetOneAsync(eventId); }
         catch (EntityNotFoundException) { return NotFound(); }
 
-        AttendanceActivityRole? activityRole = request.ActivityRole?.ToLowerInvariant() switch
-        {
-            "dancer" => AttendanceActivityRole.Dancer,
-            "musician" => AttendanceActivityRole.Musician,
-            _ => null
-        };
-
         var existing = await attendanceService.GetAll()
             .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == eventId);
 
@@ -70,7 +63,7 @@ public class AttendancesController(
 
         attendance.Status = ParseStatus(request.Status);
         attendance.Comment = request.Comment;
-        attendance.ActivityRole = activityRole;
+        attendance.ActivityRole = ParseActivityRole(request.ActivityRole);
 
         // Google Calendar sync — pouze PŘED uložením do DB
         var member = await memberService.GetOneAsync(memberId);
@@ -176,6 +169,7 @@ public class AttendancesController(
 
         attendance.Status = ParseStatus(request.Status);
         attendance.Comment = request.Comment;
+        attendance.ActivityRole = ParseActivityRole(request.ActivityRole);
 
         // Google Calendar sync pro zkoušky
         var member = await memberService.GetOneAsync(memberId);
@@ -261,13 +255,6 @@ public class AttendancesController(
         try { ev = await eventService.GetOneAsync(eventId); }
         catch (EntityNotFoundException) { return NotFound(); }
 
-        AttendanceActivityRole? activityRole = request.ActivityRole?.ToLowerInvariant() switch
-        {
-            "dancer" => AttendanceActivityRole.Dancer,
-            "musician" => AttendanceActivityRole.Musician,
-            _ => null
-        };
-
         var existing = await attendanceService.GetAll()
             .FirstOrDefaultAsync(a => a.MemberId == memberId && a.EventId == eventId);
 
@@ -280,7 +267,7 @@ public class AttendancesController(
 
         attendance.Status = ParseStatus(request.Status);
         attendance.Comment = request.Comment;
-        attendance.ActivityRole = activityRole;
+        attendance.ActivityRole = ParseActivityRole(request.ActivityRole);
 
         // Google Calendar sync for the target member.
         // member je deklarovaný před try, aby ho měl k dispozici i rollback níž.
@@ -376,6 +363,7 @@ public class AttendancesController(
 
         attendance.Status = ParseStatus(request.Status);
         attendance.Comment = request.Comment;
+        attendance.ActivityRole = ParseActivityRole(request.ActivityRole);
 
         var saved = await attendanceService.CreateOrUpdateAsync(attendance);
         if (!saved.IsSuccess)
@@ -597,5 +585,12 @@ public class AttendancesController(
         "yes" => AttendanceStatus.Yes,
         "maybe" => AttendanceStatus.Maybe,
         _ => AttendanceStatus.No
+    };
+
+    internal static AttendanceActivityRole? ParseActivityRole(string? role) => role?.ToLowerInvariant() switch
+    {
+        "dancer" => AttendanceActivityRole.Dancer,
+        "musician" => AttendanceActivityRole.Musician,
+        _ => null
     };
 }
