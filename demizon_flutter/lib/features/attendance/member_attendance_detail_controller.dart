@@ -42,6 +42,9 @@ class MemberAttendanceTarget {
   bool get isRehearsal =>
       (eventId == null || eventId == 0) && rehearsalDate != null;
 
+  /// Má člena a buď akci, nebo datum zkoušky — jinak obrazovka nemá co načíst.
+  bool get isComplete => memberId > 0 && (isRehearsal || (eventId ?? 0) > 0);
+
   @override
   bool operator ==(Object other) =>
       other is MemberAttendanceTarget &&

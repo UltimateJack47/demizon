@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/attendance/all_members_attendance_screen.dart';
+import '../features/attendance/attendance_controller.dart';
 import '../features/attendance/attendance_screen.dart';
 import '../features/attendance/attendance_stats_screen.dart';
 import '../features/attendance/member_attendance_detail_controller.dart';
@@ -97,8 +98,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'overview',
-                    builder: (context, state) =>
-                        const AllMembersAttendanceScreen(),
+                    builder: (context, state) => AllMembersAttendanceScreen(
+                      initialMonth:
+                          YearMonth.fromQuery(state.uri.queryParameters),
+                    ),
                   ),
                   GoRoute(
                     path: 'stats',
@@ -106,15 +109,18 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'member',
-                    // Cíl se předává přes `extra`, protože nese víc než id
-                    // (člen + akce NEBO datum zkoušky). Když chybí — deep link,
-                    // hot restart — vrať se na přehled místo pádu.
-                    redirect: (context, state) =>
-                        state.extra is MemberAttendanceTarget
-                            ? null
-                            : AppRoutes.attendanceOverview,
+                    // Cíl nese query z `memberAttendanceDetailPath` /
+                    // `memberRehearsalDetailPath`. Neúplný odkaz vrať na
+                    // přehled místo pádu.
+                    redirect: (context, state) => MemberAttendanceTarget
+                            .fromQuery(state.uri.queryParameters)
+                            .isComplete
+                        ? null
+                        : AppRoutes.attendanceOverview,
                     builder: (context, state) => MemberAttendanceDetailScreen(
-                      target: state.extra! as MemberAttendanceTarget,
+                      target: MemberAttendanceTarget.fromQuery(
+                        state.uri.queryParameters,
+                      ),
                     ),
                   ),
                 ],

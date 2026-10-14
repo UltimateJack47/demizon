@@ -111,6 +111,57 @@ void main() {
     });
   });
 
+  // Router čte cíl jen z query. Dřív čekal `extra`, který nikdo neposílal,
+  // a ťuknutí do buňky přehledu se vrátilo na přehled.
+  group('cesty přehledu docházky', () {
+    Map<String, String> query(String path) => Uri.parse(path).queryParameters;
+
+    test('detail člena na zkoušce přežije cestu přes URL', () {
+      final path = memberRehearsalDetailPath(
+        date: DateTime(2026, 10, 16),
+        memberId: 3,
+        memberName: 'Anna Nováková',
+      );
+      final target = MemberAttendanceTarget.fromQuery(query(path));
+
+      expect(target.isComplete, isTrue);
+      expect(target.isRehearsal, isTrue);
+      expect(target.rehearsalDate, DateTime(2026, 10, 16));
+      expect(target.memberId, 3);
+      expect(target.memberName, 'Anna Nováková');
+    });
+
+    test('detail člena na akci přežije cestu přes URL', () {
+      final path = memberAttendanceDetailPath(
+        eventId: 12,
+        memberId: 3,
+        memberName: 'Anna Nováková',
+      );
+      final target = MemberAttendanceTarget.fromQuery(query(path));
+
+      expect(target.isComplete, isTrue);
+      expect(target.isRehearsal, isFalse);
+      expect(target.eventId, 12);
+    });
+
+    test('neúplný odkaz není kompletní cíl', () {
+      expect(MemberAttendanceTarget.fromQuery(const {}).isComplete, isFalse);
+      expect(
+        MemberAttendanceTarget.fromQuery(const {'memberId': '3'}).isComplete,
+        isFalse,
+      );
+      expect(
+        MemberAttendanceTarget.fromQuery(const {'eventId': '12'}).isComplete,
+        isFalse,
+      );
+    });
+
+    test('přehled otevře měsíc z URL', () {
+      final path = attendanceOverviewPath(const YearMonth(2026, 11));
+      expect(YearMonth.fromQuery(query(path)), const YearMonth(2026, 11));
+    });
+  });
+
   group('URL souborů', () {
     test('odpovídají FilesController.cs:16', () {
       expect(imageUrl(42), endsWith('/api/files/42/image?size=full'));
