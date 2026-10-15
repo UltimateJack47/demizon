@@ -384,7 +384,7 @@ prohlížeč nemá jak připojit.
 |---|---|
 | `AuthFlowTests` | Cookie přihlášení, které `AuthApiTests` (JWT) nepokrývají: form post na `/ProcessLogin`, redirect, `HttpOnly` cookie, nepřihlášený admin obsah nevidí, odhlášení přístup zavře |
 | `PublicPageTests` | 6 veřejných rout × (vykreslení bez chyby v konzoli + žádný vodorovný přesah); naběhnutí Blazor okruhu |
-| `AdminWalkthroughTests` | 9 admin stránek × (desktop + mobil 390 px), popisky buněk tabulek na mobilu, přítomnost MudBlazor providerů, otevření a zavření dialogu, **validace všech čtyř dialogových formulářů** |
+| `AdminWalkthroughTests` | 9 admin stránek × (desktop + mobil 390 px), popisky buněk tabulek na mobilu, přítomnost MudBlazor providerů, otevření a zavření dialogu (Escape se opakuje — key interceptor MudBlazoru se připojuje až po renderu, první stisk se občas ztratil), **validace všech čtyř dialogových formulářů** |
 | `MudBlazorLayoutTests` | Nulové rozměry interaktivních prvků, přetékání na 390 px |
 
 **Proč chyby v konzoli jako assertion:** v `Development` není zaregistrovaný

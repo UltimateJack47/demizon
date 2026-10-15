@@ -121,11 +121,23 @@ public class AdminWalkthroughTests(E2EFixture fixture) : E2ETestBase(fixture)
             Timeout = 10_000,
         });
 
-        await Page.Keyboard.PressAsync("Escape");
+        // MudBlazor připojuje key interceptor dialogu až po renderu přes JS
+        // interop, takže viditelný dialog ještě nemusí Escape slyšet a první
+        // stisk se ztratí (v CI i lokálně cca 1 běh z 5). Stisk se proto
+        // opakuje, dokud dialog nezmizí; zavřít ho ale pořád musí Escape.
+        for (var attempt = 0; attempt < 5 && !await dialog.IsHiddenAsync(); attempt++)
+        {
+            await Page.Keyboard.PressAsync("Escape");
+            for (var poll = 0; poll < 20 && !await dialog.IsHiddenAsync(); poll++)
+            {
+                await Page.WaitForTimeoutAsync(100);
+            }
+        }
+
         await dialog.WaitForAsync(new LocatorWaitForOptions
         {
             State = WaitForSelectorState.Hidden,
-            Timeout = 10_000,
+            Timeout = 1_000,
         });
 
         Assert.Empty(RelevantConsoleErrors);
