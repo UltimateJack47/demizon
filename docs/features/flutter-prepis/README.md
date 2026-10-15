@@ -1,7 +1,7 @@
 # Přepis mobilní aplikace z .NET MAUI do Flutteru
 
 > **Živý dokument.** Průběžně aktualizovat.
-> Poslední aktualizace: 2026-10-14 (proklik na emulátoru proti lokálnímu backendu, 4 opravy).
+> Poslední aktualizace: 2026-10-15 (admin detail docházky člena: chyby se už nemaskují).
 > Založeno: 2026-09-01. Větev: `feat/flutter-app`. Adresář: `demizon_flutter/`.
 >
 > Pořadí vůči backendu a nasazení: [`STATUS.md`](../../STATUS.md).
@@ -139,7 +139,7 @@ ani `pub get` (`intl` z `flutter_localizations`). Stav:
 | `flutter pub get` | OK |
 | `dart run build_runner build` | **42 vygenerovaných souborů** |
 | `flutter analyze` | **No issues found!** |
-| `flutter test` | **37 testů prošlo** (2026-10-14; bylo 26) |
+| `flutter test` | **41 testů prošlo** (2026-10-15; bylo 26) |
 | `flutter build apk --debug` | **APK postaveno** (159 MB debug) |
 | **spuštěno na emulátoru** | **Pixel 9 / API 36 — aplikace běží** |
 
@@ -161,7 +161,7 @@ našel jen **3 nálezy** na 61 souborech a žádnou skutečnou chybu. Zásluhu n
 
 ### Testy
 
-`flutter test` — **37 testů** (2026-10-14):
+`flutter test` — **41 testů** (2026-10-15):
 
 - `test/contract_test.dart` — kontrakt s API, který kompilátor nehlídá: statusy
   docházky (`yes`/`maybe`/`no`), mapování rolí, `yyyy-MM-dd` na drátě u zkoušek,
@@ -173,6 +173,9 @@ našel jen **3 nálezy** na 61 souborech a žádnou skutečnou chybu. Zásluhu n
   po loginu, reset po odhlášení.
 - `test/invalidation_test.dart` — změna docházky znovu načte seznam akcí
   i všechny načtené měsíce; nová session zahodí data minulého uživatele.
+- `test/member_attendance_detail_test.dart` — admin detail docházky člena
+  na zkoušku: chyba načtení je chyba (ne „Nepřijde“), neúspěšné uložení vrátí
+  `false` a uvolní formulář, znovu otevřený formulář se načte ze serveru.
 
 Router samotný (redirect `/attendance/member`) unit testem pokrytý není —
 potřeboval by podvrhnout auth i API. Ověřuje se proklikem, viz níž.
@@ -256,6 +259,17 @@ a editace akce, tance (filtr, detail, text písně), profil, změna hesla
 Cestou opravený backend: `PUT /api/attendances/rehearsal` roli tiše zahazoval
 (u akcí ji ukládá). Teď ji ukládá; adminský `PUT …/rehearsal/member/{id}` roli
 nemění, protože klienti adminovi výběr role u zkoušky nenabízí a posílají `null`.
+
+**Admin detail docházky člena (2026-10-15).** Načtení docházky na zkoušku
+chytalo každou chybu a ukázalo „Nepřijde“ (převzato z MAUI). Server ale
+chybějící docházku vrací jako `"no"` se stavem 200, takže catch maskoval jen
+skutečné chyby (síť, 401, 500) — a admin by uložením přepsal skutečnou odpověď
+člena. Chyba teď propadne do „Nepodařilo se načíst docházku.“ Neúspěšné uložení
+se loguje (`debugPrint` s chybou a stackem), dřív `catch (_)` beze stopy.
+Provider je `autoDispose`: formulář se při každém otevření načte znovu, jinak by
+v cache zůstala chyba i po obnově spojení a admin by pracoval se starým stavem.
+Na emulátoru ověřeno: uložení bez backendu → SnackBar + log v logcatu; detail
+bez backendu → chybová obrazovka; po spuštění backendu se načte; uložení projde.
 
 **Drobnosti, beze změny** (stejné jako v MAUI, není to regrese přepisu):
 „1 videí“ v seznamu tanců; u akce bez docházky je předvybrané „Nepřijdu“

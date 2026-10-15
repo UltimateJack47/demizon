@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/attendance/all_members_attendance_controller.dart';
 import '../features/attendance/attendance_controller.dart';
 import '../features/attendance/attendance_stats_controller.dart';
-import '../features/attendance/member_attendance_detail_controller.dart';
 import '../features/dances/dance_detail_controller.dart';
 import '../features/dances/dances_controller.dart';
 import '../features/events/event_detail_controller.dart';
@@ -34,7 +33,6 @@ void invalidateAttendanceViews(Invalidate invalidate) {
 void invalidateSessionData(Invalidate invalidate) {
   invalidateAttendanceViews(invalidate);
   invalidate(eventDetailProvider);
-  invalidate(memberAttendanceDetailProvider);
   invalidate(dancesProvider);
   invalidate(danceDetailProvider);
   invalidate(galleryProvider);

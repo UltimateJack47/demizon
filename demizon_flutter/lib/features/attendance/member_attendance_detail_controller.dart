@@ -106,14 +106,17 @@ class MemberAttendanceDetailState {
   }
 }
 
-final memberAttendanceDetailProvider = AsyncNotifierProvider.family<
-    MemberAttendanceDetailController,
-    MemberAttendanceDetailState,
-    MemberAttendanceTarget>(
+/// `autoDispose`: formulář se při každém otevření načte znovu. Z cache by admin
+/// uložením přepsal novější odpověď člena a chyba načtení by v ní zůstala.
+final memberAttendanceDetailProvider =
+    AsyncNotifierProvider.autoDispose.family<
+        MemberAttendanceDetailController,
+        MemberAttendanceDetailState,
+        MemberAttendanceTarget>(
   MemberAttendanceDetailController.new,
 );
 
-class MemberAttendanceDetailController extends FamilyAsyncNotifier<
+class MemberAttendanceDetailController extends AutoDisposeFamilyAsyncNotifier<
     MemberAttendanceDetailState, MemberAttendanceTarget> {
   @override
   Future<MemberAttendanceDetailState> build(
@@ -128,18 +131,16 @@ class MemberAttendanceDetailController extends FamilyAsyncNotifier<
 
     if (arg.isRehearsal) {
       final date = arg.rehearsalDate!;
-      Attendance? attendance;
-      try {
-        attendance = await api.getMemberRehearsalAttendance(arg.memberId, date);
-      } catch (_) {
-        // MAUI: chybějící docházka na zkoušku není chyba — bere se jako "no".
-        attendance = null;
-      }
+      // Chybějící docházku vrací server jako "no" se stavem 200. MAUI tu
+      // chytalo každou chybu a ukázalo "no", které by admin uložením přepsal
+      // skutečnou odpověď člena — proto chyba propadne do chybové obrazovky.
+      final attendance =
+          await api.getMemberRehearsalAttendance(arg.memberId, date);
       return MemberAttendanceDetailState(
         eventName: 'Zkouška',
         eventDate: date,
-        status: attendance?.status ?? 'no',
-        comment: attendance?.comment,
+        status: attendance.status,
+        comment: attendance.comment,
       );
     }
 
@@ -211,7 +212,8 @@ class MemberAttendanceDetailController extends FamilyAsyncNotifier<
       // Detail akce ukazuje, kdo přijde.
       ref.invalidate(eventDetailProvider);
       return true;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Uložení docházky člena ${arg.memberId} selhalo: $e\n$stack');
       return false;
     } finally {
       final latest = state.valueOrNull;
