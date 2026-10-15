@@ -227,6 +227,11 @@ vychází ~400 buildů měsíčně zdarma. Pro tenhle projekt bohatě stačí.
    `Demizon.Maui` vyžaduje workload `maui-android` — proto solution filter.
 2. **`build.yml`** — ještě ne. Po testech Docker image do registry se dvěma tagy:
    `latest` a `sha-<commit>`. Čeká na rozhodnutí o registry.
+   Build s **`--pull`** (`docker/build-push-action`: `pull: true`), jinak cache drží
+   starý `aspnet:10.0-alpine` a záplaty .NET se do image nedostanou. Stejná politika
+   jako mru.sk (deploy `up --pull always` + `image prune -f`, 2026-10-14): obě appky
+   na nejnovějším `10.0-alpine`, vrstvy runtime (~120 MB) se na serveru sdílí, jen když
+   mají obě stejný digest — po Patch Tuesday proto nasadit obě.
 3. **`deploy.yml`** — trigger `workflow_dispatch` (ruční spuštění) nebo `release`.
    Přes SSH na server udělá `docker pull` + restart kontejneru + `docker image prune -f`.
 
