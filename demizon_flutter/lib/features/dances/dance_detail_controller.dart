@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:demizon/core/providers.dart';
 import 'package:demizon/models/models.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
@@ -24,8 +25,10 @@ class DanceDetail {
   bool get hasDocuments => documents.isNotEmpty;
 }
 
-final danceDetailProvider =
-    AsyncNotifierProvider.family<DanceDetailController, DanceDetail, int>(
+/// `autoDispose`: tanec se při každém otevření načte znovu, jinak by v cache
+/// zůstala chyba načtení i chybějící fotky po výpadku spojení.
+final danceDetailProvider = AsyncNotifierProvider.autoDispose
+    .family<DanceDetailController, DanceDetail, int>(
   DanceDetailController.new,
 );
 
@@ -33,7 +36,8 @@ final danceDetailProvider =
 ///
 /// `IsLyricsExpanded` se sem nepřenáší — rozbalení textu písně řeší
 /// `ExpansionTile` na obrazovce sám.
-class DanceDetailController extends FamilyAsyncNotifier<DanceDetail, int> {
+class DanceDetailController
+    extends AutoDisposeFamilyAsyncNotifier<DanceDetail, int> {
   @override
   Future<DanceDetail> build(int danceId) => _load(danceId);
 
@@ -53,14 +57,16 @@ class DanceDetailController extends FamilyAsyncNotifier<DanceDetail, int> {
     List<GalleryPhoto> photos;
     try {
       photos = await api.getDancePhotos(danceId);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Fotky tance $danceId se nenačetly: $e');
       photos = const [];
     }
 
     List<DanceDocument> documents;
     try {
       documents = await api.getDanceDocuments(danceId);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Dokumenty tance $danceId se nenačetly: $e');
       documents = const [];
     }
 
@@ -81,7 +87,8 @@ class DanceDetailController extends FamilyAsyncNotifier<DanceDetail, int> {
         mode: LaunchMode.externalApplication,
       );
       return launched ? null : 'Nepodařilo se otevřít video.';
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Video $url se nepodařilo otevřít: $e');
       return 'Nepodařilo se otevřít video.';
     }
   }
@@ -109,7 +116,8 @@ class DanceDetailController extends FamilyAsyncNotifier<DanceDetail, int> {
 
       final result = await OpenFilex.open(path, type: document.contentType);
       return result.type == ResultType.done ? null : failure;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Dokument ${document.id} se nepodařilo otevřít: $e');
       return failure;
     }
   }

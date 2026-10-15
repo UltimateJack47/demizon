@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -175,11 +176,15 @@ Event noRehearsalOn(DateTime date) {
   );
 }
 
-final eventDetailProvider = AsyncNotifierProvider.family<EventDetailController,
-    EventDetailState, EventDetailArgs>(EventDetailController.new);
+/// `autoDispose`: detail se při každém otevření načte znovu, jinak by v cache
+/// zůstala chyba načtení i docházka, kterou mezitím změnil admin.
+final eventDetailProvider = AsyncNotifierProvider.autoDispose
+    .family<EventDetailController, EventDetailState, EventDetailArgs>(
+  EventDetailController.new,
+);
 
 class EventDetailController
-    extends FamilyAsyncNotifier<EventDetailState, EventDetailArgs> {
+    extends AutoDisposeFamilyAsyncNotifier<EventDetailState, EventDetailArgs> {
   @override
   Future<EventDetailState> build(EventDetailArgs arg) async {
     final api = ref.read(apiClientProvider);
@@ -194,13 +199,16 @@ class EventDetailController
       try {
         final month = await api.getEventsByMonth(date.year, date.month);
         event = findRehearsal(month, date) ?? noRehearsalOn(date);
-      } catch (_) {
+      } catch (e) {
         // Bez spojení se stav zjistit nedá. Formulář necháme odemčený,
         // server případné zrušení stejně pohlídá.
+        debugPrint('Stav zkoušky ${encodeQueryValue(date)} nezjištěn: $e');
         event = rehearsalPlaceholder(date);
       }
 
       // Docházka na zkoušku nemusí existovat — 404 znamená "nepřijdu".
+      // Jiná chyba propadne do chybové obrazovky: jako "nepřijdu" by ji člen
+      // uložením přepsal přes svou skutečnou odpověď.
       try {
         final att = await api.getRehearsalAttendance(date);
         return EventDetailState(
@@ -211,7 +219,8 @@ class EventDetailController
           comment: att.comment,
           activityRole: apiRoleToDisplay(att.activityRole),
         );
-      } catch (_) {
+      } on DioException catch (e) {
+        if (e.response?.statusCode != 404) rethrow;
         return EventDetailState(
           args: arg,
           event: event,
@@ -228,7 +237,8 @@ class EventDetailController
     EventAttendees? attendees;
     try {
       attendees = await api.getEventAttendees(eventId);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Seznam účastníků akce $eventId se nenačetl: $e');
       attendees = null;
     }
 

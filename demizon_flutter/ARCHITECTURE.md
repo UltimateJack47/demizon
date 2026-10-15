@@ -150,8 +150,13 @@ class EventsController extends AsyncNotifier<List<Event>> {
 
 Obrazovka je `ConsumerWidget` a stav řeší přes `.when(data:, loading:, error:)`.
 
-**Invalidace po změně dat** — providery nejsou `autoDispose`, takže cache drží
-napořád (u rodin každý načtený měsíc). Proto:
+**Detaily jsou `autoDispose`** (detail akce, tance, docházky člena): načtou se
+při každém otevření, takže v cache nezůstane chyba ani starý stav formuláře.
+Stav z `AsyncValue` mimo `.when` čti přes `valueOrNull`, ne `.value` — to při
+chybě výjimku znovu vyhodí a obrazovka spadne.
+
+**Invalidace po změně dat** — seznamy a přehledy `autoDispose` nejsou, takže
+cache drží napořád (u rodin každý načtený měsíc). Proto:
 - Kdo mění docházku nebo akci, volá `invalidateAttendanceViews(ref.invalidate)`
   z `lib/core/invalidation.dart`, ne jednotlivé `ref.invalidate`.
 - Nový provider s daty přihlášeného člena přidej do `invalidateSessionData`,

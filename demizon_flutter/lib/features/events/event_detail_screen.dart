@@ -51,13 +51,13 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     // Poznámku držíme v TextEditingController; ze stavu ji převezmeme jen
     // jednou, po prvním načtení, ať uživateli nepřepisujeme rozepsaný text.
     ref.listen(eventDetailProvider(_args), (_, next) {
-      final value = next.value;
+      final value = next.valueOrNull;
       if (!_commentLoaded && value != null) {
         _commentLoaded = true;
         _commentController.text = value.comment ?? '';
       }
     });
-    final initial = async.value;
+    final initial = async.valueOrNull;
     if (!_commentLoaded && initial != null) {
       _commentLoaded = true;
       final text = initial.comment ?? '';
@@ -67,7 +67,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(async.value?.event?.name ?? '')),
+      appBar: AppBar(title: Text(async.valueOrNull?.event?.name ?? '')),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const Center(
@@ -518,7 +518,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           .saveAttendance(comment: _commentController.text);
       if (!mounted) return;
       context.pop();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Uložení docházky selhalo: $e');
       if (!mounted) return;
       await _alert('Chyba', 'Nepodařilo se uložit docházku.');
     } finally {
@@ -562,7 +563,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       await ref.read(eventDetailProvider(_args).notifier).deleteEvent();
       if (!mounted) return;
       context.pop();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Smazání akce selhalo: $e');
       if (!mounted) return;
       await _alert('Chyba', 'Nepodařilo se smazat akci.');
     } finally {

@@ -1,7 +1,7 @@
 # Přepis mobilní aplikace z .NET MAUI do Flutteru
 
 > **Živý dokument.** Průběžně aktualizovat.
-> Poslední aktualizace: 2026-10-15 (admin detail docházky člena: chyby se už nemaskují).
+> Poslední aktualizace: 2026-10-15 (detaily docházky, akce a tance: chyby se nemaskují ani nedrží v cache).
 > Založeno: 2026-09-01. Větev: `feat/flutter-app`. Adresář: `demizon_flutter/`.
 >
 > Pořadí vůči backendu a nasazení: [`STATUS.md`](../../STATUS.md).
@@ -139,7 +139,7 @@ ani `pub get` (`intl` z `flutter_localizations`). Stav:
 | `flutter pub get` | OK |
 | `dart run build_runner build` | **42 vygenerovaných souborů** |
 | `flutter analyze` | **No issues found!** |
-| `flutter test` | **41 testů prošlo** (2026-10-15; bylo 26) |
+| `flutter test` | **47 testů prošlo** (2026-10-15; bylo 26) |
 | `flutter build apk --debug` | **APK postaveno** (159 MB debug) |
 | **spuštěno na emulátoru** | **Pixel 9 / API 36 — aplikace běží** |
 
@@ -161,7 +161,7 @@ našel jen **3 nálezy** na 61 souborech a žádnou skutečnou chybu. Zásluhu n
 
 ### Testy
 
-`flutter test` — **41 testů** (2026-10-15):
+`flutter test` — **47 testů** (2026-10-15):
 
 - `test/contract_test.dart` — kontrakt s API, který kompilátor nehlídá: statusy
   docházky (`yes`/`maybe`/`no`), mapování rolí, `yyyy-MM-dd` na drátě u zkoušek,
@@ -176,6 +176,11 @@ našel jen **3 nálezy** na 61 souborech a žádnou skutečnou chybu. Zásluhu n
 - `test/member_attendance_detail_test.dart` — admin detail docházky člena
   na zkoušku: chyba načtení je chyba (ne „Nepřijde“), neúspěšné uložení vrátí
   `false` a uvolní formulář, znovu otevřený formulář se načte ze serveru.
+- `test/detail_providers_test.dart` — detail zkoušky: 404 = „nepřijdu“, jiná
+  chyba je chyba; detail akce i tance se po znovuotevření načte ze serveru;
+  selhání fotek tance detail nezastaví.
+- `test/event_detail_screen_test.dart` (widget) — chyba načtení akce ukáže
+  hlášku, ne červenou obrazovku.
 
 Router samotný (redirect `/attendance/member`) unit testem pokrytý není —
 potřeboval by podvrhnout auth i API. Ověřuje se proklikem, viz níž.
@@ -270,6 +275,26 @@ Provider je `autoDispose`: formulář se při každém otevření načte znovu, 
 v cache zůstala chyba i po obnově spojení a admin by pracoval se starým stavem.
 Na emulátoru ověřeno: uložení bez backendu → SnackBar + log v logcatu; detail
 bez backendu → chybová obrazovka; po spuštění backendu se načte; uložení projde.
+
+**Detail akce a tance (2026-10-15)** — stejná třída chyb:
+- `eventDetailProvider` i `danceDetailProvider` jsou `autoDispose`. Dřív chyba
+  načtení (nebo stará docházka) zůstala v cache až do dalšího přihlášení;
+  z `invalidateSessionData` proto vypadly, není co invalidovat.
+- Vlastní docházka na zkoušku: `GET /api/attendances/rehearsal` vrací 404, když
+  docházka chybí — jen to je „Nepřijdu“. Jiná chyba (síť, 500) dřív také
+  ukázala „Nepřijdu“ a člen by uložením přepsal svou odpověď; teď skončí na
+  „Nepodařilo se načíst akci.“
+- **Chyba obrazovky:** `event_detail_screen.dart` četl `AsyncValue.value`, které
+  v Riverpodu 2 při chybě výjimku znovu vyhodí — místo hlášky se ukázala červená
+  (v release šedá) obrazovka. Teď `valueOrNull`. Platilo i pro detail akce, ne
+  jen zkoušky; odhalil to až emulátor.
+- Záměrná degradace (stav zkoušky z měsíce, seznam účastníků, fotky a dokumenty
+  tance, otevření videa/dokumentu, uložení/smazání na obrazovce) zůstává, ale
+  každý catch teď loguje přes `debugPrint`.
+
+Emulátor: zkouška bez backendu → hláška, po spuštění se načte; zkouška bez
+docházky → „Nepřijdu“; tanec bez backendu → „Nepodařilo se načíst tanec.“, po
+spuštění se načte.
 
 **Drobnosti, beze změny** (stejné jako v MAUI, není to regrese přepisu):
 „1 videí“ v seznamu tanců; u akce bez docházky je předvybrané „Nepřijdu“
