@@ -206,11 +206,12 @@ v záznamu featury, sekce *Současný stav*.
 
 ## G. Krojárka
 
-Záznam: [`features/krojarka/`](features/krojarka/README.md). **Návrh (2026-10-25),
-čeká na schválení** otevřených otázek O1–O6 (role, závislosti, schéma).
+Záznam: [`features/krojarka/`](features/krojarka/README.md). **Návrh (2026-10-25).**
+Závislosti a schéma schválené; čeká se na rozhodnutí o přestavbě rolí (O1, krok 0).
 Inventář krojů po kusech i počtem, QR štítky, předávky s fotkou každého kusu
 a potvrzením příjemce, předávky člen → člen, údržba, inventura.
 
+- [ ] 0: více rolí na člena (`MemberRoles`: `Admin`, `Leader`, `CostumeKeeper`)
 - [ ] A–C: model + migrace, Core služby, API
 - [ ] D–G: Blazor (katalog, štítky, předávka z mobilního webu, přehledy, připomínky, údržba, inventura)
 - [ ] H: Flutter (Moje kroje, potvrzení, tab správce se skenem) — telefon spolu s B

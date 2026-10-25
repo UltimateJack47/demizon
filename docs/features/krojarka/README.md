@@ -1,7 +1,7 @@
 # Krojárka: inventář a předávky souborových krojů
 
-> Založeno: 2026-10-25. Stav: 📝 **návrh, čeká na schválení** (otevřené otázky
-> v [Rozhodnutí](#rozhodnutí)). Kód zatím žádný.
+> Založeno: 2026-10-25. Stav: 📝 **návrh** — otázky O2–O6 rozhodnuté 2026-10-25,
+> čeká se na rozhodnutí o rolích (O1, krok 0). Kód zatím žádný.
 >
 > Sekce *Současný stav* popisuje repozitář **před** implementací.
 
@@ -78,8 +78,8 @@ Tři úrovně podle toho, jak krojárka skutečně vypadá, plus držení a pře
 | `CostumeMaintenance` | údržba | položka, druh (praní, čištění, oprava, jiné), od–do, poznámka, cena |
 | `CostumeInventoryCheck` + `…Entry` | inventura | kdo, kdy; naskenované položky a spočtené počty |
 
-Na `Member` přibudou dva sloupce: `IsCostumeKeeper` (bool) a `CostumeQrToken`
-(náhodný, jde přegenerovat).
+Na `Member` přibude sloupec `CostumeQrToken` (náhodný, jde přegenerovat).
+Správce krojárky je **role** `CostumeKeeper`, ne sloupec — viz krok 0.
 
 Hodnota v **celých Kč jako `int`**, protože SQLite `decimal` neumí
 v EF řadit ani sčítat na straně DB.
@@ -131,11 +131,13 @@ Draft ──(fotka u každého řádku)──► Pending ──(příjemce potvr
 **Web (Blazor), nová položka menu „Krojárka“** pro všechny přihlášené. Obsah
 podle oprávnění:
 
+Admin = `Admin` i `Leader` (vůdce souboru). 👁 = jen čtení.
+
 | Obrazovka | Člen | Správce | Admin |
 |---|---|---|---|
 | Moje kroje (co držím, čekající potvrzení, historie, můj QR, předat kolegovi) | ✔ | ✔ | ✔ |
 | Karta kusu (z QR) — název, velikost, stav, kdo drží | ✔ | ✔ | ✔ |
-| Katalog: kroje → součástky → kusy, dostupnost podle velikostí | ? | ✔ | 👁 |
+| Katalog: kroje → součástky → kusy, dostupnost podle velikostí | — | ✔ | 👁 |
 | Předávka: výdej / příjem (mobilní web, skenování) | — | ✔ | — |
 | Kdo co má + připomínka pushem (jeden / vybraní / všichni držitelé) | — | ✔ | 👁 |
 | Historie kusu se všemi fotkami | — | ✔ | 👁 |
@@ -173,22 +175,25 @@ Návrhová rozhodnutí (alternativy a důvod):
 | # | Rozhodnutí | Alternativy | Proč |
 |---|---|---|---|
 | 1 | Jedna `CostumeItem` pro kus i šarži, držení v `CostumeHolding` | a) `HolderMemberId` na kusu + zvlášť tabulka pro šarže; b) jen kusy | Jedna cesta pro předávku, přehledy i inventuru. Kus je šarže s počtem 1. |
-| 2 | Správce = příznak `IsCostumeKeeper` | nová hodnota v `UserRole` | Role řídí autorizaci napříč appkou. Správce není admin a admin nemusí být správce. |
+| 2 | Správce = role `CostumeKeeper` ve více-rolovém modelu (krok 0) | a) příznak `IsCostumeKeeper` na členovi; b) další hodnota jednoho `UserRole` | a) je obejití autorizace mimo role; b) neumí člověka, který je admin i správce. |
 | 3 | Předávka jako řetěz `Transfer`ů, ne „výpůjčka + vrácení“ | `Loan` s `ReturnedAt` | Předávka člen → člen a vracení po kusech z modelu výpůjčky nevycházejí. |
 | 4 | Server-side `Draft` | poslat všechny fotky najednou při odeslání | Výpadek signálu v krojárce neztratí rozfocenou předávku. |
 | 5 | Vlastní `CostumePhoto` + vlastní limit | rozšířit `File` o FK | Viz *Fotky a úložiště*. |
 | 6 | QR nese URL, parser bere poslední segment | holý kód bez URL | Funguje i obyčejný foťák a doména jde změnit. |
 
-**Otevřené — čeká na odpověď:**
+**Rozhodnuto 2026-10-25:**
 
-- **O1.** „Vůdci souboru“ = dnešní `Admin`, nebo potřebují vlastní příznak?
-- **O2.** Vidí běžný člen katalog a volné kusy, nebo jen svoje a kartu kusu z QR?
-- **O3.** Vracení do krojárky: stačí potvrzení správcem + notifikace členovi?
-- **O4.** Předávka člen → člen: správce jen notifikovat (návrh), nebo ji má schvalovat?
-- **O5.** Nové závislosti: NuGet `QRCoder`; JS `qr-scanner` (nimiq, MIT, ~16 kB,
-  vendorovaný ve `wwwroot/js`) jako fallback k nativnímu `BarcodeDetector`,
-  který iOS Safari nemá; Flutter `mobile_scanner` + `image_picker`.
-- **O6.** Schéma: 10 nových tabulek + 2 sloupce na `Member`, jedna migrace.
+- **O2.** Běžný člen katalog ani volné kusy nevidí, jen co právě drží (a kartu kusu z QR).
+- **O3.** Vrácení do krojárky potvrzuje správce, vracející člen dostane notifikaci s fotkami.
+- **O4.** Předávka člen → člen: správce dostane notifikaci, neschvaluje.
+- **O5.** Závislosti schválené: `QRCoder`, `qr-scanner` (vendorovaný), `mobile_scanner`, `image_picker`.
+- **O6.** Schéma schválené.
+
+**Otevřené:**
+
+- **O1.** Role: dnešní jedna `UserRole` na členovi nestačí (člověk může být
+  admin i správce). Návrh přestavby je krok 0 v [Postupu](#postup);
+  vůdce souboru jako role `Leader`.
 
 ## Postup
 
@@ -196,7 +201,8 @@ Commity po uzavřených částech, každá s testy.
 
 | Krok | Obsah | Testy |
 |---|---|---|
-| A | Model, migrace, `IsCostumeKeeper` + QR token | integrační: holdings, unikátnost kódu |
+| 0 | Více rolí na člena: tabulka `MemberRoles`, role `Admin`/`Leader`/`CostumeKeeper` (samostatná změna, popis v chatu 2026-10-25, po schválení vlastní záznam) | viz krok 0 |
+| A | Model, migrace, QR token na členovi | integrační: holdings, unikátnost kódu |
 | B | Core: katalog (CRUD), předávky (automat, oprávnění, holdings), fotky (sdílený optimizer, limit, `CapturedAt`) | unit: přechody automatu, kdo smí co, Bulk počty, starý EXIF; integrační nad SQLite |
 | C | API + DTO (`/api/costumes/...`), QR endpointy | HTTP přes `WebApplicationFactory`: 401/403 podle role, kontrakt |
 | D | Blazor: menu, katalog, tisk štítků, Moje kroje, potvrzení, karta kusu | E2E |
