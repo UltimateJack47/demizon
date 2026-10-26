@@ -59,6 +59,7 @@
 ## Auth and client integration details
 - MVC host uses cookie auth as default (Blazor) and JWT bearer for `/api/*` (`MvcAuthenticationServicesRegistrationExtension.cs`).
 - JWT member id is stored in `ClaimTypes.PrimarySid`; use `User.GetMemberId()` extension. Every role is its own `ClaimTypes.Role` claim; the token response carries them as `roles: string[]`.
+- Sessions are re-checked against the DB (`MemberSessionValidator`): a cookie whose roles no longer match is signed out, a JWT gets 401 (the client refreshes into current roles). A test that hand-crafts a JWT must therefore use a member that exists in the DB with exactly those roles.
 - Flutter token lifecycle: `TokenStorage` + `AuthInterceptor` (proactive refresh 5 min before expiry, fallback on 401).
 - Flutter uses hierarchical `go_router` paths in `demizon_flutter/lib/core/routes.dart`.
 

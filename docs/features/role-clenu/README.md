@@ -84,17 +84,33 @@ to neřeší.
 složka zůstává jen jako historická reference. Rozdaná MAUI build by proti
 novému backendu přihlášení nezvládla (`role` v odpovědi chybí).
 
+**Změna role platí okamžitě (2026-10-26).** Role jsou zapečené v cookie (30 dní,
+klouzavě) i v JWT. `MemberSessionValidator` proto porovná role v session s DB a
+ověří, že člen existuje a není externista:
+
+| Kde | Kdy se kontroluje | Když nesedí |
+|---|---|---|
+| Cookie (web) | `OnValidatePrincipal`, každý HTTP požadavek | odmítnutí + smazání cookie = **odhlášení** |
+| Otevřený Blazor okruh | `MemberRevalidatingAuthenticationStateProvider`, každou minutu | okruh přejde na nepřihlášeného |
+| JWT (mobil) | `JwtBearerEvents.OnTokenValidated`, každý požadavek | **401** → Flutter obnoví token a dostane aktuální role, uživatel nic nepozná |
+
+Spouští se při jakékoli změně rolí, tedy odebrání i přidání. Navíc smazaný člen nebo
+externista přijde o přístup hned, ne až s vypršením session. Cookie a tokeny vydané
+před nasazením nesou roli `Standard`, takže se každý jednou odhlásí.
+Stojí to jeden malý dotaz do SQLite na přihlášený požadavek.
+
+Zvažované alternativy: zneplatnit jen refresh tokeny (řeší jen mobil, web by
+držel 30 dní), sloupec „verze účtu“ na členovi (migrace navíc a neumí nic víc),
+událost v paměti (nedosáhne na jiný prohlížeč ani telefon).
+
 **Migrace `AddMemberRoles`.** Vytvoří tabulku, převede `Members.Role = 'Admin'`
 na řádek `Admin` a sloupec zahodí. `Down` je ztrátový: starý sloupec unese jen
 jednu roli, takže se zachová jen `Admin`.
 
 ## Známá omezení
 
-- **Změna role se projeví až s novým tokenem nebo cookie.** JWT do refreshe
-  (≤ `ExpirationMinutes`), cookie do odhlášení. U „pamatuj si mě“ to může být
-  dlouho. Odebraný admin tak drží práva, dokud se znovu nepřihlásí. Řešením by
-  byla kontrola rolí v `CookieAuthenticationEvents.OnValidatePrincipal`. Zatím
-  se nedělá: role se mění zřídka a aplikace není v produkci.
+- Otevřená stránka se odhlásí až při další kontrole (do minuty). Automaticky
+  to testované není, E2E pokrývá jen cestu přes cookie (nový požadavek).
 - `AuthenticationService.IssueToken` nemá v kódu volajícího (endpoint není
   namapovaný). Upravený je jen kvůli kompilaci, mrtvý kód zůstává.
 
@@ -105,9 +121,11 @@ jednu roli, takže se zachová jen `Admin`.
 | role → claimy (víc rolí, žádná role) | `TokenServiceTests` |
 | `roles` v odpovědi tokenu pro člena i admina | `AuthApiTests` |
 | `ContentManager` smí videa, nesmí zkoušky; člen bez role nesmí obsah, ale vidí běžné endpointy | `RoleAuthorizationApiTests` |
+| token s odebranou / přidanou rolí a token smazaného člena → 401 | `RoleAuthorizationApiTests` |
+| odebraná role ukončí webovou session (cookie zmizí) | `AuthFlowTests.Odebrani_role_ukonci_webovou_session` (E2E) |
 | `SetRolesAsync`: přidání/odebrání, poslední admin, smazaný admin, neexistující člen | `MemberServiceTests` |
 | migrace převede adminy a běžným členům roli nepřidá | `ModelAndMigrationsTests.Migrace_roli_prevede_adminy_a_beznym_clenum_roli_neprida` |
 | menu podle role v prohlížeči (člen, správce obsahu) | `AuthFlowTests` (E2E) |
 | `TokenResponse.roles`, `rolesLabel`, `isAdmin` | `demizon_flutter/test/contract_test.dart` |
 
-Výsledek 2026-10-26: 195 unit + 190 integration + 58 E2E + 51 Flutter, vše zelené.
+Výsledek 2026-10-26: 201 unit + 190 integration + 59 E2E + 51 Flutter, vše zelené.

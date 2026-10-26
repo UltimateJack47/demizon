@@ -104,7 +104,12 @@ Přímá reference nebyla potřeba. `dotnet list package --vulnerable` je nyní 
 | **CryptoHelper** | 4.0.0 | 5.1.0 | **major, viz níže** |
 
 **Záměrně neaktualizováno:**
-- `SixLabors.ImageSharp` zůstává na `[3.1.12]` — 4.x vyžaduje licenční soubor.
+- `SixLabors.ImageSharp` zůstává na `[3.1.12]` — 4.x **i 3.2.0** ověřují licenční klíč
+  už při buildu (`SixLabors_ValidateLicense` v targets balíčku, Release bez klíče selže).
+  Pět zranitelností opravených až ve 3.2.0 je potlačených v `Directory.Build.props`
+  s odůvodněním, proč na ně naše cesta nedosáhne (ověřeno ve zdrojácích v3.1.12,
+  2026-10-26). Upload proto dekóduje **jen JPEG, PNG, WebP a GIF**
+  (`FileUploadService.UploadConfiguration`), TIFF se odmítá jako neplatný obrázek.
 - `Append.Blazor.Notifications 1.1.0` — už je aktuální.
 
 #### CryptoHelper 4.0.0 → 5.1.0 — co bylo ověřeno

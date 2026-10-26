@@ -14,7 +14,7 @@
 
 | | Stav |
 |---|---|
-| Testy | **443** — 195 unit + 190 integration + 58 E2E (2026-10-26 zelené); Flutter 51 |
+| Testy | **450** — 201 unit + 190 integration + 59 E2E (2026-10-26 zelené); Flutter 51 |
 | CI | [`test.yml`](../.github/workflows/test.yml) — dvě úlohy: `Demizon.Backend.slnf` a `Demizon.E2E.slnf` |
 | Docker image | 30 MB publish payload, 190 MB image (`aspnet:10.0-alpine` + ICU + tzdata, stejný base jako mru.sk) |
 
