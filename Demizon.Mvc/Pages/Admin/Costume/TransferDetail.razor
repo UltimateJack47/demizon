@@ -63,6 +63,11 @@ else
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="RejectAsync">Odmítnout</MudButton>
             </MudStack>
         }
+        @if (_transfer.Status == CostumeTransferStatus.Draft && _transfer.CreatedById == _actor.MemberId)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-2"
+                       Href="@($"Admin/Costumes/Handover?transfer={_transfer.Id}")">Pokračovat v předávce</MudButton>
+        }
         @if (_canCancel)
         {
             <MudButton Variant="Variant.Text" Color="Color.Error" Class="mt-2" OnClick="CancelAsync">Zrušit předávku</MudButton>

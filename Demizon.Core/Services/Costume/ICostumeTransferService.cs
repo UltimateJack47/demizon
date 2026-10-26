@@ -27,8 +27,9 @@ public interface ICostumeTransferService
     Task<Result> SetLineNoteAsync(int transferId, int lineId, CostumeActor actor, string? conditionNote,
         CancellationToken ct = default);
 
+    /// <param name="captureSource">Začátek originálu, když fotku zmenšil klient (viz <see cref="CostumePhotoProcessor"/>).</param>
     Task<Result<int>> AddPhotoAsync(int transferId, int lineId, CostumeActor actor, Stream photo,
-        CancellationToken ct = default);
+        Stream? captureSource = null, CancellationToken ct = default);
 
     Task<Result> RemovePhotoAsync(int transferId, int photoId, CostumeActor actor, CancellationToken ct = default);
 

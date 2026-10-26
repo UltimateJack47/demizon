@@ -1,7 +1,7 @@
 # Krojárka: inventář a předávky souborových krojů
 
-> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — kroky 0, A–D hotové (2026-10-26),
-> další je E (předávka se skenem na mobilním webu). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
+> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — kroky 0, A–E hotové (2026-10-26),
+> další je F (notifikace a připomínky). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
 >
 > Sekce *Současný stav* popisuje repozitář **před** implementací.
 
@@ -203,7 +203,7 @@ Commity po uzavřených částech, každá s testy.
 | B | ✅ Core: `CostumeCatalogService`, `CostumeTransferService`, `CostumePhotoProcessor`, `CostumeQrService` | `CostumeTransferServiceTests`, `CostumeCatalogServiceTests`, `CostumeQrServiceTests` (integrační nad SQLite) |
 | C | ✅ `CostumesController` (`/api/costumes`), DTO v `Demizon.Contracts/Costumes`, QR přes `QRCoder 1.8.0` | `CostumeApiTests` |
 | D | ✅ Blazor: menu „Krojárka“, Moje kroje + QR, katalog, štítky, detail předávky s potvrzením, karta kusu, kdo co má | `CostumeStoreTests` (E2E) |
-| E | Blazor mobilní web: předávka se skenem (kamera + ruční kód), fotky s kompresí v prohlížeči | E2E přes ruční zadání kódu (headless kamera neumí) |
+| E | ✅ `/Admin/Costumes/Handover`: výdej, příjem, předání kolegovi; sken kamerou (`qr-scanner`) i ručně / čtečkou; fotky zmenšené v prohlížeči | `CostumeStoreTests` (E2E přes ruční zadání), `CostumeScanTests` |
 | F | Kdo co má, ruční připomínky, transakční notifikace | unit: výběr adresátů |
 | G | Údržba, inventura, hodnota | unit: výsledek inventury (chybí / navíc / u člena) |
 | H | Flutter: Moje kroje, potvrzení, můj QR, předání kolegovi, tab správce se skenem, navigace z notifikace | `flutter test` + proklik na emulátoru (virtuální scéna kamery) |
@@ -294,6 +294,32 @@ přihlášené.
 - `/k/…` a `/m/…` vyžadují přihlášení (cookie na telefonu vydrží 30 dní).
   Nepřihlášený dostane obecné „Nemáte přístup“ z layoutu, bez přesměrování na login.
 - Zakládání předávky (sken, fotky) a „předat kolegovi“ je krok E.
+
+### E — předávka z mobilního webu (2026-10-26)
+
+`/Admin/Costumes/Handover?mode=issue|return|peer`, pokračování rozpracované
+`?transfer={id}`. Vstupy: tlačítka Výdej / Příjem (správce) a Předat kolegovi
+(kdo něco drží) na `/Admin/Costumes`, „Pokračovat v předávce“ u draftu.
+
+1. **Sběr:** sken kusů a QR protistrany. Okamžitá kontrola z katalogu (existuje,
+   je dostupný, je v krojárce / mám ho / kdo ho má). U příjmu se vracející
+   doplní z držitele prvního kusu; má-li kus víc lidí (šarže), chce se jeho QR.
+   Definitivně všechno ověří až `CreateDraftAsync`.
+2. **Fotky:** u každého kusu „Vyfotit“ (`<InputFile capture="environment">`),
+   poznámka ke stavu, přidání dalšího kusu skenem. Odeslání až s fotkou u všech.
+
+- **Skener** (`Components/CodeScanner.razor` + `wwwroot/js/costume-scanner.js`):
+  kamera přes vendorovaný `qr-scanner` 1.4.2 (`wwwroot/js/vendor/qr-scanner/`,
+  sám použije nativní `BarcodeDetector`, kde je). Ruční pole s Enterem je
+  rovnocenná cesta — ošoupaný štítek i USB/bluetooth čtečka.
+  `CostumeScan.Parse` bere poslední segment URL: `…/m/x` = člen, jinak kód kusu.
+- **Fotky z webu zmenšuje prohlížeč** (`RequestImageFileAsync`, 1600 px), aby po
+  mobilních datech a SignalR nejelo 8 MB. Tím ale zmizí EXIF, takže se zvlášť
+  pošle prvních 256 kB originálu a čas pořízení se čte z nich
+  (`ImageOptimizer.ReadCaptureTime`). HEIC z iPhonu překreslí prohlížeč na JPEG
+  (server HEIC neumí); jeho EXIF ale nepřečteme, takže `CapturedAt` zůstane prázdné.
+  Formát, který prohlížeč nepřekreslí, jde na server celý.
+- Kamera potřebuje HTTPS (nebo `localhost`). E2E kameru nemá, testuje se ruční zadání.
 
 Na telefonu to ověří až STATUS B, stejně jako zbytek Flutteru. Skenování
 z webu potřebuje HTTPS (`getUserMedia`); z mobilu na LAN proti `dotnet run`

@@ -337,6 +337,29 @@ public class CostumeTransferServiceTests : IAsyncDisposable
         ResultAssert.Failed(await service.RemovePhotoAsync(id, photoId, Keeper), ResultErrorKind.NotFound);
     }
 
+    /// <summary>
+    /// Web fotku zmenší v prohlížeči a EXIF tím ztratí; čas pořízení pak nese začátek originálu.
+    /// </summary>
+    [Fact]
+    public async Task Cas_porizeni_se_vezme_z_originalu_kdyz_fotku_zmensil_klient()
+    {
+        await SeedMembersAsync();
+        await using var db = _fixture.NewContext();
+        await CostumeTestData.SeedItemAsync(db, "K0001");
+        var service = Service(db);
+        var id = ResultAssert.Ok(await service.CreateDraftAsync(Keeper, null, _janaId, [new("K0001")], null));
+        var lineId = (await service.GetAsync(id))!.Lines.Single().Id;
+        var original = CostumeTestData.Jpeg(new DateTime(2026, 7, 1, 12, 0, 0));
+        var head = new MemoryStream(original.ToArray()[..(int)Math.Min(original.Length, 256 * 1024)]);
+
+        ResultAssert.Ok(await service.AddPhotoAsync(id, lineId, Keeper, CostumeTestData.Jpeg(), head));
+
+        // Červenec = letní čas, Praha je UTC+2.
+        var photo = Assert.Single(await service.GetPhotoInfosAsync(id));
+        Assert.Equal(new DateTime(2026, 7, 1, 10, 0, 0, DateTimeKind.Utc), photo.CapturedAt);
+        Assert.True(photo.IsStale);
+    }
+
     [Fact]
     public async Task Fotka_ktera_neni_obrazek_se_odmitne()
     {

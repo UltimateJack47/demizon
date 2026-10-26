@@ -18,13 +18,22 @@
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
-@if (_isViewer)
-{
-    <MudStack Row="true" Spacing="2" Class="mb-3" Wrap="Wrap.Wrap">
+<MudStack Row="true" Spacing="2" Class="mb-3" Wrap="Wrap.Wrap">
+    @if (_isKeeper)
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Output" Href="Admin/Costumes/Handover?mode=issue">Výdej</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Input" Href="Admin/Costumes/Handover?mode=return">Příjem</MudButton>
+    }
+    @if (_holdings.Count > 0)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SwapHoriz" Href="Admin/Costumes/Handover?mode=peer">Předat kolegovi</MudButton>
+    }
+    @if (_isViewer)
+    {
         <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Inventory2" Href="Admin/Costumes/Catalog">Katalog</MudButton>
         <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.People" Href="Admin/Costumes/Holders">Kdo co má</MudButton>
-    </MudStack>
-}
+    }
+</MudStack>
 
 <MudGrid>
     @if (_incoming.Count > 0)
@@ -83,7 +92,9 @@
                 {
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1">
                         <MudChip T="string" Size="Size.Small" Color="@transfer.Status.Color()">@transfer.Status.Label()</MudChip>
-                        <MudLink Href="@($"Admin/Costumes/Transfers/{transfer.Id}")">
+                        <MudLink Href="@(transfer.Status == CostumeTransferStatus.Draft
+                                          ? $"Admin/Costumes/Handover?transfer={transfer.Id}"
+                                          : $"Admin/Costumes/Transfers/{transfer.Id}")">
                             → @CostumeUi.Party(transfer.ToMemberId, _names) · @transfer.Lines.Count ks
                         </MudLink>
                     </MudStack>
@@ -137,6 +148,7 @@
 
     private int _memberId;
     private bool _isViewer;
+    private bool _isKeeper;
     private IReadOnlyList<CostumeHolding> _holdings = [];
     private List<CostumeTransfer> _incoming = [];
     private List<CostumeTransfer> _outgoing = [];
@@ -150,6 +162,7 @@
         var user = (await AuthenticationState!).User;
         _memberId = user.GetMemberId();
         _isViewer = user.IsCostumeViewer();
+        _isKeeper = user.IsKeeper();
         await LoadAsync();
     }
 

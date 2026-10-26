@@ -1,0 +1,383 @@
+@page "/Admin/Costumes/Handover"
+@using Demizon.Common.Configuration
+@using Demizon.Core.Services.Costume
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.Pages.Admin.Costume.Components
+@using Demizon.Mvc.Services.Costume
+@using Microsoft.Extensions.Options
+
+@attribute [Authorize]
+@layout AdminMainLayout
+
+@inject ICostumeCatalogService Catalog
+@inject ICostumeTransferService Transfers
+@inject CostumeQrService QrService
+@inject IOptions<GoogleCalendarSettings> CalendarOptions
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject ILogger<Handover> Logger
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+<MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="Admin/Costumes" title="Zpět do krojárky" Class="mb-2"/>
+
+@if (_error is not null)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-3" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+}
+
+@if (_draft is null)
+{
+    @* ------------------------------------------------ 1. kusy a protistrana *@
+    <MudPaper Class="pa-3 mb-3" Elevation="1">
+        <MudText Typo="Typo.h6">@ModeTitle</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">@ModeHelp</MudText>
+        <CodeScanner OnCode="OnCollectCodeAsync" Label="Kód kusu nebo QR člena"/>
+    </MudPaper>
+
+    <MudPaper Class="pa-3 mb-3" Elevation="1">
+        <MudText><b>@(Mode == "return" ? "Vrací" : "Příjemce"):</b>
+            @(_counterpart is null ? "— naskenuj QR z jeho profilu —" : _counterpart.FullName)</MudText>
+        @if (_lines.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">Zatím žádné kusy.</MudText>
+        }
+        @foreach (var line in _lines)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2" Wrap="Wrap.Wrap">
+                <MudText><b>@line.Item.Code</b> @line.Item.Describe()</MudText>
+                @if (line.Item.Part.TrackingMode == CostumeTrackingMode.Bulk)
+                {
+                    <MudNumericField T="int" @bind-Value="line.Quantity" Min="1" Label="ks" Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" Style="width: 90px;"/>
+                }
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Close" title="Odebrat" OnClick="() => _lines.Remove(line)"/>
+            </MudStack>
+        }
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3"
+                   Disabled="@(_lines.Count == 0 || _counterpart is null)"
+                   OnClick="CreateDraftAsync">Pokračovat k fotkám</MudButton>
+    </MudPaper>
+}
+else
+{
+    @* ------------------------------------------------ 2. fotky a odeslání *@
+    <MudPaper Class="pa-3 mb-3" Elevation="1">
+        <MudText Typo="Typo.h6">@CostumeUi.Party(_draft.FromMemberId, _names) → @CostumeUi.Party(_draft.ToMemberId, _names)</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">
+            Vyfoť každý kus tak, aby byl vidět jeho stav. @(_draft.ToMemberId is null
+                ? "Odesláním kusy rovnou přijmeš do krojárky."
+                : "Po odeslání je příjemce zkontroluje a potvrdí ve svém telefonu.")
+        </MudText>
+        <MudText Typo="Typo.caption" Class="mt-2">Přidat další kus:</MudText>
+        <CodeScanner OnCode="OnDraftCodeAsync" Label="Kód kusu"/>
+    </MudPaper>
+
+    @foreach (var line in _draft.Lines.OrderBy(l => l.Item.Code))
+    {
+        var photos = _photos.Where(p => p.TransferLineId == line.Id).ToList();
+        <MudPaper Class="pa-3 mb-2" Elevation="1">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+                <MudText><b>@line.Item.Code</b> @line.Item.Describe()@(line.Quantity > 1 ? $" · {line.Quantity} ks" : "")</MudText>
+                @if (photos.Count == 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning">chybí fotka</MudChip>
+                }
+                <MudSpacer/>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" title="Odebrat kus" OnClick="() => RemoveLineAsync(line.Id)"/>
+            </MudStack>
+            <MudStack Row="true" Spacing="2" Class="mt-2" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center">
+                @foreach (var photo in photos)
+                {
+                    <CostumePhotoThumb TransferId="_draft.Id" Photo="photo" TimeZoneId="@CalendarOptions.Value.TimeZone"/>
+                }
+                <label class="mud-button-root mud-button mud-button-outlined mud-button-outlined-primary mud-button-outlined-size-medium mud-ripple"
+                       style="cursor: pointer;">
+                    <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Class="mr-1"/> @(_uploadingLine == line.Id ? "Nahrávám…" : "Vyfotit")
+                    <InputFile OnChange="e => OnPhotoAsync(e, line.Id)" accept="image/*" capture="environment"
+                               class="costume-photo-input" style="display: none;"/>
+                </label>
+            </MudStack>
+            <MudTextField T="string" Value="line.ConditionNote" ValueChanged="note => SaveNoteAsync(line.Id, note)"
+                          Label="Poznámka ke stavu (nepovinná)" Variant="Variant.Outlined" Margin="Margin.Dense"
+                          Class="mt-2" MaxLength="1000"/>
+        </MudPaper>
+    }
+
+    <MudStack Row="true" Spacing="2" Class="mt-3 mb-6" Wrap="Wrap.Wrap">
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="SubmitAsync"
+                   Disabled="_draft.Lines.Any(l => _photos.All(p => p.TransferLineId != l.Id))">
+            @(_draft.ToMemberId is null ? "Přijmout do krojárky" : "Odeslat k potvrzení")
+        </MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="CancelAsync">Zrušit předávku</MudButton>
+    </MudStack>
+}
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    /// <summary><c>issue</c> (z krojárky), <c>return</c> (do krojárky), <c>peer</c> (kolegovi).</summary>
+    [SupplyParameterFromQuery(Name = "mode")] public string? Mode { get; set; }
+
+    /// <summary>Rozpracovaná předávka, ve které se pokračuje fotkami.</summary>
+    [SupplyParameterFromQuery(Name = "transfer")] public int? TransferId { get; set; }
+
+    /// <summary>Strop originálu — tolik nikdy nepoputuje celé, čte se jen jeho začátek kvůli EXIF.</summary>
+    private const long MaxOriginalBytes = 50L * 1024 * 1024;
+    private const int ExifHeadBytes = 256 * 1024;
+    private const int ClientMaxSide = 1600;
+
+    private sealed class PendingLine(CostumeItem item)
+    {
+        public CostumeItem Item { get; } = item;
+        public int Quantity { get; set; } = 1;
+    }
+
+    private CostumeActor _actor;
+    private string? _error;
+    private readonly List<PendingLine> _lines = [];
+    private Counterpart? _counterpart;
+    private CostumeTransfer? _draft;
+    private IReadOnlyList<CostumePhotoInfo> _photos = [];
+    private IReadOnlyDictionary<int, CostumeMemberName> _names = new Dictionary<int, CostumeMemberName>();
+    private int? _uploadingLine;
+
+    private sealed record Counterpart(int Id, string FullName);
+
+    private string ModeTitle => Mode switch
+    {
+        "issue" => "Výdej z krojárky",
+        "return" => "Příjem do krojárky",
+        _ => "Předat kolegovi"
+    };
+
+    private string ModeHelp => Mode switch
+    {
+        "issue" => "Naskenuj kusy, které vydáváš, a QR z profilu člena, který si je bere.",
+        "return" => "Naskenuj vracené kusy. Kdo je vrací, se doplní podle kusu — nebo naskenuj jeho QR.",
+        _ => "Naskenuj kusy, které máš u sebe a předáváš, a QR z profilu kolegy, který je přebírá."
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _actor = (await AuthenticationState!).User.ToCostumeActor();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        PageService.SetTitle("Předávka");
+        if (Mode is "issue" or "return" && !_actor.IsKeeper)
+        {
+            _error = "Vydávat a přijímat do krojárky může jen správce krojárky.";
+            Mode = "peer";
+        }
+        if (TransferId is { } id)
+            await LoadDraftAsync(id);
+    }
+
+    // ----------------------------------------------------- 1. sbírání
+
+    private async Task OnCollectCodeAsync(string text)
+    {
+        _error = null;
+        var scan = CostumeScan.Parse(text);
+        if (scan is null)
+            return;
+
+        if (scan.Kind == CostumeScanKind.Member)
+        {
+            var member = await QrService.FindMemberAsync(scan.Value);
+            if (member is null)
+                _error = "QR kód nepatří žádnému aktivnímu členovi (možná si ho mezitím vygeneroval znovu).";
+            else if (Mode != "return" && member.Id == _actor.MemberId)
+                _error = "Sám sobě předat nejde.";
+            else
+                _counterpart = new Counterpart(member.Id, $"{member.Name} {member.Surname}");
+            return;
+        }
+
+        var item = await Catalog.GetItemByCodeAsync(scan.Value);
+        if (item is null)
+        {
+            _error = $"Kus {scan.Value.ToUpperInvariant()} v krojárce neexistuje.";
+            return;
+        }
+        if (_lines.Any(l => l.Item.Id == item.Id))
+        {
+            Snackbar.Add($"{item.Code} už v seznamu je.", Severity.Info);
+            return;
+        }
+        if (item.State != CostumeItemState.Available)
+        {
+            _error = $"Kus {item.Code} je {item.State.Label()}.";
+            return;
+        }
+
+        var holders = (await Catalog.GetHoldingsAsync()).Where(h => h.ItemId == item.Id).ToList();
+        var stock = (await Catalog.GetStockAsync([item.Id]))[item.Id];
+        switch (Mode)
+        {
+            case "issue" when stock.AvailableInStore < 1:
+                _error = $"Kus {item.Code} není v krojárce k dispozici.";
+                return;
+            case "return" when holders.Count == 0:
+                _error = $"Kus {item.Code} už v krojárce je.";
+                return;
+            case "return" when _counterpart is null && holders.Count > 1:
+                _error = $"{item.Code} má víc lidí — naskenuj QR toho, kdo vrací.";
+                return;
+            case "return" when _counterpart is null:
+                var names = await Catalog.GetMemberNamesAsync([holders[0].MemberId]);
+                _counterpart = new Counterpart(holders[0].MemberId, CostumeUi.Party(holders[0].MemberId, names));
+                break;
+            case "return" when holders.All(h => h.MemberId != _counterpart!.Id):
+                _error = $"Kus {item.Code} nemá {_counterpart!.FullName} u sebe.";
+                return;
+            case "peer" when holders.All(h => h.MemberId != _actor.MemberId):
+                _error = $"Kus {item.Code} nemáš u sebe.";
+                return;
+        }
+
+        _lines.Add(new PendingLine(item));
+    }
+
+    private async Task CreateDraftAsync()
+    {
+        _error = null;
+        var (from, to) = Mode switch
+        {
+            "issue" => ((int?)null, _counterpart?.Id),
+            "return" => (_counterpart?.Id, (int?)null),
+            _ => (_actor.MemberId, _counterpart?.Id)
+        };
+
+        var created = await Transfers.CreateDraftAsync(_actor, from, to,
+            _lines.Select(l => new CostumeLineInput(l.Item.Code, l.Quantity)).ToList(), null);
+        if (!created.IsSuccess)
+        {
+            _error = created.Error;
+            return;
+        }
+        Navigation.NavigateTo($"Admin/Costumes/Handover?transfer={created.Value}");
+    }
+
+    // ----------------------------------------------------- 2. fotky
+
+    private async Task LoadDraftAsync(int id)
+    {
+        var transfer = await Transfers.GetAsync(id);
+        if (transfer is null || transfer.CreatedById != _actor.MemberId || transfer.Status != CostumeTransferStatus.Draft)
+        {
+            Navigation.NavigateTo(transfer is null ? "Admin/Costumes" : $"Admin/Costumes/Transfers/{id}");
+            return;
+        }
+        _draft = transfer;
+        _photos = await Transfers.GetPhotoInfosAsync(id);
+        _names = await Catalog.GetMemberNamesAsync(new[] { transfer.FromMemberId, transfer.ToMemberId }.OfType<int>());
+    }
+
+    private async Task OnDraftCodeAsync(string text)
+    {
+        _error = null;
+        if (CostumeScan.Parse(text) is not { Kind: CostumeScanKind.Item } scan)
+        {
+            _error = "Tady se skenují jen kusy; příjemce už je daný.";
+            return;
+        }
+        var added = await Transfers.AddLineAsync(_draft!.Id, _actor, new CostumeLineInput(scan.Value));
+        if (!added.IsSuccess)
+            _error = added.Error;
+        await LoadDraftAsync(_draft.Id);
+    }
+
+    private async Task RemoveLineAsync(int lineId)
+    {
+        var removed = await Transfers.RemoveLineAsync(_draft!.Id, lineId, _actor);
+        if (!removed.IsSuccess)
+            _error = removed.Error;
+        await LoadDraftAsync(_draft.Id);
+    }
+
+    private async Task SaveNoteAsync(int lineId, string? note)
+    {
+        var saved = await Transfers.SetLineNoteAsync(_draft!.Id, lineId, _actor, note);
+        if (!saved.IsSuccess)
+            _error = saved.Error;
+        await LoadDraftAsync(_draft.Id);
+    }
+
+    /// <summary>
+    /// Prohlížeč fotku zmenší sám (po mobilních datech a SignalR nejede 8 MB) a tím zahodí EXIF.
+    /// Začátek originálu proto jde zvlášť, aby server poznal, kdy byla fotka pořízená.
+    /// </summary>
+    private async Task OnPhotoAsync(InputFileChangeEventArgs e, int lineId)
+    {
+        _error = null;
+        _uploadingLine = lineId;
+        try
+        {
+            var head = new MemoryStream();
+            await using (var original = e.File.OpenReadStream(MaxOriginalBytes))
+            {
+                var buffer = new byte[ExifHeadBytes];
+                int read;
+                while (head.Length < ExifHeadBytes && (read = await original.ReadAsync(buffer.AsMemory(0, (int)(ExifHeadBytes - head.Length)))) > 0)
+                    head.Write(buffer, 0, read);
+            }
+            head.Position = 0;
+
+            IBrowserFile upload;
+            try
+            {
+                upload = await e.File.RequestImageFileAsync("image/jpeg", ClientMaxSide, ClientMaxSide);
+            }
+            catch (JSException ex)
+            {
+                // Formát, který prohlížeč neumí překreslit: pošle se originál, server ho zmenší sám.
+                Logger.LogInformation(ex, "Browser could not resize costume photo, uploading original.");
+                upload = e.File;
+            }
+
+            await using var body = upload.OpenReadStream(MaxOriginalBytes);
+            var added = await Transfers.AddPhotoAsync(_draft!.Id, lineId, _actor, body, head);
+            if (!added.IsSuccess)
+                _error = added.Error;
+            await LoadDraftAsync(_draft.Id);
+        }
+        catch (IOException ex)
+        {
+            Logger.LogWarning(ex, "Costume photo upload was interrupted.");
+            _error = "Fotku se nepodařilo nahrát (spojení se přerušilo nebo je moc velká). Zkus to znovu.";
+        }
+        finally
+        {
+            _uploadingLine = null;
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        var submitted = await Transfers.SubmitAsync(_draft!.Id, _actor);
+        if (!submitted.IsSuccess)
+        {
+            _error = submitted.Error;
+            return;
+        }
+        Snackbar.Add(submitted.Value == CostumeTransferStatus.Confirmed
+            ? "Kusy jsou zpátky v krojárce."
+            : "Odesláno. Příjemce teď předávku potvrdí ve svém telefonu.", Severity.Success);
+        Navigation.NavigateTo($"Admin/Costumes/Transfers/{_draft.Id}");
+    }
+
+    private async Task CancelAsync()
+    {
+        var cancelled = await Transfers.CancelAsync(_draft!.Id, _actor);
+        if (!cancelled.IsSuccess)
+        {
+            _error = cancelled.Error;
+            return;
+        }
+        Snackbar.Add("Předávka zrušena.", Severity.Info);
+        Navigation.NavigateTo("Admin/Costumes");
+    }
+}

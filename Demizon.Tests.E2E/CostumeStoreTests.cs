@@ -125,6 +125,117 @@ public class CostumeStoreTests(E2EFixture fixture) : E2ETestBase(fixture)
         Assert.DoesNotContain("Štítky (", await Page.InnerTextAsync("body"));
     }
 
+    private void SeedItem(string code, int? holderId = null)
+    {
+        using var db = Fixture.App.NewContext();
+        var item = new CostumeItem
+        {
+            Code = code, Size = "5",
+            Part = new CostumePart { Name = "E2E sukně", Gender = CostumeGender.Female, TrackingMode = CostumeTrackingMode.Individual },
+        };
+        db.CostumeItems.Add(item);
+        db.SaveChanges();
+        if (holderId is { } memberId)
+        {
+            db.CostumeHoldings.Add(new CostumeHolding { ItemId = item.Id, MemberId = memberId, Quantity = 1 });
+            db.SaveChanges();
+        }
+    }
+
+    private int MemberId(string login)
+    {
+        using var db = Fixture.App.NewContext();
+        return db.Members.Single(m => m.Login == login).Id;
+    }
+
+    private string MemberQrUrl(string login)
+    {
+        using var db = Fixture.App.NewContext();
+        var member = db.Members.Single(m => m.Login == login);
+        member.CostumeQrToken ??= $"e2e-{login}";
+        db.SaveChanges();
+        return $"https://demizon.cz/m/{member.CostumeQrToken}";
+    }
+
+    /// <summary>Do pole skeneru píše stejně jako USB/bluetooth čtečka: text a Enter.</summary>
+    private async Task ScanAsync(string text)
+    {
+        var input = Page.Locator(".costume-scan-input input").First;
+        await input.FillAsync(text);
+        await input.PressAsync("Enter");
+    }
+
+    private async Task PhotographAllAsync()
+    {
+        var path = Path.Combine(Fixture.ArtifactDirectory, "stav-kusu.jpg");
+        await System.IO.File.WriteAllBytesAsync(path, Jpeg().ToArray());
+        var inputs = Page.Locator("input.costume-photo-input");
+        // Krok s fotkami se vykreslí až po navigaci; bez čekání by smyčka proběhla nad nulou vstupů.
+        await Expect(inputs.First).ToBeAttachedAsync(new() { Timeout = 10_000 });
+        var count = await inputs.CountAsync();
+        for (var i = 0; i < count; i++)
+        {
+            await inputs.Nth(i).SetInputFilesAsync(path);
+            await Expect(Page.Locator("img[alt='Fotka stavu']")).ToHaveCountAsync(i + 1, new() { Timeout = 15_000 });
+        }
+    }
+
+    [Fact]
+    public async Task Spravce_vyda_kus_pres_ruce_zadany_kod_a_QR_clena()
+    {
+        const string code = "E2EH1";
+        SeedItem(code);
+        var memberQr = MemberQrUrl(AppHost.MemberLogin);
+
+        await LoginAsKeeperAsync();
+        await Page.GotoAsync("/Admin/Costumes/Handover?mode=issue", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await ScanAsync($"https://demizon.cz/k/{code.ToLowerInvariant()}");
+        await ScanAsync(memberQr);
+        await Expect(Page.GetByText(code, new() { Exact = true })).ToBeVisibleAsync(new() { Timeout = 10_000 });
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Pokračovat k fotkám" }).ClickAsync();
+        await Expect(Page.GetByText("chybí fotka")).ToBeVisibleAsync(new() { Timeout = 10_000 });
+        await PhotographAllAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Odeslat k potvrzení" }).ClickAsync();
+
+        await Expect(Page.GetByText("čeká na potvrzení")).ToBeVisibleAsync(new() { Timeout = 10_000 });
+        Assert.Empty(RelevantConsoleErrors);
+    }
+
+    [Fact]
+    public async Task Spravce_prijme_kus_a_vracejici_se_doplni_sam()
+    {
+        const string code = "E2EH2";
+        var memberId = MemberId(AppHost.MemberLogin);
+        SeedItem(code, holderId: memberId);
+
+        await LoginAsKeeperAsync();
+        await Page.GotoAsync("/Admin/Costumes/Handover?mode=return", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await ScanAsync(code);
+        await Expect(Page.Locator("p", new() { HasText = "Vrací:" })).ToContainTextAsync(AppHost.MemberLogin, new() { Timeout = 10_000 });
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Pokračovat k fotkám" }).ClickAsync();
+        await PhotographAllAsync();
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Přijmout do krojárky" }).ClickAsync();
+
+        await Expect(Page.GetByText("potvrzená")).ToBeVisibleAsync(new() { Timeout = 10_000 });
+        using var db = Fixture.App.NewContext();
+        Assert.False(db.CostumeHoldings.Any(h => h.Item.Code == code));
+    }
+
+    [Fact]
+    public async Task Clen_nepreda_kus_ktery_nema()
+    {
+        const string code = "E2EH3";
+        SeedItem(code);
+
+        await LoginAsMemberAsync();
+        await Page.GotoAsync("/Admin/Costumes/Handover?mode=peer", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await ScanAsync(code);
+
+        await Expect(Page.GetByText($"Kus {code} nemáš u sebe.")).ToBeVisibleAsync(new() { Timeout = 10_000 });
+    }
+
     [Theory]
     [InlineData("/Admin/Costumes")]
     [InlineData("/Admin/Costumes/Catalog")]

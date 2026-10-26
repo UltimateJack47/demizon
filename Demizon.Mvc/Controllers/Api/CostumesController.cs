@@ -165,7 +165,7 @@ public class CostumesController(
             return BadRequest(new { error = "Nahraná fotka je prázdná." });
 
         await using var stream = file.OpenReadStream();
-        return ToResponse(await transfers.AddPhotoAsync(id, lineId, Actor, stream, ct));
+        return ToResponse(await transfers.AddPhotoAsync(id, lineId, Actor, stream, ct: ct));
     }
 
     [HttpDelete("transfers/{id:int}/photos/{photoId:int}")]

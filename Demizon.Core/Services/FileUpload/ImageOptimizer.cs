@@ -78,6 +78,23 @@ public static class ImageOptimizer
         return new OptimizedImage(full, thumbnail, capturedAt, capturedOffset);
     }
 
+    /// <summary>
+    /// Jen čas pořízení, bez dekódování pixelů. Pro případ, kdy klient fotku zmenší sám (a EXIF tím
+    /// zahodí) a hlavičku originálu pošle zvlášť; stačí jí začátek souboru.
+    /// </summary>
+    public static (DateTime? At, TimeSpan? Offset) ReadCaptureTime(Stream source)
+    {
+        try
+        {
+            var info = Image.Identify(new DecoderOptions { Configuration = UploadConfiguration() }, source);
+            return ReadCaptureTime(info.Metadata.ExifProfile);
+        }
+        catch (Exception ex) when (IsDecodeFailure(ex) || ex is EndOfStreamException)
+        {
+            return (null, null);
+        }
+    }
+
     private static (DateTime? At, TimeSpan? Offset) ReadCaptureTime(ExifProfile? exif)
     {
         if (exif is null

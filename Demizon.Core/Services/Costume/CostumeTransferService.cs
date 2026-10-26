@@ -227,7 +227,7 @@ public sealed class CostumeTransferService(
     }
 
     public async Task<Result<int>> AddPhotoAsync(int transferId, int lineId, CostumeActor actor, Stream photo,
-        CancellationToken ct = default)
+        Stream? captureSource = null, CancellationToken ct = default)
     {
         try
         {
@@ -237,7 +237,7 @@ public sealed class CostumeTransferService(
             if (transfer.Value!.Lines.All(l => l.Id != lineId))
                 return Result<int>.NotFound("Kus v předávce není.");
 
-            var processed = await photoProcessor.ProcessAsync(photo, actor.MemberId, ct);
+            var processed = await photoProcessor.ProcessAsync(photo, actor.MemberId, captureSource, ct);
             if (!processed.IsSuccess)
                 return Result<int>.Fail(processed.Error!, processed.ErrorKind);
 

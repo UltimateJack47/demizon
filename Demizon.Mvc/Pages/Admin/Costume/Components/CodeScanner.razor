@@ -1,0 +1,84 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+@* Ruční pole je rovnocenná cesta: ošoupaný štítek, zařízení bez kamery, nebo USB/bluetooth
+   čtečka, která kód „napíše“ i s Enterem. *@
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+    <MudTextField @bind-Value="_typed" Label="@Label" Variant="Variant.Outlined" Margin="Margin.Dense"
+                  Immediate="true" OnKeyDown="OnKeyDownAsync" Style="min-width: 200px;" Class="costume-scan-input"
+                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.KeyboardReturn"
+                  OnAdornmentClick="SubmitTypedAsync"/>
+    <MudButton Variant="@(_cameraOn ? Variant.Filled : Variant.Outlined)" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.QrCodeScanner" OnClick="ToggleCameraAsync">
+        @(_cameraOn ? "Vypnout kameru" : "Skenovat kamerou")
+    </MudButton>
+</MudStack>
+@if (_cameraError is not null)
+{
+    <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">@_cameraError</MudAlert>
+}
+<video @ref="_video" playsinline muted
+       style="@(_cameraOn ? "display: block;" : "display: none;") width: 100%; max-width: 420px; margin-top: 8px; border-radius: 4px;"></video>
+
+@code {
+    [Parameter] public string Label { get; set; } = "Kód nebo QR";
+    [Parameter] public EventCallback<string> OnCode { get; set; }
+
+    private ElementReference _video;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<CodeScanner>? _self;
+    private string? _typed;
+    private bool _cameraOn;
+    private string? _cameraError;
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await SubmitTypedAsync();
+    }
+
+    private async Task SubmitTypedAsync()
+    {
+        var text = _typed;
+        _typed = null;
+        if (!string.IsNullOrWhiteSpace(text))
+            await OnCode.InvokeAsync(text);
+    }
+
+    [JSInvokable]
+    public Task OnScanned(string text) => InvokeAsync(() => OnCode.InvokeAsync(text));
+
+    private async Task ToggleCameraAsync()
+    {
+        _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/costume-scanner.js");
+        if (_cameraOn)
+        {
+            await _module.InvokeVoidAsync("stop");
+            _cameraOn = false;
+            return;
+        }
+
+        _self ??= DotNetObjectReference.Create(this);
+        _cameraOn = true;
+        _cameraError = await _module.InvokeAsync<string?>("start", _video, _self);
+        if (_cameraError is not null)
+            _cameraOn = false;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_module is not null)
+            {
+                await _module.InvokeVoidAsync("stop");
+                await _module.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // Okruh je pryč i s prohlížečem; kamera se zavřela s ním.
+        }
+        _self?.Dispose();
+    }
+}

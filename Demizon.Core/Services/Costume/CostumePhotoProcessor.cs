@@ -21,7 +21,11 @@ public sealed class CostumePhotoProcessor(
 {
     private readonly CostumeSettings _settings = costumeOptions.Value;
 
-    public async Task<Result<CostumePhoto>> ProcessAsync(Stream source, int uploadedById, CancellationToken ct = default)
+    /// <param name="captureSource">
+    /// Začátek originálu, když <paramref name="source"/> už zmenšil klient a EXIF v něm není.
+    /// </param>
+    public async Task<Result<CostumePhoto>> ProcessAsync(Stream source, int uploadedById,
+        Stream? captureSource = null, CancellationToken ct = default)
     {
         using var buffer = new MemoryStream();
         await source.CopyToAsync(buffer, ct);
@@ -49,6 +53,10 @@ public sealed class CostumePhotoProcessor(
                 "Úložiště fotek krojárky je plné. Dej vědět správci aplikace.");
         }
 
+        var (capturedAt, capturedOffset) = captureSource is null
+            ? (optimized.CapturedAt, optimized.CapturedOffset)
+            : ImageOptimizer.ReadCaptureTime(captureSource);
+
         return Result<CostumePhoto>.Ok(new CostumePhoto
         {
             Data = optimized.Full,
@@ -56,7 +64,7 @@ public sealed class CostumePhotoProcessor(
             FileSize = size,
             UploadedById = uploadedById,
             UploadedAt = DateTime.UtcNow,
-            CapturedAt = ToUtc(optimized.CapturedAt, optimized.CapturedOffset),
+            CapturedAt = ToUtc(capturedAt, capturedOffset),
         });
     }
 
