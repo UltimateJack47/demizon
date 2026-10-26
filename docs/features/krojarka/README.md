@@ -1,7 +1,7 @@
 # Krojárka: inventář a předávky souborových krojů
 
-> Založeno: 2026-10-25. Stav: 📝 **návrh** — otázky O2–O6 rozhodnuté 2026-10-25,
-> čeká se na rozhodnutí o rolích (O1, krok 0). Kód zatím žádný.
+> Založeno: 2026-10-25. Stav: 📝 **návrh schválený** — otázky O1–O6 rozhodnuté,
+> krok 0 (role) hotový 2026-10-26. Další je krok A.
 >
 > Sekce *Současný stav* popisuje repozitář **před** implementací.
 
@@ -189,11 +189,8 @@ Návrhová rozhodnutí (alternativy a důvod):
 - **O5.** Závislosti schválené: `QRCoder`, `qr-scanner` (vendorovaný), `mobile_scanner`, `image_picker`.
 - **O6.** Schéma schválené.
 
-**Otevřené:**
-
-- **O1.** Role: dnešní jedna `UserRole` na členovi nestačí (člověk může být
-  admin i správce). Návrh přestavby je krok 0 v [Postupu](#postup);
-  vůdce souboru jako role `Leader`.
+- **O1.** Role (2026-10-26): víc rolí na člena ([`role-clenu`](../role-clenu/README.md)). Vůdce
+  souboru = role `Leader`, mimo krojárku nic navíc. Správce krojárky = `CostumeKeeper`.
 
 ## Postup
 
@@ -201,8 +198,8 @@ Commity po uzavřených částech, každá s testy.
 
 | Krok | Obsah | Testy |
 |---|---|---|
-| 0 | Více rolí na člena: tabulka `MemberRoles`, role `Admin`/`Leader`/`CostumeKeeper` (samostatná změna, popis v chatu 2026-10-25, po schválení vlastní záznam) | viz krok 0 |
-| A | Model, migrace, QR token na členovi | integrační: holdings, unikátnost kódu |
+| 0 | ✅ Více rolí na člena — [`role-clenu`](../role-clenu/README.md) (2026-10-26) | tam |
+| A | Model, migrace, QR token na členovi, `UserRole.Leader` + `CostumeKeeper` (+ `RoleNames`, `RoleLabels`) | integrační: holdings, unikátnost kódu |
 | B | Core: katalog (CRUD), předávky (automat, oprávnění, holdings), fotky (sdílený optimizer, limit, `CapturedAt`) | unit: přechody automatu, kdo smí co, Bulk počty, starý EXIF; integrační nad SQLite |
 | C | API + DTO (`/api/costumes/...`), QR endpointy | HTTP přes `WebApplicationFactory`: 401/403 podle role, kontrakt |
 | D | Blazor: menu, katalog, tisk štítků, Moje kroje, potvrzení, karta kusu | E2E |

@@ -61,6 +61,7 @@ Záznamy hotové práce — zdůvodnění, naměřená čísla, poučení. **Nej
 | Feature | Co v ní je |
 |---|---|
 | [`features/disk-optimalizace/`](features/disk-optimalizace/README.md) | Hostování na 1 vCPU / 1 GB / 10 GB. ImageSharp místo Magick.NET, kvóty, purge, WAL, RID publish. Samostatný [`pruzkum.md`](features/disk-optimalizace/pruzkum.md) říká, proč disk i paměť docházely. |
+| [`features/role-clenu/`](features/role-clenu/README.md) | Víc rolí na člena místo jedné `Member.Role`, role `ContentManager`, kontrakt `roles: string[]`, vyřazení MAUI ze slnx. |
 | [`features/kvalita-result-testy/`](features/kvalita-result-testy/README.md) | `Result` místo `bool` napříč službami, E2E sada v Playwrightu, vizuální QA MudBlazoru. Nálezy dvou kol review v [`review.md`](features/kvalita-result-testy/review.md). |
 
 ## Archiv

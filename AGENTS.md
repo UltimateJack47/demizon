@@ -19,7 +19,7 @@
 ## Scope and current source of truth
 - Work primarily in `Demizon.Mvc` (Blazor Server + API in one host); this is the only web host. Flutter talks to it. There is no `Demizon.Api` project any more (removed in `71d9916`).
 - Shared layers: `Demizon.Contracts` (DTOs), `Demizon.Core` (business services), `Demizon.Dal` (EF Core + SQLite), `Demizon.Common` (settings/exceptions/helpers).
-- Mobile client: `demizon_flutter/` is the one being built; `Demizon.Maui` is the predecessor it replaces and is kept as the reference for behaviour still to be ported. See `docs/features/flutter-prepis/`.
+- Mobile client: `demizon_flutter/` is the only maintained one. `Demizon.Maui` is **no longer maintained** (decided 2026-10-26): it is out of `Demizon.slnx`, does not compile against the current contracts, and API changes do not keep it working. The folder stays only as a historical reference. See `docs/features/flutter-prepis/`.
 - Tests: `Demizon.Tests.Unit` (fast logic + HTTP via `WebApplicationFactory`), `Demizon.Tests.Integration` (real SQLite), `Demizon.Tests.E2E` (Playwright against the running app).
 
 ## Architecture map (how data flows)
@@ -27,7 +27,7 @@
 - Controllers in `Demizon.Mvc/Controllers/Api/*` call Core services, then map entities to DTOs via `Demizon.Mvc/Mapping/ContractMappingExtensions.cs`.
 - Core DI is centralized in `Demizon.Core/Extensions/CoreServicesRegistrationExtension.cs`; add service registrations there.
 - Persistence is centralized in `Demizon.Dal/DemizonContext.cs` + `Demizon.Dal/Extensions/DatabaseServiceConfigurationExtension.cs`.
-- Flutter consumes API contracts via dio + retrofit (`demizon_flutter/lib/api/api_client.dart`). MAUI's Refit `IApiClient.cs` is the behaviour reference until Flutter is verified on a phone.
+- Flutter consumes API contracts via dio + retrofit (`demizon_flutter/lib/api/api_client.dart`). MAUI's Refit `IApiClient.cs` is historical only.
 
 ## Project-specific patterns you must follow
 - **Core write operations return `Result` / `Result<T>`, never `bool`.** `CreateAsync` and
@@ -41,6 +41,11 @@
 - **Core services never throw from write operations.** They swallow, clean the change tracker via
   `DiscardPendingChanges()`, and return a failure. Callers rely on that and wrap none of these calls
   in `try/catch`, so keep entity lookups *inside* the `try` and return `NotFound` for a missing row.
+- **Permissions are roles in `MemberRoles`, several per member** (`UserRole`: `Admin`, `ContentManager`).
+  A member with no role is an ordinary member, so "any logged-in user" is plain `[Authorize]`, never a
+  role list. Use the constants in `Demizon.Mvc/Services/Authentication/RoleNames.cs`, not string literals,
+  for new checks. `IsDancer` / `IsMusician` / `IsExternal` describe what someone does in the ensemble and
+  are **not** roles. Details: `docs/features/role-clenu/`.
 - **A MudBlazor dialog form must validate before closing.** `Required="true"` on a field only draws
   the marker; enforcing it needs a `MudForm` plus a validity check in the OK handler.
 - Keep contract boundary strict: API returns `Demizon.Contracts.*` DTOs; do not expose EF entities directly.
@@ -53,9 +58,9 @@
 
 ## Auth and client integration details
 - MVC host uses cookie auth as default (Blazor) and JWT bearer for `/api/*` (`MvcAuthenticationServicesRegistrationExtension.cs`).
-- JWT member id is stored in `ClaimTypes.PrimarySid`; use `User.GetMemberId()` extension.
-- Flutter token lifecycle: `TokenStorage` + `AuthInterceptor` (proactive refresh 5 min before expiry, fallback on 401). MAUI equivalent is the reference in `Demizon.Maui` (`TokenStorage` + `AuthHandler` + `TokenRefreshHelper`).
-- MAUI navigation rules (still the behaviour source for anything not yet verified on the phone): constants in `Demizon.Maui/AppRoutes.cs`, detail routes must be flat names (no `/`). Flutter uses hierarchical `go_router` paths in `demizon_flutter/lib/core/routes.dart`.
+- JWT member id is stored in `ClaimTypes.PrimarySid`; use `User.GetMemberId()` extension. Every role is its own `ClaimTypes.Role` claim; the token response carries them as `roles: string[]`.
+- Flutter token lifecycle: `TokenStorage` + `AuthInterceptor` (proactive refresh 5 min before expiry, fallback on 401).
+- Flutter uses hierarchical `go_router` paths in `demizon_flutter/lib/core/routes.dart`.
 
 ## Notifications and external integrations
 - FCM mobile push: `Demizon.Mvc/Services/FcmService.cs`, device tokens in `DeviceTokens` table, endpoints in `Controllers/Api/NotificationsController.cs`.
@@ -67,14 +72,12 @@
 - `Jwt__SecretKey` has no value in any `appsettings.json` and is required — the host will not start without it.
 - The first admin is created through `POST /api/database/seed`, which is gated behind `Bootstrap__SeedToken` and refuses to run once any member exists. Procedure in `docs/nasazeni.md`.
 - Use `Demizon.Mvc/appsettings.Local.json.example` as template; real local file is gitignored (`.gitignore`).
-- MAUI Android expects local secret files: `Platforms/Android/FirebaseConfig.cs` and `google-services.json` (both gitignored; template provided).
 
 ## Working commands (from repo root)
 - Restore/build main solution: `dotnet restore Demizon.slnx` then `dotnet build Demizon.slnx`.
 - The solution is the **XML `.slnx` format** (migrated 2026-09-02); there is no `Demizon.sln` any more.
   Keeping both would make every solution-discovering tool ambiguous (`MSB1011`).
-- `Demizon.slnx` includes `Demizon.Maui`, which needs the `maui-android` workload and will not build
-  on a machine without it. Use the solution filters instead:
+- `dotnet build Demizon.slnx` builds everything (no MAUI since 2026-10-26). For tests use the filters:
   - `dotnet test Demizon.Backend.slnf` — unit + integration. The fast gate; no external dependency.
   - `dotnet test Demizon.E2E.slnf` — Playwright in a real browser. Needs Chromium once:
     `pwsh Demizon.Tests.E2E/bin/Release/net10.0/playwright.ps1 install chromium`.

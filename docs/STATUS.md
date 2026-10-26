@@ -14,7 +14,7 @@
 
 | | Stav |
 |---|---|
-| Testy | **429** — 188 unit + 185 integration (2026-10-14 zelené) + 56 E2E (2026-10-15 zelené); Flutter 47 |
+| Testy | **443** — 195 unit + 190 integration + 58 E2E (2026-10-26 zelené); Flutter 51 |
 | CI | [`test.yml`](../.github/workflows/test.yml) — dvě úlohy: `Demizon.Backend.slnf` a `Demizon.E2E.slnf` |
 | Docker image | 30 MB publish payload, 190 MB image (`aspnet:10.0-alpine` + ICU + tzdata, stejný base jako mru.sk) |
 
@@ -31,6 +31,7 @@ znamená pro další práci.
 | Feature | Záznam | Co z toho platí |
 |---|---|---|
 | Disková optimalizace pro Stardust | [`disk-optimalizace`](features/disk-optimalizace/README.md) | ImageSharp, kvóty, purge, WAL, RID publish, odtrackovaná dev DB, DataProtection klíče, env overlay, 30 × 3 min okruhy |
+| Role členů | [`features/role-clenu/`](features/role-clenu/README.md) | Víc rolí na člena (`MemberRoles`), `ContentManager` pro obsah webu, kontrakt `roles: string[]`, MAUI vyřazená ze slnx a neudržuje se |
 | Kvalita: Result, testy, vizuální QA | [`features/kvalita-result-testy/`](features/kvalita-result-testy/README.md) | Result kontrakt napříč službami, E2E sada, validace formulářů, 13 opravených chyb |
 
 ### Na co nesahat — je hotové
@@ -114,9 +115,8 @@ Podrobný seznam je v [`flutter-prepis/`](features/flutter-prepis/README.md).
 
 Až tohle pojede:
 
-- [ ] Vyhodit `Demizon.Maui` z `Demizon.slnx` (blokuje `dotnet test` bez filtru;
-      z image ho už `.dockerignore` vylučuje). Ne dřív, než Flutter nahradí
-      chování na telefonu — MAUI je pořád zdroj pravdy.
+- [x] `Demizon.Maui` vyřazená z `Demizon.slnx` (2026-10-26). **MAUI se neudržuje**,
+      kontrakty na ni neberou ohled, složka zůstává jen jako historie.
 - [ ] Offline cache — MAUI ji neměla, není regrese, jen vylepšení k zvážení.
 
 ---
@@ -207,11 +207,11 @@ v záznamu featury, sekce *Současný stav*.
 ## G. Krojárka
 
 Záznam: [`features/krojarka/`](features/krojarka/README.md). **Návrh (2026-10-25).**
-Závislosti a schéma schválené; čeká se na rozhodnutí o přestavbě rolí (O1, krok 0).
+Závislosti a schéma schválené, role přestavěné (krok 0). Další je krok A.
 Inventář krojů po kusech i počtem, QR štítky, předávky s fotkou každého kusu
 a potvrzením příjemce, předávky člen → člen, údržba, inventura.
 
-- [ ] 0: více rolí na člena (`MemberRoles`: `Admin`, `Leader`, `CostumeKeeper`)
+- [x] 0: více rolí na člena — [`role-clenu`](features/role-clenu/README.md) (2026-10-26). `Leader` a `CostumeKeeper` přibudou v kroku A
 - [ ] A–C: model + migrace, Core služby, API
 - [ ] D–G: Blazor (katalog, štítky, předávka z mobilního webu, přehledy, připomínky, údržba, inventura)
 - [ ] H: Flutter (Moje kroje, potvrzení, tab správce se skenem) — telefon spolu s B
@@ -231,7 +231,6 @@ Bez telefonu a bez domény **není co nutně dopsat v kódu.** Položky v E
 jsou úklid s nízkou prioritou — nedělej je místo nasazení.
 
 Nezačínej další diskovou optimalizaci ani per-page render mode.
-Nevyhazuj `Demizon.Maui` ze slnx, dokud Flutter nepojede na telefonu.
 
 ---
 

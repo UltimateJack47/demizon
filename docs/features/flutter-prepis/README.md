@@ -345,8 +345,9 @@ bez konzole a zařízení dál nejde. Až bude čas, jdi shora dolů.
        Proklik: přihlášení, docházka (včetně křížové tabulky a swipe měsíce),
        dual režim akce/zkouška, ťuknutí na notifikaci (cold / background /
        foreground), auth refresh po 5 min / 401.
-5. [ ] Až tohle pojede: vyhodit `Demizon.Maui` z `Demizon.slnx`. Ne dřív —
-       MAUI je pořád zdroj pravdy o chování.
+5. [x] `Demizon.Maui` vyřazená z `Demizon.slnx` dřív, než se čekalo (2026-10-26):
+       **MAUI se už neudržuje**, Flutter ji nahradil. Kontrakt `roles` ji rozbil
+       ([`role-clenu`](../role-clenu/README.md)), složka zůstává jen jako historie.
 
 Offline cache se záměrně nedělá (MAUI ji neměla).
 

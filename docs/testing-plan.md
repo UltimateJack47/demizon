@@ -63,10 +63,9 @@ Lokálně jednorázově:
 pwsh Demizon.Tests.E2E/bin/Release/net10.0/playwright.ps1 install chromium
 ```
 
-> ⚠️ **`dotnet test Demizon.slnx` neprojde.** `Demizon.Maui` vyžaduje workload
-> `maui-android`, který na běžném stroji ani v CI není. Proto je v repu
-> `Demizon.Backend.slnf` — solution filter se všemi projekty kromě MAUI.
-> (MAUI se navíc přepisuje do Flutteru na samostatné branchi.)
+> `Demizon.slnx` od 2026-10-26 neobsahuje MAUI a staví se celé. Pro testy se dál
+> používají filtry: `Demizon.Backend.slnf` (rychlá brána bez prohlížeče) a
+> `Demizon.E2E.slnf` (Playwright).
 
 ---
 

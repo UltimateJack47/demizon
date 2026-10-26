@@ -141,7 +141,7 @@ docker run -d --name demizon ... -e Bootstrap__SeedToken="$TOKEN" <image>:latest
 
 # 2) založit admina; login i heslo si volíš (heslo min. 12 znaků)
 curl -sS -X POST https://<domena>/api/database/seed   -H "Content-Type: application/json"   -H "X-Seed-Token: $TOKEN"   -d '{"login":"jack","password":"<silne-heslo>","name":"Jméno","surname":"Příjmení","email":"ty@demizon.cz"}'
-# -> {"id":1,"login":"jack","role":"Admin"}
+# -> {"id":1,"login":"jack","roles":["Admin"]}
 
 # 3) restartovat kontejner BEZ Bootstrap__SeedToken
 docker stop demizon && docker rm demizon
@@ -223,8 +223,8 @@ vychází ~400 buildů měsíčně zdarma. Pro tenhle projekt bohatě stačí.
 **Navržený tvar:**
 
 1. **`test.yml`** — ✅ založeno. Trigger `push`/`pull_request` na `master`,
-   `dotnet test Demizon.Backend.slnf` (251 testů). **`Demizon.slnx` v CI stavět nelze**,
-   `Demizon.Maui` vyžaduje workload `maui-android` — proto solution filter.
+   `dotnet test Demizon.Backend.slnf` (251 testů). Solution filter místo `Demizon.slnx`, aby rychlá
+   brána netahala E2E a prohlížeč (MAUI už ve slnx není).
 2. **`build.yml`** — ještě ne. Po testech Docker image do registry se dvěma tagy:
    `latest` a `sha-<commit>`. Čeká na rozhodnutí o registry.
    Build s **`--pull`** (`docker/build-push-action`: `pull: true`), jinak cache drží
