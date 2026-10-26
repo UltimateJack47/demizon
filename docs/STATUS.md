@@ -140,6 +140,10 @@ Až tohle pojede:
       volajících pokrývá dvojník (`GoogleCalendarCompensationTests`), ale
       vlastní překlad na Google API se testuje jen nepřímo. Nízká priorita:
       je to tenký obal.
+- [ ] *Jen kdyby bylo potřeba:* náhrada ImageSharp 3.1.12 za **NetVips** (nebo
+      SkiaSharp). Dnes netřeba — zranitelnosti 3.1.x jsou mimo naši cestu
+      (`Directory.Build.props`). Kandidáti a postup:
+      [`disk-optimalizace`](features/disk-optimalizace/README.md).
 
 ---
 

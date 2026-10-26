@@ -112,6 +112,20 @@ Přímá reference nebyla potřeba. `dotnet list package --vulnerable` je nyní 
   (`FileUploadService.UploadConfiguration`), TIFF se odmítá jako neplatný obrázek.
 - `Append.Blazor.Notifications 1.1.0` — už je aktuální.
 
+**Kdyby 3.1.x přestala stačit** (nová zranitelnost na naší cestě, potřeba formátu,
+který neumí), náhrada je levná: celé zpracování je ~60 řádků v `FileUploadService`
+(`OptimizeImage`, `ComputeDecodeSize`, `ResizeToWidth`) a kryjí ho testy
+`FileUploadServiceImageTests`. Kandidáti (posouzeno 2026-10-26, neměřeno):
+
+| Knihovna | Licence | Proč ano | Na co dát pozor |
+|---|---|---|---|
+| **NetVips** (libvips) — první volba | MIT obal, LGPL nativní knihovna | dělaná na serverové zmenšování, shrink-on-load, nejnižší paměť; `NetVips.Native` má `linux-musl-x64` (Alpine) | nativní knihovna ~15–20 MB; LGPL v pořádku při dynamickém linkování |
+| **SkiaSharp** — záloha | MIT (.NET Foundation) | rychlá, škálovaný dekód, EXIF orientace přes `SKCodec`, výstup JPEG i WebP | nativní knihovna; podporu Alpine/musl ověřit |
+| Magick.NET | Apache 2.0 | umí všechno | důvod, proč se od ní odešlo (paměť mimo GC, 224 MB nativních knihoven) |
+
+Případnou náhradu udělat jako samostatnou změnu se stejným měřením RSS jako výš
+(24 a 100 Mpx v kontejneru `--memory=768m`).
+
 #### CryptoHelper 4.0.0 → 5.1.0 — co bylo ověřeno
 
 Dvě breaking změny:
