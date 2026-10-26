@@ -1,0 +1,76 @@
+@using Demizon.Core.Services.Costume
+@using Demizon.Dal.Entities
+
+<MudDialog Style="min-width: min(480px, calc(100vw - 32px))">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(IsUpdate ? "Upravit" : "Nový") @(Part.TrackingMode == CostumeTrackingMode.Individual ? "kus" : "šarže") — @Part.Name</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="_code" Label="Inventární kód" MaxLength="32" Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          HelperText="@(IsUpdate ? "Změna kódu znamená přetisknout štítek." : "Prázdné = vygeneruje se další volný (K0001…)")"/>
+            <MudGrid Spacing="2">
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="_size" Label="Velikost" MaxLength="50" Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" HelperText="Jak to značíte (4, 106…)"/>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="_color" Label="Barva" MaxLength="50" Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"/>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="int?" @bind-Value="_value" Label="Hodnota (Kč)" Min="0"
+                                     Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                </MudItem>
+                @if (Part.TrackingMode == CostumeTrackingMode.Bulk)
+                {
+                    <MudItem xs="6">
+                        <MudNumericField T="int" @bind-Value="_quantity" Label="Počet kusů" Min="1"
+                                         Validation="@(new Func<int, string?>(q => q < 1 ? "Aspoň 1." : null))"
+                                         Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                    </MudItem>
+                }
+            </MudGrid>
+            <MudTextField @bind-Value="_note" Label="Poznámka ke kusu" Lines="3" MaxLength="1000"
+                          Variant="Variant.Outlined" Margin="Margin.Dense"
+                          HelperText="Specifika tohoto kusu: oprava, odlišný střih…"/>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => MudDialog.Cancel()">Zrušit</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">@(IsUpdate ? "Uložit" : "Vytvořit")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public bool IsUpdate { get; set; }
+    [Parameter] public CostumePart Part { get; set; } = null!;
+    [Parameter] public CostumeItem? Initial { get; set; }
+
+    private MudForm _form = null!;
+    private string? _code;
+    private string? _size;
+    private string? _color;
+    private string? _note;
+    private int? _value;
+    private int _quantity = 1;
+
+    protected override void OnInitialized()
+    {
+        if (Initial is null)
+            return;
+        (_code, _size, _color, _note, _value, _quantity) =
+            (Initial.Code, Initial.Size, Initial.Color, Initial.Note, Initial.ValueCzk, Initial.Quantity);
+    }
+
+    private async Task ClickedOk()
+    {
+        await _form.ValidateAsync();
+        if (!_form.IsValid)
+            return;
+        MudDialog.Close(DialogResult.Ok(new CostumeItemInput(Part.Id, _code, _size, _color, _note, _value, _quantity)));
+    }
+}

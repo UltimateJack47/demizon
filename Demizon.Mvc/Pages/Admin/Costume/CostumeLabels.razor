@@ -1,0 +1,65 @@
+@page "/Admin/Costumes/Labels"
+@using Demizon.Core.Services.Costume
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.Services.Authentication
+@using Demizon.Mvc.Services.Costume
+
+@attribute [Authorize(Roles = RoleNames.CostumeViewers)]
+@layout AdminMainLayout
+
+@inject ICostumeCatalogService Catalog
+@inject CostumeQrCodes QrCodes
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+<style>
+    .costume-labels { display: grid; grid-template-columns: repeat(auto-fill, minmax(42mm, 1fr)); gap: 3mm; }
+    .costume-label { border: 1px dashed #bbb; padding: 2mm; text-align: center; break-inside: avoid; }
+    .costume-label svg { width: 30mm; height: 30mm; }
+    .costume-label .code { font: bold 14pt monospace; letter-spacing: 1px; }
+    .costume-label .what { font-size: 7pt; line-height: 1.2; }
+    @@media print {
+        .mud-appbar, .mud-drawer, .costume-labels-toolbar { display: none !important; }
+        .mud-main-content { padding: 0 !important; margin: 0 !important; }
+        .costume-labels { grid-template-columns: repeat(4, 1fr); }
+        .costume-label { border-color: #eee; }
+    }
+</style>
+
+<MudStack Row="true" Spacing="2" Class="mb-3 costume-labels-toolbar" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="Admin/Costumes/Catalog" title="Zpět do katalogu"/>
+    <MudText>@_items.Count štítků. Pod QR je kód — kdyby se QR ošoupal, jde napsat ručně.</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print"
+               OnClick="@(() => JS.InvokeVoidAsync("print"))">Tisknout</MudButton>
+</MudStack>
+
+<div class="costume-labels">
+    @foreach (var item in _items)
+    {
+        <div class="costume-label">
+            @((MarkupString)CostumeQrCodes.Svg(QrCodes.ItemUrl(item.Code)))
+            <div class="code">@item.Code</div>
+            <div class="what">@item.Part.Name@(string.IsNullOrWhiteSpace(item.Size) ? "" : $" · {item.Size}")</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+
+    [SupplyParameterFromQuery(Name = "codes")] public string? Codes { get; set; }
+
+    private List<CostumeItem> _items = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        PageService.SetTitle("Štítky");
+        var codes = (Codes ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        _items = [];
+        foreach (var code in codes.Distinct())
+        {
+            if (await Catalog.GetItemByCodeAsync(code) is { } item)
+                _items.Add(item);
+        }
+    }
+}

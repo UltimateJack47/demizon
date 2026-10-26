@@ -1,7 +1,7 @@
 # Krojárka: inventář a předávky souborových krojů
 
-> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — kroky 0, A, B, C hotové (2026-10-26),
-> další je D (Blazor). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
+> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — kroky 0, A–D hotové (2026-10-26),
+> další je E (předávka se skenem na mobilním webu). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
 >
 > Sekce *Současný stav* popisuje repozitář **před** implementací.
 
@@ -202,7 +202,7 @@ Commity po uzavřených částech, každá s testy.
 | A | ✅ Model, migrace `AddCostumeStore`, QR token na členovi, `UserRole.Leader` + `CostumeKeeper` | `CostumeModelTests` |
 | B | ✅ Core: `CostumeCatalogService`, `CostumeTransferService`, `CostumePhotoProcessor`, `CostumeQrService` | `CostumeTransferServiceTests`, `CostumeCatalogServiceTests`, `CostumeQrServiceTests` (integrační nad SQLite) |
 | C | ✅ `CostumesController` (`/api/costumes`), DTO v `Demizon.Contracts/Costumes`, QR přes `QRCoder 1.8.0` | `CostumeApiTests` |
-| D | Blazor: menu, katalog, tisk štítků, Moje kroje, potvrzení, karta kusu | E2E |
+| D | ✅ Blazor: menu „Krojárka“, Moje kroje + QR, katalog, štítky, detail předávky s potvrzením, karta kusu, kdo co má | `CostumeStoreTests` (E2E) |
 | E | Blazor mobilní web: předávka se skenem (kamera + ruční kód), fotky s kompresí v prohlížeči | E2E přes ruční zadání kódu (headless kamera neumí) |
 | F | Kdo co má, ruční připomínky, transakční notifikace | unit: výběr adresátů |
 | G | Údržba, inventura, hodnota | unit: výsledek inventury (chybí / navíc / u člena) |
@@ -270,6 +270,30 @@ chyby jednotně `{ error }` (`Rejected` → 400).
 - **QR obsah:** `{Costumes:PublicBaseUrl}/k/{kód}` a `/m/{token}`, výchozí
   `https://demizon.cz`. Pevná konfigurace, ne adresa požadavku — štítky se šijí do krojů.
 - Notifikace (krok F) zatím nechodí, controller volá služby napřímo.
+
+### D — web (2026-10-26)
+
+Stránky v `Demizon.Mvc/Pages/Admin/Costume/`, položka menu „Krojárka“ pro všechny
+přihlášené.
+
+| Adresa | Kdo | Co |
+|---|---|---|
+| `/Admin/Costumes` | každý | čeká na mě, mám u sebe, rozpracované, historie, můj QR (+ přegenerovat) |
+| `/Admin/Costumes/Transfers/{id}` | účastník nebo kdo vidí krojárku | kusy s fotkami, potvrdit / odmítnout (příjemce), zrušit (zakladatel, správce) |
+| `/k/{kód}`, `/Admin/Costumes/Items/{kód}` | každý | karta kusu, kde je; historie jen pro `CostumeViewers` |
+| `/m/{token}` | každý | „tohle je QR člena“ — pro případ, že ho někdo načte foťákem |
+| `/Admin/Costumes/Catalog` | `CostumeViewers`, úpravy jen správce | kroje → součástky → kusy, stav zásob, stav kusu, výběr štítků |
+| `/Admin/Costumes/Labels?codes=…` | `CostumeViewers` | mřížka štítků (QR SVG + kód + součástka), `@media print` schová menu |
+| `/Admin/Costumes/Holders` | `CostumeViewers` | otevřené předávky, kdo co má i s hodnotou |
+
+- **Fotky v Blazoru jdou jako data URI z okruhu**, ne přes `/api/...`: API je jen
+  pro JWT a fotky nejsou veřejné. Náhled ~10 kB, plná fotka až po kliknutí.
+- **Časy přes `GoogleCalendar:TimeZone`**, ne `ToLocalTime()`: kontejner nemá `TZ`,
+  takže by ukázal UTC (`CostumeUi.Local`).
+- Fotka označená jako stará má na náhledu ⚠ a příjemce před potvrzením varování.
+- `/k/…` a `/m/…` vyžadují přihlášení (cookie na telefonu vydrží 30 dní).
+  Nepřihlášený dostane obecné „Nemáte přístup“ z layoutu, bez přesměrování na login.
+- Zakládání předávky (sken, fotky) a „předat kolegovi“ je krok E.
 
 Na telefonu to ověří až STATUS B, stejně jako zbytek Flutteru. Skenování
 z webu potřebuje HTTPS (`getUserMedia`); z mobilu na LAN proti `dotnet run`

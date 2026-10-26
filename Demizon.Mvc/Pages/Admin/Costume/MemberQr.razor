@@ -1,0 +1,38 @@
+@page "/m/{Token}"
+@using Demizon.Core.Services.Costume
+
+@* Adresa v QR z profilu. V aplikaci se token čte rovnou; sem se dostane jen ten, kdo QR načte foťákem. *@
+@attribute [Authorize]
+@layout AdminMainLayout
+
+@inject CostumeQrService QrService
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+<MudPaper Class="pa-3" Elevation="1" Style="max-width: 520px;">
+    @if (_name is null)
+    {
+        <MudText>Tenhle QR kód už neplatí — člen si ho mezitím vygeneroval znovu.</MudText>
+    }
+    else
+    {
+        <MudText Typo="Typo.h6">QR pro krojárku: @_name</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
+            Tímhle kódem se při předávce kusů z krojárky určuje příjemce. Načti ho ve
+            skenování předávky, ne obyčejným foťákem.
+        </MudText>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public string Token { get; set; } = "";
+
+    private string? _name;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        PageService.SetTitle("QR člena");
+        var member = await QrService.FindMemberAsync(Token);
+        _name = member is null ? null : $"{member.Name} {member.Surname}";
+    }
+}

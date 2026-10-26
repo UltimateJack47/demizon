@@ -1,0 +1,181 @@
+@page "/Admin/Costumes"
+@using Demizon.Common.Configuration
+@using Demizon.Core.Services.Costume
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.Extensions
+@using Demizon.Mvc.Services.Costume
+@using Microsoft.Extensions.Options
+
+@attribute [Authorize]
+@layout AdminMainLayout
+
+@inject ICostumeCatalogService Catalog
+@inject ICostumeTransferService Transfers
+@inject CostumeQrService QrService
+@inject CostumeQrCodes QrCodes
+@inject IOptions<GoogleCalendarSettings> CalendarOptions
+@inject ISnackbar Snackbar
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+@if (_isViewer)
+{
+    <MudStack Row="true" Spacing="2" Class="mb-3" Wrap="Wrap.Wrap">
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Inventory2" Href="Admin/Costumes/Catalog">Katalog</MudButton>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.People" Href="Admin/Costumes/Holders">Kdo co má</MudButton>
+    </MudStack>
+}
+
+<MudGrid>
+    @if (_incoming.Count > 0)
+    {
+        <MudItem xs="12">
+            <MudAlert Severity="Severity.Warning" Class="mb-2">
+                Čeká na tvé potvrzení: zkontroluj kusy a fotky a potvrď, v jakém stavu jsi je převzal(a).
+            </MudAlert>
+            @foreach (var transfer in _incoming)
+            {
+                <MudPaper Class="pa-3 mb-2" Elevation="1">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                        <MudText>
+                            Od <b>@CostumeUi.Party(transfer.FromMemberId, _names)</b> ·
+                            @transfer.Lines.Count @(transfer.Lines.Count == 1 ? "kus" : "kusů")
+                        </MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" Href="@($"Admin/Costumes/Transfers/{transfer.Id}")">
+                            Zkontrolovat a potvrdit
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            }
+        </MudItem>
+    }
+
+    <MudItem xs="12" md="8">
+        <MudPaper Class="pa-3" Elevation="1">
+            <MudText Typo="Typo.subtitle1" Class="mb-2"><b>Mám u sebe</b></MudText>
+            @if (_holdings.Count == 0)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Nemáš u sebe nic z krojárky.</MudText>
+            }
+            else
+            {
+                <MudSimpleTable Dense="true" Hover="true">
+                    <thead><tr><th>Kód</th><th>Co</th><th>Ks</th></tr></thead>
+                    <tbody>
+                    @foreach (var holding in _holdings)
+                    {
+                        <tr>
+                            <td><MudLink Href="@($"Admin/Costumes/Items/{holding.Item.Code}")">@holding.Item.Code</MudLink></td>
+                            <td>@holding.Item.Describe()</td>
+                            <td>@holding.Quantity</td>
+                        </tr>
+                    }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        </MudPaper>
+
+        @if (_outgoing.Count > 0)
+        {
+            <MudPaper Class="pa-3 mt-3" Elevation="1">
+                <MudText Typo="Typo.subtitle1" Class="mb-2"><b>Moje rozpracované předávky</b></MudText>
+                @foreach (var transfer in _outgoing)
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1">
+                        <MudChip T="string" Size="Size.Small" Color="@transfer.Status.Color()">@transfer.Status.Label()</MudChip>
+                        <MudLink Href="@($"Admin/Costumes/Transfers/{transfer.Id}")">
+                            → @CostumeUi.Party(transfer.ToMemberId, _names) · @transfer.Lines.Count ks
+                        </MudLink>
+                    </MudStack>
+                }
+            </MudPaper>
+        }
+
+        <MudPaper Class="pa-3 mt-3" Elevation="1">
+            <MudText Typo="Typo.subtitle1" Class="mb-2"><b>Historie</b></MudText>
+            @if (_history.Count == 0)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Zatím žádné předávky.</MudText>
+            }
+            @foreach (var transfer in _history)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1" Wrap="Wrap.Wrap">
+                    <MudText Typo="Typo.caption" Style="min-width: 110px;">@CostumeUi.Local(transfer.CreatedAt, CalendarOptions.Value.TimeZone)</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="@transfer.Status.Color()">@transfer.Status.Label()</MudChip>
+                    <MudLink Href="@($"Admin/Costumes/Transfers/{transfer.Id}")">
+                        @CostumeUi.Party(transfer.FromMemberId, _names) → @CostumeUi.Party(transfer.ToMemberId, _names)
+                        · @string.Join(", ", transfer.Lines.Select(l => l.Item.Code))
+                    </MudLink>
+                </MudStack>
+            }
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <MudPaper Class="pa-3" Elevation="1">
+            <MudText Typo="Typo.subtitle1"><b>Můj QR pro krojárku</b></MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+                Ukaž ho při předávce — správce nebo kolega podle něj pozná, komu kusy předává.
+                Převzetí pak potvrzuješ ty sám(a) tady v aplikaci.
+            </MudText>
+            @if (_qrSvg is not null)
+            {
+                <div style="max-width: 240px;">@((MarkupString)_qrSvg)</div>
+            }
+            <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="RegenerateQrAsync" Class="mt-2">
+                Vygenerovat nový (starý přestane platit)
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private const int HistoryCount = 15;
+
+    private int _memberId;
+    private bool _isViewer;
+    private IReadOnlyList<CostumeHolding> _holdings = [];
+    private List<CostumeTransfer> _incoming = [];
+    private List<CostumeTransfer> _outgoing = [];
+    private List<CostumeTransfer> _history = [];
+    private IReadOnlyDictionary<int, CostumeMemberName> _names = new Dictionary<int, CostumeMemberName>();
+    private string? _qrSvg;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageService.SetTitle("Krojárka");
+        var user = (await AuthenticationState!).User;
+        _memberId = user.GetMemberId();
+        _isViewer = user.IsCostumeViewer();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _holdings = await Catalog.GetHoldingsAsync(_memberId);
+        var mine = await Transfers.GetForMemberAsync(_memberId);
+        _incoming = mine.Where(t => t.Status == CostumeTransferStatus.Pending && t.ToMemberId == _memberId).ToList();
+        _outgoing = mine.Where(t => t.CreatedById == _memberId
+                                    && t.Status is CostumeTransferStatus.Draft or CostumeTransferStatus.Pending).ToList();
+        _history = mine.Where(t => t.Status != CostumeTransferStatus.Draft).Take(HistoryCount).ToList();
+        _names = await Catalog.GetMemberNamesAsync(mine.SelectMany(t => new[] { t.FromMemberId, t.ToMemberId }).OfType<int>());
+
+        var token = await QrService.GetOrCreateTokenAsync(_memberId);
+        _qrSvg = token.IsSuccess ? CostumeQrCodes.Svg(QrCodes.MemberUrl(token.Value!)) : null;
+    }
+
+    private async Task RegenerateQrAsync()
+    {
+        var token = await QrService.RegenerateTokenAsync(_memberId);
+        if (!token.IsSuccess)
+        {
+            Snackbar.Add(token.Error ?? "QR se nepodařilo vygenerovat.", Severity.Error);
+            return;
+        }
+        _qrSvg = CostumeQrCodes.Svg(QrCodes.MemberUrl(token.Value!));
+        Snackbar.Add("Nový QR kód je platný, starý už ne.", Severity.Success);
+    }
+}

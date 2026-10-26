@@ -1,0 +1,171 @@
+@page "/Admin/Costumes/Transfers/{Id:int}"
+@using Demizon.Common.Configuration
+@using Demizon.Core.Services.Costume
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.Pages.Admin.Costume.Components
+@using Microsoft.Extensions.Options
+
+@attribute [Authorize]
+@layout AdminMainLayout
+
+@inject ICostumeCatalogService Catalog
+@inject ICostumeTransferService Transfers
+@inject IOptions<GoogleCalendarSettings> CalendarOptions
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+<MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="Admin/Costumes" title="Zpět do krojárky" Class="mb-2"/>
+
+@if (_transfer is null)
+{
+    <MudText>@(_loaded ? "Předávka nebyla nalezena." : "Načítám…")</MudText>
+}
+else
+{
+    <MudPaper Class="pa-3 mb-3" Elevation="1">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+            <MudText Typo="Typo.h6">@CostumeUi.Party(_transfer.FromMemberId, _names) → @CostumeUi.Party(_transfer.ToMemberId, _names)</MudText>
+            <MudChip T="string" Color="@_transfer.Status.Color()">@_transfer.Status.Label()</MudChip>
+        </MudStack>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">
+            Založil(a) @CostumeUi.Party(_transfer.CreatedById, _names), @Local(_transfer.CreatedAt)
+            @if (_transfer.ResolvedAt is { } resolved)
+            {
+                <span> · uzavřeno @Local(resolved)@(_transfer.ResolvedById is { } by ? $" ({CostumeUi.Party(by, _names)})" : "")</span>
+            }
+        </MudText>
+        @if (!string.IsNullOrWhiteSpace(_transfer.Note))
+        {
+            <MudText Typo="Typo.body2" Class="mt-1">@_transfer.Note</MudText>
+        }
+        @if (_transfer.RejectionReason is { } reason)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-2">Důvod odmítnutí: @reason</MudAlert>
+        }
+
+        @if (_isRecipient && _transfer.Status == CostumeTransferStatus.Pending)
+        {
+            @if (_photos.Any(p => p.IsStale))
+            {
+                <MudAlert Severity="Severity.Warning" Class="mt-2">
+                    Některá fotka je podle fotoaparátu starší, než by u předávky měla být (označená ⚠).
+                    Než potvrdíš, ověř si stav kusu sám(a).
+                </MudAlert>
+            }
+            <MudText Typo="Typo.body2" Class="mt-2">
+                Potvrzením převezmeš odpovědnost za kusy ve stavu, jaký je na fotkách.
+            </MudText>
+            <MudStack Row="true" Spacing="2" Class="mt-2">
+                <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Check"
+                           OnClick="ConfirmAsync">Potvrzuji převzetí</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="RejectAsync">Odmítnout</MudButton>
+            </MudStack>
+        }
+        @if (_canCancel)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Error" Class="mt-2" OnClick="CancelAsync">Zrušit předávku</MudButton>
+        }
+    </MudPaper>
+
+    @foreach (var line in _transfer.Lines.OrderBy(l => l.Item.Code))
+    {
+        <MudPaper Class="pa-3 mb-2" Elevation="1">
+            <MudText>
+                <MudLink Href="@($"Admin/Costumes/Items/{line.Item.Code}")"><b>@line.Item.Code</b></MudLink>
+                @line.Item.Describe()@(line.Quantity > 1 ? $" · {line.Quantity} ks" : "")
+            </MudText>
+            @if (!string.IsNullOrWhiteSpace(line.ConditionNote))
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Stav: @line.ConditionNote</MudText>
+            }
+            <MudStack Row="true" Spacing="2" Class="mt-2" Wrap="Wrap.Wrap">
+                @foreach (var photo in _photos.Where(p => p.TransferLineId == line.Id))
+                {
+                    <CostumePhotoThumb TransferId="_transfer.Id" Photo="photo" TimeZoneId="@CalendarOptions.Value.TimeZone"/>
+                }
+            </MudStack>
+        </MudPaper>
+    }
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private CostumeActor _actor;
+    private bool _isViewer;
+    private bool _loaded;
+    private CostumeTransfer? _transfer;
+    private IReadOnlyList<CostumePhotoInfo> _photos = [];
+    private IReadOnlyDictionary<int, CostumeMemberName> _names = new Dictionary<int, CostumeMemberName>();
+    private bool _isRecipient;
+    private bool _canCancel;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageService.SetTitle("Předávka");
+        var user = (await AuthenticationState!).User;
+        _actor = user.ToCostumeActor();
+        _isViewer = user.IsCostumeViewer();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var transfer = await Transfers.GetAsync(Id);
+        _loaded = true;
+        // Cizí předávka se tváří jako neexistující, stejně jako v API.
+        if (transfer is null || !(_isViewer || transfer.FromMemberId == _actor.MemberId
+                                  || transfer.ToMemberId == _actor.MemberId || transfer.CreatedById == _actor.MemberId))
+        {
+            _transfer = null;
+            return;
+        }
+
+        _transfer = transfer;
+        _photos = await Transfers.GetPhotoInfosAsync(Id);
+        _names = await Catalog.GetMemberNamesAsync(
+            new[] { transfer.FromMemberId, transfer.ToMemberId, transfer.CreatedById, transfer.ResolvedById }.OfType<int>());
+        _isRecipient = transfer.ToMemberId is { } to ? to == _actor.MemberId : _actor.IsKeeper;
+        _canCancel = transfer.Status is CostumeTransferStatus.Draft or CostumeTransferStatus.Pending
+                     && (transfer.CreatedById == _actor.MemberId || _actor.IsKeeper);
+    }
+
+    private string Local(DateTime utc) => CostumeUi.Local(utc, CalendarOptions.Value.TimeZone);
+
+    private async Task ConfirmAsync()
+    {
+        var result = await Transfers.ConfirmAsync(Id, _actor);
+        Snackbar.Add(result.IsSuccess ? "Převzetí potvrzeno." : result.Error ?? "Potvrzení se nepodařilo.",
+            result.IsSuccess ? Severity.Success : Severity.Error);
+        await LoadAsync();
+    }
+
+    private async Task RejectAsync()
+    {
+        var dialog = await DialogService.ShowAsync<RejectTransferDialog>("Odmítnout převzetí");
+        var answer = await dialog.Result;
+        if (answer is null || answer.Canceled || answer.Data is not string reason)
+            return;
+
+        var result = await Transfers.RejectAsync(Id, _actor, reason);
+        Snackbar.Add(result.IsSuccess ? "Převzetí odmítnuto." : result.Error ?? "Odmítnutí se nepodařilo.",
+            result.IsSuccess ? Severity.Info : Severity.Error);
+        await LoadAsync();
+    }
+
+    private async Task CancelAsync()
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync("Zrušit předávku?",
+            "Kusy zůstanou tomu, kdo je teď drží.", yesText: "Zrušit předávku", cancelText: "Zpět");
+        if (confirmed != true)
+            return;
+
+        var result = await Transfers.CancelAsync(Id, _actor);
+        Snackbar.Add(result.IsSuccess ? "Předávka zrušena." : result.Error ?? "Zrušení se nepodařilo.",
+            result.IsSuccess ? Severity.Info : Severity.Error);
+        await LoadAsync();
+    }
+}

@@ -1,0 +1,51 @@
+@using Demizon.Core.Services.Costume
+@inject ICostumeTransferService Transfers
+@inject IDialogService DialogService
+
+@* Fotky krojárky nejsou veřejné, takže ne URL na API (to je jen pro JWT), ale data přímo z okruhu. *@
+<MudTooltip Text="@Tooltip">
+    <div style="position: relative; display: inline-block; cursor: pointer;" @onclick="OpenFullAsync">
+        @if (_thumb is not null)
+        {
+            <img src="@_thumb" alt="Fotka stavu" style="height: 96px; border-radius: 4px;
+                 @(Photo.IsStale ? "outline: 3px solid var(--mud-palette-warning);" : "")"/>
+        }
+        @if (Photo.IsStale)
+        {
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Small"
+                     Style="position: absolute; top: 2px; right: 2px; background: white; border-radius: 50%;"/>
+        }
+    </div>
+</MudTooltip>
+
+@code {
+    [Parameter, EditorRequired] public int TransferId { get; set; }
+    [Parameter, EditorRequired] public CostumePhotoInfo Photo { get; set; } = null!;
+    [Parameter, EditorRequired] public string TimeZoneId { get; set; } = null!;
+
+    private string? _thumb;
+
+    private string Tooltip => Photo.IsStale && Photo.CapturedAt is { } captured
+        ? $"Pozor: podle fotoaparátu pořízená {CostumeUi.Local(captured, TimeZoneId)}, nahraná {CostumeUi.Local(Photo.UploadedAt, TimeZoneId)}."
+        : $"Nahraná {CostumeUi.Local(Photo.UploadedAt, TimeZoneId)}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var data = await Transfers.GetPhotoDataAsync(TransferId, Photo.Id, thumbnail: true);
+        _thumb = data is null ? null : $"data:image/jpeg;base64,{Convert.ToBase64String(data)}";
+    }
+
+    private async Task OpenFullAsync()
+    {
+        var data = await Transfers.GetPhotoDataAsync(TransferId, Photo.Id, thumbnail: false);
+        if (data is null)
+            return;
+        var parameters = new DialogParameters<CostumePhotoDialog>
+        {
+            { x => x.Src, $"data:image/jpeg;base64,{Convert.ToBase64String(data)}" },
+            { x => x.Caption, Tooltip }
+        };
+        await DialogService.ShowAsync<CostumePhotoDialog>("Fotka", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Large, CloseButton = true, CloseOnEscapeKey = true });
+    }
+}

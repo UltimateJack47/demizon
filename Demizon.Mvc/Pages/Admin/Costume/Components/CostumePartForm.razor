@@ -1,0 +1,74 @@
+@using Demizon.Core.Services.Costume
+@using Demizon.Dal.Entities
+
+<MudDialog Style="min-width: min(480px, calc(100vw - 32px))">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(IsUpdate ? "Upravit součástku" : "Nová součástka")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudSelect T="int?" @bind-Value="_costumeId" Label="Kroj" Clearable="true" Variant="Variant.Outlined"
+                       Margin="Margin.Dense" HelperText="Bez kroje = ostatní (doplňky)">
+                @foreach (var costume in Costumes)
+                {
+                    <MudSelectItem T="int?" Value="costume.Id">@costume.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField @bind-Value="_name" Label="Název" Required="true" RequiredError="Název je povinný."
+                          MaxLength="100" Variant="Variant.Outlined" Margin="Margin.Dense"
+                          HelperText="Např. Kopanická vesta"/>
+            <MudSelect T="CostumeGender" @bind-Value="_gender" Label="Pro koho" Variant="Variant.Outlined" Margin="Margin.Dense">
+                @foreach (var gender in Enum.GetValues<CostumeGender>())
+                {
+                    <MudSelectItem T="CostumeGender" Value="gender">@gender.Label()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="CostumeTrackingMode" @bind-Value="_mode" Label="Evidence" Variant="Variant.Outlined"
+                       Margin="Margin.Dense" Disabled="ModeLocked"
+                       HelperText="@(ModeLocked ? "Součástka už má kusy, evidenci nejde změnit." : null)">
+                @foreach (var mode in Enum.GetValues<CostumeTrackingMode>())
+                {
+                    <MudSelectItem T="CostumeTrackingMode" Value="mode">@mode.Label()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField @bind-Value="_description" Label="Popis" Lines="3" MaxLength="1000"
+                          Variant="Variant.Outlined" Margin="Margin.Dense"/>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => MudDialog.Cancel()">Zrušit</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClickedOk">@(IsUpdate ? "Uložit" : "Vytvořit")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public bool IsUpdate { get; set; }
+    [Parameter] public bool ModeLocked { get; set; }
+    [Parameter] public CostumePartInput? Initial { get; set; }
+    [Parameter] public IReadOnlyList<Dal.Entities.Costume> Costumes { get; set; } = [];
+
+    private MudForm _form = null!;
+    private int? _costumeId;
+    private string _name = "";
+    private CostumeGender _gender = CostumeGender.Unisex;
+    private CostumeTrackingMode _mode = CostumeTrackingMode.Individual;
+    private string? _description;
+
+    protected override void OnInitialized()
+    {
+        if (Initial is null)
+            return;
+        (_costumeId, _name, _gender, _description, _mode) =
+            (Initial.CostumeId, Initial.Name, Initial.Gender, Initial.Description, Initial.TrackingMode);
+    }
+
+    private async Task ClickedOk()
+    {
+        await _form.ValidateAsync();
+        if (!_form.IsValid)
+            return;
+        MudDialog.Close(DialogResult.Ok(new CostumePartInput(_costumeId, _name, _gender, _description, _mode)));
+    }
+}

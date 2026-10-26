@@ -1,0 +1,249 @@
+@page "/Admin/Costumes/Catalog"
+@using Demizon.Common
+@using Demizon.Core.Services.Costume
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.Pages.Admin.Costume.Components
+@using Demizon.Mvc.Services.Authentication
+
+@attribute [Authorize(Roles = RoleNames.CostumeViewers)]
+@layout AdminMainLayout
+
+@inject ICostumeCatalogService Catalog
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+<MudStack Row="true" Spacing="2" Class="mb-3" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="Admin/Costumes" title="Zpět do krojárky"/>
+    @if (_isKeeper)
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreateCostumeAsync">Kroj</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreatePartAsync">Součástka</MudButton>
+    }
+    <MudSpacer/>
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print" Disabled="_selected.Count == 0"
+               Href="@LabelsHref">Štítky (@_selected.Count)</MudButton>
+</MudStack>
+
+@if (_parts.Count == 0)
+{
+    <MudText Color="Color.Secondary">Krojárka je zatím prázdná.@(_isKeeper ? " Začni krojem a jeho součástkami." : "")</MudText>
+}
+
+@foreach (var group in _parts.GroupBy(p => p.Costume))
+{
+    <MudPaper Class="pa-3 mb-3" Elevation="1">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            <MudText Typo="Typo.h6">@(group.Key?.Name ?? "Ostatní")</MudText>
+            @if (_isKeeper && group.Key is { } costume)
+            {
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" title="Upravit kroj" OnClick="() => EditCostumeAsync(costume)"/>
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" title="Smazat kroj" OnClick="() => DeleteCostumeAsync(costume)"/>
+            }
+        </MudStack>
+        @if (group.Key?.Description is { } description)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@description</MudText>
+        }
+
+        @foreach (var part in group)
+        {
+            <MudDivider Class="my-2"/>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap" Class="costume-part-header">
+                <MudText Typo="Typo.subtitle1"><b>@part.Name</b></MudText>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@part.Gender.Label()</MudChip>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    v krojárce @part.Items.Where(i => i.State == CostumeItemState.Available).Sum(i => Stock(i).InStore)
+                    z @part.Items.Where(i => i.State != CostumeItemState.Retired).Sum(i => i.Quantity)
+                </MudText>
+                @if (_isKeeper)
+                {
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" title="Upravit součástku" OnClick="() => EditPartAsync(part)"/>
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" title="Smazat součástku" OnClick="() => DeletePartAsync(part)"/>
+                    <MudButton Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => CreateItemAsync(part)">
+                        @(part.TrackingMode == CostumeTrackingMode.Individual ? "Kus" : "Šarže")
+                    </MudButton>
+                }
+                <MudButton Size="Size.Small" StartIcon="@Icons.Material.Filled.QrCode" OnClick="() => SelectAll(part)">Vybrat štítky</MudButton>
+            </MudStack>
+
+            @if (part.Items.Count > 0)
+            {
+                <MudSimpleTable Dense="true" Hover="true" Class="mt-1">
+                    <thead>
+                    <tr><th></th><th>Kód</th><th>Vel.</th><th>Barva</th><th>V krojárce</th><th>Půjčeno</th><th>Stav</th><th>Kč</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in part.Items.OrderBy(i => i.State == CostumeItemState.Retired).ThenBy(i => i.Code))
+                    {
+                        var stock = Stock(item);
+                        <tr style="@(item.State == CostumeItemState.Retired ? "opacity: 0.5;" : "")">
+                            <td><MudCheckBox T="bool" Value="_selected.Contains(item.Code)" Size="Size.Small"
+                                             ValueChanged="on => Toggle(item.Code, on)"/></td>
+                            <td><MudLink Href="@($"Admin/Costumes/Items/{item.Code}")">@item.Code</MudLink></td>
+                            <td>@item.Size</td>
+                            <td>@item.Color</td>
+                            <td>@stock.InStore@(stock.Reserved > 0 ? $" ({stock.Reserved} v předávce)" : "")</td>
+                            <td>@stock.Held</td>
+                            <td><MudChip T="string" Size="Size.Small" Color="@item.State.Color()">@item.State.Label()</MudChip></td>
+                            <td>@item.ValueCzk</td>
+                            <td style="white-space: nowrap;">
+                                @if (_isKeeper)
+                                {
+                                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" title="Upravit" OnClick="() => EditItemAsync(part, item)"/>
+                                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" title="Změnit stav">
+                                        @foreach (var state in new[] { CostumeItemState.Available, CostumeItemState.Lost, CostumeItemState.Retired })
+                                        {
+                                            <MudMenuItem OnClick="() => SetStateAsync(item, state)">Označit jako @state.Label()</MudMenuItem>
+                                        }
+                                    </MudMenu>
+                                }
+                            </td>
+                        </tr>
+                        @if (!string.IsNullOrWhiteSpace(item.Note))
+                        {
+                            <tr><td></td><td colspan="8"><MudText Typo="Typo.caption" Color="Color.Secondary">@item.Note</MudText></td></tr>
+                        }
+                    }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        }
+    </MudPaper>
+}
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private bool _isKeeper;
+    private IReadOnlyList<Dal.Entities.Costume> _costumes = [];
+    private IReadOnlyList<CostumePart> _parts = [];
+    private IReadOnlyDictionary<int, CostumeItemStock> _stock = new Dictionary<int, CostumeItemStock>();
+    private readonly HashSet<string> _selected = [];
+
+    private string LabelsHref => $"Admin/Costumes/Labels?codes={Uri.EscapeDataString(string.Join(",", _selected.Order()))}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageService.SetTitle("Katalog krojárky");
+        _isKeeper = (await AuthenticationState!).User.IsKeeper();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _costumes = await Catalog.GetCostumesAsync();
+        _parts = await Catalog.GetPartsAsync();
+        _stock = await Catalog.GetStockAsync();
+    }
+
+    private CostumeItemStock Stock(CostumeItem item) =>
+        _stock.TryGetValue(item.Id, out var stock) ? stock : new CostumeItemStock(item.Id, item.Quantity, 0, 0);
+
+    private void Toggle(string code, bool on)
+    {
+        if (on) _selected.Add(code);
+        else _selected.Remove(code);
+    }
+
+    private void SelectAll(CostumePart part)
+    {
+        foreach (var item in part.Items.Where(i => i.State != CostumeItemState.Retired))
+            _selected.Add(item.Code);
+    }
+
+    private async Task<T?> AskAsync<TDialog, T>(string title, DialogParameters<TDialog> parameters) where TDialog : IComponent
+    {
+        var dialog = await DialogService.ShowAsync<TDialog>(title, parameters);
+        var result = await dialog.Result;
+        return result is { Canceled: false, Data: T data } ? data : default;
+    }
+
+    private async Task SaveAsync(Task<Result> action, string success)
+    {
+        var result = await action;
+        Snackbar.Add(result.IsSuccess ? success : result.Error ?? "Uložení se nepodařilo.",
+            result.IsSuccess ? Severity.Success : Severity.Error);
+        if (result.IsSuccess)
+            await LoadAsync();
+    }
+
+    private async Task SaveAsync(Task<Result<int>> action, string success)
+    {
+        var result = await action;
+        Snackbar.Add(result.IsSuccess ? success : result.Error ?? "Uložení se nepodařilo.",
+            result.IsSuccess ? Severity.Success : Severity.Error);
+        if (result.IsSuccess)
+            await LoadAsync();
+    }
+
+    private async Task CreateCostumeAsync()
+    {
+        if (await AskAsync<CostumeForm, CostumeInput>("Kroj", new DialogParameters<CostumeForm>()) is { } input)
+            await SaveAsync(Catalog.CreateCostumeAsync(input), "Kroj vytvořen.");
+    }
+
+    private async Task EditCostumeAsync(Dal.Entities.Costume costume)
+    {
+        var parameters = new DialogParameters<CostumeForm>
+        {
+            { x => x.IsUpdate, true },
+            { x => x.Initial, new CostumeInput(costume.Name, costume.Description, costume.SortOrder) }
+        };
+        if (await AskAsync<CostumeForm, CostumeInput>("Kroj", parameters) is { } input)
+            await SaveAsync(Catalog.UpdateCostumeAsync(costume.Id, input), "Kroj uložen.");
+    }
+
+    private async Task DeleteCostumeAsync(Dal.Entities.Costume costume)
+    {
+        if (await DialogService.ShowMessageBoxAsync("Smazat kroj?", costume.Name, yesText: "Smazat", cancelText: "Zpět") == true)
+            await SaveAsync(Catalog.DeleteCostumeAsync(costume.Id), "Kroj smazán.");
+    }
+
+    private async Task CreatePartAsync()
+    {
+        var parameters = new DialogParameters<CostumePartForm> { { x => x.Costumes, _costumes } };
+        if (await AskAsync<CostumePartForm, CostumePartInput>("Součástka", parameters) is { } input)
+            await SaveAsync(Catalog.CreatePartAsync(input), "Součástka vytvořena.");
+    }
+
+    private async Task EditPartAsync(CostumePart part)
+    {
+        var parameters = new DialogParameters<CostumePartForm>
+        {
+            { x => x.IsUpdate, true },
+            { x => x.ModeLocked, part.Items.Count > 0 },
+            { x => x.Costumes, _costumes },
+            { x => x.Initial, new CostumePartInput(part.CostumeId, part.Name, part.Gender, part.Description, part.TrackingMode) }
+        };
+        if (await AskAsync<CostumePartForm, CostumePartInput>("Součástka", parameters) is { } input)
+            await SaveAsync(Catalog.UpdatePartAsync(part.Id, input), "Součástka uložena.");
+    }
+
+    private async Task DeletePartAsync(CostumePart part)
+    {
+        if (await DialogService.ShowMessageBoxAsync("Smazat součástku?", part.Name, yesText: "Smazat", cancelText: "Zpět") == true)
+            await SaveAsync(Catalog.DeletePartAsync(part.Id), "Součástka smazána.");
+    }
+
+    private async Task CreateItemAsync(CostumePart part)
+    {
+        var parameters = new DialogParameters<CostumeItemForm> { { x => x.Part, part } };
+        if (await AskAsync<CostumeItemForm, CostumeItemInput>("Kus", parameters) is { } input)
+            await SaveAsync(Catalog.CreateItemAsync(input), "Kus vytvořen.");
+    }
+
+    private async Task EditItemAsync(CostumePart part, CostumeItem item)
+    {
+        var parameters = new DialogParameters<CostumeItemForm>
+        {
+            { x => x.IsUpdate, true }, { x => x.Part, part }, { x => x.Initial, item }
+        };
+        if (await AskAsync<CostumeItemForm, CostumeItemInput>("Kus", parameters) is { } input)
+            await SaveAsync(Catalog.UpdateItemAsync(item.Id, input), "Kus uložen.");
+    }
+
+    private Task SetStateAsync(CostumeItem item, CostumeItemState state) =>
+        SaveAsync(Catalog.SetItemStateAsync(item.Id, state), $"{item.Code}: {state.Label()}.");
+}

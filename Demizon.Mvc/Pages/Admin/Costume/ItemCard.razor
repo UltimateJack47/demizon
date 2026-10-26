@@ -1,0 +1,113 @@
+@page "/k/{Code}"
+@page "/Admin/Costumes/Items/{Code}"
+@using Demizon.Common.Configuration
+@using Demizon.Core.Services.Costume
+@using Demizon.Dal.Entities
+@using Microsoft.Extensions.Options
+
+@* /k/{Code} je adresa v QR štítku: načte ji i obyčejný foťák v telefonu. *@
+@attribute [Authorize]
+@layout AdminMainLayout
+
+@inject ICostumeCatalogService Catalog
+@inject ICostumeTransferService Transfers
+@inject IOptions<GoogleCalendarSettings> CalendarOptions
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+<MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="Admin/Costumes" title="Krojárka" Class="mb-2"/>
+
+@if (_item is null)
+{
+    <MudText>@(_loaded ? $"Kus {Code} v krojárce neexistuje." : "Načítám…")</MudText>
+}
+else
+{
+    <MudPaper Class="pa-3 mb-3" Elevation="1">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+            <MudText Typo="Typo.h5"><b>@_item.Code</b></MudText>
+            <MudChip T="string" Color="@_item.State.Color()">@_item.State.Label()</MudChip>
+        </MudStack>
+        <MudText>@_item.Describe()</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">
+            @_item.Part.Gender.Label()
+            @if (_item.Part.TrackingMode == CostumeTrackingMode.Bulk)
+            {
+                <span> · šarže @_item.Quantity ks</span>
+            }
+            @if (_isViewer && _item.ValueCzk is { } value)
+            {
+                <span> · hodnota @value Kč</span>
+            }
+        </MudText>
+        @if (!string.IsNullOrWhiteSpace(_item.Note))
+        {
+            <MudText Typo="Typo.body2" Class="mt-1">@_item.Note</MudText>
+        }
+        @if (!string.IsNullOrWhiteSpace(_item.Part.Description))
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">@_item.Part.Description</MudText>
+        }
+
+        <MudDivider Class="my-2"/>
+        <MudText Typo="Typo.subtitle2">Kde je</MudText>
+        @if (_stock?.InStore > 0)
+        {
+            <MudText Typo="Typo.body2">V krojárce: @_stock.InStore ks</MudText>
+        }
+        @foreach (var holding in _holdings)
+        {
+            <MudText Typo="Typo.body2">@CostumeUi.Party(holding.MemberId, _names): @holding.Quantity ks</MudText>
+        }
+    </MudPaper>
+
+    @if (_isViewer)
+    {
+        <MudPaper Class="pa-3" Elevation="1">
+            <MudText Typo="Typo.subtitle1" Class="mb-2"><b>Historie předávek</b></MudText>
+            @if (_history.Count == 0)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Kus se zatím nepředával.</MudText>
+            }
+            @foreach (var transfer in _history)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1" Wrap="Wrap.Wrap">
+                    <MudText Typo="Typo.caption" Style="min-width: 110px;">@CostumeUi.Local(transfer.CreatedAt, CalendarOptions.Value.TimeZone)</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="@transfer.Status.Color()">@transfer.Status.Label()</MudChip>
+                    <MudLink Href="@($"Admin/Costumes/Transfers/{transfer.Id}")">
+                        @CostumeUi.Party(transfer.FromMemberId, _names) → @CostumeUi.Party(transfer.ToMemberId, _names)
+                    </MudLink>
+                </MudStack>
+            }
+        </MudPaper>
+    }
+}
+
+@code {
+    [Parameter] public string Code { get; set; } = "";
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private bool _loaded;
+    private bool _isViewer;
+    private CostumeItem? _item;
+    private CostumeItemStock? _stock;
+    private List<CostumeHolding> _holdings = [];
+    private IReadOnlyList<CostumeTransfer> _history = [];
+    private IReadOnlyDictionary<int, CostumeMemberName> _names = new Dictionary<int, CostumeMemberName>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        PageService.SetTitle(Code.ToUpperInvariant());
+        _isViewer = (await AuthenticationState!).User.IsCostumeViewer();
+        _item = await Catalog.GetItemByCodeAsync(Code);
+        _loaded = true;
+        if (_item is null)
+            return;
+
+        _stock = (await Catalog.GetStockAsync([_item.Id]))[_item.Id];
+        _holdings = (await Catalog.GetHoldingsAsync()).Where(h => h.ItemId == _item.Id).ToList();
+        _history = _isViewer ? await Transfers.GetItemHistoryAsync(_item.Id) : [];
+        _names = await Catalog.GetMemberNamesAsync(_holdings.Select(h => h.MemberId)
+            .Concat(_history.SelectMany(t => new[] { t.FromMemberId, t.ToMemberId }).OfType<int>()));
+    }
+}

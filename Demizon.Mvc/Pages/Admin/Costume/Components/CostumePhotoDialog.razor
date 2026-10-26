@@ -1,0 +1,11 @@
+<MudDialog>
+    <DialogContent>
+        <img src="@Src" alt="Fotka stavu" style="max-width: 100%; max-height: 80vh; display: block; margin: 0 auto;"/>
+        <MudText Typo="Typo.caption" Class="mt-2">@Caption</MudText>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter] public string Src { get; set; } = "";
+    [Parameter] public string Caption { get; set; } = "";
+}
