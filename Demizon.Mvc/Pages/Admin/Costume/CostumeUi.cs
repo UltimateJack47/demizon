@@ -43,6 +43,14 @@ public static class CostumeUi
     public static string Label(this CostumeTrackingMode mode) =>
         mode == CostumeTrackingMode.Individual ? "po kusech (každý kus svůj QR)" : "počtem (šarže, jeden QR)";
 
+    public static string Label(CostumeMaintenanceKind kind) => kind switch
+    {
+        CostumeMaintenanceKind.Washing => "praní",
+        CostumeMaintenanceKind.Cleaning => "čištění",
+        CostumeMaintenanceKind.Repair => "oprava",
+        _ => "jiné"
+    };
+
     public static string Label(this CostumeTransferStatus status) => status switch
     {
         CostumeTransferStatus.Draft => "rozpracovaná",

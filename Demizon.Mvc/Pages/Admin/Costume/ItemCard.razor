@@ -11,6 +11,8 @@
 
 @inject ICostumeCatalogService Catalog
 @inject ICostumeTransferService Transfers
+@inject CostumeMaintenanceService Maintenance
+@inject ISnackbar Snackbar
 @inject IOptions<GoogleCalendarSettings> CalendarOptions
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
@@ -63,6 +65,45 @@ else
 
     @if (_isViewer)
     {
+        <MudPaper Class="pa-3 mb-3" Elevation="1">
+            <MudText Typo="Typo.subtitle1" Class="mb-2"><b>Údržba</b></MudText>
+            @if (_isKeeper && _openMaintenance is { } open)
+            {
+                <MudText Typo="Typo.body2">
+                    V údržbě od @CostumeUi.Local(open.StartedAt, CalendarOptions.Value.TimeZone) (@CostumeUi.Label(open.Kind))@(open.Note is null ? "" : $": {open.Note}")
+                </MudText>
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mt-1">
+                    <MudTextField @bind-Value="_note" Label="Poznámka" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="1000"/>
+                    <MudNumericField T="int?" @bind-Value="_cost" Label="Cena Kč" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" Style="width: 120px;"/>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="FinishMaintenanceAsync">Hotovo, vrátit mezi dostupné</MudButton>
+                </MudStack>
+            }
+            else if (_isKeeper && _item.State == CostumeItemState.Available && _stock?.Held == 0)
+            {
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                    <MudSelect T="CostumeMaintenanceKind" @bind-Value="_kind" Label="Druh" Variant="Variant.Outlined" Margin="Margin.Dense" Style="width: 140px;">
+                        @foreach (var kind in Enum.GetValues<CostumeMaintenanceKind>())
+                        {
+                            <MudSelectItem T="CostumeMaintenanceKind" Value="kind">@CostumeUi.Label(kind)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTextField @bind-Value="_note" Label="Poznámka" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="1000"/>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="StartMaintenanceAsync">Dát do údržby</MudButton>
+                </MudStack>
+            }
+            @foreach (var record in _maintenance.Where(m => m.FinishedAt is not null))
+            {
+                <MudText Typo="Typo.body2" Class="mt-1">
+                    @CostumeUi.Local(record.StartedAt, CalendarOptions.Value.TimeZone) – @CostumeUi.Local(record.FinishedAt!.Value, CalendarOptions.Value.TimeZone):
+                    @CostumeUi.Label(record.Kind)@(record.Note is null ? "" : $", {record.Note}")@(record.CostCzk is { } cost ? $", {cost} Kč" : "")
+                </MudText>
+            }
+            @if (_maintenance.Count == 0 && !_isKeeper)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Zatím žádná.</MudText>
+            }
+        </MudPaper>
+
         <MudPaper Class="pa-3" Elevation="1">
             <MudText Typo="Typo.subtitle1" Class="mb-2"><b>Historie předávek</b></MudText>
             @if (_history.Count == 0)
@@ -89,6 +130,13 @@ else
 
     private bool _loaded;
     private bool _isViewer;
+    private bool _isKeeper;
+    private int _memberId;
+    private IReadOnlyList<CostumeMaintenance> _maintenance = [];
+    private CostumeMaintenance? _openMaintenance;
+    private CostumeMaintenanceKind _kind = CostumeMaintenanceKind.Washing;
+    private string? _note;
+    private int? _cost;
     private CostumeItem? _item;
     private CostumeItemStock? _stock;
     private List<CostumeHolding> _holdings = [];
@@ -98,7 +146,15 @@ else
     protected override async Task OnParametersSetAsync()
     {
         PageService.SetTitle(Code.ToUpperInvariant());
-        _isViewer = (await AuthenticationState!).User.IsCostumeViewer();
+        var user = (await AuthenticationState!).User;
+        _isViewer = user.IsCostumeViewer();
+        _isKeeper = user.IsKeeper();
+        _memberId = user.ToCostumeActor().MemberId;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
         _item = await Catalog.GetItemByCodeAsync(Code);
         _loaded = true;
         if (_item is null)
@@ -109,5 +165,25 @@ else
         _history = _isViewer ? await Transfers.GetItemHistoryAsync(_item.Id) : [];
         _names = await Catalog.GetMemberNamesAsync(_holdings.Select(h => h.MemberId)
             .Concat(_history.SelectMany(t => new[] { t.FromMemberId, t.ToMemberId }).OfType<int>()));
+        _maintenance = _isViewer ? await Maintenance.GetForItemAsync(_item.Id) : [];
+        _openMaintenance = _maintenance.FirstOrDefault(m => m.FinishedAt is null);
+    }
+
+    private async Task StartMaintenanceAsync()
+    {
+        var started = await Maintenance.StartAsync(_item!.Id, _kind, _note, null, _memberId);
+        Snackbar.Add(started.IsSuccess ? $"{_item.Code} je v údržbě." : started.Error ?? "Nepodařilo se.",
+            started.IsSuccess ? Severity.Success : Severity.Error);
+        _note = null;
+        await LoadAsync();
+    }
+
+    private async Task FinishMaintenanceAsync()
+    {
+        var finished = await Maintenance.FinishAsync(_openMaintenance!.Id, _note, _cost);
+        Snackbar.Add(finished.IsSuccess ? $"{_item!.Code} je zase dostupný." : finished.Error ?? "Nepodařilo se.",
+            finished.IsSuccess ? Severity.Success : Severity.Error);
+        (_note, _cost) = (null, null);
+        await LoadAsync();
     }
 }

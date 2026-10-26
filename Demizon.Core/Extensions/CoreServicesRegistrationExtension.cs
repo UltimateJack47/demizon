@@ -50,6 +50,8 @@ public static class CoreServicesRegistrationExtension
         services.AddScoped<ICostumeTransferService, CostumeTransferService>();
         services.AddScoped<CostumePhotoProcessor>();
         services.AddScoped<CostumeQrService>();
+        services.AddScoped<CostumeMaintenanceService>();
+        services.AddScoped<CostumeInventoryService>();
         services.AddSingleton<TokenService>();
         services.AddScoped<RefreshTokenService>();
         return services;

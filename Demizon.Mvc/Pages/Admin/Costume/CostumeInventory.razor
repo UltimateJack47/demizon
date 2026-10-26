@@ -1,0 +1,160 @@
+@page "/Admin/Costumes/Inventory"
+@using Demizon.Common.Configuration
+@using Demizon.Core.Services.Costume
+@using Demizon.Dal.Entities
+@using Demizon.Mvc.Pages.Admin.Costume.Components
+@using Demizon.Mvc.Services.Authentication
+@using Demizon.Mvc.Services.Costume
+@using Microsoft.Extensions.Options
+
+@attribute [Authorize(Roles = RoleNames.CostumeViewers)]
+@layout AdminMainLayout
+
+@inject CostumeInventoryService Inventory
+@inject IOptions<GoogleCalendarSettings> CalendarOptions
+@inject ISnackbar Snackbar
+
+<PageTitle>@PageService.GetTitle()</PageTitle>
+
+<MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="Admin/Costumes" title="Zpět do krojárky" Class="mb-2"/>
+
+<MudPaper Class="pa-3 mb-3" Elevation="1">
+    @if (_check is null)
+    {
+        <MudText Typo="Typo.h6">Inventura</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+            Projdi krojárku a naskenuj všechno, co v ní fyzicky je. Výsledek ukáže, co chybí, co přebývá
+            a co leží v krojárce, přestože je vedené u člena. Nic se tím samo neopravuje.
+        </MudText>
+        @if (_isKeeper)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartAsync">Začít inventuru</MudButton>
+        }
+    }
+    else
+    {
+        <MudText Typo="Typo.h6">
+            Inventura @CostumeUi.Local(_check.StartedAt, CalendarOptions.Value.TimeZone)
+            @(_check.FinishedAt is null ? "(probíhá)" : "(uzavřená)")
+        </MudText>
+        @if (_check.FinishedAt is null && _isKeeper)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+                Šarže: každý sken přičte kus, nebo počet oprav v tabulce.
+            </MudText>
+            <CodeScanner OnCode="OnScanAsync" Label="Kód kusu"/>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2" OnClick="FinishAsync">Uzavřít inventuru</MudButton>
+        }
+    }
+</MudPaper>
+
+@if (_check is not null)
+{
+    <MudPaper Class="pa-3" Elevation="1">
+        <MudText Typo="Typo.subtitle1" Class="mb-2">
+            <b>Výsledek</b> — @_rows.Count(r => r.Finding != CostumeInventoryFinding.Ok) rozdílů, @_rows.Count(r => r.Finding == CostumeInventoryFinding.Ok) v pořádku
+        </MudText>
+        <MudSimpleTable Dense="true" Hover="true">
+            <thead><tr><th>Kód</th><th>Co</th><th>Má být</th><th>Spočteno</th><th>Zjištění</th></tr></thead>
+            <tbody>
+            @foreach (var row in _rows)
+            {
+                <tr>
+                    <td><MudLink Href="@($"Admin/Costumes/Items/{row.Item.Code}")">@row.Item.Code</MudLink></td>
+                    <td>@row.Item.Describe()</td>
+                    <td>@row.Expected</td>
+                    <td>
+                        @if (_isKeeper && _check.FinishedAt is null && row.Item.Part.TrackingMode == CostumeTrackingMode.Bulk)
+                        {
+                            <MudNumericField T="int" Value="row.Counted" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                             Style="width: 90px;" ValueChanged="count => SetCountAsync(row.Item.Code, count)"/>
+                        }
+                        else
+                        {
+                            @row.Counted
+                        }
+                    </td>
+                    <td><MudChip T="string" Size="Size.Small" Color="@FindingColor(row.Finding)">@FindingText(row.Finding)</MudChip></td>
+                </tr>
+            }
+            </tbody>
+        </MudSimpleTable>
+    </MudPaper>
+}
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private CostumeActor _actor;
+    private bool _isKeeper;
+    private CostumeInventoryCheck? _check;
+    private IReadOnlyList<CostumeInventoryRow> _rows = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageService.SetTitle("Inventura");
+        var user = (await AuthenticationState!).User;
+        _actor = user.ToCostumeActor();
+        _isKeeper = user.IsKeeper();
+        await LoadAsync();
+    }
+
+    /// <summary>Probíhající inventura, jinak poslední uzavřená.</summary>
+    private async Task LoadAsync()
+    {
+        _check = await Inventory.GetOpenAsync() ?? (await Inventory.GetRecentAsync(1)).FirstOrDefault();
+        _rows = _check is null ? [] : await Inventory.GetResultAsync(_check.Id);
+    }
+
+    private async Task StartAsync()
+    {
+        var started = await Inventory.StartAsync(_actor.MemberId);
+        if (!started.IsSuccess)
+            Snackbar.Add(started.Error ?? "Inventuru se nepodařilo založit.", Severity.Error);
+        await LoadAsync();
+    }
+
+    private async Task OnScanAsync(string text)
+    {
+        if (CostumeScan.Parse(text) is not { Kind: CostumeScanKind.Item } scan)
+        {
+            Snackbar.Add("Tohle není kód kusu.", Severity.Warning);
+            return;
+        }
+        var scanned = await Inventory.ScanAsync(_check!.Id, scan.Value);
+        if (scanned.IsSuccess)
+            Snackbar.Add($"{scanned.Value!.Code} ✓", Severity.Normal, o => o.VisibleStateDuration = 1500);
+        else
+            Snackbar.Add(scanned.Error ?? "Sken se nepodařilo zapsat.", Severity.Error);
+        await LoadAsync();
+    }
+
+    private async Task SetCountAsync(string code, int count)
+    {
+        var scanned = await Inventory.ScanAsync(_check!.Id, code, count);
+        if (!scanned.IsSuccess)
+            Snackbar.Add(scanned.Error ?? "Počet se nepodařilo uložit.", Severity.Error);
+        await LoadAsync();
+    }
+
+    private async Task FinishAsync()
+    {
+        var finished = await Inventory.FinishAsync(_check!.Id);
+        Snackbar.Add(finished.IsSuccess ? "Inventura uzavřena." : finished.Error ?? "Nepodařilo se.",
+            finished.IsSuccess ? Severity.Success : Severity.Error);
+        await LoadAsync();
+    }
+
+    private static string FindingText(CostumeInventoryFinding finding) => finding switch
+    {
+        CostumeInventoryFinding.Ok => "v pořádku",
+        CostumeInventoryFinding.Missing => "chybí",
+        CostumeInventoryFinding.Surplus => "přebývá",
+        CostumeInventoryFinding.HeldByMember => "vedený u člena",
+        CostumeInventoryFinding.UnexpectedState => "vedený jako ztracený / vyřazený",
+        _ => finding.ToString()
+    };
+
+    private static Color FindingColor(CostumeInventoryFinding finding) =>
+        finding == CostumeInventoryFinding.Ok ? Color.Success : Color.Warning;
+}

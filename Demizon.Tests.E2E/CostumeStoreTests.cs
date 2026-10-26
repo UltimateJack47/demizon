@@ -236,7 +236,46 @@ public class CostumeStoreTests(E2EFixture fixture) : E2ETestBase(fixture)
         await Expect(Page.GetByText($"Kus {code} nemáš u sebe.")).ToBeVisibleAsync(new() { Timeout = 10_000 });
     }
 
+    [Fact]
+    public async Task Spravce_da_kus_do_udrzby_a_zase_ho_vrati()
+    {
+        const string code = "E2EM1";
+        SeedItem(code);
+
+        await LoginAsKeeperAsync();
+        await Page.GotoAsync($"/k/{code}", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Dát do údržby" }).ClickAsync();
+        await Expect(Page.GetByText($"{code} je v údržbě.")).ToBeVisibleAsync(new() { Timeout = 10_000 });
+        await Expect(Page.Locator(".mud-chip", new() { HasText = "v údržbě" }).First).ToBeVisibleAsync();
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Hotovo, vrátit mezi dostupné" }).ClickAsync();
+        await Expect(Page.GetByText($"{code} je zase dostupný.")).ToBeVisibleAsync(new() { Timeout = 10_000 });
+        // Uzavřená údržba zůstane v historii kusu.
+        await Expect(Page.Locator("p", new() { HasText = "praní" })).ToBeVisibleAsync();
+    }
+
+    [Fact]
+    public async Task Inventura_ukaze_naskenovany_kus_v_poradku_a_jde_uzavrit()
+    {
+        const string code = "E2EI1";
+        SeedItem(code);
+
+        await LoginAsKeeperAsync();
+        await Page.GotoAsync("/Admin/Costumes/Inventory", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Začít inventuru" }).ClickAsync();
+        await Expect(Page.GetByText("(probíhá)")).ToBeVisibleAsync(new() { Timeout = 10_000 });
+
+        await ScanAsync(code);
+        var row = Page.Locator("tr", new() { Has = Page.GetByRole(AriaRole.Link, new() { Name = code, Exact = true }) });
+        await Expect(row).ToContainTextAsync("v pořádku", new() { Timeout = 10_000 });
+
+        await Page.GetByRole(AriaRole.Button, new() { Name = "Uzavřít inventuru" }).ClickAsync();
+        await Expect(Page.GetByText("(uzavřená)")).ToBeVisibleAsync(new() { Timeout = 10_000 });
+        Assert.Empty(RelevantConsoleErrors);
+    }
+
     [Theory]
+    [InlineData("/Admin/Costumes/Inventory")]
     [InlineData("/Admin/Costumes")]
     [InlineData("/Admin/Costumes/Catalog")]
     [InlineData("/Admin/Costumes/Holders")]

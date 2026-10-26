@@ -26,6 +26,12 @@
                Href="@LabelsHref">Štítky (@_selected.Count)</MudButton>
 </MudStack>
 
+@if (_parts.Count > 0)
+{
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">
+        Hodnota evidovaných kusů @TotalValue(i => i.Quantity) Kč, z toho u členů @TotalValue(i => Stock(i).Held) Kč.
+    </MudText>
+}
 @if (_parts.Count == 0)
 {
     <MudText Color="Color.Secondary">Krojárka je zatím prázdná.@(_isKeeper ? " Začni krojem a jeho součástkami." : "")</MudText>
@@ -137,6 +143,12 @@
         _parts = await Catalog.GetPartsAsync();
         _stock = await Catalog.GetStockAsync();
     }
+
+    /// <summary>Součet hodnoty nevyřazených kusů; <paramref name="pieces"/> říká, kolik kusů položky započítat.</summary>
+    private int TotalValue(Func<CostumeItem, int> pieces) =>
+        _parts.SelectMany(p => p.Items)
+            .Where(i => i.State != CostumeItemState.Retired)
+            .Sum(i => (i.ValueCzk ?? 0) * pieces(i));
 
     private CostumeItemStock Stock(CostumeItem item) =>
         _stock.TryGetValue(item.Id, out var stock) ? stock : new CostumeItemStock(item.Id, item.Quantity, 0, 0);

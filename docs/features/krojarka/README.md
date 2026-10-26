@@ -1,7 +1,7 @@
 # Krojárka: inventář a předávky souborových krojů
 
-> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — kroky 0, A–F hotové (2026-10-26),
-> další je G (údržba, inventura). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
+> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — backend a web hotové (kroky 0, A–G, 2026-10-26),
+> zbývá H (Flutter). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
 >
 > Sekce *Současný stav* popisuje repozitář **před** implementací.
 
@@ -205,7 +205,7 @@ Commity po uzavřených částech, každá s testy.
 | D | ✅ Blazor: menu „Krojárka“, Moje kroje + QR, katalog, štítky, detail předávky s potvrzením, karta kusu, kdo co má | `CostumeStoreTests` (E2E) |
 | E | ✅ `/Admin/Costumes/Handover`: výdej, příjem, předání kolegovi; sken kamerou (`qr-scanner`) i ručně / čtečkou; fotky zmenšené v prohlížeči | `CostumeStoreTests` (E2E přes ruční zadání), `CostumeScanTests` |
 | F | ✅ `CostumeWorkflow` + `CostumeNotifications`: push při odeslání / potvrzení / odmítnutí, ruční připomínky z „Kdo co má“ | `CostumeNotificationsTests`, `CostumeApiTests` |
-| G | Údržba, inventura, hodnota | unit: výsledek inventury (chybí / navíc / u člena) |
+| G | ✅ `CostumeMaintenanceService`, `CostumeInventoryService`; údržba na kartě kusu, `/Admin/Costumes/Inventory`, hodnota v katalogu a u držitelů | `CostumeMaintenanceAndInventoryTests`, `CostumeStoreTests` (E2E) |
 | H | Flutter: Moje kroje, potvrzení, můj QR, předání kolegovi, tab správce se skenem, navigace z notifikace | `flutter test` + proklik na emulátoru (virtuální scéna kamery) |
 
 ## Implementace
@@ -331,6 +331,23 @@ nekopíruje se sem). Rozhodnutí z implementace:
   že autor akce zprávu nedostane a správce u předání mezi členy ano (O4).
 - Připomínka se do `SentNotification` nezapisuje, stejně jako ruční připomínka
   docházky: je to vědomá akce správce, deduplikace by tu jen překážela.
+
+### G — údržba, inventura, hodnota (2026-10-26)
+
+Jen web, API pro to není (Flutter to podle návrhu nemá).
+
+- **Údržba** na kartě kusu (správce): druh (praní, čištění, oprava, jiné),
+  poznámka, cena při ukončení. Kus v údržbě má `InMaintenance` a nejde vydat;
+  do údržby jde jen kus, který je celý v krojárce a není v otevřené předávce.
+  Uzavřené záznamy zůstávají v historii kusu.
+- **Inventura** `/Admin/Costumes/Inventory`: najednou běží jedna. Sken kusu =
+  1 (opakovaný nic nemění), sken šarže přičte 1, počet jde opravit v tabulce.
+  Výsledek: v pořádku / chybí / přebývá / vedený u člena / vedený jako
+  ztracený nebo vyřazený. **Nic neopravuje**, jen ukáže rozdíly. Kusy v údržbě
+  se nekontrolují (bývají v čistírně). Srovnává se s evidencí v okamžiku
+  zobrazení, ne skenu.
+- **Hodnota:** v katalogu součet nevyřazených kusů a z toho u členů,
+  na „Kdo co má“ u každého člena.
 
 Na telefonu to ověří až STATUS B, stejně jako zbytek Flutteru. Skenování
 z webu potřebuje HTTPS (`getUserMedia`); z mobilu na LAN proti `dotnet run`

@@ -14,7 +14,7 @@
 
 | | Stav |
 |---|---|
-| Testy | **525** — 226 unit + 231 integration + 68 E2E (2026-10-26 zelené); Flutter 51 |
+| Testy | **533** — 226 unit + 236 integration + 71 E2E (2026-10-26 zelené); Flutter 51 |
 | CI | [`test.yml`](../.github/workflows/test.yml) — dvě úlohy: `Demizon.Backend.slnf` a `Demizon.E2E.slnf` |
 | Docker image | 30 MB publish payload, 190 MB image (`aspnet:10.0-alpine` + ICU + tzdata, stejný base jako mru.sk) |
 
@@ -211,7 +211,7 @@ v záznamu featury, sekce *Současný stav*.
 ## G. Krojárka
 
 Záznam: [`features/krojarka/`](features/krojarka/README.md). **Probíhá (2026-10-26).**
-Závislosti a schéma schválené, kroky 0 a A–F hotové. Další je krok G (údržba, inventura).
+Backend a web hotové (kroky 0, A–G). Zbývá krok H (Flutter).
 Inventář krojů po kusech i počtem, QR štítky, předávky s fotkou každého kusu
 a potvrzením příjemce, předávky člen → člen, údržba, inventura.
 
@@ -221,7 +221,7 @@ a potvrzením příjemce, předávky člen → člen, údržba, inventura.
 - [x] D: Blazor — katalog, štítky, Moje kroje, potvrzení, karta kusu, kdo co má (2026-10-26)
 - [x] E: předávka se skenem z mobilního webu (2026-10-26)
 - [x] F: notifikace předávek + ruční připomínky vrácení (2026-10-26)
-- [ ] G: údržba, inventura
+- [x] G: údržba, inventura, hodnota (2026-10-26)
 - [ ] H: Flutter (Moje kroje, potvrzení, tab správce se skenem) — telefon spolu s B
 
 ---
