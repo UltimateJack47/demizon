@@ -8,7 +8,6 @@
   <Project Path="Demizon.Contracts/Demizon.Contracts.csproj" />
   <Project Path="Demizon.Core/Demizon.Core.csproj" />
   <Project Path="Demizon.Dal/Demizon.Dal.csproj" />
-  <Project Path="Demizon.Maui/Demizon.Maui.csproj" />
   <Project Path="Demizon.Mvc/Demizon.Mvc.csproj" />
   <Project Path="Demizon.Tests.E2E/Demizon.Tests.E2E.csproj" />
   <Project Path="Demizon.Tests.Integration/Demizon.Tests.Integration.csproj" />
