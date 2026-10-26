@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/auth/auth_controller.dart';
 import '../../core/notifications/device_registration.dart';
 import '../../core/notifications/notification_navigation.dart';
 import '../../core/providers.dart';
 import '../../core/routes.dart';
+import '../costumes/costume_logic.dart';
 
-/// Spodní navigace se čtyřmi taby — protějšek `Demizon.Maui/AppShell.xaml`.
+/// Spodní navigace se čtyřmi taby — protějšek `Demizon.Maui/AppShell.xaml`. Správce
+/// krojárky má navíc pátý tab „Krojárka“; je to poslední větev, takže ostatním stačí
+/// ho nevykreslit a indexy prvních čtyř se nemění.
 ///
 /// V MAUI se kolem Shellu muselo bojovat s Android toolbarem: `AppShell.xaml.cs:34-78`
 /// prolézal nativní view tree a skrýval toolbar pětkrát po sobě s časovači, protože
@@ -61,13 +65,21 @@ class _MainShellState extends ConsumerState<MainShell> {
     ),
   ];
 
+  static const _keeperDestination = NavigationDestination(
+    icon: Icon(Icons.checkroom_outlined),
+    selectedIcon: Icon(Icons.checkroom),
+    label: 'Krojárka',
+  );
+
   @override
   Widget build(BuildContext context) {
+    final isKeeper = ref.watch(authControllerProvider).session?.roles.contains(kCostumeKeeperRole) ?? false;
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        destinations: _destinations,
+        // Kdo o roli správce přišel, smí na tabu zůstat jen do dalšího přechodu.
+        selectedIndex: navigationShell.currentIndex.clamp(0, isKeeper ? 4 : 3),
+        destinations: [..._destinations, if (isKeeper) _keeperDestination],
         onDestinationSelected: (index) => navigationShell.goBranch(
           index,
           // Druhý tap na už aktivní tab vrátí větev na její kořen.
@@ -84,4 +96,5 @@ const shellBranchRoots = <String>[
   AppRoutes.events,
   AppRoutes.dances,
   AppRoutes.profile,
+  AppRoutes.costumeStore,
 ];

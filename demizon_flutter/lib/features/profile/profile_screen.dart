@@ -82,6 +82,19 @@ class _ProfileBody extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
 
+        // ------------------------------------------------------- Krojárka
+        Card(
+          margin: EdgeInsets.zero,
+          child: ListTile(
+            leading: const Icon(Icons.checkroom, color: DemizonColors.primary),
+            title: const Text('Moje kroje'),
+            subtitle: const Text('Co mám z krojárky, potvrzení převzetí, můj QR'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(AppRoutes.myCostumes),
+          ),
+        ),
+        const SizedBox(height: 16),
+
         // ------------------------------------------------- Google Calendar
         _ProfileCard(
           child: Column(

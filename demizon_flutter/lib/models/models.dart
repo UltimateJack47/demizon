@@ -9,6 +9,7 @@ library;
 
 export 'attendance.dart';
 export 'auth.dart';
+export 'costume.dart';
 export 'create_video_link_request.dart';
 export 'dance.dart';
 export 'dance_document.dart';

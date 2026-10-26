@@ -1,7 +1,7 @@
 # Krojárka: inventář a předávky souborových krojů
 
-> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — backend a web hotové (kroky 0, A–G, 2026-10-26),
-> zbývá H (Flutter). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
+> Založeno: 2026-10-25. Stav: ✅ **hotové v kódu** (kroky 0, A–H, 2026-10-26). Flutter část
+> je otestovaná unit testy a buildem, na telefonu čeká spolu se zbytkem appky (STATUS B). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
 >
 > Sekce *Současný stav* popisuje repozitář **před** implementací.
 
@@ -206,7 +206,7 @@ Commity po uzavřených částech, každá s testy.
 | E | ✅ `/Admin/Costumes/Handover`: výdej, příjem, předání kolegovi; sken kamerou (`qr-scanner`) i ručně / čtečkou; fotky zmenšené v prohlížeči | `CostumeStoreTests` (E2E přes ruční zadání), `CostumeScanTests` |
 | F | ✅ `CostumeWorkflow` + `CostumeNotifications`: push při odeslání / potvrzení / odmítnutí, ruční připomínky z „Kdo co má“ | `CostumeNotificationsTests`, `CostumeApiTests` |
 | G | ✅ `CostumeMaintenanceService`, `CostumeInventoryService`; údržba na kartě kusu, `/Admin/Costumes/Inventory`, hodnota v katalogu a u držitelů | `CostumeMaintenanceAndInventoryTests`, `CostumeStoreTests` (E2E) |
-| H | Flutter: Moje kroje, potvrzení, můj QR, předání kolegovi, tab správce se skenem, navigace z notifikace | `flutter test` + proklik na emulátoru (virtuální scéna kamery) |
+| H | ✅ Flutter: Moje kroje v Profilu, detail s potvrzením, předávka se skenem a fotoaparátem, tab správce, navigace z notifikací | `test/costume_test.dart`, `flutter build apk --debug`; **proklik neproběhl** |
 
 ## Implementace
 
@@ -348,6 +348,49 @@ Jen web, API pro to není (Flutter to podle návrhu nemá).
   zobrazení, ne skenu.
 - **Hodnota:** v katalogu součet nevyřazených kusů a z toho u členů,
   na „Kdo co má“ u každého člena.
+
+### H — Flutter (2026-10-26)
+
+Kód v `demizon_flutter/lib/features/costumes/`, modely v `lib/models/costume.dart`,
+endpointy v `ApiClient` (sekce Krojárka).
+
+| Cesta | Co |
+|---|---|
+| `/profile/costumes` (z Profilu „Moje kroje“) | čeká na mě, mám u sebe, předat kolegovi, rozpracované, můj QR (PNG ze serveru) + přegenerovat, historie |
+| `/costume-transfers/:id` (přes celou obrazovku) | kusy s fotkami, potvrdit / odmítnout s důvodem, zrušit, pokračovat v draftu |
+| `/costume-handover?mode=issue\|return\|peer`, `?transfer=id` | sběr (sken nebo ruční pole) → fotky → odeslání |
+| `/costume-store` — **pátý tab jen pro `CostumeKeeper`** | Výdej / Příjem, otevřené předávky, kdo co má, připomínky (vybraným / všem) |
+
+- **Tab správce** je poslední větev `StatefulShellRoute`; kdo roli nemá, tab
+  se mu jen nevykreslí a indexy prvních čtyř se nemění.
+- **Skener** `mobile_scanner` 7.4.2 přes celou obrazovku, vrátí první QR. Ruční
+  pole funguje stejně jako na webu (i pro bluetooth čtečku).
+- **Fotky** `image_picker` 1.2.3 **jen z fotoaparátu**, ne z galerie: fotka stavu
+  má vzniknout u předávky. Telefon ji zmenší na 1600 px / q85, server dál na 1200 px.
+  Android image_picker EXIF při zmenšení kopíruje; jestli přežije i na iOS,
+  ověří až telefon — pojistkou zůstává potvrzení příjemcem.
+- **Fotky předávek** se stahují přes Dio s tokenem (`getCostumePhoto`) a ukazují
+  přes `Image.memory` — nejsou veřejné, `Image.network` by bez hlavičky dostal 401.
+- **Notifikace:** `costumeTransferId` → detail předávky, `costumes=mine` → Moje kroje
+  (`NotificationTarget`). Akce a zkouška mají v payloadu přednost.
+- Oprávnění: `CAMERA` v `AndroidManifest.xml`, `NSCameraUsageDescription`
+  a `NSPhotoLibraryUsageDescription` v `Info.plist`.
+- Pravidla sběru (`checkCollectedItem`) a parser (`CostumeScan`) jsou kopie webových
+  (`Handover.razor`, `CostumeScan.cs`) — při změně upravit obojí. Definitivně
+  všechno ověřuje server.
+
+**Co neproběhlo:** proklik na emulátoru ani na telefonu. Ověřeno je
+`flutter analyze`, 67 testů a sestavení `app-debug.apk`. Kamera (sken i fotka)
+na emulátoru potřebuje virtuální scénu, smysluplně až na telefonu.
+
+## Jak to otestovat ručně
+
+1. Adminovi v `/Admin/Members` zaškrtnout roli **Správce krojárky**.
+2. Web `/Admin/Costumes/Catalog`: kroj → součástka → kusy, vybrat a vytisknout štítky.
+3. Člen otevře `/Admin/Costumes` (nebo v appce Profil → Moje kroje) a ukáže QR.
+4. Správce: Výdej → naskenovat štítky a QR člena → vyfotit → Odeslat.
+5. Člen dostane push, zkontroluje fotky a potvrdí. Kusy má v „Mám u sebe“.
+6. Člen: Předat kolegovi; správce: Příjem; inventura a údržba na webu.
 
 Na telefonu to ověří až STATUS B, stejně jako zbytek Flutteru. Skenování
 z webu potřebuje HTTPS (`getUserMedia`); z mobilu na LAN proti `dotnet run`

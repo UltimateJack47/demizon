@@ -9,6 +9,11 @@ import '../features/attendance/attendance_stats_screen.dart';
 import '../features/attendance/member_attendance_detail_controller.dart';
 import '../features/attendance/member_attendance_detail_screen.dart';
 import '../features/auth/login_screen.dart';
+import '../features/costumes/costume_handover_screen.dart';
+import '../features/costumes/costume_logic.dart';
+import '../features/costumes/costume_store_screen.dart';
+import '../features/costumes/costume_transfer_screen.dart';
+import '../features/costumes/my_costumes_screen.dart';
 import '../features/dances/dance_detail_screen.dart';
 import '../features/dances/dances_screen.dart';
 import '../features/events/create_event_screen.dart';
@@ -201,11 +206,43 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'password',
                     builder: (context, state) => const ChangePasswordScreen(),
                   ),
+                  GoRoute(
+                    path: 'costumes',
+                    builder: (context, state) => const MyCostumesScreen(),
+                  ),
                 ],
               ),
             ],
           ),
+
+          // ── Krojárka (tab jen pro správce, viz MainShell) ─────
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.costumeStore,
+                builder: (context, state) => const CostumeStoreScreen(),
+              ),
+            ],
+          ),
         ],
+      ),
+
+      // Předávka a její detail přes celou obrazovku: otevírá je profil člena,
+      // tab správce i notifikace, takže nepatří do žádné větve.
+      GoRoute(
+        path: AppRoutes.costumeHandover,
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => CostumeHandoverScreen(
+          mode: HandoverMode.fromQuery(state.uri.queryParameters['mode']),
+          transferId: int.tryParse(state.uri.queryParameters['transfer'] ?? ''),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.costumeTransfer,
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => CostumeTransferScreen(
+          transferId: int.parse(state.pathParameters['id']!),
+        ),
       ),
     ],
   );

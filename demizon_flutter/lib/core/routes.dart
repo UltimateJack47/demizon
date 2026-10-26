@@ -27,6 +27,19 @@ abstract final class AppRoutes {
   static const profile = '/profile';
   static const profileEdit = '/profile/edit';
   static const changePassword = '/profile/password';
+  static const myCostumes = '/profile/costumes';
+
+  /// Tab správce krojárky (jen pro roli `CostumeKeeper`).
+  static const costumeStore = '/costume-store';
+
+  /// Předávka a její detail jsou přes celou obrazovku, mimo taby — otevírá je
+  /// profil člena, tab správce i notifikace.
+  static const costumeHandover = '/costume-handover';
+  static const costumeTransfer = '/costume-transfers/:id';
+
+  static String costumeTransferFor(int id) => '/costume-transfers/$id';
+  static String costumeHandoverFor(String mode) => '$costumeHandover?mode=$mode';
+  static String costumeDraftFor(int transferId) => '$costumeHandover?transfer=$transferId';
 
   static String eventDetailFor(int id) => '/events/$id';
   static String eventEditFor(int id) => '/events/$id/edit';

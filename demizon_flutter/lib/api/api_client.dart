@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -187,4 +189,88 @@ abstract class ApiClient {
   Future<NotifyMissingAttendanceResponse> notifyMissingRehearsalAttendance(
     @Query('date') DateTime date,
   );
+
+  // ------------------------------------------------------------ Krojárka
+
+  @GET('/api/costumes/me')
+  Future<MyCostumes> getMyCostumes();
+
+  @GET('/api/costumes/me/transfers')
+  Future<List<CostumeTransfer>> getMyCostumeTransfers();
+
+  /// QR z profilu jako PNG — server ho vykreslí, appka nepotřebuje balíček na QR.
+  @GET('/api/costumes/me/qr')
+  @DioResponseType(ResponseType.bytes)
+  Future<HttpResponse<List<int>>> getMyCostumeQr();
+
+  @POST('/api/costumes/me/qr/regenerate')
+  Future<void> regenerateMyCostumeQr();
+
+  @GET('/api/costumes/members/by-qr/{token}')
+  Future<CostumeMember> getCostumeMemberByQr(@Path('token') String token);
+
+  @GET('/api/costumes/items/by-code/{code}')
+  Future<CostumeItemCard> getCostumeItemCard(@Path('code') String code);
+
+  @GET('/api/costumes/transfers/{id}')
+  Future<CostumeTransfer> getCostumeTransfer(@Path('id') int id);
+
+  /// Fotky nejsou veřejné, takže jdou přes Dio s tokenem, ne přes `Image.network`.
+  @GET('/api/costumes/transfers/{id}/photos/{photoId}')
+  @DioResponseType(ResponseType.bytes)
+  Future<HttpResponse<List<int>>> getCostumePhoto(
+    @Path('id') int id,
+    @Path('photoId') int photoId,
+    @Query('size') String size,
+  );
+
+  @POST('/api/costumes/transfers')
+  Future<CostumeTransfer> createCostumeTransfer(@Body() CreateCostumeTransferRequest request);
+
+  @POST('/api/costumes/transfers/{id}/lines')
+  Future<void> addCostumeLine(@Path('id') int id, @Body() CostumeLineRequest request);
+
+  @DELETE('/api/costumes/transfers/{id}/lines/{lineId}')
+  Future<void> removeCostumeLine(@Path('id') int id, @Path('lineId') int lineId);
+
+  @PUT('/api/costumes/transfers/{id}/lines/{lineId}/note')
+  Future<void> setCostumeLineNote(
+    @Path('id') int id,
+    @Path('lineId') int lineId,
+    @Body() CostumeLineNoteRequest request,
+  );
+
+  @POST('/api/costumes/transfers/{id}/lines/{lineId}/photos')
+  @MultiPart()
+  Future<void> addCostumePhoto(
+    @Path('id') int id,
+    @Path('lineId') int lineId,
+    @Part(name: 'file', contentType: 'image/jpeg') File file,
+  );
+
+  @DELETE('/api/costumes/transfers/{id}/photos/{photoId}')
+  Future<void> removeCostumePhoto(@Path('id') int id, @Path('photoId') int photoId);
+
+  @POST('/api/costumes/transfers/{id}/submit')
+  Future<CostumeTransferStatusResponse> submitCostumeTransfer(@Path('id') int id);
+
+  @POST('/api/costumes/transfers/{id}/confirm')
+  Future<void> confirmCostumeTransfer(@Path('id') int id);
+
+  @POST('/api/costumes/transfers/{id}/reject')
+  Future<void> rejectCostumeTransfer(@Path('id') int id, @Body() RejectCostumeTransferRequest request);
+
+  @POST('/api/costumes/transfers/{id}/cancel')
+  Future<void> cancelCostumeTransfer(@Path('id') int id);
+
+  // ------------------------------------------- Krojárka (jen správce / vedení)
+
+  @GET('/api/costumes/holders')
+  Future<List<CostumeHolderOverview>> getCostumeHolders();
+
+  @GET('/api/costumes/transfers/open')
+  Future<List<CostumeTransfer>> getOpenCostumeTransfers();
+
+  @POST('/api/costumes/reminders')
+  Future<CostumeReminderResponse> remindCostumeHolders(@Body() CostumeReminderRequest request);
 }

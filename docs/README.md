@@ -52,7 +52,7 @@ soubor vypadá jako chybějící práce — což je horší než žádný.
 |---|---|
 | [`features/flutter-prepis/`](features/flutter-prepis/README.md) | 🔨 probíhá — kód bez telefonu je hotový; zbývá Firebase + fyzické zařízení (**odloženo**). |
 | [`features/zkousky-kalendar/`](features/zkousky-kalendar/README.md) | 📝 plán — páteční pravidlo na jednom místě, rušení zkoušek, vícedenní akce. |
-| [`features/krojarka/`](features/krojarka/README.md) | 📝 návrh — inventář krojů, QR, předávky s fotkou a potvrzením příjemce. |
+| [`features/krojarka/`](features/krojarka/README.md) | ✅ v kódu — inventář krojů, QR štítky, předávky s fotkou a potvrzením příjemce, údržba, inventura. Flutter čeká na telefon. |
 
 ## Uzavřené featury
 

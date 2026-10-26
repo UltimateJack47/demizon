@@ -46,6 +46,11 @@
   role list. Use the constants in `Demizon.Mvc/Services/Authentication/RoleNames.cs`, not string literals,
   for new checks. `IsDancer` / `IsMusician` / `IsExternal` describe what someone does in the ensemble and
   are **not** roles. Details: `docs/features/role-clenu/`.
+- **Costume store (`docs/features/krojarka/`): costume entities reference members by foreign key only, never by
+  navigation.** A required navigation to the soft-deleted `Member` would make `Include` drop the rows of a former
+  member who still holds a costume. Resolve names with `ICostumeCatalogService.GetMemberNamesAsync`. Transfer rules
+  (who may create, confirm, cancel) live in `CostumeTransferService`; side effects (push) go through `CostumeWorkflow`.
+  SQLite returns `DateTime` without `Kind` — mark UTC before serialising (`CostumeContractMapping`).
 - **A MudBlazor dialog form must validate before closing.** `Required="true"` on a field only draws
   the marker; enforcing it needs a `MudForm` plus a validity check in the OK handler.
 - Keep contract boundary strict: API returns `Demizon.Contracts.*` DTOs; do not expose EF entities directly.
