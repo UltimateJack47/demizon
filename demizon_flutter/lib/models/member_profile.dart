@@ -13,7 +13,7 @@ class MemberProfile {
     required this.surname,
     required this.login,
     this.email,
-    required this.role,
+    this.roles = const [],
     required this.gender,
   });
 
@@ -22,7 +22,8 @@ class MemberProfile {
   final String surname;
   final String login;
   final String? email;
-  final String role;
+  @JsonKey(defaultValue: <String>[])
+  final List<String> roles;
   final String gender;
 
   factory MemberProfile.fromJson(Map<String, dynamic> json) =>

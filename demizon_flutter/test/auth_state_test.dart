@@ -22,7 +22,7 @@ void main() {
 
     test('neplatí pro přihlášeného uživatele', () {
       const state = AsyncData<AuthState>(
-        Authenticated(login: 'jan', role: 'Admin'),
+        Authenticated(login: 'jan', roles: ['Admin']),
       );
       expect(state.isRestoring, isFalse);
     });
@@ -31,7 +31,7 @@ void main() {
   group('isAuthenticated', () {
     test('je true jen pro potvrzenou session', () {
       const authenticated = AsyncData<AuthState>(
-        Authenticated(login: 'jan', role: 'Member'),
+        Authenticated(login: 'jan'),
       );
       expect(authenticated.isAuthenticated, isTrue);
       expect(authenticated.session?.login, 'jan');

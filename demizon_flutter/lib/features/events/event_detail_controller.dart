@@ -189,9 +189,8 @@ class EventDetailController
   Future<EventDetailState> build(EventDetailArgs arg) async {
     final api = ref.read(apiClientProvider);
 
-    // `TokenStorage.role` je Future<String?> (protějšek GetRoleAsync).
-    final role = await ref.read(tokenStorageProvider).role;
-    final isAdmin = role?.toLowerCase() == 'admin';
+    final roles = await ref.read(tokenStorageProvider).roles;
+    final isAdmin = roles.contains(kAdminRole);
 
     if (arg.isRehearsal) {
       final date = arg.rehearsalDate!;

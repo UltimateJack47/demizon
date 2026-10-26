@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:demizon/core/formatting.dart';
 import 'package:demizon/core/providers.dart';
 import 'package:demizon/models/models.dart';
 
@@ -51,19 +52,18 @@ class AllMembersAttendanceController
 
     // TODO(verify): očekávaný kontrakt `core/providers.dart` —
     // `tokenStorageProvider` vrací `TokenStorage` z `core/auth/token_storage.dart`
-    // (getter `memberId`, getter `role`). Pokud session bude držet
+    // (getter `memberId`, getter `roles`). Pokud session bude držet
     // `authControllerProvider`, přečti identitu odtamtud.
     final storage = ref.read(tokenStorageProvider);
 
     final memberId = await storage.memberId;
-    final role = await storage.role;
+    final roles = await storage.roles;
     final table = await api.getMonthlyAttendanceTable(arg.year, arg.month);
 
     return AllMembersAttendanceState(
       table: table,
       currentMemberId: memberId,
-      // MAUI: string.Equals(role, "Admin", OrdinalIgnoreCase)
-      isAdmin: role?.toLowerCase() == 'admin',
+      isAdmin: roles.contains(kAdminRole),
     );
   }
 

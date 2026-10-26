@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/models.dart';
+import '../formatting.dart';
 import '../invalidation.dart';
 import '../notifications/notification_navigation.dart';
 import '../providers.dart';
@@ -27,24 +28,23 @@ class Unauthenticated extends AuthState {
   const Unauthenticated();
 }
 
-/// Platná session. [role] a [memberId] jsou předtažené z úložiště, aby se na ně
+/// Platná session. [roles] a [memberId] jsou předtažené z úložiště, aby se na ně
 /// obrazovky nemusely ptát asynchronně (v MAUI to dělal každý ViewModel zvlášť,
 /// např. `EventDetailViewModel.LoadAsync`).
 class Authenticated extends AuthState {
   const Authenticated({
     required this.login,
-    required this.role,
+    this.roles = const [],
     this.memberId,
     this.gcalConnected = false,
   });
 
   final String login;
-  final String? role;
+  final List<String> roles;
   final int? memberId;
   final bool gcalConnected;
 
-  /// V MAUI porovnáváno case-insensitive proti "Admin".
-  bool get isAdmin => role?.toLowerCase() == 'admin';
+  bool get isAdmin => roles.contains(kAdminRole);
 }
 
 /// Chyba přihlášení s hláškou pro uživatele. Texty jsou převzaté doslova
@@ -177,7 +177,7 @@ class AuthController extends AsyncNotifier<AuthState> {
   Future<Authenticated> _authenticatedFromStorage() async {
     return Authenticated(
       login: await _tokens.login ?? '',
-      role: await _tokens.role,
+      roles: await _tokens.roles,
       memberId: await _tokens.memberId,
       gcalConnected: await _tokens.gcalConnected,
     );

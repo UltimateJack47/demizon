@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:demizon/core/auth/auth_controller.dart';
 import 'package:demizon/core/notifications/device_registration.dart';
+import 'package:demizon/core/formatting.dart';
 import 'package:demizon/core/providers.dart';
 import 'package:demizon/models/models.dart';
 import 'package:dio/dio.dart';
@@ -87,7 +88,7 @@ class ProfileController extends AsyncNotifier<ProfileState> {
     final tokenStorage = ref.read(tokenStorageProvider);
 
     final login = await tokenStorage.login;
-    final role = await tokenStorage.role;
+    final roles = await tokenStorage.roles;
 
     // Uložená preference musí souhlasit se skutečným systémovým oprávněním —
     // jinak by přepínač tvrdil "zapnuto" u aplikace bez povolení
@@ -103,7 +104,7 @@ class ProfileController extends AsyncNotifier<ProfileState> {
 
     return ProfileState(
       login: login ?? '—',
-      role: role ?? '—',
+      role: rolesLabel(roles),
       googleCalendarConnected: await tokenStorage.gcalConnected,
       notificationsEnabled: savedPref && granted,
     );

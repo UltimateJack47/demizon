@@ -1,3 +1,4 @@
+import 'package:demizon/core/auth/auth_controller.dart';
 import 'package:demizon/core/formatting.dart';
 import 'package:demizon/core/theme.dart';
 import 'package:demizon/features/attendance/attendance_controller.dart';
@@ -50,6 +51,42 @@ void main() {
       expect(apiRoleToDisplay(null), isNull);
       expect(apiRoleToDisplay('singer'), isNull);
       expect(displayRoleToApi('Zpěvák'), isNull);
+    });
+  });
+
+  group('oprávnění', () {
+    test('TokenResponse čte roles jako seznam', () {
+      final response = TokenResponse.fromJson({
+        'token': 't',
+        'refreshToken': 'r',
+        'expiresIn': 3600,
+        'roles': ['Admin', 'ContentManager'],
+        'memberId': 7,
+      });
+
+      expect(response.roles, ['Admin', 'ContentManager']);
+    });
+
+    test('člen bez role dostane prázdný seznam, ne výjimku', () {
+      final response = TokenResponse.fromJson({
+        'token': 't',
+        'refreshToken': 'r',
+        'expiresIn': 3600,
+        'roles': <String>[],
+      });
+
+      expect(response.roles, isEmpty);
+    });
+
+    test('popisek v profilu', () {
+      expect(rolesLabel([]), 'Člen');
+      expect(rolesLabel(['Admin', 'ContentManager']), 'Admin, Správce obsahu webu');
+    });
+
+    test('isAdmin jen s rolí Admin', () {
+      expect(const Authenticated(login: 'x', roles: ['Admin']).isAdmin, isTrue);
+      expect(const Authenticated(login: 'x', roles: ['ContentManager']).isAdmin, isFalse);
+      expect(const Authenticated(login: 'x').isAdmin, isFalse);
     });
   });
 

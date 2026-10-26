@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 class _Tokens implements TokenStorage {
   @override
-  Future<String?> get role async => 'Member';
+  Future<List<String>> get roles async => const [];
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

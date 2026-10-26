@@ -31,7 +31,7 @@ class TokenResponse {
     required this.token,
     required this.refreshToken,
     required this.expiresIn,
-    required this.role,
+    this.roles = const [],
     this.isGoogleCalendarConnected = false,
     this.memberId = 0,
   });
@@ -39,7 +39,9 @@ class TokenResponse {
   final String token;
   final String refreshToken;
   final int expiresIn;
-  final String role;
+  /// Oprávnění (`Admin`, `ContentManager`). Prázdné = běžný člen.
+  @JsonKey(defaultValue: <String>[])
+  final List<String> roles;
   final bool isGoogleCalendarConnected;
   final int memberId;
 

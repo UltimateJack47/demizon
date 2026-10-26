@@ -101,6 +101,23 @@ String? displayRoleToApi(String? displayRole) => switch (displayRole) {
       _ => null,
     };
 
+/// --------------------------------------------------------- Oprávnění
+
+/// Název role `UserRole.Admin` tak, jak ho posílá server v `roles`.
+const kAdminRole = 'Admin';
+
+/// Role z tokenu → popisek pro profil. Bez role je člověk běžný člen.
+String rolesLabel(List<String> roles) {
+  if (roles.isEmpty) return 'Člen';
+  return roles
+      .map((role) => switch (role) {
+            'Admin' => 'Admin',
+            'ContentManager' => 'Správce obsahu webu',
+            _ => role,
+          })
+      .join(', ');
+}
+
 /// ----------------------------------------------------------- Obrázky
 
 /// Obrázky se nestahují přes `ApiClient` — widget `Image.network` si je bere

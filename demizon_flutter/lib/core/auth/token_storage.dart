@@ -21,7 +21,7 @@ class TokenStorage {
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
   static const _expiresAtKey = 'expires_at';
-  static const _roleKey = 'role';
+  static const _rolesKey = 'roles';
   static const _loginKey = 'login';
   static const _memberIdKey = 'member_id';
   static const _gcalConnectedKey = 'gcal_connected';
@@ -59,7 +59,8 @@ class TokenStorage {
       // Odpovídá C# formátu "O" (round-trip ISO 8601).
       value: expiresAt.toIso8601String(),
     );
-    await _storage.write(key: _roleKey, value: response.role);
+    // Názvy rolí čárku neobsahují — jsou to názvy enumu `UserRole` na serveru.
+    await _storage.write(key: _rolesKey, value: response.roles.join(','));
     await _storage.write(key: _loginKey, value: login);
     if (response.memberId != 0) {
       await _storage.write(
@@ -88,7 +89,10 @@ class TokenStorage {
     return !expiresAt.isAfter(DateTime.now().toUtc().add(refreshThreshold));
   }
 
-  Future<String?> get role => _storage.read(key: _roleKey);
+  Future<List<String>> get roles async {
+    final raw = await _storage.read(key: _rolesKey);
+    return raw == null || raw.isEmpty ? const [] : raw.split(',');
+  }
 
   Future<String?> get login => _storage.read(key: _loginKey);
 
@@ -108,7 +112,7 @@ class TokenStorage {
       _storage.delete(key: _accessTokenKey),
       _storage.delete(key: _refreshTokenKey),
       _storage.delete(key: _expiresAtKey),
-      _storage.delete(key: _roleKey),
+      _storage.delete(key: _rolesKey),
       _storage.delete(key: _loginKey),
       _storage.delete(key: _memberIdKey),
       _storage.delete(key: _gcalConnectedKey),
