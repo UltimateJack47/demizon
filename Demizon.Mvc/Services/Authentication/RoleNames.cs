@@ -10,7 +10,12 @@ public static class RoleNames
 {
     public const string Admin = nameof(UserRole.Admin);
     public const string ContentManager = nameof(UserRole.ContentManager);
+    public const string Leader = nameof(UserRole.Leader);
+    public const string CostumeKeeper = nameof(UserRole.CostumeKeeper);
 
     /// <summary>Who may edit public web content: dances, videos, gallery.</summary>
     public const string ContentEditors = Admin + "," + ContentManager;
+
+    /// <summary>Who may see the whole costume store (catalogue, holders, history). Only the keeper edits it.</summary>
+    public const string CostumeViewers = CostumeKeeper + "," + Admin + "," + Leader;
 }

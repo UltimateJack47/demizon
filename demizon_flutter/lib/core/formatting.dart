@@ -113,6 +113,8 @@ String rolesLabel(List<String> roles) {
       .map((role) => switch (role) {
             'Admin' => 'Admin',
             'ContentManager' => 'Správce obsahu webu',
+            'Leader' => 'Vůdce souboru',
+            'CostumeKeeper' => 'Správce krojárky',
             _ => role,
           })
       .join(', ');

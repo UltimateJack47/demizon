@@ -105,6 +105,370 @@ namespace Demizon.Dal.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("Demizon.Dal.Entities.Costume", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Costumes");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeHolding", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("ItemId", "MemberId")
+                        .IsUnique();
+
+                    b.ToTable("CostumeHoldings", t =>
+                        {
+                            t.HasCheckConstraint("CK_CostumeHoldings_Quantity", "Quantity > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeInventoryCheck", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StartedById")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartedById");
+
+                    b.ToTable("CostumeInventoryChecks");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeInventoryEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CheckId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CountedQuantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ScannedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("CheckId", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("CostumeInventoryEntries");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PartId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Size")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ValueCzk")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("PartId");
+
+                    b.ToTable("CostumeItems", t =>
+                        {
+                            t.HasCheckConstraint("CK_CostumeItems_Quantity", "Quantity > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeMaintenance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CostCzk")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("CostumeMaintenances");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumePart", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CostumeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TrackingMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CostumeId");
+
+                    b.ToTable("CostumeParts");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumePhoto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CapturedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Data")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("PartId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte[]>("ThumbnailData")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<int?>("TransferLineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UploadedById")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartId");
+
+                    b.HasIndex("TransferLineId");
+
+                    b.HasIndex("UploadedById");
+
+                    b.ToTable("CostumePhotos", t =>
+                        {
+                            t.HasCheckConstraint("CK_CostumePhotos_Owner", "(TransferLineId IS NULL) <> (PartId IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeTransfer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("FromMemberId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ResolvedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ToMemberId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("FromMemberId");
+
+                    b.HasIndex("ResolvedById");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("ToMemberId");
+
+                    b.ToTable("CostumeTransfers", t =>
+                        {
+                            t.HasCheckConstraint("CK_CostumeTransfers_Parties", "(FromMemberId IS NOT NULL OR ToMemberId IS NOT NULL) AND (FromMemberId IS NULL OR ToMemberId IS NULL OR FromMemberId <> ToMemberId)");
+                        });
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeTransferLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ConditionNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TransferId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("TransferId", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("CostumeTransferLines", t =>
+                        {
+                            t.HasCheckConstraint("CK_CostumeTransferLines_Quantity", "Quantity > 0");
+                        });
+                });
+
             modelBuilder.Entity("Demizon.Dal.Entities.Dance", b =>
                 {
                     b.Property<int>("Id")
@@ -282,6 +646,10 @@ namespace Demizon.Dal.Migrations
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CostumeQrToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("TEXT");
 
@@ -351,6 +719,9 @@ namespace Demizon.Dal.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CostumeQrToken")
+                        .IsUnique();
 
                     b.ToTable("Members");
                 });
@@ -603,6 +974,155 @@ namespace Demizon.Dal.Migrations
                     b.Navigation("Member");
                 });
 
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeHolding", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.CostumeItem", "Item")
+                        .WithMany("Holdings")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Demizon.Dal.Entities.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeInventoryCheck", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.Member", null)
+                        .WithMany()
+                        .HasForeignKey("StartedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeInventoryEntry", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.CostumeInventoryCheck", "Check")
+                        .WithMany("Entries")
+                        .HasForeignKey("CheckId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Demizon.Dal.Entities.CostumeItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Check");
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeItem", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.CostumePart", "Part")
+                        .WithMany("Items")
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Part");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeMaintenance", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.Member", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Demizon.Dal.Entities.CostumeItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumePart", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.Costume", "Costume")
+                        .WithMany("Parts")
+                        .HasForeignKey("CostumeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Costume");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumePhoto", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.CostumePart", "Part")
+                        .WithMany()
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Demizon.Dal.Entities.CostumeTransferLine", "TransferLine")
+                        .WithMany("Photos")
+                        .HasForeignKey("TransferLineId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Demizon.Dal.Entities.Member", null)
+                        .WithMany()
+                        .HasForeignKey("UploadedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Part");
+
+                    b.Navigation("TransferLine");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeTransfer", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.Member", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Demizon.Dal.Entities.Member", null)
+                        .WithMany()
+                        .HasForeignKey("FromMemberId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Demizon.Dal.Entities.Member", null)
+                        .WithMany()
+                        .HasForeignKey("ResolvedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Demizon.Dal.Entities.Member", null)
+                        .WithMany()
+                        .HasForeignKey("ToMemberId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeTransferLine", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.CostumeItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Demizon.Dal.Entities.CostumeTransfer", "Transfer")
+                        .WithMany("Lines")
+                        .HasForeignKey("TransferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Transfer");
+                });
+
             modelBuilder.Entity("Demizon.Dal.Entities.DeviceToken", b =>
                 {
                     b.HasOne("Demizon.Dal.Entities.Member", "Member")
@@ -698,6 +1218,36 @@ namespace Demizon.Dal.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Dance");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.Costume", b =>
+                {
+                    b.Navigation("Parts");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeInventoryCheck", b =>
+                {
+                    b.Navigation("Entries");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeItem", b =>
+                {
+                    b.Navigation("Holdings");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumePart", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeTransfer", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.CostumeTransferLine", b =>
+                {
+                    b.Navigation("Photos");
                 });
 
             modelBuilder.Entity("Demizon.Dal.Entities.Dance", b =>

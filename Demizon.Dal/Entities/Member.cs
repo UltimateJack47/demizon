@@ -66,6 +66,13 @@ public class Member
     /// </summary>
     public DateTime? GoogleConnectedAt { get; set; }
 
+    /// <summary>
+    /// Náhodný token v QR z profilu, podle kterého správce krojárky pozná příjemce předávky.
+    /// Vzniká až při prvním zobrazení; přegenerováním přestane platit vytištěný/vyfocený starý QR.
+    /// Sám nic nepovoluje — předávku potvrzuje přihlášený příjemce.
+    /// </summary>
+    public string? CostumeQrToken { get; set; }
+
     public bool HasRole(UserRole role) => Roles.Any(r => r.Role == role);
 }
 
@@ -76,7 +83,11 @@ public enum UserRole
 {
     Admin = 1,
     /// <summary>Spravuje obsah veřejného webu (tance, videa, galerie), ne členy ani docházku.</summary>
-    ContentManager = 2
+    ContentManager = 2,
+    /// <summary>Vůdce souboru. Mimo krojárku (jen čtení) nic navíc nedostává.</summary>
+    Leader = 3,
+    /// <summary>Správce krojárky: katalog, výdej a příjem kusů, údržba, inventura.</summary>
+    CostumeKeeper = 4
 }
 
 public enum Gender

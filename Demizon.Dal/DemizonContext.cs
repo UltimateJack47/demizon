@@ -22,6 +22,17 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
     public DbSet<SentNotification> SentNotifications { get; set; } = null!;
     public DbSet<RehearsalCancellation> RehearsalCancellations { get; set; } = null!;
 
+    public DbSet<Costume> Costumes { get; set; } = null!;
+    public DbSet<CostumePart> CostumeParts { get; set; } = null!;
+    public DbSet<CostumeItem> CostumeItems { get; set; } = null!;
+    public DbSet<CostumeHolding> CostumeHoldings { get; set; } = null!;
+    public DbSet<CostumeTransfer> CostumeTransfers { get; set; } = null!;
+    public DbSet<CostumeTransferLine> CostumeTransferLines { get; set; } = null!;
+    public DbSet<CostumePhoto> CostumePhotos { get; set; } = null!;
+    public DbSet<CostumeMaintenance> CostumeMaintenances { get; set; } = null!;
+    public DbSet<CostumeInventoryCheck> CostumeInventoryChecks { get; set; } = null!;
+    public DbSet<CostumeInventoryEntry> CostumeInventoryEntries { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -57,6 +68,8 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
                 .OnDelete(DeleteBehavior.Cascade);
             b.Property(m => m.GoogleRefreshToken).HasMaxLength(512);
             b.Property(m => m.GoogleCalendarId).HasMaxLength(256);
+            b.Property(m => m.CostumeQrToken).HasMaxLength(64);
+            b.HasIndex(m => m.CostumeQrToken).IsUnique();
             b.HasQueryFilter(m => m.DeletedAt == null);
         });
 
@@ -209,7 +222,157 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
                 .HasForeignKey(x => x.CreatedByMemberId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
+
+        ConfigureCostumes(modelBuilder);
+    }
+
+    /// <summary>
+    /// Krojárka. Na členy vedou jen cizí klíče bez navigací (viz <see cref="CostumeHolding"/>),
+    /// mazání je všude Restrict: historie předávek musí přežít cokoli kromě vědomého zásahu.
+    /// </summary>
+    private static void ConfigureCostumes(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Costume>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Name).HasMaxLength(CostumeNameMaxLength).IsRequired();
+            b.Property(x => x.Description).HasMaxLength(CostumeTextMaxLength);
+        });
+
+        modelBuilder.Entity<CostumePart>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Name).HasMaxLength(CostumeNameMaxLength).IsRequired();
+            b.Property(x => x.Description).HasMaxLength(CostumeTextMaxLength);
+            b.Property(x => x.Gender).HasConversion<string>().HasMaxLength(20).IsRequired();
+            b.Property(x => x.TrackingMode).HasConversion<string>().HasMaxLength(20).IsRequired();
+            b.HasOne(x => x.Costume)
+                .WithMany(c => c.Parts)
+                .HasForeignKey(x => x.CostumeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CostumeItem>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Code).HasMaxLength(CostumeCodeMaxLength).IsRequired();
+            b.HasIndex(x => x.Code).IsUnique();
+            b.Property(x => x.Size).HasMaxLength(50);
+            b.Property(x => x.Color).HasMaxLength(50);
+            b.Property(x => x.Note).HasMaxLength(CostumeTextMaxLength);
+            b.Property(x => x.State).HasConversion<string>().HasMaxLength(20).IsRequired();
+            b.HasOne(x => x.Part)
+                .WithMany(p => p.Items)
+                .HasForeignKey(x => x.PartId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.ToTable(t => t.HasCheckConstraint("CK_CostumeItems_Quantity", "Quantity > 0"));
+        });
+
+        modelBuilder.Entity<CostumeHolding>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.ItemId, x.MemberId }).IsUnique();
+            b.HasIndex(x => x.MemberId);
+            b.HasOne(x => x.Item)
+                .WithMany(i => i.Holdings)
+                .HasForeignKey(x => x.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<Member>().WithMany().HasForeignKey(x => x.MemberId).OnDelete(DeleteBehavior.Restrict);
+            b.ToTable(t => t.HasCheckConstraint("CK_CostumeHoldings_Quantity", "Quantity > 0"));
+        });
+
+        modelBuilder.Entity<CostumeTransfer>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+            b.Property(x => x.Note).HasMaxLength(CostumeTextMaxLength);
+            b.Property(x => x.RejectionReason).HasMaxLength(CostumeTextMaxLength);
+            b.HasIndex(x => x.Status);
+            b.HasIndex(x => x.FromMemberId);
+            b.HasIndex(x => x.ToMemberId);
+            b.HasOne<Member>().WithMany().HasForeignKey(x => x.FromMemberId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<Member>().WithMany().HasForeignKey(x => x.ToMemberId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<Member>().WithMany().HasForeignKey(x => x.CreatedById).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<Member>().WithMany().HasForeignKey(x => x.ResolvedById).OnDelete(DeleteBehavior.Restrict);
+            b.ToTable(t =>
+            {
+                // null = krojárka; z krojárky do krojárky ani od člena k témuž členovi se nepředává.
+                t.HasCheckConstraint("CK_CostumeTransfers_Parties",
+                    "(FromMemberId IS NOT NULL OR ToMemberId IS NOT NULL) " +
+                    "AND (FromMemberId IS NULL OR ToMemberId IS NULL OR FromMemberId <> ToMemberId)");
+            });
+        });
+
+        modelBuilder.Entity<CostumeTransferLine>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.ConditionNote).HasMaxLength(CostumeTextMaxLength);
+            b.HasIndex(x => new { x.TransferId, x.ItemId }).IsUnique();
+            b.HasOne(x => x.Transfer)
+                .WithMany(t => t.Lines)
+                .HasForeignKey(x => x.TransferId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.Item)
+                .WithMany()
+                .HasForeignKey(x => x.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.ToTable(t => t.HasCheckConstraint("CK_CostumeTransferLines_Quantity", "Quantity > 0"));
+        });
+
+        modelBuilder.Entity<CostumePhoto>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Data).IsRequired();
+            b.Property(x => x.ThumbnailData).IsRequired();
+            b.HasOne(x => x.TransferLine)
+                .WithMany(l => l.Photos)
+                .HasForeignKey(x => x.TransferLineId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.Part)
+                .WithMany()
+                .HasForeignKey(x => x.PartId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<Member>().WithMany().HasForeignKey(x => x.UploadedById).OnDelete(DeleteBehavior.Restrict);
+            b.ToTable(t => t.HasCheckConstraint("CK_CostumePhotos_Owner",
+                "(TransferLineId IS NULL) <> (PartId IS NULL)"));
+        });
+
+        modelBuilder.Entity<CostumeMaintenance>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(20).IsRequired();
+            b.Property(x => x.Note).HasMaxLength(CostumeTextMaxLength);
+            b.HasIndex(x => x.ItemId);
+            b.HasOne(x => x.Item)
+                .WithMany()
+                .HasForeignKey(x => x.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<Member>().WithMany().HasForeignKey(x => x.CreatedById).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CostumeInventoryCheck>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasOne<Member>().WithMany().HasForeignKey(x => x.StartedById).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CostumeInventoryEntry>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => new { x.CheckId, x.ItemId }).IsUnique();
+            b.HasOne(x => x.Check)
+                .WithMany(c => c.Entries)
+                .HasForeignKey(x => x.CheckId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.Item)
+                .WithMany()
+                .HasForeignKey(x => x.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 
     public const int RehearsalCancellationReasonMaxLength = 200;
+    public const int CostumeNameMaxLength = 100;
+    public const int CostumeCodeMaxLength = 32;
+    public const int CostumeTextMaxLength = 1000;
 }

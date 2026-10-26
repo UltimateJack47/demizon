@@ -8,6 +8,8 @@ public static class RoleLabels
     {
         UserRole.Admin => "Admin",
         UserRole.ContentManager => "Správce obsahu webu",
+        UserRole.Leader => "Vůdce souboru",
+        UserRole.CostumeKeeper => "Správce krojárky",
         _ => role.ToString()
     };
 }
