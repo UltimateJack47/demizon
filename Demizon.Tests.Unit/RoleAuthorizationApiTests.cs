@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using Demizon.Contracts.Rehearsals;
 using Demizon.Dal.Entities;
 using Demizon.Tests.Unit.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Demizon.Tests.Unit;
@@ -89,5 +90,51 @@ public class RoleAuthorizationApiTests : IAsyncLifetime
             new CancelRehearsalsRequest(new DateOnly(2026, 6, 12), new DateOnly(2026, 6, 12), null));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    // ------------------------------------------- token neodpovídá databázi
+
+    private void ChangeMember(string login, Action<Member> change)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<Dal.DemizonContext>();
+        change(db.Members.Include(m => m.Roles).Single(m => m.Login == login));
+        db.SaveChanges();
+    }
+
+    /// <summary>
+    /// 401, ne 403: mobilní klient na 401 obnoví token a ten už nese aktuální role.
+    /// </summary>
+    [Fact]
+    public async Task Token_s_odebranou_roli_vrati_401()
+    {
+        using var client = ClientFor("byvaly-redaktor", UserRole.ContentManager);
+        ChangeMember("byvaly-redaktor", m => m.Roles.Clear());
+
+        var response = await client.GetAsync("/api/videos");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Token_s_nove_pridanou_roli_vrati_401_aby_si_klient_vzal_novy()
+    {
+        using var client = ClientFor("novy-redaktor");
+        ChangeMember("novy-redaktor", m => m.Roles.Add(new MemberRole { Role = UserRole.ContentManager }));
+
+        var response = await client.GetAsync("/api/videos");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Token_smazaneho_clena_vrati_401()
+    {
+        using var client = ClientFor("odesly");
+        ChangeMember("odesly", m => m.DeletedAt = DateTime.UtcNow);
+
+        var response = await client.GetAsync("/api/videos");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 }

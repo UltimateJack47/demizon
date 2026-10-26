@@ -1,4 +1,7 @@
+using CryptoHelper;
+using Demizon.Dal.Entities;
 using Demizon.Tests.E2E.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 
 namespace Demizon.Tests.E2E;
@@ -99,5 +102,42 @@ public class AuthFlowTests(E2EFixture fixture) : E2ETestBase(fixture)
         await Page.GotoAsync("/Admin/Photos", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
         Assert.Contains("Správa fotografií", await Page.InnerTextAsync("body"));
         Assert.Empty(RelevantConsoleErrors);
+    }
+
+    /// <summary>
+    /// Cookie platí 30 dní a nese role. Bez kontroly proti DB by odebraná role
+    /// fungovala až do vypršení cookie.
+    /// </summary>
+    [Fact]
+    public async Task Odebrani_role_ukonci_webovou_session()
+    {
+        const string login = "e2e-odebrana-role";
+        const string password = "e2e-odebrana-role-heslo";
+        using (var db = Fixture.App.NewContext())
+        {
+            db.Members.Add(new Member
+            {
+                Name = login, Surname = "Test", Login = login, Email = $"{login}@demizon.test",
+                PasswordHash = PasswordHasher.HashPassword(password), Gender = Gender.Male,
+                Roles = [new MemberRole { Role = UserRole.ContentManager }],
+            });
+            db.SaveChanges();
+        }
+
+        await LoginAsync(login, password);
+        await Page.GotoAsync("/Admin/Photos", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        Assert.Contains("Správa fotografií", await Page.InnerTextAsync("body"));
+
+        using (var db = Fixture.App.NewContext())
+        {
+            var member = db.Members.Include(m => m.Roles).Single(m => m.Login == login);
+            member.Roles.Clear();
+            db.SaveChanges();
+        }
+
+        await Page.GotoAsync("/Admin", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        var body = await Page.InnerTextAsync("body");
+        Assert.DoesNotContain("Docházka", body);
+        Assert.DoesNotContain(await Context.CookiesAsync(), c => c.Name.Contains("Cookies"));
     }
 }
