@@ -29,7 +29,7 @@
                 Icon="@Icons.Material.Filled.BarChart">
         Statistiky docházky
     </MudNavLink>
-    <AuthorizeView Roles="Admin">
+    <AuthorizeView Roles="@RoleNames.ContentEditors">
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Videos")"
                     Icon="@Icons.Material.Filled.VideoLibrary">
             Videa

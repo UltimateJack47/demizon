@@ -20,7 +20,7 @@
 @inject IOptionsSnapshot<UploadSettings> UploadOptions
 
 @layout AdminMainLayout
-@attribute [Authorize(Roles = "Admin, Standard")]
+@attribute [Authorize]
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
@@ -38,7 +38,7 @@ else
             <MudChip T="string" Color="Color.Secondary" Variant="Variant.Outlined" Size="Size.Small">@Model.Region</MudChip>
         }
         <MudSpacer/>
-        <AuthorizeView Roles="Admin">
+        <AuthorizeView Roles="@RoleNames.ContentEditors">
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="OpenEditDanceDialog"
                            title="Upravit tanec"/>
         </AuthorizeView>
@@ -125,7 +125,7 @@ else
                     <!-- Videa -->
                     <MudTabPanel Icon="@Icons.Material.Filled.VideoLibrary" Text="@($"Videa ({Model.Videos.Count})")">
                         <div class="pa-4">
-                            <AuthorizeView Roles="Admin">
+                            <AuthorizeView Roles="@RoleNames.ContentEditors">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="1" Class="mb-3">
                                     <MudTooltip Text="Propojit existující video">
                                         <MudIconButton Icon="@Icons.Material.Filled.Link" Color="Color.Secondary"
@@ -158,7 +158,7 @@ else
                                                         <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
                                                     }
                                                     <MudSpacer/>
-                                                    <AuthorizeView Roles="Admin">
+                                                    <AuthorizeView Roles="@RoleNames.ContentEditors">
                                                         <MudTooltip Text="Odpojit video od tance">
                                                             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.LinkOff"
                                                                            Color="Color.Warning"
@@ -180,7 +180,7 @@ else
                     <!-- Fotky -->
                     <MudTabPanel Icon="@Icons.Material.Filled.PhotoLibrary" Text="@($"Fotky ({Photos.Count})")">
                         <div class="pa-4">
-                            <AuthorizeView Roles="Admin">
+                            <AuthorizeView Roles="@RoleNames.ContentEditors">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="1" Class="mb-3">
                                     <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadDancePhotos" Accept="image/*">
                                         <CustomContent Context="upload">
@@ -208,7 +208,7 @@ else
                                             <MudPaper Outlined="true" Class="pa-1" Style="position: relative;">
                                                 <img src="/api/files/@photo.Id/image?size=thumb" alt="photo"
                                                      style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:4px; display:block;"/>
-                                                <AuthorizeView Roles="Admin">
+                                                <AuthorizeView Roles="@RoleNames.ContentEditors">
                                                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mt-1">
                                                         <MudTooltip Text="@(photo.IsPublic ? "Veřejné – viditelné na webu" : "Soukromé – pouze v admin")">
                                                             <MudSwitch T="bool" Value="@photo.IsPublic"
@@ -233,7 +233,7 @@ else
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-3">
                                 <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Jen pro členy</MudChip>
                                 <MudSpacer/>
-                                <AuthorizeView Roles="Admin">
+                                <AuthorizeView Roles="@RoleNames.ContentEditors">
                                     <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadDanceDocuments"
                                                    Accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
                                         <CustomContent Context="upload">
@@ -265,7 +265,7 @@ else
                                                 </MudLink>
                                                 <MudText Typo="Typo.caption" Color="Color.Secondary">@FormatFileSize(doc.FileSize)</MudText>
                                             </MudStack>
-                                            <AuthorizeView Roles="Admin">
+                                            <AuthorizeView Roles="@RoleNames.ContentEditors">
                                                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
                                                                Color="Color.Error" OnClick="() => DeleteDanceDocument(doc.Id)"/>
                                             </AuthorizeView>

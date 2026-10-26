@@ -1,6 +1,7 @@
 @page "/Members/Detail/{Id:int}"
 @using Demizon.Core.Services.Member
 @using Demizon.Dal.Entities
+@using Demizon.Mvc.Helpers
 @using Demizon.Mvc.ViewModels
 
 @inject IMemberService MemberService
@@ -59,9 +60,9 @@
                                 {
                                     <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.PersonOff" Color="Color.Warning" Variant="Variant.Outlined">Externista</MudChip>
                                 }
-                                @if (Model.Role == UserRole.Admin)
+                                @foreach (var role in Model.Roles)
                                 {
-                                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.AdminPanelSettings" Color="Color.Warning" Variant="Variant.Outlined">Admin</MudChip>
+                                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.AdminPanelSettings" Color="Color.Warning" Variant="Variant.Outlined">@RoleLabels.For(role)</MudChip>
                                 }
                             </MudStack>
                         </MudStack>

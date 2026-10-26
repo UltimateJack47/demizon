@@ -374,7 +374,7 @@ public class RehearsalApiTests : IAsyncLifetime
             var member = new Member
             {
                 Name = "Bez", Surname = "Prav", Login = "bez-prav", Email = "bez-prav@demizon.test",
-                PasswordHash = "x", Role = UserRole.Standard, Gender = Gender.Female,
+                PasswordHash = "x", Gender = Gender.Female,
             };
             db.Members.Add(member);
             await db.SaveChangesAsync();

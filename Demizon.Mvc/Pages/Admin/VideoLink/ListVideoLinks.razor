@@ -9,7 +9,7 @@
 @inject IVideoLinkService VideoLinkService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = RoleNames.ContentEditors)]
 @layout AdminMainLayout
 
 <MudTable @ref="VideoLinksGrid" T="VideoLinkViewModel" Items="VideoLinks" Hover="true" Striped="true" FixedHeader="true" Height="900px">

@@ -99,7 +99,7 @@
                     </MudList>
                 </MudItem>
             }
-            @if (LoggedUser.Role == UserRole.Admin)
+            @if (LoggedUser.IsAdmin)
             {
                 <MudItem xs="12">
                     <MudDivider Class="my-1"/>
@@ -124,6 +124,16 @@
                         <MudItem xs="6">
                             <MudCheckBox @bind-Value="Model.IsMusician" Label="Muzika" Color="Color.Primary"/>
                         </MudItem>
+                    </MudGrid>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2 mb-1">Oprávnění</MudText>
+                    <MudGrid Spacing="0">
+                        @foreach (var role in Enum.GetValues<UserRole>())
+                        {
+                            <MudItem xs="6">
+                                <MudCheckBox T="bool" Value="Model.Roles.Contains(role)" Label="@RoleLabels.For(role)"
+                                             Color="Color.Primary" ValueChanged="isChecked => ToggleRole(role, isChecked)"/>
+                            </MudItem>
+                        }
                     </MudGrid>
                 </MudItem>
             }
@@ -241,11 +251,28 @@
 
             if (IsUpdate)
             {
+                // Role napřed: odmítnutí (poslední admin) je běžný stav a nesmí nechat
+                // ostatní pole uložená, zatímco formulář hlásí, že se úprava nepovedla.
+                if (LoggedUser.IsAdmin)
+                {
+                    var rolesSaved = await MemberService.SetRolesAsync(Model.Id, Model.Roles);
+                    if (!rolesSaved.IsSuccess)
+                    {
+                        Snackbar.Add(rolesSaved.Error ?? "Role se nepodařilo uložit.", Severity.Error);
+                        return;
+                    }
+                }
+
                 // UpdateAsync výjimku propouští, takže ji zachytí catch níž.
                 await MemberService.UpdateAsync(Model.Id, dbModel);
             }
             else
             {
+                if (LoggedUser.IsAdmin)
+                {
+                    dbModel.Roles = Model.Roles.Select(r => new MemberRole { Role = r }).ToList();
+                }
+
                 // CreateAsync naopak výjimku spolkne a jen vrátí neúspěch. Bez téhle
                 // kontroly by se ohlásilo "Člen byl vytvořen", i kdyby se neuložil.
                 var created = await MemberService.CreateAsync(dbModel);
@@ -264,6 +291,13 @@
             Snackbar.Add("Něco se pokazilo.", Severity.Error);
             MudDialog.Close(DialogResult.Ok(false));
         }
+    }
+
+    private void ToggleRole(UserRole role, bool isChecked)
+    {
+        Model.Roles.Remove(role);
+        if (isChecked)
+            Model.Roles.Add(role);
     }
 
     private void UploadFile(IBrowserFile file)

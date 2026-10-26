@@ -70,6 +70,35 @@ public class ModelAndMigrationsTests : IAsyncDisposable
         Assert.Empty(await db.Members.ToListAsync());
     }
 
+    /// <summary>
+    /// <c>AddMemberRoles</c> nahrazuje sloupec <c>Members.Role</c> tabulkou. Bez převodu by
+    /// databáze po nasazení neměla jediného admina a správa aplikace by se zamkla.
+    /// </summary>
+    [Fact]
+    public async Task Migrace_roli_prevede_adminy_a_beznym_clenum_roli_neprida()
+    {
+        await using var connection = new SqliteConnection("DataSource=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<DemizonContext>().UseSqlite(connection).Options;
+        await using var db = new DemizonContext(options);
+        var migrator = db.GetService<IMigrator>();
+
+        await migrator.MigrateAsync("20261001001254_AddRehearsalCancellations");
+        await db.Database.ExecuteSqlRawAsync("""
+            INSERT INTO Members (Name, Surname, Login, PasswordHash, Role, Gender, IsVisible,
+                                 IsAttendanceVisible, IsDancer, IsMusician, IsExternal)
+            VALUES ('A', 'Admin', 'admin', 'x', 'Admin', 'Male', 0, 1, 0, 0, 0),
+                   ('B', 'Clen', 'clen', 'x', 'Standard', 'Female', 0, 1, 0, 0, 0);
+            """);
+
+        await migrator.MigrateAsync();
+
+        var roles = await db.MemberRoles.Select(r => new { r.Member.Login, r.Role }).ToListAsync();
+        var only = Assert.Single(roles);
+        Assert.Equal("admin", only.Login);
+        Assert.Equal(UserRole.Admin, only.Role);
+    }
+
     // ---------------------------------------------------------------- chování schématu
 
     [Fact]
@@ -104,7 +133,8 @@ public class ModelAndMigrationsTests : IAsyncDisposable
         var connection = verify.Database.GetDbConnection();
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT Role, Gender FROM Members WHERE Id = $id";
+        command.CommandText =
+            "SELECT r.Role, m.Gender FROM Members m JOIN MemberRoles r ON r.MemberId = m.Id WHERE m.Id = $id";
         var parameter = command.CreateParameter();
         parameter.ParameterName = "$id";
         parameter.Value = member.Id;

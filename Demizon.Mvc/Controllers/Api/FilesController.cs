@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Demizon.Mvc.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Demizon.Mvc.Services.Authentication;
 
 namespace Demizon.Mvc.Controllers.Api;
 
@@ -81,7 +82,7 @@ public class FilesController(IFileService fileService) : ControllerBase
 
 [ApiController]
 [Route("api/gallery")]
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = RoleNames.ContentEditors)]
 public class GalleryController(IFileService fileService, IFileUploadService fileUploadService) : ControllerBase
 {
     [HttpPost("upload")]

@@ -20,13 +20,13 @@ public sealed class TokenService(IOptions<JwtSettings> jwtOptions)
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, member.Login),
-            new Claim(ClaimTypes.Role, member.Role.ToString()),
-            new Claim(ClaimTypes.PrimarySid, member.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(ClaimTypes.Name, member.Login),
+            new(ClaimTypes.PrimarySid, member.Id.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
+        claims.AddRange(member.Roles.Select(r => new Claim(ClaimTypes.Role, r.Role.ToString())));
 
         var token = new JwtSecurityToken(
             issuer: _settings.Issuer,

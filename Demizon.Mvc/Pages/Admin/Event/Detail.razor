@@ -12,7 +12,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @layout AdminMainLayout
-@attribute [Authorize(Roles = "Admin, Standard")]
+@attribute [Authorize]
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 

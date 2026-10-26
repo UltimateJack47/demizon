@@ -13,7 +13,7 @@ public static class TestData
         string login = "tester",
         string name = "Jan",
         string surname = "Novak",
-        UserRole role = UserRole.Standard,
+        UserRole? role = null,
         bool isAttendanceVisible = true,
         bool isExternal = false) => new()
     {
@@ -22,7 +22,7 @@ public static class TestData
         Login = login,
         Email = $"{login}@demizon.test",
         PasswordHash = "not-a-real-hash",
-        Role = role,
+        Roles = role is { } r ? [new MemberRole { Role = r }] : [],
         Gender = Gender.Male,
         IsAttendanceVisible = isAttendanceVisible,
         IsExternal = isExternal

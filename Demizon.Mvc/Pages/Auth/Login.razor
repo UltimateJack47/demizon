@@ -2,7 +2,7 @@
 @page "/Login/{E:bool}"
 @using Demizon.Mvc.ViewModels
 
-<AuthorizeView Roles="Admin,Standard">
+<AuthorizeView>
     <Authorized>
         <MudText Typo="Typo.body1">Hello, @context.User.Identity?.Name!</MudText>
         <MudButton ButtonType="ButtonType.Submit" Size="Size.Medium" Variant="Variant.Outlined"

@@ -15,7 +15,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject ILogger<ListEvents> Logger
-@attribute [Authorize(Roles = "Admin, Standard")]
+@attribute [Authorize]
 
 <MudTable @ref="EventsGrid" T="EventViewModel" Items="Events" Hover="true" Striped="true" FixedHeader="true" Height="900px"
           RowClassFunc="@((item, _) => item.IsCancelled ? "demi-event-row-cancelled" : "")">

@@ -74,4 +74,30 @@ public class AuthFlowTests(E2EFixture fixture) : E2ETestBase(fixture)
         Assert.Contains("/Admin", Page.Url);
         Assert.Empty(RelevantConsoleErrors);
     }
+
+    [Fact]
+    public async Task Bezny_clen_spravu_obsahu_ani_zkousek_v_menu_nema()
+    {
+        await LoginAsMemberAsync();
+
+        var menu = await Page.Locator(".mud-navmenu").InnerTextAsync();
+        Assert.Contains("Docházka", menu);
+        Assert.DoesNotContain("Fotografie", menu);
+        Assert.DoesNotContain("Zkoušky", menu);
+    }
+
+    [Fact]
+    public async Task Spravce_obsahu_vidi_galerii_a_videa_ale_ne_zkousky()
+    {
+        await LoginAsync(AppHost.ContentManagerLogin, AppHost.ContentManagerPassword);
+
+        var menu = await Page.Locator(".mud-navmenu").InnerTextAsync();
+        Assert.Contains("Fotografie", menu);
+        Assert.Contains("Videa", menu);
+        Assert.DoesNotContain("Zkoušky", menu);
+
+        await Page.GotoAsync("/Admin/Photos", new PageGotoOptions { WaitUntil = WaitUntilState.NetworkIdle });
+        Assert.Contains("Správa fotografií", await Page.InnerTextAsync("body"));
+        Assert.Empty(RelevantConsoleErrors);
+    }
 }

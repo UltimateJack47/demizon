@@ -90,14 +90,24 @@ public class AuthApiTests : IAsyncLifetime
         var body = await LoginAsync(AuthApiFactory.StandardLogin, AuthApiFactory.StandardPassword);
 
         Assert.Equal(_factory.StandardMemberId, body.MemberId);
-        Assert.Equal("Standard", body.Role);
+        Assert.Empty(body.Roles);
         Assert.Equal(3600, body.ExpiresIn);
         Assert.False(string.IsNullOrEmpty(body.Token));
         Assert.False(string.IsNullOrEmpty(body.RefreshToken));
 
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(body.Token);
         Assert.Equal(_factory.StandardMemberId.ToString(), jwt.Claims.First(c => c.Type == ClaimTypes.PrimarySid).Value);
-        Assert.Equal("Standard", jwt.Claims.First(c => c.Type == ClaimTypes.Role).Value);
+        Assert.DoesNotContain(jwt.Claims, c => c.Type == ClaimTypes.Role);
+    }
+
+    [Fact]
+    public async Task Token_admina_nese_roli_v_odpovedi_i_v_jwt()
+    {
+        var body = await LoginAsync(AuthApiFactory.AdminLogin, AuthApiFactory.AdminPassword);
+
+        Assert.Equal(["Admin"], body.Roles);
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(body.Token);
+        Assert.Equal("Admin", jwt.Claims.Single(c => c.Type == ClaimTypes.Role).Value);
     }
 
     [Fact]

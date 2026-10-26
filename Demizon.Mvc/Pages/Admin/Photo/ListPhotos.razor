@@ -15,7 +15,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IOptionsSnapshot<UploadSettings> UploadOptions
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = RoleNames.ContentEditors)]
 @layout AdminMainLayout
 
 <MudText Typo="Typo.h5" Class="mb-4"><b>Správa fotografií</b></MudText>

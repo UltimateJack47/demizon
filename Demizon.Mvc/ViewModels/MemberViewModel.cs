@@ -19,7 +19,13 @@ public class MemberViewModel
 
     public string? Password { get; set; }
 
-    public UserRole Role { get; set; }
+    /// <summary>
+    /// Ukládá se přes <c>IMemberService.SetRolesAsync</c>, ne přes <c>ToEntity</c>:
+    /// role smí měnit jen admin.
+    /// </summary>
+    public List<UserRole> Roles { get; set; } = [];
+
+    public bool IsAdmin => Roles.Contains(UserRole.Admin);
 
     public Gender Gender { get; set; }
 
@@ -54,7 +60,7 @@ public static class MemberMappingExtensions
         Login = entity.Login,
         Email = entity.Email,
         PasswordHash = entity.PasswordHash,
-        Role = entity.Role,
+        Roles = entity.Roles.Select(r => r.Role).ToList(),
         Gender = entity.Gender,
         IsVisible = entity.IsVisible,
         IsAttendanceVisible = entity.IsAttendanceVisible,
@@ -76,7 +82,6 @@ public static class MemberMappingExtensions
         PasswordHash = string.IsNullOrWhiteSpace(vm.Password)
             ? vm.PasswordHash
             : PasswordHasher.HashPassword(vm.Password),
-        Role = vm.Role,
         Gender = vm.Gender,
         IsVisible = !vm.IsExternal && vm.IsVisible,
         IsAttendanceVisible = vm.IsAttendanceVisible,

@@ -8,6 +8,7 @@ using Demizon.Common.Configuration;
 using Demizon.Contracts.Auth;
 using Demizon.Dal;
 using Demizon.Dal.Entities;
+using Demizon.Mvc.Mapping;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -68,7 +69,7 @@ public class DatabaseController(
             Email = request.Email,
             Login = request.Login,
             PasswordHash = PasswordHasher.HashPassword(request.Password),
-            Role = UserRole.Admin,
+            Roles = [new MemberRole { Role = UserRole.Admin }],
             DeletedAt = null
         };
 
@@ -78,7 +79,7 @@ public class DatabaseController(
         logger.LogInformation("První admin {Login} založen přes seed endpoint.", admin.Login);
 
         // Heslo se v odpovědi nevrací — zná ho ten, kdo request poslal.
-        return Ok(new { id = admin.Id, login = admin.Login, role = admin.Role.ToString() });
+        return Ok(new { id = admin.Id, login = admin.Login, roles = admin.ToRoleNames() });
     }
 
     [HttpGet("info")]

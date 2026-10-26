@@ -1,5 +1,6 @@
 ﻿using Demizon.Common.Exceptions;
 using Demizon.Dal;
+using Demizon.Dal.Entities;
 using Demizon.Dal.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -86,6 +87,46 @@ public class MemberService(DemizonContext demizonContext, ILogger<MemberService>
         entity.GoogleCalendarId = null;
         entity.GoogleConnectedAt = null;
         await DemizonContext.SaveChangesWithRecoveryAsync();
+    }
+
+    public async Task<Common.Result> SetRolesAsync(int memberId, IReadOnlyCollection<UserRole> roles)
+    {
+        try
+        {
+            var member = await DemizonContext.Members
+                .Include(m => m.Roles)
+                .FirstOrDefaultAsync(m => m.Id == memberId);
+            if (member is null)
+            {
+                return Common.Result.NotFound("Člen nebyl nalezen.");
+            }
+
+            var wanted = roles.ToHashSet();
+            if (member.HasRole(UserRole.Admin) && !wanted.Contains(UserRole.Admin))
+            {
+                var anotherAdminExists = await DemizonContext.MemberRoles.AnyAsync(r =>
+                    r.Role == UserRole.Admin && r.MemberId != memberId && r.Member.DeletedAt == null);
+                if (!anotherAdminExists)
+                {
+                    return Common.Result.Rejected("Soubor musí mít aspoň jednoho admina.");
+                }
+            }
+
+            member.Roles.RemoveAll(r => !wanted.Contains(r.Role));
+            foreach (var role in wanted.Where(r => !member.HasRole(r)))
+            {
+                member.Roles.Add(new MemberRole { Role = role });
+            }
+
+            await DemizonContext.SaveChangesAsync();
+            return Common.Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            DemizonContext.DiscardPendingChanges();
+            logger.LogError(ex, "Failed to set roles of member {MemberId}.", memberId);
+            return Common.Result.Fail("Role se nepodařilo uložit.");
+        }
     }
 
     public async Task<Common.Result> DeleteAsync(int id)

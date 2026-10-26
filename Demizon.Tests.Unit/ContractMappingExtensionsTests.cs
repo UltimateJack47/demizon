@@ -123,7 +123,7 @@ public class ContractMappingExtensionsTests
             Login = "anna",
             Email = "anna@demizon.test",
             PasswordHash = "SUPER-TAJNY-HASH",
-            Role = UserRole.Admin,
+            Roles = [new MemberRole { Role = UserRole.Admin }, new MemberRole { Role = UserRole.ContentManager }],
             Gender = Gender.Female
         };
 
@@ -134,7 +134,7 @@ public class ContractMappingExtensionsTests
         Assert.Equal("Dvořáková", dto.Surname);
         Assert.Equal("anna", dto.Login);
         Assert.Equal("anna@demizon.test", dto.Email);
-        Assert.Equal("Admin", dto.Role);
+        Assert.Equal(["Admin", "ContentManager"], dto.Roles);
         Assert.Equal("Female", dto.Gender);
 
         // MemberProfileDto je record — kdyby někdo přidal pole s hashem, chytí to tady.

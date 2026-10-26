@@ -9,6 +9,11 @@ public interface IMemberService
     /// <summary>Uloží novou entitu. <c>Value</c> je vygenerovaný klíč.</summary>
     Task<Common.Result<int>> CreateAsync(Dal.Entities.Member member);
     Task<Common.Result> DeleteAsync(int id);
+    /// <summary>
+    /// Nastaví členovi přesně tyto role. Odebrat roli <c>Admin</c> poslednímu adminovi je
+    /// <c>Rejected</c> — jinak by aplikaci nemohl nikdo spravovat.
+    /// </summary>
+    Task<Common.Result> SetRolesAsync(int memberId, IReadOnlyCollection<Dal.Entities.UserRole> roles);
     Task ConnectGoogleCalendarAsync(int memberId, string refreshToken, string calendarId);
     Task DisconnectGoogleCalendarAsync(int memberId);
 }

@@ -88,7 +88,7 @@ public sealed class CalendarApiFactory : WebApplicationFactory<Program>
             Login = MemberLogin,
             Email = $"{MemberLogin}@demizon.test",
             PasswordHash = PasswordHasher.HashPassword(MemberPassword),
-            Role = UserRole.Admin,
+            Roles = [new MemberRole { Role = UserRole.Admin }],
             Gender = Gender.Male,
             // Propojený kalendář: bez obojího controller synchronizaci přeskočí.
             GoogleRefreshToken = "fake-refresh-token",

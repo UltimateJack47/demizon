@@ -345,10 +345,6 @@ namespace Demizon.Dal.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Surname")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -357,6 +353,28 @@ namespace Demizon.Dal.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Members");
+                });
+
+            modelBuilder.Entity("Demizon.Dal.Entities.MemberRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId", "Role")
+                        .IsUnique();
+
+                    b.ToTable("MemberRoles");
                 });
 
             modelBuilder.Entity("Demizon.Dal.Entities.PushSubscription", b =>
@@ -612,6 +630,17 @@ namespace Demizon.Dal.Migrations
                     b.Navigation("Member");
                 });
 
+            modelBuilder.Entity("Demizon.Dal.Entities.MemberRole", b =>
+                {
+                    b.HasOne("Demizon.Dal.Entities.Member", "Member")
+                        .WithMany("Roles")
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Member");
+                });
+
             modelBuilder.Entity("Demizon.Dal.Entities.PushSubscription", b =>
                 {
                     b.HasOne("Demizon.Dal.Entities.Member", "Member")
@@ -694,6 +723,8 @@ namespace Demizon.Dal.Migrations
                     b.Navigation("PushSubscriptions");
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("Roles");
                 });
 #pragma warning restore 612, 618
         }

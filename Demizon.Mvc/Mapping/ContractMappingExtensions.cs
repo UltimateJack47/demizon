@@ -13,7 +13,10 @@ public static class ContractMappingExtensions
             IsPublic: e.IsPublic, NotifyBeforeDays: e.NotifyBeforeDays);
 
     public static MemberProfileDto ToProfileDto(this Dal.Entities.Member m) =>
-        new(m.Id, m.Name, m.Surname, m.Login, m.Email, m.Role.ToString(), m.Gender.ToString());
+        new(m.Id, m.Name, m.Surname, m.Login, m.Email, m.ToRoleNames(), m.Gender.ToString());
+
+    public static IReadOnlyList<string> ToRoleNames(this Dal.Entities.Member m) =>
+        m.Roles.Select(r => r.Role.ToString()).Order(StringComparer.Ordinal).ToList();
 
     public static AttendanceDto ToDto(this Dal.Entities.Attendance a) =>
         new(a.Id, a.Status.ToString().ToLowerInvariant(), a.Comment, a.ActivityRole?.ToString(), a.LastUpdated);

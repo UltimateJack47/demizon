@@ -9,7 +9,7 @@
 @inject IDanceService DanceService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@attribute [Authorize(Roles = "Admin, Standard")]
+@attribute [Authorize]
 
 @layout AdminMainLayout
 
@@ -18,7 +18,7 @@
         <MudText Typo="Typo.subtitle1"><b>Tance</b></MudText>
         <MudSpacer/>
         <MudIconButton Class="mt-0" Size="Size.Medium" aria-label="refresh" OnClick="RefreshTable" Icon="@Icons.Material.Filled.Refresh"/>
-        <AuthorizeView Roles="Admin">
+        <AuthorizeView Roles="@RoleNames.ContentEditors">
             <MudButton Size="Size.Medium" Variant="Variant.Filled" ButtonType="ButtonType.Button" Color="Color.Primary"
                        @onclick="() => OpenFormDialog()">
                 Vytvořit
@@ -45,7 +45,7 @@
         </MudTd>
         <MudTd DataLabel="Akce">
             <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility" OnClick="() => NavigateToDetail(dance.Id)" title="Detail"/>
-            <AuthorizeView Roles="Admin">
+            <AuthorizeView Roles="@RoleNames.ContentEditors">
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(dance)"/>
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="() => RemoveDance(dance.Id)"/>
             </AuthorizeView>

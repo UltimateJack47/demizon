@@ -3,6 +3,7 @@ using CryptoHelper;
 using Demizon.Common.Configuration;
 using Demizon.Core.Services.Authentication;
 using Demizon.Core.Services.Member;
+using Demizon.Mvc.Mapping;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Options;
@@ -43,13 +44,15 @@ public sealed class AuthenticationService(
             IsPersistent = rememberMe,
         };
 
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Name, userAccount.Login),
+            new(ClaimTypes.PrimarySid, userAccount.Id.ToString())
+        };
+        claims.AddRange(userAccount.Roles.Select(r => new Claim(ClaimTypes.Role, r.Role.ToString())));
+
         await context.SignInAsync(new ClaimsPrincipal(new ClaimsIdentity(
-            new List<Claim>
-            {
-                new(ClaimTypes.Name, userAccount.Login),
-                new(ClaimTypes.Role, userAccount.Role.ToString()),
-                new(ClaimTypes.PrimarySid, userAccount.Id.ToString())
-            }, CookieAuthenticationDefaults.AuthenticationScheme)), properties);
+            claims, CookieAuthenticationDefaults.AuthenticationScheme)), properties);
 
         context.Response.Redirect("/Admin");
     }
@@ -101,7 +104,7 @@ public sealed class AuthenticationService(
             token,
             refreshToken,
             expiresIn = tokenService.ExpirationMinutes * 60,
-            role = userAccount.Role.ToString(),
+            roles = userAccount.ToRoleNames(),
         });
     }
 

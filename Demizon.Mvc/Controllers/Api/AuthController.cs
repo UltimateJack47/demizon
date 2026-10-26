@@ -4,6 +4,7 @@ using Demizon.Common.Exceptions;
 using Demizon.Contracts.Auth;
 using Demizon.Core.Services.Authentication;
 using Demizon.Core.Services.Member;
+using Demizon.Mvc.Mapping;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
@@ -37,7 +38,7 @@ public class AuthController(
             token,
             refreshToken,
             tokenService.ExpirationMinutes * 60,
-            member.Role.ToString(),
+            member.ToRoleNames(),
             member.GoogleConnectedAt != null,
             member.Id));
     }
@@ -64,7 +65,7 @@ public class AuthController(
                 token,
                 newRefreshToken,
                 tokenService.ExpirationMinutes * 60,
-                member.Role.ToString(),
+                member.ToRoleNames(),
                 member.GoogleConnectedAt != null,
                 member.Id));
         }

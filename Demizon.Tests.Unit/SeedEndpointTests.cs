@@ -161,8 +161,8 @@ public class SeedEndpointTests : IAsyncLifetime
         using (var scope = factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<DemizonContext>();
-            var admin = await db.Members.SingleAsync(m => m.Login == login);
-            Assert.Equal(UserRole.Admin, admin.Role);
+            var admin = await db.Members.Include(m => m.Roles).SingleAsync(m => m.Login == login);
+            Assert.Equal([UserRole.Admin], admin.Roles.Select(r => r.Role));
             Assert.NotEqual(ValidPassword, admin.PasswordHash);
             Assert.Null(admin.DeletedAt);
         }
@@ -191,7 +191,6 @@ public class SeedEndpointTests : IAsyncLifetime
                 Surname = "Clen",
                 Login = "smazany",
                 PasswordHash = "hash",
-                Role = UserRole.Standard,
                 DeletedAt = DateTime.UtcNow
             });
             await db.SaveChangesAsync();

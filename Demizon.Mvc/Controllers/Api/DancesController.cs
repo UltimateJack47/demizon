@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Demizon.Mvc.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Demizon.Mvc.Services.Authentication;
 
 namespace Demizon.Mvc.Controllers.Api;
 
@@ -80,7 +81,7 @@ public class DancesController(IDanceService danceService, IFileService fileServi
     }
 
     [HttpPost("{id:int}/documents")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = RoleNames.ContentEditors)]
     [RequestSizeLimit(25 * 1024 * 1024)]
     public async Task<ActionResult<DanceDocumentDto>> UploadDanceDocument(int id, IFormFile file)
     {
@@ -139,7 +140,7 @@ public class DancesController(IDanceService danceService, IFileService fileServi
     }
 
     [HttpDelete("{id:int}/documents/{fileId:int}")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = RoleNames.ContentEditors)]
     public async Task<IActionResult> DeleteDanceDocument(int id, int fileId)
     {
         try

@@ -7,7 +7,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @layout AdminMainLayout
-@attribute [Authorize(Roles = "Admin, Standard")]
+@attribute [Authorize]
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
@@ -26,7 +26,7 @@ else
             <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">Interní</MudChip>
         }
         <MudSpacer/>
-        <AuthorizeView Roles="Admin">
+        <AuthorizeView Roles="@RoleNames.ContentEditors">
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
                            OnClick="OpenEditDialog" title="Upravit video"/>
         </AuthorizeView>

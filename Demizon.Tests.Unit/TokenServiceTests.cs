@@ -25,14 +25,14 @@ public class TokenServiceTests
         ExpirationMinutes = 60
     };
 
-    private static Member Member(UserRole role = UserRole.Standard) => new()
+    private static Member Member(params UserRole[] roles) => new()
     {
         Id = 42,
         Login = "jana",
         Name = "Jana",
         Surname = "Novakova",
         PasswordHash = "x",
-        Role = role,
+        Roles = roles.Select(r => new MemberRole { Role = r }).ToList(),
         Gender = Gender.Female
     };
 
@@ -43,9 +43,28 @@ public class TokenServiceTests
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
         Assert.Equal("jana", jwt.Claims.First(c => c.Type == ClaimTypes.Name).Value);
-        Assert.Equal("Admin", jwt.Claims.First(c => c.Type == ClaimTypes.Role).Value);
+        Assert.Equal("Admin", jwt.Claims.Single(c => c.Type == ClaimTypes.Role).Value);
         Assert.Equal("42", jwt.Claims.First(c => c.Type == ClaimTypes.PrimarySid).Value);
         Assert.False(string.IsNullOrEmpty(jwt.Claims.First(c => c.Type == JwtRegisteredClaimNames.Jti).Value));
+    }
+
+    [Fact]
+    public void GenerateToken_zapise_kazdou_roli_jako_samostatny_claim()
+    {
+        var token = Service().GenerateToken(Member(UserRole.Admin, UserRole.ContentManager));
+        var principal = Service().ValidateToken(token);
+
+        Assert.NotNull(principal);
+        Assert.True(principal.IsInRole("Admin"));
+        Assert.True(principal.IsInRole("ContentManager"));
+    }
+
+    [Fact]
+    public void GenerateToken_clen_bez_role_nema_zadny_role_claim()
+    {
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(Service().GenerateToken(Member()));
+
+        Assert.DoesNotContain(jwt.Claims, c => c.Type == ClaimTypes.Role);
     }
 
     [Fact]

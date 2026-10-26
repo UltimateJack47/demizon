@@ -9,7 +9,7 @@
 @inject IMemberService MemberService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@attribute [Authorize(Roles = "Admin, Standard")]
+@attribute [Authorize]
 
 @layout AdminMainLayout
 <PageTitle>@PageService.GetTitle()</PageTitle>
@@ -127,11 +127,11 @@
         <MudTd DataLabel="Akce">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Style="white-space: nowrap;">
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Visibility" OnClick="() => NavigateToDetail(member.Id)" title="Detail"/>
-                @if (member.Id == LoggedUser.Id || LoggedUser.Role == UserRole.Admin)
+                @if (member.Id == LoggedUser.Id || LoggedUser.IsAdmin)
                 {
                     <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenFormDialog(member)"/>
                 }
-                @if (LoggedUser.Role == UserRole.Admin && member.Id != LoggedUser.Id)
+                @if (LoggedUser.IsAdmin && member.Id != LoggedUser.Id)
                 {
                     <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="() => RemoveMember(member.Id)"/>
                 }

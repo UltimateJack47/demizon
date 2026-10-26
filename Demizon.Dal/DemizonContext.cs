@@ -9,6 +9,7 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
     public DbSet<Setting> Settings { get; set; } = null!;
     public DbSet<Event> Events { get; set; } = null!;
     public DbSet<Member> Members { get; set; } = null!;
+    public DbSet<MemberRole> MemberRoles { get; set; } = null!;
     public DbSet<File> Files { get; set; } = null!;
     public DbSet<VideoLink> VideoLinks { get; set; } = null!;
     public DbSet<Dance> Dances { get; set; } = null!;
@@ -41,7 +42,6 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(s => s.Login).HasMaxLength(100).IsRequired();
             b.Property(s => s.Email).HasMaxLength(100);
             b.Property(s => s.PasswordHash).HasMaxLength(150);
-            b.Property(s => s.Role).HasConversion<string>().IsRequired();
             b.Property(m => m.IsVisible).IsRequired();
             b.Property(m => m.IsAttendanceVisible).HasDefaultValue(true).IsRequired();
             b.Property(m => m.IsDancer).HasDefaultValue(false).IsRequired();
@@ -143,6 +143,17 @@ public class DemizonContext(DbContextOptions options) : DbContext(options)
             b.Property(x => x.TokenPrefix).HasMaxLength(8).IsRequired().HasDefaultValue("");
             b.HasIndex(x => new { x.TokenPrefix, x.IsRevoked });
             b.Property(x => x.ExpiresAt).IsRequired();
+        });
+
+        modelBuilder.Entity<MemberRole>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Role).HasConversion<string>().HasMaxLength(50).IsRequired();
+            b.HasIndex(x => new { x.MemberId, x.Role }).IsUnique();
+            b.HasOne(x => x.Member)
+                .WithMany(m => m.Roles)
+                .HasForeignKey(x => x.MemberId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<DeviceToken>(b =>

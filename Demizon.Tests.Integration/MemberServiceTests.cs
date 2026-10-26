@@ -1,3 +1,4 @@
+using Demizon.Common;
 using Demizon.Common.Exceptions;
 using Demizon.Core.Services.Member;
 using Demizon.Dal;
@@ -227,5 +228,67 @@ public class MemberServiceTests : IAsyncDisposable
         invalid.Name = null!;
 
         ResultAssert.Failed(await CreateService(db).CreateAsync(invalid));
+    }
+
+    // ---------------------------------------------------------------- role
+
+    private async Task<Member> SeedWithRolesAsync(string login, params UserRole[] roles)
+    {
+        await using var db = _fixture.NewContext();
+        var member = TestData.Member(login: login);
+        member.Roles = roles.Select(r => new MemberRole { Role = r }).ToList();
+        db.Members.Add(member);
+        await db.SaveChangesAsync();
+        return member;
+    }
+
+    private async Task<UserRole[]> RolesOfAsync(int memberId)
+    {
+        await using var verify = _fixture.NewContext();
+        return await verify.MemberRoles.Where(r => r.MemberId == memberId)
+            .Select(r => r.Role).OrderBy(r => r).ToArrayAsync();
+    }
+
+    [Fact]
+    public async Task SetRolesAsync_prida_a_odebere_role_podle_seznamu()
+    {
+        await SeedWithRolesAsync("admin", UserRole.Admin);
+        var member = await SeedWithRolesAsync("redaktor", UserRole.Admin);
+        await using var db = _fixture.NewContext();
+
+        ResultAssert.Ok(await CreateService(db).SetRolesAsync(member.Id, [UserRole.ContentManager]));
+
+        Assert.Equal([UserRole.ContentManager], await RolesOfAsync(member.Id));
+    }
+
+    [Fact]
+    public async Task SetRolesAsync_poslednimu_adminovi_admina_neodebere()
+    {
+        var admin = await SeedWithRolesAsync("admin", UserRole.Admin);
+        await using var db = _fixture.NewContext();
+
+        ResultAssert.Failed(await CreateService(db).SetRolesAsync(admin.Id, []), ResultErrorKind.Rejected);
+
+        Assert.Equal([UserRole.Admin], await RolesOfAsync(admin.Id));
+    }
+
+    [Fact]
+    public async Task SetRolesAsync_smazany_admin_se_jako_druhy_admin_nepocita()
+    {
+        var deleted = await SeedWithRolesAsync("byvaly", UserRole.Admin);
+        var admin = await SeedWithRolesAsync("admin", UserRole.Admin);
+        await using (var db = _fixture.NewContext())
+            ResultAssert.Ok(await CreateService(db).DeleteAsync(deleted.Id));
+
+        await using var setDb = _fixture.NewContext();
+        ResultAssert.Failed(await CreateService(setDb).SetRolesAsync(admin.Id, []), ResultErrorKind.Rejected);
+    }
+
+    [Fact]
+    public async Task SetRolesAsync_neexistujici_clen_vrati_NotFound()
+    {
+        await using var db = _fixture.NewContext();
+
+        ResultAssert.Failed(await CreateService(db).SetRolesAsync(999, [UserRole.Admin]), ResultErrorKind.NotFound);
     }
 }

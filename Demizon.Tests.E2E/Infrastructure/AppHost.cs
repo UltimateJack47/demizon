@@ -24,6 +24,8 @@ public sealed class AppHost : IAsyncDisposable
     public const string AdminPassword = "e2e-admin-heslo-1";
     public const string MemberLogin = "e2e-clen";
     public const string MemberPassword = "e2e-clen-heslo-1";
+    public const string ContentManagerLogin = "e2e-obsah";
+    public const string ContentManagerPassword = "e2e-obsah-heslo-1";
 
     private readonly string _dbPath;
     private Process? _process;
@@ -143,7 +145,8 @@ public sealed class AppHost : IAsyncDisposable
 
         db.Members.AddRange(
             NewMember(AdminLogin, AdminPassword, UserRole.Admin),
-            NewMember(MemberLogin, MemberPassword));
+            NewMember(MemberLogin, MemberPassword),
+            NewMember(ContentManagerLogin, ContentManagerPassword, UserRole.ContentManager));
 
         // Po jednom řádku do každé tabulky administrace. Prázdná tabulka totiž
         // nic neověří — kontrola popisků buněk by na ní jen tiše prošla — a na
@@ -171,14 +174,14 @@ public sealed class AppHost : IAsyncDisposable
         db.SaveChanges();
     }
 
-    private static Member NewMember(string login, string password, UserRole role = UserRole.Standard) => new()
+    private static Member NewMember(string login, string password, UserRole? role = null) => new()
     {
         Name = login,
         Surname = "Testovaci",
         Login = login,
         Email = $"{login}@demizon.test",
         PasswordHash = PasswordHasher.HashPassword(password),
-        Role = role,
+        Roles = role is { } r ? [new MemberRole { Role = r }] : [],
         Gender = Gender.Male,
         IsVisible = true,
         IsAttendanceVisible = true,

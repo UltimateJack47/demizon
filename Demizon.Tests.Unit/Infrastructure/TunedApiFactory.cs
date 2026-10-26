@@ -62,7 +62,7 @@ public sealed class TunedApiFactory : WebApplicationFactory<Program>
             Login = AdminLogin,
             Email = $"{AdminLogin}@demizon.test",
             PasswordHash = PasswordHasher.HashPassword(AdminPassword),
-            Role = UserRole.Admin,
+            Roles = [new MemberRole { Role = UserRole.Admin }],
             Gender = Gender.Male,
         };
         db.Members.Add(admin);

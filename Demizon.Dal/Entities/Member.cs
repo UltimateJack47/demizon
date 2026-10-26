@@ -14,8 +14,6 @@ public class Member
 
     public string PasswordHash { get; set; } = null!;
 
-    public UserRole Role { get; set; } = UserRole.Standard;
-
     public Gender Gender { get; set; }
 
     public bool IsVisible { get; set; } = false;
@@ -31,6 +29,12 @@ public class Member
     public DateTime? BirthDate { get; set; }
 
     public DateTime? MemberSince { get; set; }
+
+    /// <summary>
+    /// Oprávnění člena. Prázdný seznam = běžný člen. Co člověk v souboru dělá
+    /// (<see cref="IsDancer"/>, <see cref="IsMusician"/>) role nejsou a sem nepatří.
+    /// </summary>
+    public virtual List<MemberRole> Roles { get; set; } = [];
 
     public virtual List<File> Photos { get; set; } = [];
 
@@ -61,12 +65,18 @@ public class Member
     /// UTC čas, kdy bylo propojení s Google Calendar navázáno.
     /// </summary>
     public DateTime? GoogleConnectedAt { get; set; }
+
+    public bool HasRole(UserRole role) => Roles.Any(r => r.Role == role);
 }
 
+/// <summary>
+/// Ukládá se jako text, číselné hodnoty nic neznamenají. Běžný člen žádnou roli nemá.
+/// </summary>
 public enum UserRole
 {
-    Standard = 0,
-    Admin = 1
+    Admin = 1,
+    /// <summary>Spravuje obsah veřejného webu (tance, videa, galerie), ne členy ani docházku.</summary>
+    ContentManager = 2
 }
 
 public enum Gender

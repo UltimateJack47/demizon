@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Demizon.Mvc.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Demizon.Mvc.Services.Authentication;
 
 namespace Demizon.Mvc.Controllers.Api;
 
@@ -39,7 +40,7 @@ public class VideosController(IVideoLinkService videoLinkService) : ControllerBa
     }
 
     [HttpPost]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = RoleNames.ContentEditors)]
     public async Task<ActionResult<VideoLinkDto>> Create([FromBody] CreateVideoLinkRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -66,7 +67,7 @@ public class VideosController(IVideoLinkService videoLinkService) : ControllerBa
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = RoleNames.ContentEditors)]
     public async Task<IActionResult> Update(int id, [FromBody] CreateVideoLinkRequest request)
     {
         try
@@ -96,7 +97,7 @@ public class VideosController(IVideoLinkService videoLinkService) : ControllerBa
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = RoleNames.ContentEditors)]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await videoLinkService.DeleteAsync(id);

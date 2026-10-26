@@ -67,7 +67,7 @@ public sealed class AuthApiFactory : WebApplicationFactory<Program>
     public int SeedMember(
         string login,
         string password,
-        UserRole role = UserRole.Standard,
+        UserRole? role = null,
         bool isExternal = false,
         DateTime? deletedAt = null)
     {
@@ -81,7 +81,7 @@ public sealed class AuthApiFactory : WebApplicationFactory<Program>
             Login = login,
             Email = $"{login}@demizon.test",
             PasswordHash = PasswordHasher.HashPassword(password),
-            Role = role,
+            Roles = role is { } r ? [new MemberRole { Role = r }] : [],
             Gender = Gender.Male,
             IsExternal = isExternal,
             DeletedAt = deletedAt
