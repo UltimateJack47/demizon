@@ -303,6 +303,42 @@ public class FileUploadServiceImageTests
     private static bool IsReddish(Rgb24 pixel) => pixel.R > 150 && pixel.G < 100 && pixel.B < 100;
 
     /// <summary>
+    /// TIFF je z uploadu vyřazený: ImageSharp 3.1.x má neopravené zaseknutí dekodéru na BigTIFF
+    /// (GHSA-wmxv-xphr-5c9g) a oprava je až v licencované 3.2+. Platný TIFF proto musí skončit
+    /// stejně jako neobrázek, ne projít do dekodéru.
+    /// </summary>
+    [Fact]
+    public async Task UploadImageToDbAsync_platny_tiff_odmitne()
+    {
+        using var image = new Image<Rgb24>(16, 16);
+        using var ms = new MemoryStream();
+        image.SaveAsTiff(ms);
+
+        var result = await UploadImageAsync(ms.ToArray(), ".tiff", "image/tiff");
+
+        Assert.False(result.IsSuccessful);
+        Assert.Equal("Soubor není platný obrázek.", result.ErrorMessage);
+    }
+
+    [Theory]
+    [InlineData("webp")]
+    [InlineData("gif")]
+    public async Task UploadImageToDbAsync_prijme_webp_a_gif(string format)
+    {
+        using var image = new Image<Rgb24>(64, 32);
+        using var ms = new MemoryStream();
+        if (format == "webp")
+            image.SaveAsWebp(ms);
+        else
+            image.SaveAsGif(ms);
+
+        var result = await UploadImageAsync(ms.ToArray(), "." + format, "image/" + format);
+
+        Assert.True(result.IsSuccessful);
+        Assert.Equal(64, Image.Identify(result.Data!).Width);
+    }
+
+    /// <summary>
     /// Regresní test k nálezu z code review: filtr výjimek původně pokrýval jen
     /// <c>ImageFormatException</c> a <c>InvalidMemoryOperationException</c>, takže
     /// rozpoznaný ale nepodporovaný formát (ImageSharp na něj hlásí

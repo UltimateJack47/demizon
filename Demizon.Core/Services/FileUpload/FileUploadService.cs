@@ -4,7 +4,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using SixLabors.ImageSharp.Processing;
@@ -137,13 +140,28 @@ public class FileUploadService(
         };
     }
 
+    /// <summary>
+    /// Only the formats phones and browsers actually upload. TIFF is left out on purpose: ImageSharp
+    /// 3.1.x has an unpatched BigTIFF decoder hang (GHSA-wmxv-xphr-5c9g) and the fix ships only in the
+    /// licence-checked 3.2+. Built per call so it picks up the allocator cap set on
+    /// <see cref="Configuration.Default"/> at startup.
+    /// </summary>
+    private static Configuration UploadConfiguration() =>
+        new(new JpegConfigurationModule(), new PngConfigurationModule(),
+            new WebpConfigurationModule(), new GifConfigurationModule())
+        {
+            MemoryAllocator = Configuration.Default.MemoryAllocator
+        };
+
     private static (byte[] Full, byte[] Thumbnail) OptimizeImage(Stream source)
     {
-        var info = Image.Identify(source);
+        var configuration = UploadConfiguration();
+        var info = Image.Identify(new DecoderOptions { Configuration = configuration }, source);
         source.Position = 0;
 
         var options = new DecoderOptions
         {
+            Configuration = configuration,
             MaxFrames = 1,
             TargetSize = ComputeDecodeSize(info)
         };
