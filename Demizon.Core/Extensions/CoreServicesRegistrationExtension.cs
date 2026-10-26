@@ -1,5 +1,6 @@
 using Demizon.Core.Services.Attendance;
 using Demizon.Core.Services.Authentication;
+using Demizon.Core.Services.Costume;
 using Demizon.Core.Services.Dance;
 using Demizon.Core.Services.Event;
 using Demizon.Core.Services.File;
@@ -45,6 +46,10 @@ public static class CoreServicesRegistrationExtension
         services.AddTransient<IAttendanceReportService, AttendanceReportService>();
         services.AddTransient<IGoogleCalendarService, GoogleCalendarService>();
         services.AddTransient<IRehearsalService, RehearsalService>();
+        services.AddScoped<ICostumeCatalogService, CostumeCatalogService>();
+        services.AddScoped<ICostumeTransferService, CostumeTransferService>();
+        services.AddScoped<CostumePhotoProcessor>();
+        services.AddScoped<CostumeQrService>();
         services.AddSingleton<TokenService>();
         services.AddScoped<RefreshTokenService>();
         return services;

@@ -2,15 +2,6 @@
 using Demizon.Core.Services.Storage;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Memory;
-using SixLabors.ImageSharp.Metadata.Profiles.Exif;
-using SixLabors.ImageSharp.Processing;
 
 namespace Demizon.Core.Services.FileUpload;
 
@@ -19,10 +10,6 @@ public class FileUploadService(
     IStorageQuotaService? storageQuota = null,
     ILogger<FileUploadService>? logger = null) : IFileUploadService
 {
-    private const int MaxImageWidth = 1200;
-    private const int ThumbnailWidth = 200;
-    private const int JpegQuality = 80;
-
     private UploadSettings UploadSettings { get; } = uploadSettings.Value;
 
     public async Task<FileUploadResult> UploadImageToDbAsync(FileUploadRequest fileRequest)
@@ -39,12 +26,10 @@ public class FileUploadService(
         byte[] thumbData;
         try
         {
-            (fullData, thumbData) = OptimizeImage(ms);
+            var optimized = ImageOptimizer.Optimize(ms);
+            (fullData, thumbData) = (optimized.Full, optimized.Thumbnail);
         }
-        catch (Exception ex) when (ex is ImageFormatException
-                                       or InvalidMemoryOperationException
-                                       or ImageProcessingException
-                                       or NotSupportedException)
+        catch (Exception ex) when (ImageOptimizer.IsDecodeFailure(ex))
         {
             return FailedImage(fileRequest, ex);
         }
@@ -118,8 +103,7 @@ public class FileUploadService(
 
     private FileUploadResult FailedImage(FileUploadRequest fileRequest, Exception ex)
     {
-        var isTooLarge = ex is InvalidMemoryOperationException
-                         || ex.InnerException is InvalidMemoryOperationException;
+        var isTooLarge = ImageOptimizer.IsTooLarge(ex);
 
         logger?.LogWarning(ex,
             "Zpracování obrázku {FileName}{FileExtension} ({FileSize} B) selhalo: {Reason}.",
@@ -138,72 +122,5 @@ public class FileUploadService(
             RelativePath = string.Empty,
             FileSize = 0
         };
-    }
-
-    /// <summary>
-    /// Only the formats phones and browsers actually upload. TIFF is left out on purpose: ImageSharp
-    /// 3.1.x has an unpatched BigTIFF decoder hang (GHSA-wmxv-xphr-5c9g) and the fix ships only in the
-    /// licence-checked 3.2+. Built per call so it picks up the allocator cap set on
-    /// <see cref="Configuration.Default"/> at startup.
-    /// </summary>
-    private static Configuration UploadConfiguration() =>
-        new(new JpegConfigurationModule(), new PngConfigurationModule(),
-            new WebpConfigurationModule(), new GifConfigurationModule())
-        {
-            MemoryAllocator = Configuration.Default.MemoryAllocator
-        };
-
-    private static (byte[] Full, byte[] Thumbnail) OptimizeImage(Stream source)
-    {
-        var configuration = UploadConfiguration();
-        var info = Image.Identify(new DecoderOptions { Configuration = configuration }, source);
-        source.Position = 0;
-
-        var options = new DecoderOptions
-        {
-            Configuration = configuration,
-            MaxFrames = 1,
-            TargetSize = ComputeDecodeSize(info)
-        };
-
-        using var image = Image.Load(options, source);
-
-        image.Mutate(x => x.AutoOrient());
-        image.Metadata.ExifProfile = null;
-        image.Metadata.IptcProfile = null;
-        image.Metadata.XmpProfile = null;
-
-        var full = ResizeToWidth(image, MaxImageWidth);
-        var thumbnail = ResizeToWidth(image, ThumbnailWidth);
-
-        return (full, thumbnail);
-    }
-
-    private static Size ComputeDecodeSize(ImageInfo info)
-    {
-        var storedWidthAxis = SwapsAxes(info) ? info.Height : info.Width;
-        var scale = Math.Min(1.0, (double)MaxImageWidth / storedWidthAxis);
-
-        return new Size(
-            Math.Max(1, (int)Math.Round(info.Width * scale)),
-            Math.Max(1, (int)Math.Round(info.Height * scale)));
-    }
-
-    private static bool SwapsAxes(ImageInfo info) =>
-        info.Metadata.ExifProfile is { } exif
-        && exif.TryGetValue(ExifTag.Orientation, out var orientation)
-        && orientation.Value is 5 or 6 or 7 or 8;
-
-    private static byte[] ResizeToWidth(Image image, int maxWidth)
-    {
-        if (image.Width > maxWidth)
-        {
-            var newHeight = (int)Math.Round(image.Height * ((double)maxWidth / image.Width));
-            image.Mutate(x => x.Resize(maxWidth, Math.Max(1, newHeight)));
-        }
-
-        using var output = new MemoryStream();
-        image.SaveAsJpeg(output, new JpegEncoder { Quality = JpegQuality });
-        return output.ToArray();
     }
 }

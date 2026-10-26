@@ -102,6 +102,8 @@ builder.Services.AddOptions<GoogleCalendarSettings>()
     .ValidateOnStart();
 builder.Services.AddOptions<RehearsalSettings>()
     .BindConfiguration("Rehearsals");
+builder.Services.AddOptions<CostumeSettings>()
+    .BindConfiguration("Costumes");
 builder.Services.AddNotifications();
 builder.Services.AddHostedService<UnifiedNotificationService>();
 

@@ -1,7 +1,7 @@
 # Krojárka: inventář a předávky souborových krojů
 
-> Založeno: 2026-10-25. Stav: 📝 **návrh schválený** — otázky O1–O6 rozhodnuté,
-> krok 0 (role) hotový 2026-10-26. Další je krok A.
+> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — kroky 0, A, B hotové (2026-10-26),
+> další je C (API). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
 >
 > Sekce *Současný stav* popisuje repozitář **před** implementací.
 
@@ -199,14 +199,56 @@ Commity po uzavřených částech, každá s testy.
 | Krok | Obsah | Testy |
 |---|---|---|
 | 0 | ✅ Více rolí na člena — [`role-clenu`](../role-clenu/README.md) (2026-10-26) | tam |
-| A | Model, migrace, QR token na členovi, `UserRole.Leader` + `CostumeKeeper` (+ `RoleNames`, `RoleLabels`) | integrační: holdings, unikátnost kódu |
-| B | Core: katalog (CRUD), předávky (automat, oprávnění, holdings), fotky (sdílený optimizer, limit, `CapturedAt`) | unit: přechody automatu, kdo smí co, Bulk počty, starý EXIF; integrační nad SQLite |
+| A | ✅ Model, migrace `AddCostumeStore`, QR token na členovi, `UserRole.Leader` + `CostumeKeeper` | `CostumeModelTests` |
+| B | ✅ Core: `CostumeCatalogService`, `CostumeTransferService`, `CostumePhotoProcessor`, `CostumeQrService` | `CostumeTransferServiceTests`, `CostumeCatalogServiceTests`, `CostumeQrServiceTests` (integrační nad SQLite) |
 | C | API + DTO (`/api/costumes/...`), QR endpointy | HTTP přes `WebApplicationFactory`: 401/403 podle role, kontrakt |
 | D | Blazor: menu, katalog, tisk štítků, Moje kroje, potvrzení, karta kusu | E2E |
 | E | Blazor mobilní web: předávka se skenem (kamera + ruční kód), fotky s kompresí v prohlížeči | E2E přes ruční zadání kódu (headless kamera neumí) |
 | F | Kdo co má, ruční připomínky, transakční notifikace | unit: výběr adresátů |
 | G | Údržba, inventura, hodnota | unit: výsledek inventury (chybí / navíc / u člena) |
 | H | Flutter: Moje kroje, potvrzení, můj QR, předání kolegovi, tab správce se skenem, navigace z notifikace | `flutter test` + proklik na emulátoru (virtuální scéna kamery) |
+
+## Implementace
+
+### A — model (2026-10-26)
+
+- **Na člena vedou jen cizí klíče, žádné navigace** (`CostumeHolding.MemberId`,
+  `CostumeTransfer.FromMemberId`…). `Member` má soft-delete filtr a `Include` přes
+  povinnou navigaci by řádky smazaného člena tiše zahodil (`SoftDeleteRelationTests`).
+  Bývalý člen, který drží kroj, je přitom přesně to, co správce musí vidět. Jména
+  dodává `ICostumeCatalogService.GetMemberNamesAsync` přes `IgnoreQueryFilters`.
+  Vedlejší efekt: EF k těmto vztahům nehlásí varování 10622.
+- Pravidla, která drží databáze: unikátní `CostumeItems.Code`, `(ItemId, MemberId)`
+  v držení, `(TransferId, ItemId)` v řádcích, `Members.CostumeQrToken`; CHECK na
+  kladné počty, na strany předávky (ne krojárka → krojárka, ne člen → týž člen)
+  a na vlastníka fotky (řádek předávky **xor** součástka).
+- Mazání všude `Restrict` kromě řádků a fotek pod předávkou / součástkou.
+  Kus se nemaže, vyřazuje (`Retired`).
+- `CostumeQrToken` vzniká až při prvním zobrazení, migrace nic nepředgeneruje.
+
+### B — služby (2026-10-26)
+
+- **`ImageOptimizer`** — obrazový pipeline vytažený z `FileUploadService`
+  (galerie se chová stejně, hlídá `FileUploadServiceImageTests`). Navíc čte EXIF
+  `DateTimeOriginal` + `OffsetTimeOriginal` dřív, než metadata zahodí.
+- **Čas pořízení:** s offsetem z EXIF přímo, bez něj jako místní čas
+  `GoogleCalendar:TimeZone` (Europe/Prague) → UTC. Fotka bez EXIF má `CapturedAt`
+  null a varování nedostane — „nevím“ není „stará“.
+- **SQLite nevrací `DateTimeKind`.** Časy z DB je před výstupem nutné označit
+  jako UTC (`GetPhotoInfosAsync` to dělá), jinak se serializují bez `Z`
+  a klient je čte jako místní. Platí i pro DTO v kroku C.
+- **Dostupnost** = držení zdroje − kusy téhož zdroje v otevřených (`Draft`,
+  `Pending`) předávkách. Ověřuje se při přidání řádku **i znovu při potvrzení**
+  (mezi tím mohl správce kus poslat do údržby). Potvrzení běží v transakci.
+- **Kdo co smí** (`CostumeActor` s příznakem správce předává volající z claimů):
+  správce zakládá cokoli; člen jen od sebe jinému aktivnímu členovi. Upravovat
+  a odeslat smí jen zakladatel, zrušit zakladatel nebo správce, potvrdit /
+  odmítnout jen příjemce (u vrácení správce, a to rovnou odesláním).
+  Příjemce nesmí být externista — nepřihlásí se, takže by nepotvrdil.
+- Odmítnutí vyžaduje důvod. Limit fotek `Costumes:MaxPhotoStorageBytes`
+  (500 MB) a „stará fotka“ `Costumes:StalePhotoAge` (1 h).
+- Kódy: `K0001`… generované podle nejvyššího existujícího, ruční kód se
+  normalizuje na velká písmena, povolené jen `A–Z`, `0–9`, `-` (je to segment URL).
 
 Na telefonu to ověří až STATUS B, stejně jako zbytek Flutteru. Skenování
 z webu potřebuje HTTPS (`getUserMedia`); z mobilu na LAN proti `dotnet run`
