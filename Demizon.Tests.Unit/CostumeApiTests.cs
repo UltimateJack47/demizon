@@ -196,6 +196,33 @@ public class CostumeApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Pripominku_posila_jen_spravce_a_jen_tem_kdo_neco_drzi()
+    {
+        var (keeper, _) = ClientFor("krojarka", UserRole.CostumeKeeper);
+        var (member, _) = ClientFor("clen");
+        var (_, janaId) = ClientFor("jana");
+        var (_, petrId) = ClientFor("petr");
+        var itemId = await CreateItemAsync(keeper, "K0001");
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<Dal.DemizonContext>();
+            db.CostumeHoldings.Add(new CostumeHolding { ItemId = itemId, MemberId = janaId, Quantity = 1 });
+            db.SaveChanges();
+        }
+
+        Assert.Equal(HttpStatusCode.Forbidden,
+            (await member.PostAsJsonAsync("/api/costumes/reminders", new CostumeReminderRequest(null, null))).StatusCode);
+
+        var all = await keeper.PostAsJsonAsync("/api/costumes/reminders", new CostumeReminderRequest(null, "Vraťte prosím"));
+        await AssertStatusAsync(HttpStatusCode.OK, all);
+        Assert.Equal(1, (await all.Content.ReadFromJsonAsync<CostumeReminderResponse>())!.Recipients);
+
+        // Petr nic nedrží — výběr ho tiše přeskočí.
+        var picked = await keeper.PostAsJsonAsync("/api/costumes/reminders", new CostumeReminderRequest([petrId], null));
+        Assert.Equal(0, (await picked.Content.ReadFromJsonAsync<CostumeReminderResponse>())!.Recipients);
+    }
+
+    [Fact]
     public async Task Neznamy_QR_prijemce_vrati_srozumitelnou_400()
     {
         var (keeper, _) = ClientFor("krojarka", UserRole.CostumeKeeper);

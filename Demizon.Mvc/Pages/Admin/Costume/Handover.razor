@@ -11,6 +11,7 @@
 
 @inject ICostumeCatalogService Catalog
 @inject ICostumeTransferService Transfers
+@inject CostumeWorkflow Workflow
 @inject CostumeQrService QrService
 @inject IOptions<GoogleCalendarSettings> CalendarOptions
 @inject NavigationManager Navigation
@@ -357,7 +358,7 @@ else
 
     private async Task SubmitAsync()
     {
-        var submitted = await Transfers.SubmitAsync(_draft!.Id, _actor);
+        var submitted = await Workflow.SubmitAsync(_draft!.Id, _actor);
         if (!submitted.IsSuccess)
         {
             _error = submitted.Error;

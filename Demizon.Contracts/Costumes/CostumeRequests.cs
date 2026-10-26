@@ -37,5 +37,11 @@ public sealed record CostumeItemRequest(
 
 public sealed record CostumeItemStateRequest(string State);
 
+/// <summary>Připomínka vrácení. Bez <c>MemberIds</c> všem, kdo něco drží.</summary>
+public sealed record CostumeReminderRequest(List<int>? MemberIds, string? Message);
+
+/// <summary><c>Reached</c>: kolika členům push dorazil aspoň jedním kanálem (FCM / web push).</summary>
+public sealed record CostumeReminderResponse(int Recipients, int Reached);
+
 /// <summary>Člen podle QR z profilu — aby UI ukázalo, komu se předává, dřív než se předávka založí.</summary>
 public sealed record CostumeMemberDto(int Id, string FullName);

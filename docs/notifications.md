@@ -88,6 +88,33 @@ Příklad: akce zadána 20 dní před konáním → milník 60d i 30d se přesko
 - Zrušení zároveň smaže členům „Zkoušku Demizon“ z Google Calendaru
   (`RehearsalWorkflow`). Obnovení ji vrátí těm, kdo mají „ano“.
 
+### 7. Krojárka — předávky (automaticky)
+- **Kdo posílá**: `CostumeWorkflow` při přechodu předávky, z API i z Blazoru.
+  Pravidla „komu“ jsou v čisté funkci `CostumeNotifications` (testy
+  `CostumeNotificationsTests`). Autor akce zprávu o vlastní akci nedostane nikdy.
+
+| Událost | Komu | Titulek |
+|---|---|---|
+| odeslaná předávka členovi | příjemce | „Převzetí krojů k potvrzení“ |
+| vrácení do krojárky (potvrzené odesláním) | vracející člen | „Kroje vráceny do krojárky“ |
+| potvrzené převzetí | zakladatel předávky | „Převzetí potvrzeno“ |
+| potvrzené předání **mezi členy** | navíc všichni správci krojárky | „Předání krojů mezi členy“ |
+| odmítnuté převzetí | zakladatel + správci, s důvodem | „Převzetí krojů odmítnuto“ |
+
+- **Data**: `costumeTransferId` — tap otevře detail předávky.
+- **Záznam**: žádný `SentNotification`; selhání pushe předávku nevrací (ta už je uložená),
+  jen se zaloguje.
+
+### 8. Krojárka — připomínka vrácení (ručně)
+- **Kdo spouští**: správce krojárky, `/Admin/Costumes/Holders` (vybraným / všem)
+  nebo `POST /api/costumes/reminders` `{ memberIds?, message? }`.
+- **Komu**: vybraní členové, kteří něco drží; bez výběru všichni držitelé. Kdo nic
+  nedrží, se přeskočí.
+- **Obsah**: text správce (nebo „Domluv se prosím se správcem krojárky na vrácení.“)
+  + „Máš u sebe N ks: K0001, …“.
+- **Data**: `costumes = mine` — tap otevře Moje kroje.
+- **Odpověď**: `{ recipients, reached }`; `reached` = komu push dorazil aspoň jedním kanálem.
+
 ---
 
 ## Technická architektura

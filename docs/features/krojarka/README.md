@@ -1,7 +1,7 @@
 # Krojárka: inventář a předávky souborových krojů
 
-> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — kroky 0, A–E hotové (2026-10-26),
-> další je F (notifikace a připomínky). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
+> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — kroky 0, A–F hotové (2026-10-26),
+> další je G (údržba, inventura). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
 >
 > Sekce *Současný stav* popisuje repozitář **před** implementací.
 
@@ -204,7 +204,7 @@ Commity po uzavřených částech, každá s testy.
 | C | ✅ `CostumesController` (`/api/costumes`), DTO v `Demizon.Contracts/Costumes`, QR přes `QRCoder 1.8.0` | `CostumeApiTests` |
 | D | ✅ Blazor: menu „Krojárka“, Moje kroje + QR, katalog, štítky, detail předávky s potvrzením, karta kusu, kdo co má | `CostumeStoreTests` (E2E) |
 | E | ✅ `/Admin/Costumes/Handover`: výdej, příjem, předání kolegovi; sken kamerou (`qr-scanner`) i ručně / čtečkou; fotky zmenšené v prohlížeči | `CostumeStoreTests` (E2E přes ruční zadání), `CostumeScanTests` |
-| F | Kdo co má, ruční připomínky, transakční notifikace | unit: výběr adresátů |
+| F | ✅ `CostumeWorkflow` + `CostumeNotifications`: push při odeslání / potvrzení / odmítnutí, ruční připomínky z „Kdo co má“ | `CostumeNotificationsTests`, `CostumeApiTests` |
 | G | Údržba, inventura, hodnota | unit: výsledek inventury (chybí / navíc / u člena) |
 | H | Flutter: Moje kroje, potvrzení, můj QR, předání kolegovi, tab správce se skenem, navigace z notifikace | `flutter test` + proklik na emulátoru (virtuální scéna kamery) |
 
@@ -320,6 +320,17 @@ přihlášené.
   (server HEIC neumí); jeho EXIF ale nepřečteme, takže `CapturedAt` zůstane prázdné.
   Formát, který prohlížeč nepřekreslí, jde na server celý.
 - Kamera potřebuje HTTPS (nebo `localhost`). E2E kameru nemá, testuje se ruční zadání.
+
+### F — notifikace (2026-10-26)
+
+Kdo co dostane: [`notifications.md`](../../notifications.md) §7 a §8 (jediné místo,
+nekopíruje se sem). Rozhodnutí z implementace:
+
+- Pravidla adresátů jsou čistá funkce `CostumeNotifications`, odesílání je
+  `CostumeWorkflow`. Testy push infrastrukturu nemají, takže jen tak jde ověřit,
+  že autor akce zprávu nedostane a správce u předání mezi členy ano (O4).
+- Připomínka se do `SentNotification` nezapisuje, stejně jako ruční připomínka
+  docházky: je to vědomá akce správce, deduplikace by tu jen překážela.
 
 Na telefonu to ověří až STATUS B, stejně jako zbytek Flutteru. Skenování
 z webu potřebuje HTTPS (`getUserMedia`); z mobilu na LAN proti `dotnet run`

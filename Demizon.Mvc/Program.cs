@@ -121,6 +121,7 @@ builder.Services.AddSingleton<FcmService>();
 builder.Services.AddScoped<Demizon.Mvc.Services.Notification.WebPushSender>();
 builder.Services.AddScoped<Demizon.Mvc.Services.Notification.AttendanceReminderService>();
 builder.Services.AddScoped<Demizon.Mvc.Services.Rehearsal.RehearsalWorkflow>();
+builder.Services.AddScoped<Demizon.Mvc.Services.Costume.CostumeWorkflow>();
 
 // Health check – ověří dostupnost DB
 builder.Services.AddHealthChecks()

@@ -1,13 +1,18 @@
 @page "/Admin/Costumes/Holders"
 @using Demizon.Core.Services.Costume
 @using Demizon.Dal.Entities
+@using Demizon.Mvc.Pages.Admin.Costume.Components
 @using Demizon.Mvc.Services.Authentication
+@using Demizon.Mvc.Services.Costume
 
 @attribute [Authorize(Roles = RoleNames.CostumeViewers)]
 @layout AdminMainLayout
 
 @inject ICostumeCatalogService Catalog
 @inject ICostumeTransferService Transfers
+@inject CostumeWorkflow Workflow
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <PageTitle>@PageService.GetTitle()</PageTitle>
 
@@ -31,14 +36,34 @@
 }
 
 <MudPaper Class="pa-3" Elevation="1">
-    <MudText Typo="Typo.subtitle1" Class="mb-2"><b>Kdo co má</b> (@_byMember.Count @(_byMember.Count == 1 ? "člen" : "členů"))</MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap" Class="mb-2">
+        <MudText Typo="Typo.subtitle1"><b>Kdo co má</b> (@_byMember.Count @(_byMember.Count == 1 ? "člen" : "členů"))</MudText>
+        @if (_isKeeper && _byMember.Count > 0)
+        {
+            <MudSpacer/>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.NotificationsActive"
+                       Disabled="_selected.Count == 0" OnClick="() => RemindAsync(_selected.ToList())">
+                Připomenout vybraným (@_selected.Count)
+            </MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.NotificationsActive" OnClick="() => RemindAsync(null)">
+                Připomenout všem
+            </MudButton>
+        }
+    </MudStack>
     @if (_byMember.Count == 0)
     {
         <MudText Typo="Typo.body2" Color="Color.Secondary">Všechno je v krojárce.</MudText>
     }
     @foreach (var member in _byMember)
     {
-        <MudText Class="mt-2"><b>@CostumeUi.Party(member.Key, _names)</b>
+        <MudText Class="mt-2">
+            @if (_isKeeper)
+            {
+                <MudCheckBox T="bool" Size="Size.Small" Value="_selected.Contains(member.Key)" Style="display: inline-flex;"
+                             ValueChanged="on => Toggle(member.Key, on)"/>
+            }
+            <b>@CostumeUi.Party(member.Key, _names)</b>
             <MudText Inline="true" Typo="Typo.caption" Color="Color.Secondary">
                 · hodnota @member.Sum(h => (h.Item.ValueCzk ?? 0) * h.Quantity) Kč
             </MudText>
@@ -59,6 +84,10 @@
 </MudPaper>
 
 @code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private bool _isKeeper;
+    private readonly HashSet<int> _selected = [];
     private List<IGrouping<int, CostumeHolding>> _byMember = [];
     private IReadOnlyList<CostumeTransfer> _open = [];
     private IReadOnlyDictionary<int, CostumeMemberName> _names = new Dictionary<int, CostumeMemberName>();
@@ -66,6 +95,7 @@
     protected override async Task OnInitializedAsync()
     {
         PageService.SetTitle("Kdo co má");
+        _isKeeper = (await AuthenticationState!).User.IsKeeper();
         var holdings = await Catalog.GetHoldingsAsync();
         _open = await Transfers.GetOpenAsync();
         _names = await Catalog.GetMemberNamesAsync(holdings.Select(h => h.MemberId)
@@ -73,5 +103,27 @@
         _byMember = holdings.GroupBy(h => h.MemberId)
             .OrderBy(g => _names.TryGetValue(g.Key, out var n) ? n.FullName : "")
             .ToList();
+    }
+
+    private void Toggle(int memberId, bool on)
+    {
+        if (on) _selected.Add(memberId);
+        else _selected.Remove(memberId);
+    }
+
+    private async Task RemindAsync(List<int>? memberIds)
+    {
+        var parameters = new DialogParameters<RemindDialog> { { x => x.Count, memberIds?.Count ?? _byMember.Count } };
+        var dialog = await DialogService.ShowAsync<RemindDialog>("Připomínka", parameters);
+        var answer = await dialog.Result;
+        if (answer is null || answer.Canceled || answer.Data is not string message)
+            return;
+
+        var (recipients, reached) = await Workflow.RemindAsync(memberIds, message);
+        Snackbar.Add(reached == recipients
+            ? $"Připomínka odešla {recipients} členům."
+            : $"Připomínka odešla {recipients} členům, doručit se podařilo {reached} — ostatní nemají zapnuté notifikace.",
+            reached == recipients ? Severity.Success : Severity.Warning);
+        _selected.Clear();
     }
 }

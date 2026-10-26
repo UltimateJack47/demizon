@@ -24,7 +24,8 @@ public class CostumesController(
     ICostumeCatalogService catalog,
     ICostumeTransferService transfers,
     CostumeQrService qrService,
-    CostumeQrCodes qrCodes) : ControllerBase
+    CostumeQrCodes qrCodes,
+    CostumeWorkflow workflow) : ControllerBase
 {
     private const string Scheme = JwtBearerDefaults.AuthenticationScheme;
 
@@ -175,7 +176,7 @@ public class CostumesController(
     [HttpPost("transfers/{id:int}/submit")]
     public async Task<ActionResult<CostumeTransferStatusDto>> Submit(int id, CancellationToken ct)
     {
-        var submitted = await transfers.SubmitAsync(id, Actor, ct);
+        var submitted = await workflow.SubmitAsync(id, Actor, ct);
         return submitted.IsSuccess
             ? Ok(new CostumeTransferStatusDto(id, submitted.Value.ToString()))
             : submitted.ToErrorResponse();
@@ -183,11 +184,11 @@ public class CostumesController(
 
     [HttpPost("transfers/{id:int}/confirm")]
     public async Task<IActionResult> Confirm(int id, CancellationToken ct) =>
-        ToResponse(await transfers.ConfirmAsync(id, Actor, ct));
+        ToResponse(await workflow.ConfirmAsync(id, Actor, ct));
 
     [HttpPost("transfers/{id:int}/reject")]
     public async Task<IActionResult> Reject(int id, [FromBody] RejectCostumeTransferRequest request, CancellationToken ct) =>
-        ToResponse(await transfers.RejectAsync(id, Actor, request.Reason, ct));
+        ToResponse(await workflow.RejectAsync(id, Actor, request.Reason, ct));
 
     [HttpPost("transfers/{id:int}/cancel")]
     public async Task<IActionResult> Cancel(int id, CancellationToken ct) =>
@@ -235,6 +236,18 @@ public class CostumesController(
     [Authorize(AuthenticationSchemes = Scheme, Roles = RoleNames.CostumeViewers)]
     public async Task<ActionResult<List<CostumeTransferDto>>> GetItemHistory(int id, CancellationToken ct) =>
         Ok(await ToDtosAsync(await transfers.GetItemHistoryAsync(id, ct), ct));
+
+    /// <summary>Ruční připomínka vrácení — jednomu, vybraným nebo všem držitelům.</summary>
+    [HttpPost("reminders")]
+    [Authorize(AuthenticationSchemes = Scheme, Roles = RoleNames.CostumeKeeper)]
+    public async Task<ActionResult<CostumeReminderResponse>> Remind([FromBody] CostumeReminderRequest request,
+        CancellationToken ct)
+    {
+        if (request.Message?.Length > 500)
+            return BadRequest(new { error = "Zpráva může mít nejvýš 500 znaků." });
+        var (recipients, reached) = await workflow.RemindAsync(request.MemberIds, request.Message, ct);
+        return Ok(new CostumeReminderResponse(recipients, reached));
+    }
 
     // ------------------------------------------------ správa katalogu
 
