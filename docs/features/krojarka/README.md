@@ -1,7 +1,7 @@
 # Krojárka: inventář a předávky souborových krojů
 
-> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — kroky 0, A, B hotové (2026-10-26),
-> další je C (API). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
+> Založeno: 2026-10-25. Stav: 🔨 **probíhá** — kroky 0, A, B, C hotové (2026-10-26),
+> další je D (Blazor). Co se při implementaci rozhodlo jinak než v návrhu: [Implementace](#implementace).
 >
 > Sekce *Současný stav* popisuje repozitář **před** implementací.
 
@@ -201,7 +201,7 @@ Commity po uzavřených částech, každá s testy.
 | 0 | ✅ Více rolí na člena — [`role-clenu`](../role-clenu/README.md) (2026-10-26) | tam |
 | A | ✅ Model, migrace `AddCostumeStore`, QR token na členovi, `UserRole.Leader` + `CostumeKeeper` | `CostumeModelTests` |
 | B | ✅ Core: `CostumeCatalogService`, `CostumeTransferService`, `CostumePhotoProcessor`, `CostumeQrService` | `CostumeTransferServiceTests`, `CostumeCatalogServiceTests`, `CostumeQrServiceTests` (integrační nad SQLite) |
-| C | API + DTO (`/api/costumes/...`), QR endpointy | HTTP přes `WebApplicationFactory`: 401/403 podle role, kontrakt |
+| C | ✅ `CostumesController` (`/api/costumes`), DTO v `Demizon.Contracts/Costumes`, QR přes `QRCoder 1.8.0` | `CostumeApiTests` |
 | D | Blazor: menu, katalog, tisk štítků, Moje kroje, potvrzení, karta kusu | E2E |
 | E | Blazor mobilní web: předávka se skenem (kamera + ruční kód), fotky s kompresí v prohlížeči | E2E přes ruční zadání kódu (headless kamera neumí) |
 | F | Kdo co má, ruční připomínky, transakční notifikace | unit: výběr adresátů |
@@ -249,6 +249,27 @@ Commity po uzavřených částech, každá s testy.
   (500 MB) a „stará fotka“ `Costumes:StalePhotoAge` (1 h).
 - Kódy: `K0001`… generované podle nejvyššího existujícího, ruční kód se
   normalizuje na velká písmena, povolené jen `A–Z`, `0–9`, `-` (je to segment URL).
+
+### C — API (2026-10-26)
+
+Všechno pod `/api/costumes`, JWT. Enumy jako text (`Individual`, `Pending`…),
+časy UTC se `Z`. Vytvoření v katalogu vrací `{ id }`, akce nad předávkou 204,
+chyby jednotně `{ error }` (`Rejected` → 400).
+
+| Kdo | Endpointy |
+|---|---|
+| každý člen | `GET me` (držím / čeká na mě / rozpracoval jsem), `GET me/transfers`, `GET me/qr` (PNG), `POST me/qr/regenerate`, `GET members/by-qr/{token}`, `GET items/by-code/{code}` (karta kusu) |
+| účastník předávky nebo kdo vidí celou krojárku | `GET transfers/{id}`, `GET transfers/{id}/photos/{photoId}?size=thumb\|full` — ostatním 404, ne 403, ať se nedá zjišťovat, co existuje |
+| zakladatel / příjemce (pravidla v Core) | `POST transfers`, `…/lines`, `…/lines/{lineId}` (DELETE), `…/lines/{lineId}/note`, `…/lines/{lineId}/photos` (multipart `file`), `…/photos/{photoId}` (DELETE), `…/submit`, `…/confirm`, `…/reject`, `…/cancel` |
+| správce, admin, vůdce (`RoleNames.CostumeViewers`) | `GET catalog`, `GET holders`, `GET transfers/open`, `GET items/{id}/history` |
+| jen správce (`CostumeKeeper`) | `POST/PUT/DELETE costumes`, `parts`, `items`, `PUT items/{id}/state` |
+
+- **Příjemce podle QR:** `CreateCostumeTransferRequest.ToQrToken` — server token
+  přeloží na člena. Bez `ToMemberId` i `ToQrToken` = vrácení do krojárky.
+- **Hodnota kusu (`ValueCzk`)** jde jen tomu, kdo vidí celou krojárku; členovi `null`.
+- **QR obsah:** `{Costumes:PublicBaseUrl}/k/{kód}` a `/m/{token}`, výchozí
+  `https://demizon.cz`. Pevná konfigurace, ne adresa požadavku — štítky se šijí do krojů.
+- Notifikace (krok F) zatím nechodí, controller volá služby napřímo.
 
 Na telefonu to ověří až STATUS B, stejně jako zbytek Flutteru. Skenování
 z webu potřebuje HTTPS (`getUserMedia`); z mobilu na LAN proti `dotnet run`

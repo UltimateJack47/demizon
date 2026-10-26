@@ -14,7 +14,7 @@
 
 | | Stav |
 |---|---|
-| Testy | **490** — 201 unit + 230 integration + 59 E2E (2026-10-26 zelené); Flutter 51 |
+| Testy | **497** — 208 unit + 230 integration + 59 E2E (2026-10-26 zelené); Flutter 51 |
 | CI | [`test.yml`](../.github/workflows/test.yml) — dvě úlohy: `Demizon.Backend.slnf` a `Demizon.E2E.slnf` |
 | Docker image | 30 MB publish payload, 190 MB image (`aspnet:10.0-alpine` + ICU + tzdata, stejný base jako mru.sk) |
 
@@ -211,13 +211,13 @@ v záznamu featury, sekce *Současný stav*.
 ## G. Krojárka
 
 Záznam: [`features/krojarka/`](features/krojarka/README.md). **Probíhá (2026-10-26).**
-Závislosti a schéma schválené, kroky 0, A a B hotové. Další je krok C (API).
+Závislosti a schéma schválené, kroky 0, A, B a C hotové. Další je krok D (Blazor).
 Inventář krojů po kusech i počtem, QR štítky, předávky s fotkou každého kusu
 a potvrzením příjemce, předávky člen → člen, údržba, inventura.
 
 - [x] 0: více rolí na člena — [`role-clenu`](features/role-clenu/README.md) (2026-10-26). `Leader` a `CostumeKeeper` přibudou v kroku A
 - [x] A–B: model + migrace, Core služby (2026-10-26)
-- [ ] C: API
+- [x] C: API `/api/costumes` (2026-10-26)
 - [ ] D–G: Blazor (katalog, štítky, předávka z mobilního webu, přehledy, připomínky, údržba, inventura)
 - [ ] H: Flutter (Moje kroje, potvrzení, tab správce se skenem) — telefon spolu s B
 

@@ -15,6 +15,7 @@ public static class MvcServicesRegistrationExtension
     public static IServiceCollection AddMvcServices(this IServiceCollection services)
     {
         services.AddScoped<PageService>();
+        services.AddSingleton<Costume.CostumeQrCodes>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
         services.AddHostedService<DiskMaintenanceHostedService>();

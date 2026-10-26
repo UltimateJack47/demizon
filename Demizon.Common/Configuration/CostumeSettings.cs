@@ -8,4 +8,11 @@ public class CostumeSettings
 
     /// <summary>Fotka pořízená dřív než tohle před nahráním dostane u příjemce varování.</summary>
     public TimeSpan StalePhotoAge { get; set; } = TimeSpan.FromHours(1);
+
+    /// <summary>
+    /// Adresa v QR štítcích (<c>{PublicBaseUrl}/k/{kód}</c>). Štítky se tisknou a šijí do krojů, proto
+    /// pevná konfigurace, ne adresa aktuálního požadavku. Aplikace z QR bere jen poslední segment,
+    /// takže změna domény rozbije jen otevření obyčejným foťákem, ne skenování v aplikaci.
+    /// </summary>
+    public string PublicBaseUrl { get; set; } = "https://demizon.cz";
 }
