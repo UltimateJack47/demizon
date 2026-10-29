@@ -185,6 +185,20 @@ abstract class ApiClient {
     @Path('id') int id,
   );
 
+  /// Výjimky ze zkoušek zasahující do `from`–`to` (`yyyy-MM-dd`, včetně).
+  @GET('/api/rehearsals/cancellations')
+  Future<List<RehearsalCancellation>> getRehearsalCancellations(
+    @Query('from') String from,
+    @Query('to') String to,
+  );
+
+  /// Admin nebo vůdce souboru.
+  @POST('/api/rehearsals/cancellations')
+  Future<RehearsalCancellation> cancelRehearsals(@Body() CancelRehearsalsRequest request);
+
+  @DELETE('/api/rehearsals/cancellations/{id}')
+  Future<void> restoreRehearsals(@Path('id') int id);
+
   @POST('/api/events/rehearsals/notify-missing-attendance')
   Future<NotifyMissingAttendanceResponse> notifyMissingRehearsalAttendance(
     @Query('date') DateTime date,

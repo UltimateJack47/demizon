@@ -19,7 +19,7 @@
                 Icon="@Icons.Material.Filled.CalendarMonth">
         Docházka
     </MudNavLink>
-    <AuthorizeView Roles="Admin">
+    <AuthorizeView Roles="@RoleNames.RehearsalManagers">
         <MudNavLink Href="@(NavigationManager.BaseUri + "Admin/Rehearsals")"
                     Icon="@Icons.Material.Filled.EventBusy">
             Zkoušky

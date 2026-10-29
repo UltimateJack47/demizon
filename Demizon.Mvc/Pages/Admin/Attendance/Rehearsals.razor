@@ -7,7 +7,7 @@
 @using Demizon.Mvc.Pages.Admin.Attendance.Components
 @using Demizon.Mvc.Services.Rehearsal
 
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = RoleNames.RehearsalManagers)]
 @layout AdminMainLayout
 
 @inject IRehearsalService RehearsalService

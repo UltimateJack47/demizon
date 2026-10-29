@@ -102,6 +102,21 @@ void main() {
     });
   });
 
+  group('volné kusy k výdeji', () {
+    test('v krojárce bez zamluvených', () {
+      final stock = CostumeStockItem(item: _item(mode: 'Bulk'), inStore: 10, held: 2, reserved: 3);
+      expect(stock.available, 7);
+    });
+
+    test('kus v údržbě se nevydává', () {
+      expect(CostumeStockItem(item: _item(state: 'InMaintenance'), inStore: 1, held: 0, reserved: 0).available, 0);
+    });
+
+    test('zamluvený kus není volný', () {
+      expect(CostumeStockItem(item: _item(), inStore: 1, held: 0, reserved: 1).available, 0);
+    });
+  });
+
   group('notifikace krojárky', () {
     test('předávka otevře detail', () {
       final target = NotificationTarget.parse({'costumeTransferId': '42'});

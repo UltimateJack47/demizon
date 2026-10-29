@@ -72,6 +72,8 @@ class EventDetailState {
     this.comment,
     this.activityRole,
     this.isAdmin = false,
+    this.canManageRehearsals = false,
+    this.cancellation,
   });
 
   final EventDetailArgs args;
@@ -87,6 +89,13 @@ class EventDetailState {
   final String? activityRole;
   final bool isAdmin;
 
+  /// Admin nebo vůdce souboru: smí zkoušku zrušit a obnovit.
+  final bool canManageRehearsals;
+
+  /// Výjimka, kterou je zkouška zrušená. `null` i u dne, kdy zkouška není kvůli
+  /// akci — ten se obnovit nedá.
+  final RehearsalCancellation? cancellation;
+
   bool get isRehearsal => args.isRehearsal;
   bool get isAttending => status == 'yes';
   bool get hasStatus => status.isNotEmpty;
@@ -98,6 +107,11 @@ class EventDetailState {
 
   /// `EventDetailViewModel.CanSendReminder` — admin, akce není zrušená
   /// a začíná až po dnešku.
+  bool get canCancelRehearsal =>
+      isRehearsal && canManageRehearsals && event != null && !event!.isCancelled;
+
+  bool get canRestoreRehearsal => isRehearsal && canManageRehearsals && cancellation != null;
+
   bool get canSendReminder {
     final ev = event;
     if (!isAdmin || ev == null || ev.isCancelled) return false;
@@ -125,6 +139,8 @@ class EventDetailState {
           ? this.activityRole
           : activityRole as String?,
       isAdmin: isAdmin ?? this.isAdmin,
+      canManageRehearsals: canManageRehearsals,
+      cancellation: cancellation,
     );
   }
 }
@@ -191,6 +207,7 @@ class EventDetailController
 
     final roles = await ref.read(tokenStorageProvider).roles;
     final isAdmin = roles.contains(kAdminRole);
+    final canManageRehearsals = isAdmin || roles.contains(kLeaderRole);
 
     if (arg.isRehearsal) {
       final date = arg.rehearsalDate!;
@@ -205,6 +222,17 @@ class EventDetailController
         event = rehearsalPlaceholder(date);
       }
 
+      RehearsalCancellation? cancellation;
+      if (canManageRehearsals && event.isCancelled) {
+        try {
+          final day = formatApiDate(date);
+          cancellation = (await api.getRehearsalCancellations(day, day)).firstOrNull;
+        } catch (e) {
+          // Without it the restore button is just hidden; the web can still restore.
+          debugPrint('Výjimka zkoušky ${formatApiDate(date)} se nenačetla: $e');
+        }
+      }
+
       // Docházka na zkoušku nemusí existovat — 404 znamená "nepřijdu".
       // Jiná chyba propadne do chybové obrazovky: jako "nepřijdu" by ji člen
       // uložením přepsal přes svou skutečnou odpověď.
@@ -214,6 +242,8 @@ class EventDetailController
           args: arg,
           event: event,
           isAdmin: isAdmin,
+          canManageRehearsals: canManageRehearsals,
+          cancellation: cancellation,
           status: att.status,
           comment: att.comment,
           activityRole: apiRoleToDisplay(att.activityRole),
@@ -224,6 +254,8 @@ class EventDetailController
           args: arg,
           event: event,
           isAdmin: isAdmin,
+          canManageRehearsals: canManageRehearsals,
+          cancellation: cancellation,
           status: 'no',
         );
       }
@@ -299,6 +331,23 @@ class EventDetailController
 
     // Protějšek WeakReferenceMessenger.Send(new EventsChangedMessage()).
     invalidateAttendanceViews(ref.invalidate);
+  }
+
+  /// Zruší jednu zkoušku (den detailu). Období se ruší na webu.
+  Future<void> cancelRehearsal({String? reason, required bool notify}) async {
+    final day = formatApiDate(_value.args.rehearsalDate!);
+    await ref.read(apiClientProvider).cancelRehearsals(
+          CancelRehearsalsRequest(dateFrom: day, dateTo: day, reason: reason, notify: notify),
+        );
+    invalidateAttendanceViews(ref.invalidate);
+    ref.invalidateSelf();
+  }
+
+  /// Smaže výjimku — u období se vrátí všechny jeho zkoušky.
+  Future<void> restoreRehearsal() async {
+    await ref.read(apiClientProvider).restoreRehearsals(_value.cancellation!.id);
+    invalidateAttendanceViews(ref.invalidate);
+    ref.invalidateSelf();
   }
 
   /// `SendReminderAsync`. Vrací hlášku, kterou obrazovka zobrazí v dialogu

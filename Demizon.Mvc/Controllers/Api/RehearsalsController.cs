@@ -2,6 +2,7 @@ using Demizon.Contracts.Rehearsals;
 using Demizon.Core.Services.Rehearsal;
 using Demizon.Dal.Entities;
 using Demizon.Mvc.Extensions;
+using Demizon.Mvc.Services.Authentication;
 using Demizon.Mvc.Services.Rehearsal;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -39,7 +40,7 @@ public class RehearsalsController(
     }
 
     [HttpPost("cancellations")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = RoleNames.RehearsalManagers)]
     public async Task<ActionResult<RehearsalCancellationDto>> Cancel(
         [FromBody] CancelRehearsalsRequest request, CancellationToken ct)
     {
@@ -55,7 +56,7 @@ public class RehearsalsController(
     }
 
     [HttpDelete("cancellations/{id:int}")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = RoleNames.RehearsalManagers)]
     public async Task<IActionResult> Restore(int id, CancellationToken ct)
     {
         var restored = await workflow.RestoreAsync(id, ct);

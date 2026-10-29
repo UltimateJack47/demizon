@@ -26,5 +26,6 @@ export 'monthly_attendance_table.dart';
 export 'monthly_column.dart';
 export 'notify_missing_attendance_response.dart';
 export 'register_device_request.dart';
+export 'rehearsal_cancellation.dart';
 export 'upsert_attendance_request.dart';
 export 'video_link.dart';

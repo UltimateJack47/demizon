@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:demizon/core/api_errors.dart';
 import 'package:demizon/core/formatting.dart';
 import 'package:demizon/core/routes.dart';
 import 'package:demizon/core/theme.dart';
@@ -117,7 +118,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
               child: const Text('Uložit docházku'),
             ),
           ],
-          if (s.isAdmin) ...[
+          if (s.isAdmin || s.canCancelRehearsal || s.canRestoreRehearsal) ...[
             const SizedBox(height: 24),
             _adminCard(s),
           ],
@@ -441,16 +442,47 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'Správa',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
-                color: Color(0xFF3E2723),
+                color: context.palette.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
-            if (!s.isRehearsal)
+            if (s.canCancelRehearsal)
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  foregroundColor: const Color(0xFFC0392B),
+                  side: const BorderSide(color: Color(0xFFC0392B)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _isBusy ? null : _cancelRehearsal,
+                child: const Text(
+                  '🚫 Zrušit zkoušku',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            if (s.canRestoreRehearsal)
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF6B8E4E),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _isBusy ? null : () => _restoreRehearsal(s.cancellation!),
+                child: const Text(
+                  '↩️ Obnovit zkoušku',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            if (!s.isRehearsal && s.isAdmin)
               FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFFA8845E),
@@ -485,7 +517,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
             ],
             // TODO(verify): v MAUI se tlačítko zobrazovalo i u zkoušky, kde
             // by ale mazalo akci s id 0. Tady je schované mimo režim akce.
-            if (!s.isRehearsal) ...[
+            if (!s.isRehearsal && s.isAdmin) ...[
               const SizedBox(height: 12),
               OutlinedButton(
                 style: OutlinedButton.styleFrom(
@@ -546,6 +578,54 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       await _alert('Chyba', 'Odeslání selhalo: $e');
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
+    }
+  }
+
+  Future<void> _cancelRehearsal() async {
+    final input = await showDialog<({String? reason, bool notify})>(
+      context: context,
+      builder: (_) => const _CancelRehearsalDialog(),
+    );
+    if (input == null || !mounted) return;
+
+    setState(() => _isBusy = true);
+    try {
+      await ref
+          .read(eventDetailProvider(_args).notifier)
+          .cancelRehearsal(reason: input.reason, notify: input.notify);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(input.notify
+            ? 'Zkouška zrušena, členové dostanou notifikaci.'
+            : 'Zkouška zrušena.'),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      await _alert('Chyba', apiErrorText(e, 'Zkoušku se nepodařilo zrušit.'));
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
+    }
+  }
+
+  Future<void> _restoreRehearsal(RehearsalCancellation cancellation) async {
+    final confirmed = await _confirm(
+      title: 'Obnovit zkoušku',
+      message: cancellation.isRange
+          ? 'Zrušení platí pro celé období ${formatDate(DateTime.parse(cancellation.dateFrom))} – '
+              '${formatDate(DateTime.parse(cancellation.dateTo))}. Obnovením se vrátí všechny zkoušky v něm.'
+          : 'Zkouška se vrátí a docházka na ni půjde zase vyplnit.',
+      confirmText: 'Obnovit',
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() => _isBusy = true);
+    try {
+      await ref.read(eventDetailProvider(_args).notifier).restoreRehearsal();
+    } catch (e) {
+      if (!mounted) return;
+      await _alert('Chyba', apiErrorText(e, 'Zkoušku se nepodařilo obnovit.'));
     } finally {
       if (mounted) setState(() => _isBusy = false);
     }
@@ -612,5 +692,63 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       ),
     );
     return result ?? false;
+  }
+}
+
+/// Důvod a volba notifikace ke zrušení zkoušky. Vrací `null` při zpět.
+class _CancelRehearsalDialog extends StatefulWidget {
+  const _CancelRehearsalDialog();
+
+  @override
+  State<_CancelRehearsalDialog> createState() => _CancelRehearsalDialogState();
+}
+
+class _CancelRehearsalDialogState extends State<_CancelRehearsalDialog> {
+  final _reason = TextEditingController();
+  bool _notify = true;
+
+  @override
+  void dispose() {
+    _reason.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Zrušit zkoušku'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _reason,
+            maxLength: 200,
+            decoration: const InputDecoration(
+              labelText: 'Důvod (nepovinný)',
+              hintText: 'Např. Vánoce, málo lidí',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Poslat notifikaci'),
+            subtitle: const Text('Členům, kteří na zkoušku nemají „ne“.'),
+            value: _notify,
+            onChanged: (v) => setState(() => _notify = v),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Zpět')),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: DemizonColors.error, minimumSize: const Size(0, 40)),
+          onPressed: () {
+            final reason = _reason.text.trim();
+            Navigator.pop(context, (reason: reason.isEmpty ? null : reason, notify: _notify));
+          },
+          child: const Text('Zrušit zkoušku'),
+        ),
+      ],
+    );
   }
 }

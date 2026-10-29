@@ -284,6 +284,60 @@ void main() {
       );
     });
 
+    test('zrušit smí admin i vůdce, jen nezrušenou zkoušku', () {
+      final day = DateTime(2026, 12, 25);
+      final args = EventDetailArgs(rehearsalDate: day);
+      final planned = rehearsalPlaceholder(day);
+
+      expect(EventDetailState(args: args, event: planned, canManageRehearsals: true).canCancelRehearsal, isTrue);
+      expect(EventDetailState(args: args, event: planned).canCancelRehearsal, isFalse);
+      expect(
+        EventDetailState(args: args, event: noRehearsalOn(day), canManageRehearsals: true).canCancelRehearsal,
+        isFalse,
+      );
+      expect(
+        EventDetailState(args: const EventDetailArgs(eventId: 3), event: planned, canManageRehearsals: true)
+            .canCancelRehearsal,
+        isFalse,
+      );
+    });
+
+    test('obnovit jde jen zkoušku se známou výjimkou, ne den s akcí', () {
+      final day = DateTime(2026, 12, 25);
+      final args = EventDetailArgs(rehearsalDate: day);
+      const cancellation = RehearsalCancellation(id: 4, dateFrom: '2026-12-25', dateTo: '2026-12-25');
+
+      expect(
+        EventDetailState(args: args, event: noRehearsalOn(day), canManageRehearsals: true, cancellation: cancellation)
+            .canRestoreRehearsal,
+        isTrue,
+      );
+      expect(
+        EventDetailState(args: args, event: noRehearsalOn(day), canManageRehearsals: true).canRestoreRehearsal,
+        isFalse,
+      );
+      expect(
+        EventDetailState(args: args, event: noRehearsalOn(day), cancellation: cancellation).canRestoreRehearsal,
+        isFalse,
+      );
+    });
+
+    test('výjimka ze zkoušek drží kalendářní dny jako text', () {
+      final range = RehearsalCancellation.fromJson({
+        'id': 2,
+        'dateFrom': '2026-12-21',
+        'dateTo': '2027-01-03',
+        'reason': 'Vánoce',
+        'createdAt': '2026-10-29T10:00:00Z',
+        'createdBy': 'Josef Obrtlík',
+      });
+      expect(range.isRange, isTrue);
+      expect(range.dateFrom, '2026-12-21');
+
+      const request = CancelRehearsalsRequest(dateFrom: '2026-12-25', dateTo: '2026-12-25', notify: true);
+      expect(request.toJson(), {'dateFrom': '2026-12-25', 'dateTo': '2026-12-25', 'reason': null, 'notify': true});
+    });
+
     test('záloha má čas zkoušky, ne půlnoc', () {
       final placeholder = rehearsalPlaceholder(DateTime(2026, 6, 12));
       expect(placeholder.dateFrom, DateTime(2026, 6, 12, 19));

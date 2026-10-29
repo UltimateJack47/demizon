@@ -18,4 +18,7 @@ public static class RoleNames
 
     /// <summary>Who may see the whole costume store (catalogue, holders, history). Only the keeper edits it.</summary>
     public const string CostumeViewers = CostumeKeeper + "," + Admin + "," + Leader;
+
+    /// <summary>Who may cancel and restore rehearsals: an admin or an ensemble leader.</summary>
+    public const string RehearsalManagers = Admin + "," + Leader;
 }

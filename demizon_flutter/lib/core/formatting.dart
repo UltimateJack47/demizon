@@ -106,6 +106,9 @@ String? displayRoleToApi(String? displayRole) => switch (displayRole) {
 /// Název role `UserRole.Admin` tak, jak ho posílá server v `roles`.
 const kAdminRole = 'Admin';
 
+/// `UserRole.Leader` — vůdce souboru; smí rušit a obnovovat zkoušky.
+const kLeaderRole = 'Leader';
+
 /// Role z tokenu → popisek pro profil. Bez role je člověk běžný člen.
 String rolesLabel(List<String> roles) {
   if (roles.isEmpty) return 'Člen';

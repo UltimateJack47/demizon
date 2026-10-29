@@ -92,6 +92,30 @@ public class RoleAuthorizationApiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Vudce_rusi_a_obnovuje_zkousky()
+    {
+        using var client = ClientFor("vudce", UserRole.Leader);
+
+        var created = await client.PostAsJsonAsync("/api/rehearsals/cancellations",
+            new CancelRehearsalsRequest(new DateOnly(2026, 6, 12), new DateOnly(2026, 6, 12), "Málo lidí"));
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+
+        var cancellation = await created.Content.ReadFromJsonAsync<RehearsalCancellationDto>();
+        var restored = await client.DeleteAsync($"/api/rehearsals/cancellations/{cancellation!.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, restored.StatusCode);
+    }
+
+    [Fact]
+    public async Task Spravce_krojarny_nesmi_rusit_zkousky()
+    {
+        using var client = ClientFor("krojarka", UserRole.CostumeKeeper);
+
+        var response = await client.DeleteAsync("/api/rehearsals/cancellations/999");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     // ------------------------------------------- token neodpovídá databázi
 
     private void ChangeMember(string login, Action<Member> change)
