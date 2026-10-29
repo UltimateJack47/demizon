@@ -40,8 +40,7 @@ class _DancesScreenState extends ConsumerState<DancesScreen> {
     final dances = ref.watch(filteredDancesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tance')),
-      body: Column(
+      body: SafeArea(bottom: false, child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -81,7 +80,7 @@ class _DancesScreenState extends ConsumerState<DancesScreen> {
             ),
           ),
         ],
-      ),
+      )),
     );
   }
 }

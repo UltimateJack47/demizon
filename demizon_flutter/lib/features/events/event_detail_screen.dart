@@ -67,7 +67,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(async.valueOrNull?.event?.name ?? '')),
+      // The name is the first heading of the body; the bar only carries the back arrow.
+      appBar: AppBar(),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const Center(

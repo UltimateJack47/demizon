@@ -18,14 +18,13 @@ class EventsScreen extends ConsumerWidget {
     final events = ref.watch(eventsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Akce')),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.eventCreate),
         backgroundColor: DemizonColors.primary,
         foregroundColor: DemizonColors.textOnPrimary,
         child: const Icon(Icons.add),
       ),
-      body: RefreshIndicator(
+      body: SafeArea(bottom: false, child: RefreshIndicator(
         onRefresh: () => ref.read(eventsProvider.notifier).refresh(),
         child: events.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -43,7 +42,7 @@ class EventsScreen extends ConsumerWidget {
                 )
               : _EventList(events: list),
         ),
-      ),
+      )),
     );
   }
 

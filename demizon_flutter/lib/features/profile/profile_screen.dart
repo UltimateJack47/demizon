@@ -18,8 +18,7 @@ class ProfileScreen extends ConsumerWidget {
     final profile = ref.watch(profileProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil')),
-      body: profile.when(
+      body: SafeArea(bottom: false, child: profile.when(
         data: (state) => _ProfileBody(state: state),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const Center(
@@ -31,7 +30,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 }

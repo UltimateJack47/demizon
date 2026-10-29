@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +10,7 @@ import '../../core/notifications/device_registration.dart';
 import '../../core/notifications/notification_navigation.dart';
 import '../../core/providers.dart';
 import '../../core/routes.dart';
+import '../../core/theme.dart';
 import '../costumes/costume_logic.dart';
 
 /// Spodní navigace se čtyřmi taby — protějšek `Demizon.Maui/AppShell.xaml`. Správce
@@ -74,16 +76,20 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   Widget build(BuildContext context) {
     final isKeeper = ref.watch(authControllerProvider).session?.roles.contains(kCostumeKeeperRole) ?? false;
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        // Kdo o roli správce přišel, smí na tabu zůstat jen do dalšího přechodu.
-        selectedIndex: navigationShell.currentIndex.clamp(0, isKeeper ? 4 : 3),
-        destinations: [..._destinations, if (isKeeper) _keeperDestination],
-        onDestinationSelected: (index) => navigationShell.goBranch(
-          index,
-          // Druhý tap na už aktivní tab vrátí větev na její kořen.
-          initialLocation: index == navigationShell.currentIndex,
+    // Tab roots have no AppBar, so nothing else would set status bar icons for the page background.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: DemizonTheme.overlayStyle(Theme.of(context).brightness),
+      child: Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: NavigationBar(
+          // Kdo o roli správce přišel, smí na tabu zůstat jen do dalšího přechodu.
+          selectedIndex: navigationShell.currentIndex.clamp(0, isKeeper ? 4 : 3),
+          destinations: [..._destinations, if (isKeeper) _keeperDestination],
+          onDestinationSelected: (index) => navigationShell.goBranch(
+            index,
+            // Druhý tap na už aktivní tab vrátí větev na její kořen.
+            initialLocation: index == navigationShell.currentIndex,
+          ),
         ),
       ),
     );

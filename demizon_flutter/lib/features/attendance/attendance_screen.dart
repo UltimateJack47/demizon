@@ -52,8 +52,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     final events = ref.watch(attendanceProvider(_month));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Docházka')),
-      body: Column(
+      body: SafeArea(bottom: false, child: Column(
         children: [
           _Header(
             month: _month,
@@ -88,7 +87,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             ),
           ),
         ],
-      ),
+      )),
     );
   }
 }

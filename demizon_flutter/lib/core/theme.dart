@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Barevná paleta převzatá 1:1 z `Demizon.Maui/Resources/Styles/Colors.xaml`.
 abstract final class DemizonColors {
@@ -102,6 +103,7 @@ abstract final class DemizonTheme {
 
   static ThemeData _build(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
+    final palette = isDark ? DemizonPalette.dark : DemizonPalette.light;
     final scheme = ColorScheme.fromSeed(
       seedColor: DemizonColors.primary,
       brightness: brightness,
@@ -115,14 +117,20 @@ abstract final class DemizonTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      extensions: [isDark ? DemizonPalette.dark : DemizonPalette.light],
+      extensions: [palette],
       scaffoldBackgroundColor:
           isDark ? DemizonColors.pageBackgroundDark : DemizonColors.pageBackground,
+      // Lišta splývá se stránkou: kde jsem, říká spodní navigace a nadpis obsahu,
+      // lišta nese jen šipku zpět (a název tam, kde ho obsah nemá).
       appBarTheme: AppBarTheme(
-        backgroundColor: isDark ? DemizonColors.primaryDark : DemizonColors.primary,
-        foregroundColor: DemizonColors.textOnPrimary,
+        backgroundColor: isDark ? DemizonColors.pageBackgroundDark : DemizonColors.pageBackground,
+        foregroundColor: palette.textPrimary,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         centerTitle: false,
+        systemOverlayStyle: overlayStyle(brightness),
+        titleTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: palette.textPrimary),
       ),
       cardTheme: CardThemeData(
         color: isDark ? DemizonColors.cardBackgroundDark : DemizonColors.cardBackground,
@@ -143,6 +151,12 @@ abstract final class DemizonTheme {
       ),
     );
   }
+
+  /// Ikony stavového řádku kontrastní k pozadí stránky. Taby nemají AppBar,
+  /// takže to za ně nastavuje `MainShell`.
+  static SystemUiOverlayStyle overlayStyle(Brightness brightness) => brightness == Brightness.dark
+      ? SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent)
+      : SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent);
 
   /// Barva pro stav docházky. Kontrakt statusů je shodný s API:
   /// "yes" | "maybe" | "no" | null.

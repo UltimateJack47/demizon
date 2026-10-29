@@ -48,8 +48,7 @@ class _CostumeStoreScreenState extends ConsumerState<CostumeStoreScreen> {
     final overview = ref.watch(costumeStoreProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Krojárka')),
-      body: RefreshIndicator(
+      body: SafeArea(bottom: false, child: RefreshIndicator(
         onRefresh: () async => invalidateCostumeViews(ref),
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -82,7 +81,7 @@ class _CostumeStoreScreenState extends ConsumerState<CostumeStoreScreen> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 

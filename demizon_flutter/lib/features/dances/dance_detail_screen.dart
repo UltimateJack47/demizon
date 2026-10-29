@@ -18,7 +18,8 @@ class DanceDetailScreen extends ConsumerWidget {
     final detail = ref.watch(danceDetailProvider(danceId));
 
     return Scaffold(
-      appBar: AppBar(title: Text(detail.valueOrNull?.dance.name ?? '')),
+      // The name is the first heading of the body; the bar only carries the back arrow.
+      appBar: AppBar(),
       body: detail.when(
         data: (data) => _DanceDetailBody(danceId: danceId, detail: data),
         loading: () => const Center(child: CircularProgressIndicator()),
