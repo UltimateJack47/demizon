@@ -85,10 +85,10 @@ class _DanceDetailBody extends ConsumerWidget {
           // ----------------------------------------------------------- Hero
           Text(
             dance.name,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: DemizonColors.textPrimary,
+              color: context.palette.textPrimary,
             ),
           ),
           if (_has(dance.region)) ...[
@@ -99,7 +99,7 @@ class _DanceDetailBody extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: DemizonColors.primaryDark,
+                  color: context.palette.accentText,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -115,10 +115,10 @@ class _DanceDetailBody extends ConsumerWidget {
             const _SectionDivider(),
             Text(
               dance.description!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 height: 1.4,
-                color: DemizonColors.textPrimary,
+                color: context.palette.textPrimary,
               ),
             ),
           ],
@@ -134,14 +134,14 @@ class _DanceDetailBody extends ConsumerWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: DemizonColors.warmBeige,
+                    color: context.palette.warmBeige,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text(
+                  child: Text(
                     'jen pro členy',
                     style: TextStyle(
                       fontSize: 11,
-                      color: DemizonColors.textSecondary,
+                      color: context.palette.textSecondary,
                     ),
                   ),
                 ),
@@ -150,10 +150,10 @@ class _DanceDetailBody extends ConsumerWidget {
             const SizedBox(height: 6),
             Text(
               dance.internalDescription!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 height: 1.4,
-                color: DemizonColors.textPrimary,
+                color: context.palette.textPrimary,
               ),
             ),
           ],
@@ -174,10 +174,10 @@ class _DanceDetailBody extends ConsumerWidget {
                 children: [
                   Text(
                     dance.lyrics!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       height: 1.5,
-                      color: DemizonColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                   ),
                 ],
@@ -190,14 +190,14 @@ class _DanceDetailBody extends ConsumerWidget {
           const _SectionTitle('Videa'),
           const SizedBox(height: 10),
           if (dance.videos.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
               child: Center(
                 child: Text(
                   'Žádná videa',
                   style: TextStyle(
                     fontSize: 13,
-                    color: DemizonColors.textSecondary,
+                    color: context.palette.textSecondary,
                   ),
                 ),
               ),
@@ -235,9 +235,9 @@ class _DanceDetailBody extends ConsumerWidget {
                     child: Image.network(
                       thumbnailUrl(photo.id),
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const ColoredBox(
-                        color: DemizonColors.warmBeige,
-                        child: Center(child: Icon(Icons.broken_image_outlined)),
+                      errorBuilder: (_, __, ___) => ColoredBox(
+                        color: context.palette.warmBeige,
+                        child: const Center(child: Icon(Icons.broken_image_outlined)),
                       ),
                     ),
                   ),
@@ -291,10 +291,10 @@ class _VideoCard extends StatelessWidget {
                   children: [
                     Text(
                       video.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: DemizonColors.textPrimary,
+                        color: context.palette.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -304,14 +304,14 @@ class _VideoCard extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: DemizonColors.warmBeige,
+                        color: context.palette.warmBeige,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         '${video.year}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: DemizonColors.textSecondary,
+                          color: context.palette.textSecondary,
                         ),
                       ),
                     ),
@@ -351,18 +351,18 @@ class _DocumentCard extends StatelessWidget {
                   children: [
                     Text(
                       document.fileName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: DemizonColors.textPrimary,
+                        color: context.palette.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       document.contentType,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: DemizonColors.textSecondary,
+                        color: context.palette.textSecondary,
                       ),
                     ),
                   ],
@@ -394,10 +394,10 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
-          color: DemizonColors.textPrimary,
+          color: context.palette.textPrimary,
         ),
       );
 }

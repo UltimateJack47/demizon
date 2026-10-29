@@ -74,7 +74,7 @@ class _Body extends ConsumerWidget {
                 const Text('Mám u sebe', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 if (data.holdings.isEmpty)
-                  const Text('Nemáš u sebe nic z krojárky.', style: TextStyle(color: DemizonColors.textSecondary)),
+                  Text('Nemáš u sebe nic z krojárky.', style: TextStyle(color: context.palette.textSecondary)),
                 for (final holding in data.holdings)
                   ListTile(
                     dense: true,
@@ -127,7 +127,7 @@ class _Body extends ConsumerWidget {
                 const Text('Historie', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ...history.when(
                   data: (list) => list.where((t) => !t.isDraft).isEmpty
-                      ? [const Text('Zatím žádné předávky.', style: TextStyle(color: DemizonColors.textSecondary))]
+                      ? [Text('Zatím žádné předávky.', style: TextStyle(color: context.palette.textSecondary))]
                       : [
                           for (final t in list.where((t) => !t.isDraft).take(20))
                             ListTile(
@@ -166,10 +166,10 @@ class _QrCard extends ConsumerWidget {
           children: [
             const Text('Můj QR pro krojárku', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Ukaž ho při předávce — správce nebo kolega podle něj pozná, komu kusy předává. '
               'Převzetí pak potvrzuješ ty sám(a) tady v aplikaci.',
-              style: TextStyle(fontSize: 12, color: DemizonColors.textSecondary),
+              style: TextStyle(fontSize: 12, color: context.palette.textSecondary),
             ),
             const SizedBox(height: 12),
             Center(

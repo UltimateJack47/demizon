@@ -298,7 +298,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(color: DemizonColors.textSecondary),
+                style: TextStyle(color: context.palette.textSecondary),
               ),
             ),
             Switch(

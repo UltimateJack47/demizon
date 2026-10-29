@@ -37,6 +37,65 @@ abstract final class DemizonColors {
   static const info = Color(0xFF3498DB);
 }
 
+/// Barvy textu a podkladů, které se liší mezi světlým a tmavým režimem.
+/// `DemizonColors.textPrimary` / `textSecondary` jsou jen pro světlý — natvrdo
+/// použité dávaly v tmavém režimu tmavě hnědý text na tmavě hnědé kartě.
+@immutable
+class DemizonPalette extends ThemeExtension<DemizonPalette> {
+  const DemizonPalette({
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.warmBeige,
+    required this.accentText,
+  });
+
+  final Color textPrimary;
+  final Color textSecondary;
+
+  /// Teplý podklad zvýrazněných bloků (text písně, popis, prázdný stav).
+  final Color warmBeige;
+
+  /// Zvýrazněný text v barvě značky (region tance apod.).
+  final Color accentText;
+
+  static const light = DemizonPalette(
+    textPrimary: DemizonColors.textPrimary,
+    textSecondary: DemizonColors.textSecondary,
+    warmBeige: DemizonColors.warmBeige,
+    accentText: DemizonColors.primaryDark,
+  );
+
+  static const dark = DemizonPalette(
+    textPrimary: Color(0xFFFBF6EE),
+    textSecondary: Color(0xFFCDB89C),
+    warmBeige: DemizonColors.warmBeigeDark,
+    accentText: DemizonColors.primaryLight,
+  );
+
+  @override
+  DemizonPalette copyWith({Color? textPrimary, Color? textSecondary, Color? warmBeige, Color? accentText}) =>
+      DemizonPalette(
+        textPrimary: textPrimary ?? this.textPrimary,
+        textSecondary: textSecondary ?? this.textSecondary,
+        warmBeige: warmBeige ?? this.warmBeige,
+        accentText: accentText ?? this.accentText,
+      );
+
+  @override
+  DemizonPalette lerp(DemizonPalette? other, double t) => other == null
+      ? this
+      : DemizonPalette(
+          textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
+          textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
+          warmBeige: Color.lerp(warmBeige, other.warmBeige, t)!,
+          accentText: Color.lerp(accentText, other.accentText, t)!,
+        );
+}
+
+extension DemizonPaletteContext on BuildContext {
+  DemizonPalette get palette => Theme.of(this).extension<DemizonPalette>() ?? DemizonPalette.light;
+}
+
 abstract final class DemizonTheme {
   static ThemeData get light => _build(Brightness.light);
   static ThemeData get dark => _build(Brightness.dark);
@@ -56,6 +115,7 @@ abstract final class DemizonTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      extensions: [isDark ? DemizonPalette.dark : DemizonPalette.light],
       scaffoldBackgroundColor:
           isDark ? DemizonColors.pageBackgroundDark : DemizonColors.pageBackground,
       appBarTheme: AppBarTheme(

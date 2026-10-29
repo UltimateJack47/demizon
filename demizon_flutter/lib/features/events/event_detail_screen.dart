@@ -138,10 +138,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           children: [
             Text(
               event.name,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: DemizonColors.textPrimary,
+                color: context.palette.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -152,9 +152,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                 Expanded(
                   child: Text(
                     formatDateTimeLong(event.dateFrom),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      color: DemizonColors.textSecondary,
+                      color: context.palette.textSecondary,
                     ),
                   ),
                 ),
@@ -169,8 +169,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                   Expanded(
                     child: Text(
                       event.place!,
-                      style: const TextStyle(
-                        color: DemizonColors.textSecondary,
+                      style: TextStyle(
+                        color: context.palette.textSecondary,
                       ),
                     ),
                   ),
@@ -202,7 +202,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                 const SizedBox(height: 6),
                 Text(
                   event.cancellationReason!,
-                  style: const TextStyle(color: DemizonColors.textSecondary),
+                  style: TextStyle(color: context.palette.textSecondary),
                 ),
               ],
             ],
@@ -223,7 +223,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           event.cancellationReason == null
               ? 'Zkouška odpadá, docházka se nevyplňuje.'
               : 'Zkouška odpadá: ${event.cancellationReason}',
-          style: const TextStyle(color: DemizonColors.textSecondary),
+          style: TextStyle(color: context.palette.textSecondary),
         ),
       ),
     );
@@ -279,8 +279,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                     // TODO(verify): nemá se místo toho použít apiRoleToDisplay?
                     Text(
                       a.activityRole ?? '',
-                      style: const TextStyle(
-                        color: DemizonColors.textSecondary,
+                      style: TextStyle(
+                        color: context.palette.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -341,7 +341,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           child: _statusButton(
             label: '↺',
             value: '',
-            color: DemizonColors.textSecondary,
+            color: context.palette.textSecondary,
             selected: false,
             fontSize: 18,
           ),

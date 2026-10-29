@@ -314,7 +314,7 @@ class _EventCard extends StatelessWidget {
                                   fontSize: 12,
                                   color: isDark
                                       ? DemizonColors.primaryLight
-                                      : DemizonColors.textSecondary,
+                                      : context.palette.textSecondary,
                                 ),
                               ),
                             ),
@@ -398,9 +398,9 @@ class _DateBox extends StatelessWidget {
           ),
           Text(
             DateFormat('MMM', 'cs').format(date),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: DemizonColors.textSecondary,
+              color: context.palette.textSecondary,
             ),
           ),
         ],
@@ -440,14 +440,14 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('📋', style: TextStyle(fontSize: 48)),
-        SizedBox(height: 12),
+        const Text('📋', style: TextStyle(fontSize: 48)),
+        const SizedBox(height: 12),
         Text(
           'V tomto měsíci nejsou žádné akce',
-          style: TextStyle(fontSize: 16, color: DemizonColors.textSecondary),
+          style: TextStyle(fontSize: 16, color: context.palette.textSecondary),
         ),
       ],
     );

@@ -100,7 +100,7 @@ class _BodyState extends ConsumerState<_Body> {
                 const SizedBox(height: 4),
                 Chip(label: Text(transferStatusLabel(t.status))),
                 Text('Založil(a) ${t.createdBy.fullName}, ${format.format(t.createdAt.toLocal())}',
-                    style: const TextStyle(fontSize: 12, color: DemizonColors.textSecondary)),
+                    style: TextStyle(fontSize: 12, color: context.palette.textSecondary)),
                 if (t.note != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(t.note!)),
                 if (t.rejectionReason != null)
                   Padding(
@@ -167,7 +167,7 @@ class _BodyState extends ConsumerState<_Body> {
                   Text('${line.item.code}  ${line.item.description}${line.quantity > 1 ? ' · ${line.quantity} ks' : ''}',
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   if (line.conditionNote != null)
-                    Text('Stav: ${line.conditionNote}', style: const TextStyle(color: DemizonColors.textSecondary)),
+                    Text('Stav: ${line.conditionNote}', style: TextStyle(color: context.palette.textSecondary)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,

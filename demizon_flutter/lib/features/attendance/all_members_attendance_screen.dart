@@ -424,15 +424,15 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('📋', style: TextStyle(fontSize: 48)),
-          SizedBox(height: 12),
+          const Text('📋', style: TextStyle(fontSize: 48)),
+          const SizedBox(height: 12),
           Text(
             'V tomto měsíci nejsou žádná data',
-            style: TextStyle(fontSize: 16, color: DemizonColors.textSecondary),
+            style: TextStyle(fontSize: 16, color: context.palette.textSecondary),
           ),
         ],
       ),

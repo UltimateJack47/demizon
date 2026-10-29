@@ -105,11 +105,11 @@ class _AttendanceStatsScreenState extends ConsumerState<AttendanceStatsScreen> {
               ),
             )
           else if (items.isEmpty)
-            const Center(
+            Center(
               child: Text(
                 'Žádná data pro zvolené období.',
                 style:
-                    TextStyle(fontSize: 16, color: DemizonColors.textSecondary),
+                    TextStyle(fontSize: 16, color: context.palette.textSecondary),
               ),
             )
           else ...[
@@ -227,9 +227,9 @@ class _SummaryCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               caption,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: DemizonColors.textSecondary,
+                color: context.palette.textSecondary,
               ),
             ),
           ],
@@ -302,9 +302,9 @@ class _RateRow extends StatelessWidget {
           width: 60,
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: DemizonColors.textSecondary,
+              color: context.palette.textSecondary,
             ),
           ),
         ),

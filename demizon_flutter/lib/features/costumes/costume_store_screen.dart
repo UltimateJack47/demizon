@@ -115,7 +115,7 @@ class _CostumeStoreScreenState extends ConsumerState<CostumeStoreScreen> {
           ],
         ]),
         if (data.holders.isEmpty)
-          const Text('Všechno je v krojárce.', style: TextStyle(color: DemizonColors.textSecondary)),
+          Text('Všechno je v krojárce.', style: TextStyle(color: context.palette.textSecondary)),
         for (final holder in data.holders)
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,

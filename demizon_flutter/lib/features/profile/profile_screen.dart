@@ -55,10 +55,10 @@ class _ProfileBody extends ConsumerWidget {
             children: [
               Text(
                 'Přihlášen jako ${state.login}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: DemizonColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 6),
@@ -100,20 +100,20 @@ class _ProfileBody extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Google Calendar',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: DemizonColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Stav:',
-                    style: TextStyle(color: DemizonColors.textPrimary),
+                    style: TextStyle(color: context.palette.textPrimary),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -129,11 +129,11 @@ class _ProfileBody extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Propojení s Google Calendar probíhá přes webovou administraci na demizon.cz',
                 style: TextStyle(
                   fontSize: 12,
-                  color: DemizonColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
               ),
             ],
@@ -146,21 +146,21 @@ class _ProfileBody extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Notifikace',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: DemizonColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Push notifikace',
-                      style: TextStyle(color: DemizonColors.textPrimary),
+                      style: TextStyle(color: context.palette.textPrimary),
                     ),
                   ),
                   Switch(
@@ -178,9 +178,9 @@ class _ProfileBody extends ConsumerWidget {
                 state.notificationsEnabled
                     ? 'Notifikace jsou zapnuté'
                     : 'Notifikace jsou vypnuté',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: DemizonColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
               ),
               if (state.notificationError != null) ...[
@@ -219,9 +219,9 @@ class _ProfileBody extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   state.testNotificationMessage!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: DemizonColors.textSecondary,
+                    color: context.palette.textSecondary,
                   ),
                 ),
               ],
@@ -231,12 +231,12 @@ class _ProfileBody extends ConsumerWidget {
         const SizedBox(height: 16),
 
         // --------------------------------------------------- O aplikaci
-        const Center(
+        Center(
           child: Text(
             'Verze aplikace: $kAppVersion',
             style: TextStyle(
               fontSize: 12,
-              color: DemizonColors.textSecondary,
+              color: context.palette.textSecondary,
             ),
           ),
         ),

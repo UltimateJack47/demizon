@@ -34,7 +34,7 @@ class CostumePhotoThumb extends ConsumerWidget {
             child: thumb.when(
               data: (bytes) => Image.memory(bytes, fit: BoxFit.cover),
               loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-              error: (_, __) => const Icon(Icons.broken_image, color: DemizonColors.textSecondary),
+              error: (_, __) => Icon(Icons.broken_image, color: context.palette.textSecondary),
             ),
           ),
           if (photo.isStale)

@@ -54,6 +54,8 @@ class _CodeScanFieldState extends State<CodeScanField> {
         ),
         const SizedBox(width: 8),
         FilledButton.icon(
+          // The theme's full-width minimum size would ask a Row for infinite width.
+          style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
           onPressed: _scan,
           icon: const Icon(Icons.qr_code_scanner),
           label: const Text('Skenovat'),

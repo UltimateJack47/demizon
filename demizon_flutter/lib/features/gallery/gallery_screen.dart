@@ -60,9 +60,9 @@ class _PhotoGrid extends StatelessWidget {
             child: Image.network(
               thumbnailUrl(photo.id),
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const ColoredBox(
-                color: DemizonColors.warmBeige,
-                child: Center(child: Icon(Icons.broken_image_outlined)),
+              errorBuilder: (_, __, ___) => ColoredBox(
+                color: context.palette.warmBeige,
+                child: const Center(child: Icon(Icons.broken_image_outlined)),
               ),
             ),
           ),
@@ -82,27 +82,27 @@ class _EmptyGallery extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: const Center(
+          child: Center(
             child: Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('📷', style: TextStyle(fontSize: 48)),
-                  SizedBox(height: 8),
+                  const Text('📷', style: TextStyle(fontSize: 48)),
+                  const SizedBox(height: 8),
                   Text(
                     'Žádné fotografie',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: DemizonColors.textPrimary,
+                      color: context.palette.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     'Zatím nebyly přidány žádné veřejné fotografie.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: DemizonColors.textSecondary),
+                    style: TextStyle(color: context.palette.textSecondary),
                   ),
                 ],
               ),

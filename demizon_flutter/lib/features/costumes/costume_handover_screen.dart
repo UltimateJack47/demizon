@@ -250,7 +250,7 @@ class _CostumeHandoverScreenState extends ConsumerState<CostumeHandoverScreen> {
             '${_counterpart?.fullName ?? '— naskenuj QR z jeho profilu —'}',
             style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        if (_lines.isEmpty) const Text('Zatím žádné kusy.', style: TextStyle(color: DemizonColors.textSecondary)),
+        if (_lines.isEmpty) Text('Zatím žádné kusy.', style: TextStyle(color: context.palette.textSecondary)),
         for (final line in _lines)
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -282,7 +282,7 @@ class _CostumeHandoverScreenState extends ConsumerState<CostumeHandoverScreen> {
       const SizedBox(height: 4),
       Text(
         'Vyfoť každý kus tak, aby byl vidět jeho stav. ${draft.to == null ? 'Odesláním kusy rovnou přijmeš do krojárky.' : 'Po odeslání je příjemce zkontroluje a potvrdí ve svém telefonu.'}',
-        style: const TextStyle(color: DemizonColors.textSecondary),
+        style: TextStyle(color: context.palette.textSecondary),
       ),
       const SizedBox(height: 12),
       CodeScanField(onCode: _onDraftCode, label: 'Přidat další kus'),

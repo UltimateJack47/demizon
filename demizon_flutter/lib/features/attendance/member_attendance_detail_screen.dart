@@ -211,9 +211,9 @@ class _MemberAttendanceDetailScreenState
                 Expanded(
                   child: Text(
                     state.eventName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      color: DemizonColors.textSecondary,
+                      color: context.palette.textSecondary,
                     ),
                   ),
                 ),
@@ -225,8 +225,8 @@ class _MemberAttendanceDetailScreenState
                 // Protějšek DateFormatConverter: "dd. MMMM yyyy, HH:mm" (cs-CZ).
                 DateFormat('dd. MMMM yyyy, HH:mm', 'cs')
                     .format(state.eventDate!),
-                style: const TextStyle(
-                  color: DemizonColors.textSecondary,
+                style: TextStyle(
+                  color: context.palette.textSecondary,
                   fontSize: 13,
                 ),
               ),

@@ -68,7 +68,7 @@ class EventsScreen extends ConsumerWidget {
                 Text(
                   text,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: DemizonColors.textSecondary,
+                        color: context.palette.textSecondary,
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -100,7 +100,7 @@ class _EventList extends StatelessWidget {
               'Nadcházející akce',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: DemizonColors.textPrimary,
+                    color: context.palette.textPrimary,
                   ),
             ),
           );
@@ -136,10 +136,10 @@ class _EventCard extends StatelessWidget {
                   children: [
                     Text(
                       event.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
-                        color: DemizonColors.textPrimary,
+                        color: context.palette.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -188,9 +188,9 @@ class _IconLine extends StatelessWidget {
         Flexible(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: DemizonColors.textSecondary,
+              color: context.palette.textSecondary,
             ),
           ),
         ),

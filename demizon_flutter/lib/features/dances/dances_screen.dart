@@ -124,10 +124,10 @@ class _DanceCard extends StatelessWidget {
             children: [
               Text(
                 dance.name,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
-                  color: DemizonColors.textPrimary,
+                  color: context.palette.textPrimary,
                 ),
               ),
               if (dance.region != null && dance.region!.isNotEmpty) ...[
@@ -139,9 +139,9 @@ class _DanceCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         dance.region!,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: DemizonColors.textSecondary,
+                          color: context.palette.textSecondary,
                         ),
                       ),
                     ),
@@ -152,9 +152,9 @@ class _DanceCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '🎥 ${dance.videos.length} videí',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: DemizonColors.textSecondary,
+                    color: context.palette.textSecondary,
                   ),
                 ),
               ],
@@ -189,7 +189,7 @@ class _ScrollableMessage extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: color ?? DemizonColors.textSecondary,
+                  color: color ?? context.palette.textSecondary,
                 ),
               ),
             ),
