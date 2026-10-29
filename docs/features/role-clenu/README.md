@@ -12,6 +12,8 @@
   ukazuje na veřejném webu, ale není admin.
 - Vůdce souboru (`Leader`) a správce krojárky (`CostumeKeeper`) přibudou
   s krojárkou. Mimo krojárku vůdce nic navíc nedostává (rozhodnuto 2026-10-26).
+  **Změněno 2026-10-29:** vůdce smí navíc rušit a obnovovat zkoušky
+  (`RoleNames.RehearsalManagers`), viz [kalendář zkoušek](../zkousky-kalendar/README.md).
 - Aplikace ještě není v produkci, takže přestavba je teď levná.
 
 ## Jak to funguje dnes
@@ -36,15 +38,19 @@ odvozené přes `nameof(UserRole.X)`.
 
 **Kdo co smí:**
 
-| Oblast | Člen | `ContentManager` | `Admin` |
-|---|---|---|---|
-| Docházka, akce, tance, profil (čtení, vlastní docházka) | ✔ | ✔ | ✔ |
-| Tance: úpravy, dokumenty, videa u tance | — | ✔ | ✔ |
-| Video odkazy (`/Admin/Videos`, `/api/videos` zápis) | — | ✔ | ✔ |
-| Galerie (`/Admin/Photos`, `/api/gallery`) | — | ✔ | ✔ |
-| Akce: úpravy, mazání, rušení, veřejnost, připomínky | — | — | ✔ |
-| Zkoušky (rušení), docházka za ostatní | — | — | ✔ |
-| Členové a jejich role, `/api/database` | — | — | ✔ |
+| Oblast | Člen | `ContentManager` | `Leader` | `Admin` |
+|---|---|---|---|---|
+| Docházka, akce, tance, profil (čtení, vlastní docházka) | ✔ | ✔ | ✔ | ✔ |
+| Tance: úpravy, dokumenty, videa u tance | — | ✔ | — | ✔ |
+| Video odkazy (`/Admin/Videos`, `/api/videos` zápis) | — | ✔ | — | ✔ |
+| Galerie (`/Admin/Photos`, `/api/gallery`) | — | ✔ | — | ✔ |
+| Akce: úpravy, mazání, rušení, veřejnost, připomínky | — | — | — | ✔ |
+| Zkoušky: rušení a obnovení (`/Admin/Rehearsals`, `/api/rehearsals/cancellations`, appka) | — | — | ✔ | ✔ |
+| Docházka za ostatní | — | — | — | ✔ |
+| Krojárka: čtení celé (katalog, kdo co má) | — | — | ✔ | ✔ |
+| Členové a jejich role, `/api/database` | — | — | — | ✔ |
+
+Správce krojárky (`CostumeKeeper`) je popsaný v [krojárce](../krojarka/README.md).
 
 Akce zůstaly jen adminovi, i když se ukazují na webu. Řídí totiž docházku,
 Google Calendar a push notifikace, takže to není jen obsah. Kdyby je měl

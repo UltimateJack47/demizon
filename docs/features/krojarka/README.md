@@ -356,9 +356,9 @@ endpointy v `ApiClient` (sekce Krojárka).
 
 | Cesta | Co |
 |---|---|
-| `/profile/costumes` (z Profilu „Moje kroje“) | čeká na mě, mám u sebe, předat kolegovi, rozpracované, můj QR (PNG ze serveru) + přegenerovat, historie |
-| `/costume-transfers/:id` (přes celou obrazovku) | kusy s fotkami, potvrdit / odmítnout s důvodem, zrušit, pokračovat v draftu |
-| `/costume-handover?mode=issue\|return\|peer`, `?transfer=id` | sběr (sken nebo ruční pole) → fotky → odeslání |
+| `/profile/costumes` (z Profilu „Moje kroje“) | čeká na mě, mám u sebe, předat kolegovi, rozpracované, můj QR (PNG ze serveru), historie |
+| `/costume-transfers/:id` (přes celou obrazovku) | kusy s fotkami, stav jako barevná tečka, pod sebou stejná tlačítka **Potvrzuji převzetí** (zelené) / **Odmítám převzetí** (oranžové) / **Zrušit předávku** (červené, s potvrzením), pokračovat v draftu |
+| `/costume-handover?mode=issue\|return\|peer`, `?transfer=id` | sběr (sken, ruční pole nebo **Vybrat ze seznamu**) → fotky → odeslání |
 | `/costume-store` — **pátý tab jen pro `CostumeKeeper`** | Výdej / Příjem, otevřené předávky, kdo co má, připomínky (vybraným / všem) |
 
 - **Tab správce** je poslední větev `StatefulShellRoute`; kdo roli nemá, tab
@@ -375,13 +375,30 @@ endpointy v `ApiClient` (sekce Krojárka).
   (`NotificationTarget`). Akce a zkouška mají v payloadu přednost.
 - Oprávnění: `CAMERA` v `AndroidManifest.xml`, `NSCameraUsageDescription`
   a `NSPhotoLibraryUsageDescription` v `Info.plist`.
+- **Vybrat ze seznamu** (2026-10-29): výdej nabídne volné kusy z katalogu
+  (`GET /api/costumes/catalog`, `CostumeStockItem.available` = v krojárce − zamluvené,
+  jen `Available`), příjem co kdo drží (jen vracející, když už je daný), předání
+  kolegovi moje kusy. Vybraný kus jde stejnou cestou jako naskenovaný (karta kusu
+  + `checkCollectedItem`), u příjmu se vracející doplní z výběru.
+- **Přegenerování QR** je od 2026-10-29 jen na webu (`/Admin/Costumes`). Smysl má,
+  jen když QR unikne, a i pak je riziko malé: cizí může nanejvýš založit předávku,
+  kterou musí člen potvrdit.
 - Pravidla sběru (`checkCollectedItem`) a parser (`CostumeScan`) jsou kopie webových
   (`Handover.razor`, `CostumeScan.cs`) — při změně upravit obojí. Definitivně
   všechno ověřuje server.
 
-**Co neproběhlo:** proklik na emulátoru ani na telefonu. Ověřeno je
-`flutter analyze`, 67 testů a sestavení `app-debug.apk`. Kamera (sken i fotka)
-na emulátoru potřebuje virtuální scénu, smysluplně až na telefonu.
+**První proklik na telefonu (2026-10-29, Galaxy S25, lokální backend přes `adb reverse`).**
+Moje kroje, potvrzení předávky a tab správce fungují. Našlo se:
+
+- **Výdej a Příjem byly prázdné:** `FilledButton` „Skenovat“ v `Row` dědil z tématu
+  `minimumSize: Size.fromHeight(48)` (nekonečná šířka) a layout spadl, takže se pole
+  vůbec nevykreslilo. Opraveno v `code_scan_field.dart`, regresní test
+  `test/theme_test.dart`.
+- Detail předávky byl nekonzistentní (stav vypadal jako tlačítko, tři různé styly
+  tlačítek) — předělán, viz tabulka výš.
+
+Sken štítku kamerou, fotka u předávky a push se zatím neověřily (backend nemá
+Firebase klíč).
 
 ## Jak to otestovat ručně
 

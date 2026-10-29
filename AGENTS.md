@@ -67,6 +67,10 @@
 - Sessions are re-checked against the DB (`MemberSessionValidator`): a cookie whose roles no longer match is signed out, a JWT gets 401 (the client refreshes into current roles). A test that hand-crafts a JWT must therefore use a member that exists in the DB with exactly those roles.
 - Flutter token lifecycle: `TokenStorage` + `AuthInterceptor` (proactive refresh 5 min before expiry, fallback on 401).
 - Flutter uses hierarchical `go_router` paths in `demizon_flutter/lib/core/routes.dart`.
+- Flutter colours: text and tinted backgrounds come from `context.palette` (`DemizonPalette` in `core/theme.dart`),
+  never `DemizonColors.textPrimary` / `textSecondary` directly — those are light-theme values and vanish in dark mode.
+- The Flutter theme gives `FilledButton` a full-width minimum size. Inside a `Row` override it
+  (`FilledButton.styleFrom(minimumSize: const Size(0, 48))`), otherwise layout throws and the whole row disappears.
 
 ## Notifications and external integrations
 - FCM mobile push: `Demizon.Mvc/Services/FcmService.cs`, device tokens in `DeviceTokens` table, endpoints in `Controllers/Api/NotificationsController.cs`.

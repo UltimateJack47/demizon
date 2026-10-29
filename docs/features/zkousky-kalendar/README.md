@@ -228,6 +228,26 @@ chování kromě dvou opravených chyb. Nová funkce přichází až v C.
       `STATUS.md`, tady stav kroků. (2026-10-01, v `notifications.md` přibyly
       sekce 5 a 6 a nové `NotificationType`.)
 
+### Doplněno 2026-10-29: zrušení z appky, vůdci
+
+Podnět z prvního prokliku na telefonu: zkoušku je potřeba zrušit narychlo (málo
+lidí) nebo dopředu (25. 12. 2026 je pátek).
+
+- **Kdo:** POST a DELETE `/api/rehearsals/cancellations` i stránka
+  `/Admin/Rehearsals` (a položka menu) jsou pro `RoleNames.RehearsalManagers`
+  = `Admin` + `Leader`. Dřív jen admin. Testy v `RoleAuthorizationApiTests`
+  (vůdce zruší i obnoví, správce krojárky dostane 403).
+- **Flutter:** detail zkoušky má pro admina a vůdce kartu „Správa“
+  s **Zrušit zkoušku** (dialog: důvod do 200 znaků, přepínač „Poslat notifikaci“,
+  výchozí zapnutý) a u zrušené zkoušky **Obnovit zkoušku**. Ruší se jen ten jeden
+  den; období (prázdniny) zůstává na webu.
+- **Obnovení** potřebuje id výjimky, které `Event` nenese. Controller ji pro zrušenou
+  zkoušku dohledá přes `GET /api/rehearsals/cancellations?from=den&to=den`. Den,
+  kdy zkouška není kvůli akci, výjimku nemá, takže tlačítko Obnovit nedostane.
+  Výjimka přes víc dní se obnoví celá a dialog to řekne s datem od–do.
+- Stav: `EventDetailState.canCancelRehearsal` / `canRestoreRehearsal`, testy ve skupině
+  „zrušená zkouška“ v `test/contract_test.dart`.
+
 ### Kde co je
 
 | Co | Kde |

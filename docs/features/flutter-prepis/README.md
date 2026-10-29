@@ -312,6 +312,20 @@ a auth refresh — čeká na telefon a Firebase.
   nasadit jako update, ne jako druhá aplikace vedle stávající.
 - `android:label="Demižón"` (výchozí `demizon` z generátoru nahrazeno).
 
+### Úpravy po prvním prokliku na telefonu (2026-10-29)
+
+- **Tmavý režim:** appka bere režim ze systému, ale ~55 míst mělo text natvrdo
+  v `DemizonColors.textPrimary` / `textSecondary` (tmavě hnědá pro světlé téma).
+  V tmavém režimu to byl hnědý text na hnědé kartě. Teď `ThemeExtension`
+  `DemizonPalette` (světlá i tmavá varianta) a `context.palette.textPrimary` atd.
+- **Horní lišta:** taby (Docházka, Akce, Tance, Profil, Krojárka) ji nemají — kde
+  jsem, říká spodní navigace. Detaily akce a tance mají lištu jen se šipkou zpět,
+  název je první nadpis obsahu. Ostatní podstránky si nechaly název, protože
+  ho obsah nemá. Lišta má barvu pozadí stránky (`appBarTheme`), ikony stavového
+  řádku nastavuje `DemizonTheme.overlayStyle` (u tabů přes `AnnotatedRegion`
+  v `MainShell`). Šipka zpět zůstala záměrně: ne každý zná gesto a iPhone
+  systémové tlačítko zpět nemá.
+
 ## Až budeš mít Firebase a telefon
 
 Odloženo 2026-09-09. Kód notifikací, DateTime a duálního režimu je hotový;

@@ -109,6 +109,8 @@ Podrobný seznam je v [`flutter-prepis/`](features/flutter-prepis/README.md).
 - [ ] **Release keystore** — Flutter release se zatím podepisuje debug klíčem;
       pro update přes rozdanou MAUI appku musí být stejný keystore jako MAUI.
       Kde je, není známo.
+- [x] **Telefon proti lokálnímu backendu** (2026-10-29, Galaxy S25, Wi-Fi ladění +
+      `adb reverse tcp:5272`). Opravený tmavý režim, horní lišta, výdej/příjem.
 - [ ] Běh na **fyzickém telefonu** proti živému API — hlavně ťuknutí
       na notifikaci a auth refresh. Docházka, tabulka, akce, tance a profil
       jsou ověřené na emulátoru.
@@ -199,6 +201,7 @@ Google Calendar a volitelný push řeší `RehearsalWorkflow`.
 
 - [x] A–C: `RehearsalSchedule` + `IRehearsalService`, přepojit pět míst, validace upsertu
 - [x] D–G: tabulka `RehearsalCancellation`, admin UI, úklid Google Calendar, Flutter
+- [x] Rušení a obnovení zkoušky z appky, smí i vůdce (2026-10-29).
 - [ ] Flutter část (zrušená zkouška, zamčená docházka) ověřit na telefonu spolu s B.
 - [ ] `Event.Recurrence` / `RecurrenceEndDate` jsou kandidáti na odstranění
       (rozhodnutí 7), ale až samostatně, protože pole nese `EventDto`.
@@ -222,7 +225,8 @@ a potvrzením příjemce, předávky člen → člen, údržba, inventura.
 - [x] F: notifikace předávek + ruční připomínky vrácení (2026-10-26)
 - [x] G: údržba, inventura, hodnota (2026-10-26)
 - [x] H: Flutter — Moje kroje, potvrzení, předávka se skenem a fotoaparátem, tab správce (2026-10-26)
-- [ ] Proklik krojárky na telefonu (sken, fotka, push) spolu s B
+- [x] První proklik na telefonu (2026-10-29): opraven prázdný výdej/příjem, detail předávky, výběr ze seznamu
+- [ ] Sken štítku kamerou, fotka u předávky a push na telefonu
 
 ---
 
