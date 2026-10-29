@@ -210,8 +210,7 @@ v záznamu featury, sekce *Současný stav*.
 
 ## G. Krojárka
 
-Záznam: [`features/krojarka/`](features/krojarka/README.md). **Hotové v kódu (2026-10-26).**
-**Hotové v kódu (2026-10-26).** Zbývá ověřit Flutter část na telefonu spolu s B.
+Záznam: [`features/krojarka/`](features/krojarka/README.md). **Hotové v kódu (2026-10-26).** Zbývá ověřit Flutter část na telefonu spolu s B.
 Inventář krojů po kusech i počtem, QR štítky, předávky s fotkou každého kusu
 a potvrzením příjemce, předávky člen → člen, údržba, inventura.
 
