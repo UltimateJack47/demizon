@@ -317,17 +317,21 @@ a auth refresh — čeká na telefon a Firebase.
 Odloženo 2026-09-09. Kód notifikací, DateTime a duálního režimu je hotový;
 bez konzole a zařízení dál nejde. Až bude čas, jdi shora dolů.
 
-1. [ ] **`flutterfire configure`** (stejný Firebase projekt, jehož service
-       account poleze do kontejneru jako `FIREBASE_CREDENTIAL_JSON` — viz
-       [`nasazeni.md`](../../nasazeni.md)):
+1. [x] **`flutterfire configure`** (2026-10-29). Firebase projekt `demizon-app`,
+       stejný jako MAUI; Android appka `com.demizon.administrace` už v něm byla
+       registrovaná (stejné App ID). Na čistém klonu zopakovat:
        ```
        cd demizon_flutter
-       dart pub global activate flutterfire_cli
-       flutterfire configure --platforms=android,ios --out=lib/firebase_options.dart
+       firebase login            # interaktivně, ne přes `!` v Claude Code
+       flutterfire configure --project=demizon-app --platforms=android          --android-package-name=com.demizon.administrace --out=lib/firebase_options.dart --yes
        ```
-       `google-services.json` patří do `android/app/` (`applicationId` je
-       `com.demizon.administrace`, shodné s MAUI). `lib/firebase_options.dart`
-       je gitignorovaný, stejně jako nativní config.
+       `android/app/google-services.json` a `lib/firebase_options.dart` jsou
+       gitignorované; `firebase.json` (jen ID projektu a appky) je v repu.
+       Gradle plugin `com.google.gms.google-services` se aplikuje **jen když
+       `google-services.json` existuje** — bez něj build projde a FCM se přeskočí.
+       `main.dart` volá `Firebase.initializeApp()` bez options, takže Android bere
+       nativní config a `firebase_options.dart` se neimportuje (nebyl by na CI).
+       iOS vynechán — konfigurace chce Mac.
 2. [ ] **Ikony a splash** ze `Demizon.Maui/Resources/AppIcon/` a
        `demizon_flutter/assets/images/demizon_logo.jpg`:
        `flutter_launcher_icons` + `flutter_native_splash`, pak

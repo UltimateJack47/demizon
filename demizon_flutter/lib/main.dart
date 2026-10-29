@@ -9,7 +9,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Protějšek inicializace v Platforms/Android/MainApplication.cs.
-  // TODO(verify): vyžaduje firebase_options.dart z `flutterfire configure`.
+  // Bez options: Android bere android/app/google-services.json (flutterfire
+  // configure). firebase_options.dart je gitignorovaný, import by rozbil čistý klon.
   try {
     await Firebase.initializeApp();
   } catch (e) {

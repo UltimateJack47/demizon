@@ -4,6 +4,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// google-services.json is gitignored (from `flutterfire configure`); without it
+// the app still builds and just runs without FCM.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.demizon.demizon"
     compileSdk = flutter.compileSdkVersion

@@ -103,7 +103,7 @@ Podrobný seznam je v [`flutter-prepis/`](features/flutter-prepis/README.md).
 
 ### Čeká na člověka (Firebase konzole + telefon)
 
-- [ ] `flutterfire configure` → `lib/firebase_options.dart` + `google-services.json`
+- [x] `flutterfire configure` (Android, 2026-10-29) — iOS až s Macem
 - [ ] Ikony a splash (`flutter_launcher_icons`, `flutter_native_splash`)
       ze `Demizon.Maui/Resources/AppIcon/` + `demizon_flutter/assets/images/demizon_logo.jpg`
 - [ ] **Release keystore** — Flutter release se zatím podepisuje debug klíčem;
