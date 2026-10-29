@@ -77,6 +77,26 @@ class _BodyState extends ConsumerState<_Body> {
     );
   }
 
+  Future<void> _cancel() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Zrušit předávku?'),
+        content: const Text('Kusy zůstanou tomu, kdo je předával. Předávku nejde obnovit.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Zpět')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: DemizonColors.error, minimumSize: const Size(0, 40)),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Zrušit předávku'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await _run(() => ref.read(apiClientProvider).cancelCostumeTransfer(t.id), 'Předávka zrušena.', 'Zrušení se nepodařilo.');
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(authControllerProvider).session;
@@ -97,8 +117,9 @@ class _BodyState extends ConsumerState<_Body> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('${t.fromName} → ${t.toName}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Chip(label: Text(transferStatusLabel(t.status))),
+                const SizedBox(height: 6),
+                _StatusBadge(status: t.status),
+                const SizedBox(height: 6),
                 Text('Založil(a) ${t.createdBy.fullName}, ${format.format(t.createdAt.toLocal())}',
                     style: TextStyle(fontSize: 12, color: context.palette.textSecondary)),
                 if (t.note != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(t.note!)),
@@ -107,56 +128,55 @@ class _BodyState extends ConsumerState<_Body> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text('Důvod odmítnutí: ${t.rejectionReason}', style: const TextStyle(color: DemizonColors.error)),
                   ),
-                if (isRecipient && t.isPending) ...[
-                  if (hasStale)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 12),
-                      child: Text(
-                        'Některá fotka je podle fotoaparátu starší, než by u předávky měla být (⚠). '
-                        'Než potvrdíš, ověř si stav kusu sám(a).',
-                        style: TextStyle(color: DemizonColors.warning),
-                      ),
-                    ),
-                  const Padding(
-                    padding: EdgeInsets.only(top: 12),
-                    child: Text('Potvrzením převezmeš odpovědnost za kusy ve stavu, jaký je na fotkách.'),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      FilledButton.icon(
-                        onPressed: _busy
-                            ? null
-                            : () => _run(() => ref.read(apiClientProvider).confirmCostumeTransfer(t.id),
-                                'Převzetí potvrzeno.', 'Potvrzení se nepodařilo.'),
-                        icon: const Icon(Icons.check),
-                        label: const Text('Potvrzuji převzetí'),
-                      ),
-                      OutlinedButton(onPressed: _busy ? null : _reject, child: const Text('Odmítnout')),
-                    ],
-                  ),
-                ],
-                if (t.isDraft && t.createdBy.memberId == myId)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: FilledButton(
-                      onPressed: () => context.pushReplacement(AppRoutes.costumeDraftFor(t.id)),
-                      child: const Text('Pokračovat v předávce'),
-                    ),
-                  ),
-                if (canCancel)
-                  TextButton(
-                    onPressed: _busy
-                        ? null
-                        : () => _run(() => ref.read(apiClientProvider).cancelCostumeTransfer(t.id),
-                            'Předávka zrušena.', 'Zrušení se nepodařilo.'),
-                    child: const Text('Zrušit předávku', style: TextStyle(color: DemizonColors.error)),
-                  ),
               ],
             ),
           ),
         ),
+        if (isRecipient && t.isPending) ...[
+          if (hasStale)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Text(
+                'Některá fotka je podle fotoaparátu starší, než by u předávky měla být (⚠). '
+                'Než potvrdíš, ověř si stav kusu sám(a).',
+                style: TextStyle(color: DemizonColors.warning),
+              ),
+            ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text('Potvrzením převezmeš odpovědnost za kusy ve stavu, jaký je na fotkách.'),
+          ),
+          _ActionButton(
+            label: 'Potvrzuji převzetí',
+            icon: Icons.check,
+            color: DemizonColors.success,
+            onPressed: _busy
+                ? null
+                : () => _run(() => ref.read(apiClientProvider).confirmCostumeTransfer(t.id), 'Převzetí potvrzeno.',
+                    'Potvrzení se nepodařilo.'),
+          ),
+          _ActionButton(
+            label: 'Odmítám převzetí',
+            icon: Icons.block,
+            color: DemizonColors.warning,
+            onPressed: _busy ? null : _reject,
+          ),
+        ],
+        if (t.isDraft && t.createdBy.memberId == myId)
+          _ActionButton(
+            label: 'Pokračovat v předávce',
+            icon: Icons.edit,
+            color: Theme.of(context).colorScheme.primary,
+            onPressed: () => context.pushReplacement(AppRoutes.costumeDraftFor(t.id)),
+          ),
+        if (canCancel)
+          _ActionButton(
+            label: 'Zrušit předávku',
+            icon: Icons.close,
+            color: DemizonColors.error,
+            onPressed: _busy ? null : _cancel,
+          ),
+        const SizedBox(height: 8),
         for (final line in t.lines)
           Card(
             child: Padding(
@@ -179,6 +199,54 @@ class _BodyState extends ConsumerState<_Body> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Stav jako barevná tečka s textem — ne čip, který vypadá jako tlačítko.
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (status) {
+      'Pending' => DemizonColors.warning,
+      'Confirmed' => DemizonColors.success,
+      'Rejected' => DemizonColors.error,
+      _ => context.palette.textSecondary,
+    };
+    return Row(
+      children: [
+        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 8),
+        Text(transferStatusLabel(status), style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+}
+
+/// Akce předávky: všechny stejně velké pod sebou, liší se jen barvou.
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({required this.label, required this.icon, required this.color, required this.onPressed});
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      // Same side inset as the theme's Card margin, so buttons line up with the card.
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: FilledButton.icon(
+        style: FilledButton.styleFrom(backgroundColor: color, foregroundColor: Colors.white),
+        onPressed: onPressed,
+        icon: Icon(icon),
+        label: Text(label),
+      ),
     );
   }
 }
