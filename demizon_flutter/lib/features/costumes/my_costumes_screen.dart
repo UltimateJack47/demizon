@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/providers.dart';
 import '../../core/routes.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
@@ -178,25 +177,6 @@ class _QrCard extends ConsumerWidget {
                 loading: () => const SizedBox(width: 220, height: 220, child: Center(child: CircularProgressIndicator())),
                 error: (e, _) => Text(apiErrorText(e, 'QR se nepodařilo načíst.')),
               ),
-            ),
-            TextButton.icon(
-              onPressed: () async {
-                try {
-                  await ref.read(apiClientProvider).regenerateMyCostumeQr();
-                  ref.invalidate(myCostumeQrProvider);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(const SnackBar(content: Text('Nový QR kód je platný, starý už ne.')));
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(apiErrorText(e, 'QR se nepodařilo vygenerovat.'))));
-                  }
-                }
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Vygenerovat nový (starý přestane platit)'),
             ),
           ],
         ),

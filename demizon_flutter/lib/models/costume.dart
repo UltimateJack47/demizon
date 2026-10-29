@@ -223,6 +223,48 @@ class CostumeHolderOverview {
   Map<String, dynamic> toJson() => _$CostumeHolderOverviewToJson(this);
 }
 
+/// Kus v katalogu se stavem zásob. `inStore` = v krojárce, `reserved` = z toho
+/// v otevřených předávkách.
+@JsonSerializable(explicitToJson: true)
+class CostumeStockItem {
+  const CostumeStockItem({required this.item, required this.inStore, required this.held, required this.reserved});
+
+  final CostumeItem item;
+  final int inStore;
+  final int held;
+  final int reserved;
+
+  /// Kolik jde ještě vydat: v krojárce, nezamluvené jinou předávkou, ne v údržbě.
+  int get available => item.state == 'Available' ? (inStore - reserved).clamp(0, inStore) : 0;
+
+  factory CostumeStockItem.fromJson(Map<String, dynamic> json) => _$CostumeStockItemFromJson(json);
+  Map<String, dynamic> toJson() => _$CostumeStockItemToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true)
+class CostumeCatalogPart {
+  const CostumeCatalogPart({required this.id, required this.name, required this.items});
+
+  final int id;
+  final String name;
+  final List<CostumeStockItem> items;
+
+  factory CostumeCatalogPart.fromJson(Map<String, dynamic> json) => _$CostumeCatalogPartFromJson(json);
+  Map<String, dynamic> toJson() => _$CostumeCatalogPartToJson(this);
+}
+
+/// Jen části katalogu, které appka potřebuje (výběr kusů k výdeji); kroje
+/// a popisy spravuje web.
+@JsonSerializable(explicitToJson: true)
+class CostumeCatalog {
+  const CostumeCatalog({required this.parts});
+
+  final List<CostumeCatalogPart> parts;
+
+  factory CostumeCatalog.fromJson(Map<String, dynamic> json) => _$CostumeCatalogFromJson(json);
+  Map<String, dynamic> toJson() => _$CostumeCatalogToJson(this);
+}
+
 // ------------------------------------------------------------- requesty
 
 @JsonSerializable()

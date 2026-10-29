@@ -203,9 +203,6 @@ abstract class ApiClient {
   @DioResponseType(ResponseType.bytes)
   Future<HttpResponse<List<int>>> getMyCostumeQr();
 
-  @POST('/api/costumes/me/qr/regenerate')
-  Future<void> regenerateMyCostumeQr();
-
   @GET('/api/costumes/members/by-qr/{token}')
   Future<CostumeMember> getCostumeMemberByQr(@Path('token') String token);
 
@@ -264,6 +261,9 @@ abstract class ApiClient {
   Future<void> cancelCostumeTransfer(@Path('id') int id);
 
   // ------------------------------------------- Krojárka (jen správce / vedení)
+
+  @GET('/api/costumes/catalog')
+  Future<CostumeCatalog> getCostumeCatalog();
 
   @GET('/api/costumes/holders')
   Future<List<CostumeHolderOverview>> getCostumeHolders();

@@ -13,6 +13,7 @@ import '../../models/models.dart';
 import 'costume_logic.dart';
 import 'costume_providers.dart';
 import 'widgets/code_scan_field.dart';
+import 'widgets/costume_item_picker.dart';
 import 'widgets/costume_photo_thumb.dart';
 
 /// Předávka krojů: nejdřív kusy a protistrana (sken), pak fotka u každého kusu
@@ -121,6 +122,43 @@ class _CostumeHandoverScreenState extends ConsumerState<CostumeHandoverScreen> {
       _counterpart ??= outcome.counterpart;
       _lines.add(_PendingLine(card.item));
     });
+  }
+
+  /// Kusy, které jde v tomhle režimu přidat: k výdeji volné v krojárce, k příjmu
+  /// co kdo drží (jen vracející, když už je daný), kolegovi co mám já.
+  Future<List<CostumePickEntry>> _pickEntries(Set<String> taken, int? holderId) async {
+    final api = ref.read(apiClientProvider);
+    final entries = switch (_mode) {
+      HandoverMode.issue => [
+          for (final part in (await api.getCostumeCatalog()).parts)
+            for (final stock in part.items)
+              if (stock.available > 0) CostumePickEntry(item: stock.item, count: stock.available),
+        ],
+      HandoverMode.returnToStore => [
+          for (final holder in await api.getCostumeHolders())
+            if (holderId == null || holder.member.memberId == holderId)
+              for (final h in holder.holdings) CostumePickEntry(item: h.item, count: h.quantity, holder: holder.member),
+        ],
+      HandoverMode.peer => [
+          for (final h in (await api.getMyCostumes()).holdings) CostumePickEntry(item: h.item, count: h.quantity),
+        ],
+    };
+    return entries.where((e) => !taken.contains(e.item.code)).toList();
+  }
+
+  Future<void> _pick({required bool draft}) async {
+    setState(() => _error = null);
+    final holderId = draft ? _draft!.from?.memberId : _counterpart?.memberId;
+    final taken = draft ? {for (final l in _draft!.lines) l.item.code} : {for (final l in _lines) l.item.code};
+    final entries = await _call(
+        () => _pickEntries(taken, _mode == HandoverMode.returnToStore ? holderId : null), 'Seznam kusů se nepodařilo načíst.');
+    if (entries == null || !mounted) return;
+    final picked = await showCostumeItemPicker(context, entries);
+    if (picked == null) return;
+    if (draft) return _onDraftCode(picked.item.code);
+    // Known holder: a batch held by several people would otherwise ask for the returner's QR.
+    if (picked.holder != null) setState(() => _counterpart ??= picked.holder);
+    await _onCollectCode(picked.item.code);
   }
 
   Future<void> _createDraft() async {
@@ -245,7 +283,8 @@ class _CostumeHandoverScreenState extends ConsumerState<CostumeHandoverScreen> {
         }),
         const SizedBox(height: 12),
         CodeScanField(onCode: _onCollectCode),
-        const SizedBox(height: 16),
+        _PickButton(onPressed: _busy ? null : () => _pick(draft: false)),
+        const SizedBox(height: 8),
         Text('${_mode == HandoverMode.returnToStore ? 'Vrací' : 'Příjemce'}: '
             '${_counterpart?.fullName ?? '— naskenuj QR z jeho profilu —'}',
             style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -286,7 +325,8 @@ class _CostumeHandoverScreenState extends ConsumerState<CostumeHandoverScreen> {
       ),
       const SizedBox(height: 12),
       CodeScanField(onCode: _onDraftCode, label: 'Přidat další kus'),
-      const SizedBox(height: 12),
+      _PickButton(onPressed: _busy ? null : () => _pick(draft: true)),
+      const SizedBox(height: 4),
       for (final line in draft.lines)
         Card(
           child: Padding(
@@ -332,6 +372,20 @@ class _CostumeHandoverScreenState extends ConsumerState<CostumeHandoverScreen> {
         child: const Text('Zrušit předávku', style: TextStyle(color: DemizonColors.error)),
       ),
     ];
+  }
+}
+
+class _PickButton extends StatelessWidget {
+  const _PickButton({required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton.icon(onPressed: onPressed, icon: const Icon(Icons.list), label: const Text('Vybrat ze seznamu')),
+    );
   }
 }
 
